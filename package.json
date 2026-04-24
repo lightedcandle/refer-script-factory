@@ -1,0 +1,71 @@
+{
+  "name": "refer-script-factory",
+  "displayName": "Refer Script Factory",
+  "description": "A governed REFER cockpit for plans, Send Contracts, factory telemetry, and repo bootstrap dry-runs.",
+  "version": "0.0.1",
+  "private": true,
+  "engines": {
+    "vscode": "^1.92.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onView:refer.dashboard",
+    "onView:refer.chat",
+    "onView:refer.process",
+    "onCommand:refer.initializeRepo",
+    "onCommand:refer.emitSendContract"
+  ],
+  "main": "./dist/src/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "refer.initializeRepo",
+        "title": "REFER: Initialize Repo"
+      },
+      {
+        "command": "refer.emitSendContract",
+        "title": "REFER: Emit Send Contract Draft"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "refer",
+          "title": "REFER",
+          "icon": "resources/refer.svg"
+        }
+      ]
+    },
+    "views": {
+      "refer": [
+        {
+          "type": "webview",
+          "id": "refer.dashboard",
+          "name": "Dashboard"
+        },
+        {
+          "type": "webview",
+          "id": "refer.chat",
+          "name": "Governed Chat"
+        },
+        {
+          "type": "webview",
+          "id": "refer.process",
+          "name": "Process"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "test": "npm run compile && node dist/test/metrics.test.js && node dist/test/processEvents.test.js && node dist/test/bootstrapDryRun.test.js",
+    "verify": "npm run test"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.21",
+    "@types/vscode": "^1.92.0",
+    "typescript": "^5.8.2"
+  }
+}

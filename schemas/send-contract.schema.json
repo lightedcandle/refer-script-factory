@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Send Contract",
+  "type": "object",
+  "required": [
+    "plan_id",
+    "target_repo",
+    "allowed_mutations",
+    "target_paths",
+    "station_route",
+    "adapter",
+    "inputs",
+    "outputs",
+    "invariants",
+    "verification",
+    "failure_handling"
+  ],
+  "properties": {
+    "plan_id": { "type": "string" },
+    "target_repo": { "type": "string" },
+    "allowed_mutations": { "type": "array", "items": { "type": "string" } },
+    "target_paths": { "type": "array", "items": { "type": "string" } },
+    "station_route": { "type": "array", "items": { "type": "string" } },
+    "adapter": { "type": "string" },
+    "inputs": { "type": "object" },
+    "outputs": { "type": "object" },
+    "invariants": { "type": "array", "items": { "type": "string" } },
+    "verification": { "type": "array", "items": { "type": "string" } },
+    "failure_handling": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Adapter Contract",
+  "type": "object",
+  "required": [
+    "adapter_id",
+    "framework",
+    "anchor_map",
+    "target_path_rules",
+    "placement_hooks",
+    "style_hooks",
+    "verification_commands",
+    "repair_artifact_outputs"
+  ],
+  "properties": {
+    "adapter_id": { "type": "string" },
+    "framework": { "type": "string" },
+    "anchor_map": { "type": "object", "additionalProperties": { "type": "string" } },
+    "target_path_rules": { "type": "array", "items": { "type": "string" } },
+    "placement_hooks": { "type": "array", "items": { "type": "string" } },
+    "style_hooks": { "type": "array", "items": { "type": "string" } },
+    "verification_commands": { "type": "array", "items": { "type": "string" } },
+    "repair_artifact_outputs": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": false
+}

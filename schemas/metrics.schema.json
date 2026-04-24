@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Factory Metrics",
+  "type": "object",
+  "required": [
+    "input_tokens",
+    "output_tokens",
+    "response_mpg",
+    "codebase_mpg",
+    "mutations_per_group",
+    "dominant_gear",
+    "secondary_gears",
+    "terrain_drag",
+    "repo_health_score",
+    "running_scripts",
+    "script_status",
+    "script_elapsed_ms"
+  ],
+  "properties": {
+    "input_tokens": { "type": ["number", "null"] },
+    "output_tokens": { "type": ["number", "null"] },
+    "response_mpg": { "type": "number" },
+    "codebase_mpg": { "type": "number" },
+    "mutations_per_group": { "type": "number" },
+    "dominant_gear": { "type": "string" },
+    "secondary_gears": { "type": "array", "items": { "type": "string" } },
+    "terrain_drag": { "type": "number" },
+    "repo_health_score": { "type": "number" },
+    "running_scripts": { "type": "number" },
+    "script_status": { "type": "string" },
+    "script_elapsed_ms": { "type": "number" }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Bootstrap Dry Run",
+  "type": "object",
+  "required": [
+    "workspace_root",
+    "repo_purpose",
+    "framework",
+    "would_create",
+    "would_update",
+    "would_skip",
+    "unsafe_overwrites",
+    "required_confirmation"
+  ],
+  "properties": {
+    "workspace_root": { "type": "string" },
+    "repo_purpose": { "type": "string" },
+    "framework": { "type": "string" },
+    "would_create": { "type": "array", "items": { "type": "string" } },
+    "would_update": { "type": "array", "items": { "type": "string" } },
+    "would_skip": { "type": "array", "items": { "type": "string" } },
+    "unsafe_overwrites": { "type": "array", "items": { "type": "string" } },
+    "required_confirmation": { "type": "boolean" }
+  },
+  "additionalProperties": false
+}

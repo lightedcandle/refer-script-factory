@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Process Event",
+  "type": "object",
+  "required": [
+    "id",
+    "script_name",
+    "status",
+    "started_at",
+    "elapsed_ms",
+    "dominant_gear",
+    "output_target",
+    "efficiency_state",
+    "message",
+    "error"
+  ],
+  "properties": {
+    "id": { "type": "string" },
+    "script_name": { "type": "string" },
+    "status": {
+      "type": "string",
+      "enum": ["queued", "running", "blocked", "failed", "completed"]
+    },
+    "started_at": { "type": "string" },
+    "elapsed_ms": { "type": "number" },
+    "dominant_gear": { "type": "string" },
+    "output_target": { "type": "string" },
+    "efficiency_state": { "type": "string" },
+    "message": { "type": "string" },
+    "error": { "type": ["string", "null"] }
+  },
+  "additionalProperties": false
+}
