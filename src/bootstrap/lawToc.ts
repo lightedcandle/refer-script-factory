@@ -1,0 +1,105 @@
+export interface LawTocEntry {
+  sequence: number;
+  file: string;
+  title: string;
+  group: string;
+  status: "canonical" | "compatibility" | "historical" | "reference";
+  summary: string;
+}
+
+export const referLawToc: LawTocEntry[] = [
+  { sequence: 10, file: "refer.md", title: "Overview", group: "Core", status: "canonical", summary: "Primary REFER entrypoint and routing surface." },
+  { sequence: 20, file: "refer.os.md", title: "Operating System", group: "Core", status: "canonical", summary: "Universal operating doctrine for REFER." },
+  { sequence: 30, file: "refer.plan.md", title: "Plan", group: "Core", status: "canonical", summary: "Planner intake, readiness, Send Contract, and flow rules." },
+  { sequence: 40, file: "refer.flow.md", title: "Flow", group: "Core", status: "canonical", summary: "Execution flow and deterministic state movement." },
+  { sequence: 50, file: "refer.governance.md", title: "Governance", group: "Core", status: "canonical", summary: "Law validation, routing authority, and governance boundaries." },
+  { sequence: 60, file: "refer.qc.md", title: "Quality Control", group: "Core", status: "canonical", summary: "RETURN/QC integrity checks before commit or publish." },
+  { sequence: 70, file: "refer.law.md", title: "Law", group: "Core", status: "canonical", summary: "Law doctrine and referential authority." },
+  { sequence: 80, file: "refer.law.index.md", title: "Law Index", group: "Core", status: "canonical", summary: "Index of REFER law surfaces." },
+  { sequence: 90, file: "refer.law.crossref.md", title: "Law Cross-Reference", group: "Core", status: "reference", summary: "Cross-reference map for law documents." },
+
+  { sequence: 110, file: "refer.factory.md", title: "Factory", group: "Factory", status: "canonical", summary: "Factory doctrine for known structure and reusable manifestation." },
+  { sequence: 120, file: "refer.codebases.md", title: "Codebases", group: "Factory", status: "canonical", summary: "Repo-level tracking with monorepo and internal subspace routing." },
+  { sequence: 130, file: "refer.engine.md", title: "Engine", group: "Factory", status: "canonical", summary: "Script engine and interpreter doctrine." },
+  { sequence: 140, file: "refer.efficiency.md", title: "Efficiency", group: "Factory", status: "canonical", summary: "Token burn, MPG, terrain, and durable reuse model." },
+  { sequence: 150, file: "refer.odometer.md", title: "Odometer", group: "Factory", status: "canonical", summary: "Miles, movement, and efficiency measurement." },
+  { sequence: 160, file: "refer.gears.md", title: "Gears", group: "Factory", status: "canonical", summary: "Work mode and gear classification." },
+  { sequence: 170, file: "refer.tooling.md", title: "Tooling", group: "Factory", status: "canonical", summary: "Governed tooling outputs and verification artifacts." },
+  { sequence: 180, file: "refer.forge.md", title: "Forge", group: "Factory", status: "canonical", summary: "Tool/script creation and registry doctrine." },
+  { sequence: 190, file: "refer.compiler.md", title: "Compiler", group: "Factory", status: "canonical", summary: "Compiler pipeline entrypoint." },
+  { sequence: 191, file: "refer.compiler.init.md", title: "Compiler Init", group: "Factory", status: "reference", summary: "Compiler initialization support." },
+  { sequence: 192, file: "refer.compiler.blueprint.md", title: "Compiler Blueprint", group: "Factory", status: "compatibility", summary: "Blueprint-era compiler support." },
+  { sequence: 193, file: "refer.compiler.metrics.md", title: "Compiler Metrics", group: "Factory", status: "reference", summary: "Compiler measurement support." },
+  { sequence: 194, file: "refer.compiler.pages.md", title: "Compiler Pages", group: "Factory", status: "reference", summary: "Page compiler support." },
+
+  { sequence: 210, file: "refer.build.md", title: "Build", group: "Work Modes", status: "canonical", summary: "Build doctrine for governed code changes." },
+  { sequence: 220, file: "refer.combing.md", title: "Combing", group: "Work Modes", status: "canonical", summary: "Recursive repair/combing doctrine." },
+  { sequence: 230, file: "refer.expand.md", title: "Expand", group: "Work Modes", status: "canonical", summary: "Capability expansion doctrine." },
+  { sequence: 240, file: "refer.repair.md", title: "Repair", group: "Work Modes", status: "compatibility", summary: "Legacy repair alias and compatibility surface." },
+  { sequence: 250, file: "refer.audit.md", title: "Audit", group: "Work Modes", status: "canonical", summary: "Audit and evidence review doctrine." },
+  { sequence: 260, file: "refer.migrate.md", title: "Migrate", group: "Work Modes", status: "canonical", summary: "Migration and rollout rules." },
+  { sequence: 270, file: "refer.tests.md", title: "Tests", group: "Work Modes", status: "canonical", summary: "Testing and validation guidance." },
+
+  { sequence: 310, file: "refer.branch.md", title: "Branch", group: "Repo Operations", status: "canonical", summary: "Branch creation, naming, and cleanup rules." },
+  { sequence: 320, file: "refer.commit.md", title: "Commit", group: "Repo Operations", status: "canonical", summary: "Commit and closeout law." },
+  { sequence: 330, file: "refer.github.md", title: "GitHub", group: "Repo Operations", status: "canonical", summary: "PR, publish, push, and GitHub integration rules." },
+  { sequence: 340, file: "refer.cli.md", title: "CLI", group: "Repo Operations", status: "canonical", summary: "CLI execution and command routing." },
+  { sequence: 350, file: "refer.localrepo.md", title: "Local Repo", group: "Repo Operations", status: "canonical", summary: "Local repository attachment and scope rules." },
+  { sequence: 360, file: "refer.init.md", title: "Init", group: "Repo Operations", status: "canonical", summary: "Initialization and bootstrap doctrine." },
+  { sequence: 370, file: "refer.housekeeping.md", title: "Housekeeping", group: "Repo Operations", status: "reference", summary: "Cleanup and maintenance rules." },
+  { sequence: 380, file: "refer.file.md", title: "File", group: "Repo Operations", status: "reference", summary: "File handling doctrine." },
+  { sequence: 390, file: "refer.boot.md", title: "Boot", group: "Repo Operations", status: "reference", summary: "Startup and boot process support." },
+
+  { sequence: 410, file: "refer.subagents.md", title: "Subagents", group: "Agents & Providers", status: "canonical", summary: "Subagent roles and coordination rules." },
+  { sequence: 420, file: "refer.skills.md", title: "Skills", group: "Agents & Providers", status: "canonical", summary: "Skill layer rules and boundaries." },
+  { sequence: 430, file: "refer.aisettings.md", title: "AI Settings", group: "Agents & Providers", status: "reference", summary: "AI settings and configuration guidance." },
+  { sequence: 440, file: "refer.providers.md", title: "Providers", group: "Agents & Providers", status: "reference", summary: "Provider abstraction overview." },
+  { sequence: 450, file: "refer.provider.codex.md", title: "Provider: Codex", group: "Agents & Providers", status: "reference", summary: "Codex provider guidance." },
+  { sequence: 460, file: "refer.provider.chatgpt.md", title: "Provider: ChatGPT", group: "Agents & Providers", status: "reference", summary: "ChatGPT provider guidance." },
+  { sequence: 470, file: "refer.provider.cli.md", title: "Provider: CLI", group: "Agents & Providers", status: "reference", summary: "CLI provider guidance." },
+
+  { sequence: 510, file: "refer.structure.md", title: "Structure", group: "App Structure", status: "canonical", summary: "Structural doctrine for app manifestation." },
+  { sequence: 520, file: "refer.identity.md", title: "Identity", group: "App Structure", status: "canonical", summary: "Identity and registration rules." },
+  { sequence: 530, file: "refer.app.md", title: "App", group: "App Structure", status: "canonical", summary: "Application-level doctrine." },
+  { sequence: 540, file: "refer.auth.md", title: "Auth", group: "App Structure", status: "reference", summary: "Authentication rules." },
+  { sequence: 550, file: "refer.api.md", title: "API", group: "App Structure", status: "reference", summary: "API guidance." },
+  { sequence: 560, file: "refer.angular.md", title: "Angular", group: "App Structure", status: "reference", summary: "Angular-specific implementation guidance." },
+  { sequence: 570, file: "refer.ontology.md", title: "Ontology", group: "App Structure", status: "reference", summary: "Ontology and meaning model." },
+  { sequence: 580, file: "refer.instantiation.md", title: "Instantiation", group: "App Structure", status: "reference", summary: "Instantiation doctrine." },
+  { sequence: 590, file: "refer.knowledge.md", title: "Knowledge", group: "App Structure", status: "reference", summary: "Knowledge surface guidance." },
+
+  { sequence: 610, file: "refer.design.md", title: "Design", group: "Design & UI", status: "canonical", summary: "Design doctrine." },
+  { sequence: 620, file: "refer.figma.md", title: "Figma", group: "Design & UI", status: "canonical", summary: "Figma workflow and design authority." },
+  { sequence: 630, file: "refer.seamless-ui.md", title: "Seamless UI", group: "Design & UI", status: "canonical", summary: "Seamless page and section layout doctrine." },
+  { sequence: 640, file: "refer.honeycomb.md", title: "Honeycomb", group: "Design & UI", status: "reference", summary: "Honeycomb design reference." },
+  { sequence: 650, file: "refer.designlab.md", title: "Design Lab", group: "Design & UI", status: "reference", summary: "Design lab support." },
+  { sequence: 660, file: "refer.icons.md", title: "Icons", group: "Design & UI", status: "reference", summary: "Icon guidance." },
+  { sequence: 670, file: "refer.og.md", title: "Open Graph", group: "Design & UI", status: "reference", summary: "Open Graph/social metadata guidance." },
+  { sequence: 680, file: "refer.shortlink.md", title: "Shortlink", group: "Design & UI", status: "reference", summary: "Shortlink guidance." },
+  { sequence: 690, file: "theme.spec.md", title: "Theme Spec", group: "Design & UI", status: "reference", summary: "Theme specification." },
+  { sequence: 691, file: "reverent.deltatheme.md", title: "Reverent Delta Theme", group: "Design & UI", status: "reference", summary: "Theme reference." },
+
+  { sequence: 710, file: "refer.spirit.md", title: "Spirit", group: "Runtime & Systems", status: "canonical", summary: "Spirit runtime doctrine." },
+  { sequence: 720, file: "refer.spirit-runtime.md", title: "Spirit Runtime", group: "Runtime & Systems", status: "canonical", summary: "Runtime mechanics for Spirit." },
+  { sequence: 730, file: "refer.cloudflare.md", title: "Cloudflare", group: "Runtime & Systems", status: "reference", summary: "Cloudflare deployment guidance." },
+  { sequence: 740, file: "refer.supabase.md", title: "Supabase", group: "Runtime & Systems", status: "reference", summary: "Supabase and DB guidance." },
+  { sequence: 750, file: "refer.stripe.md", title: "Stripe", group: "Runtime & Systems", status: "reference", summary: "Stripe integration guidance." },
+  { sequence: 760, file: "refer.daily.md", title: "Daily", group: "Runtime & Systems", status: "reference", summary: "Daily provider guidance." },
+  { sequence: 770, file: "refer.cron.md", title: "Cron", group: "Runtime & Systems", status: "reference", summary: "Scheduled work guidance." },
+  { sequence: 780, file: "refer.systems.security.md", title: "Systems Security", group: "Runtime & Systems", status: "canonical", summary: "Security boundaries and system guardrails." },
+  { sequence: 790, file: "refer.automated.md", title: "Automated", group: "Runtime & Systems", status: "reference", summary: "Automation guidance." },
+  { sequence: 791, file: "refer.governance.publish.md", title: "Governance Publish", group: "Runtime & Systems", status: "reference", summary: "Governance publishing support." },
+
+  { sequence: 810, file: "refer.analytics.md", title: "Analytics", group: "Specialized References", status: "reference", summary: "Analytics guidance." },
+  { sequence: 820, file: "refer.daylight.md", title: "Daylight", group: "Specialized References", status: "reference", summary: "Daylight reference." },
+  { sequence: 830, file: "refer.talents.md", title: "Talents", group: "Specialized References", status: "reference", summary: "Talents reference." },
+  { sequence: 840, file: "refer.turbocharge-build.md", title: "Turbocharge Build", group: "Specialized References", status: "reference", summary: "Build speed and tooling guidance." },
+  { sequence: 850, file: "refer.turnstyle.md", title: "Turnstyle", group: "Specialized References", status: "reference", summary: "Turnstyle guard guidance." },
+  { sequence: 860, file: "refer.library.md", title: "Library", group: "Specialized References", status: "reference", summary: "Library doctrine and browsing support." },
+
+  { sequence: 910, file: "inference.md", title: "Inference", group: "Compatibility & History", status: "compatibility", summary: "Older inference layer retained for compatibility." },
+  { sequence: 920, file: "e2e_artifact_map.md", title: "E2E Artifact Map", group: "Compatibility & History", status: "historical", summary: "Pre-REFER artifact map retained as history." },
+  { sequence: 930, file: "ESCL_2.0_Schematic.md", title: "ESCL 2.0 Schematic", group: "Compatibility & History", status: "historical", summary: "Earlier schematic reference retained as history." },
+  { sequence: 940, file: "msc.template.list.md", title: "MSC Template List", group: "Compatibility & History", status: "historical", summary: "Template list retained as history." },
+  { sequence: 950, file: "UNIVERSAL_STATES.md", title: "Universal States", group: "Compatibility & History", status: "reference", summary: "Universal state reference." },
+] as const;

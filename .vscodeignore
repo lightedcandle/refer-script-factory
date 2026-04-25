@@ -1,0 +1,15 @@
+.env
+.env.*
+.env*
+**/.env*
+.history/**
+.git/**
+.vscode/**
+node_modules/**
+src/**
+test/**
+dist/test/**
+docs/**
+.refer-factory/**
+*.vsix
+npm-debug.log*

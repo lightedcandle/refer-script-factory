@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "REFER Update Manifest",
+  "type": "object",
+  "required": ["manifest_version", "channel", "published_at", "artifacts"],
+  "properties": {
+    "manifest_version": { "type": "string" },
+    "channel": { "type": "string", "enum": ["stable", "beta", "dev"] },
+    "published_at": { "type": "string" },
+    "notes": { "type": "string" },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "kind", "version", "target_path", "source_path"],
+        "properties": {
+          "id": { "type": "string" },
+          "kind": { "type": "string", "enum": ["law", "schema", "script", "extension"] },
+          "version": { "type": "string" },
+          "target_path": { "type": "string" },
+          "source_path": { "type": "string" },
+          "sha256": { "type": "string" },
+          "summary": { "type": "string" },
+          "requires_restart": { "type": "boolean" }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

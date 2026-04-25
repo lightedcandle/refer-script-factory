@@ -1,0 +1,7 @@
+{
+  "manifest_version": "0.0.1",
+  "channel": "stable",
+  "published_at": "2026-04-25T00:00:00.000Z",
+  "notes": "Packaged baseline manifest for local update sync testing.",
+  "artifacts": []
+}

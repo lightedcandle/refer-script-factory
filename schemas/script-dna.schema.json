@@ -1,0 +1,134 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "REFER Script DNA",
+  "type": "object",
+  "required": [
+    "script_id",
+    "title",
+    "version",
+    "status",
+    "governing_refs",
+    "trigger_intents",
+    "adapters",
+    "inputs",
+    "outputs",
+    "guards",
+    "stations",
+    "verification",
+    "registry"
+  ],
+  "properties": {
+    "script_id": { "type": "string" },
+    "title": { "type": "string" },
+    "version": { "type": "string" },
+    "status": { "enum": ["seed", "active", "deprecated"] },
+    "governing_refs": { "type": "array", "items": { "type": "string" } },
+    "trigger_intents": { "type": "array", "items": { "type": "string" } },
+    "adapters": { "type": "array", "items": { "type": "string" } },
+    "inputs": { "$ref": "#/$defs/ports" },
+    "outputs": { "$ref": "#/$defs/ports" },
+    "guards": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "rule", "failure_packet"],
+        "properties": {
+          "id": { "type": "string" },
+          "rule": { "type": "string" },
+          "failure_packet": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "stations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "purpose",
+          "inputs",
+          "outputs",
+          "instructions"
+        ],
+        "properties": {
+          "id": { "type": "string" },
+          "title": { "type": "string" },
+          "purpose": { "type": "string" },
+          "inputs": { "type": "array", "items": { "type": "string" } },
+          "outputs": { "type": "array", "items": { "type": "string" } },
+          "instructions": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": ["opcode", "reads", "writes", "args"],
+              "properties": {
+                "opcode": {
+                  "enum": [
+                    "READ_CONTRACT",
+                    "RESOLVE_TARGET",
+                    "CHECK_GUARD",
+                    "READ_FILE",
+                    "WRITE_FILE",
+                    "PATCH_FILE",
+                    "EMIT_PACKET",
+                    "RUN_CHECK",
+                    "REGISTER_ROUTE"
+                  ]
+                },
+                "reads": { "type": "array", "items": { "type": "string" } },
+                "writes": { "type": "array", "items": { "type": "string" } },
+                "args": { "type": "object" }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "verification": { "type": "array", "items": { "type": "string" } },
+    "registry": {
+      "type": "object",
+      "required": ["route_id", "reusable", "promoted_from_seed"],
+      "properties": {
+        "route_id": { "type": "string" },
+        "reusable": { "type": "boolean" },
+        "promoted_from_seed": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "ports": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "type", "required", "description"],
+        "properties": {
+          "id": { "type": "string" },
+          "type": {
+            "enum": [
+              "string",
+              "number",
+              "boolean",
+              "json",
+              "path",
+              "glob",
+              "contract",
+              "packet"
+            ]
+          },
+          "required": { "type": "boolean" },
+          "description": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    }
+  }
+}

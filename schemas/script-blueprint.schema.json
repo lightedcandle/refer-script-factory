@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "REFER Script Blueprint",
+  "type": "object",
+  "required": [
+    "blueprint_id",
+    "title",
+    "governing_refs",
+    "doctrine",
+    "nodes",
+    "edges",
+    "correction_path",
+    "terminal_outputs"
+  ],
+  "properties": {
+    "blueprint_id": { "type": "string" },
+    "title": { "type": "string" },
+    "governing_refs": { "type": "array", "items": { "type": "string" } },
+    "doctrine": { "type": "array", "items": { "type": "string" } },
+    "nodes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "title",
+          "purpose",
+          "inputs",
+          "outputs",
+          "owner"
+        ],
+        "properties": {
+          "id": { "type": "string" },
+          "kind": {
+            "enum": [
+              "chat_intake",
+              "contract_interrogatory",
+              "send_contract",
+              "registry_lookup",
+              "script_execution",
+              "correction_contract",
+              "interpreter",
+              "artifact_emission",
+              "verification",
+              "registration"
+            ]
+          },
+          "title": { "type": "string" },
+          "purpose": { "type": "string" },
+          "inputs": { "type": "array", "items": { "type": "string" } },
+          "outputs": { "type": "array", "items": { "type": "string" } },
+          "owner": {
+            "enum": [
+              "assistant",
+              "planner",
+              "factory",
+              "engine",
+              "interpreter",
+              "qc"
+            ]
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["from", "to", "condition", "packet"],
+        "properties": {
+          "from": { "type": "string" },
+          "to": { "type": "string" },
+          "condition": { "type": "string" },
+          "packet": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "correction_path": { "type": "array", "items": { "type": "string" } },
+    "terminal_outputs": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": false
+}

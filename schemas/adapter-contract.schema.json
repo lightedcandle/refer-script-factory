@@ -5,8 +5,13 @@
   "required": [
     "adapter_id",
     "framework",
+    "runtime",
+    "package_managers",
     "anchor_map",
     "target_path_rules",
+    "input_contracts",
+    "output_packets",
+    "transform_contract",
     "placement_hooks",
     "style_hooks",
     "verification_commands",
@@ -15,8 +20,22 @@
   "properties": {
     "adapter_id": { "type": "string" },
     "framework": { "type": "string" },
+    "runtime": { "enum": ["browser", "server", "fullstack", "unknown"] },
+    "package_managers": { "type": "array", "items": { "type": "string" } },
     "anchor_map": { "type": "object", "additionalProperties": { "type": "string" } },
     "target_path_rules": { "type": "array", "items": { "type": "string" } },
+    "input_contracts": { "type": "array", "items": { "type": "string" } },
+    "output_packets": { "type": "array", "items": { "type": "string" } },
+    "transform_contract": {
+      "type": "object",
+      "required": ["portable_format", "consumes", "emits"],
+      "properties": {
+        "portable_format": { "const": "json" },
+        "consumes": { "type": "array", "items": { "type": "string" } },
+        "emits": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": false
+    },
     "placement_hooks": { "type": "array", "items": { "type": "string" } },
     "style_hooks": { "type": "array", "items": { "type": "string" } },
     "verification_commands": { "type": "array", "items": { "type": "string" } },

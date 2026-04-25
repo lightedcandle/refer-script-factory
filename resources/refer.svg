@@ -1,5 +1,5 @@
-<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M4 5h11a5 5 0 0 1 0 10H9v4H4V5Z" stroke="#C5C5C5" stroke-width="2" stroke-linejoin="round"/>
-  <path d="M9 10h6" stroke="#C5C5C5" stroke-width="2" stroke-linecap="round"/>
-  <path d="M15 15l5 4" stroke="#C5C5C5" stroke-width="2" stroke-linecap="round"/>
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="REFER OS">
+  <path d="M3.5 3.5h8.2c3 0 5 1.8 5 4.6 0 2-1 3.4-2.7 4.1l3.3 4.3h-4.2l-2.7-3.6H7.5v3.6h-4V3.5Zm4 3.1v3.3h3.8c.9 0 1.4-.6 1.4-1.7 0-.9-.5-1.6-1.4-1.6H7.5Z" fill="#C5C5C5"/>
+  <path d="M5.1 18.1h3.8c1.7 0 2.9 1 2.9 2.5S10.6 23 8.9 23H5.1c-1.7 0-2.9-.9-2.9-2.4s1.2-2.5 2.9-2.5Zm.2 1.5c-.6 0-1 .4-1 1s.4 1 1 1h3.4c.6 0 1-.4 1-1s-.4-1-1-1H5.3Z" fill="#C5C5C5"/>
+  <path d="M14.1 18.1h6.7v1.5h-5.1c-.3 0-.5.2-.5.5s.2.5.5.5h3c1.5 0 2.4.8 2.4 2.1v.3h-7v-1.5h4.8c.3 0 .5-.2.5-.5s-.2-.5-.5-.5h-3c-1.5 0-2.4-.8-2.4-2.1v-.3Z" fill="#C5C5C5"/>
 </svg>

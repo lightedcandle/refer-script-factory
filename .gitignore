@@ -3,4 +3,9 @@ dist/
 *.vsix
 .DS_Store
 npm-debug.log*
+.env
+.env.*
+.env*
 .refer-factory/*.local.json
+.refer-factory/process-state.json
+.refer-factory/updates/

@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "REFER Codebase Registry",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "workspace_mode",
+    "tracking_scope",
+    "last_scanned_at",
+    "codebases",
+    "ignored_paths"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "workspace_mode": { "enum": ["single", "monorepo"] },
+    "tracking_scope": { "const": "repo" },
+    "last_scanned_at": { "type": "string" },
+    "ignored_paths": { "type": "array", "items": { "type": "string" } },
+    "codebases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "path",
+          "framework",
+          "adapter",
+          "status",
+          "target_paths"
+        ],
+        "properties": {
+          "id": { "type": "string" },
+          "path": { "type": "string" },
+          "framework": { "type": "string" },
+          "adapter": { "enum": ["angular", "react", "node", "generic"] },
+          "status": {
+            "enum": ["active", "discovered", "missing", "ignored"]
+          },
+          "target_paths": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "alias": { "type": "string" },
+          "primary": { "type": "boolean" },
+          "manual": { "type": "boolean" }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

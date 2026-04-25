@@ -3,6 +3,7 @@
   "displayName": "Refer Script Factory",
   "description": "A governed REFER cockpit for plans, Send Contracts, factory telemetry, and repo bootstrap dry-runs.",
   "version": "0.0.1",
+  "publisher": "refer-factory",
   "private": true,
   "engines": {
     "vscode": "^1.92.0"
@@ -12,10 +13,16 @@
   ],
   "activationEvents": [
     "onView:refer.dashboard",
-    "onView:refer.chat",
     "onView:refer.process",
+    "onView:refer.library",
+    "onView:refer.referLibrary",
     "onCommand:refer.initializeRepo",
-    "onCommand:refer.emitSendContract"
+    "onCommand:refer.emitSendContract",
+    "onCommand:refer.emitScriptBlueprint",
+    "onCommand:refer.emitScriptDnaSeed",
+    "onCommand:refer.refreshCodebases",
+    "onCommand:refer.checkForUpdates",
+    "onCommand:refer.applyUpdate"
   ],
   "main": "./dist/src/extension.js",
   "contributes": {
@@ -27,8 +34,54 @@
       {
         "command": "refer.emitSendContract",
         "title": "REFER: Emit Send Contract Draft"
+      },
+      {
+        "command": "refer.emitScriptBlueprint",
+        "title": "REFER: Emit Script Blueprint"
+      },
+      {
+        "command": "refer.emitScriptDnaSeed",
+        "title": "REFER: Emit Script DNA Seed"
+      },
+      {
+        "command": "refer.refreshCodebases",
+        "title": "REFER: Refresh Codebases"
+      },
+      {
+        "command": "refer.checkForUpdates",
+        "title": "REFER: Check for Updates"
+      },
+      {
+        "command": "refer.applyUpdate",
+        "title": "REFER: Apply Update"
       }
     ],
+    "configuration": {
+      "title": "Refer Script Factory",
+      "properties": {
+        "refer.updateChannel": {
+          "type": "string",
+          "enum": ["stable", "beta", "dev"],
+          "default": "stable",
+          "description": "REFER update channel used when checking remote update manifests."
+        },
+        "refer.updateManifestUrl": {
+          "type": "string",
+          "default": "",
+          "description": "Optional URL or file path for a REFER update manifest. Empty uses the packaged local manifest."
+        },
+        "refer.autoCheckUpdates": {
+          "type": "boolean",
+          "default": true,
+          "description": "Check for REFER law/script updates when the extension activates."
+        },
+        "refer.autoRefreshCodebases": {
+          "type": "boolean",
+          "default": true,
+          "description": "Refresh the REFER codebase/subspace registry when the extension activates."
+        }
+      }
+    },
     "viewsContainers": {
       "activitybar": [
         {
@@ -47,25 +100,31 @@
         },
         {
           "type": "webview",
-          "id": "refer.chat",
-          "name": "Governed Chat"
+          "id": "refer.process",
+          "name": "Process"
         },
         {
           "type": "webview",
-          "id": "refer.process",
-          "name": "Process"
+          "id": "refer.library",
+          "name": "Bootstrap Library"
+        },
+        {
+          "type": "webview",
+          "id": "refer.referLibrary",
+          "name": "Refer Library"
         }
       ]
     }
   },
   "scripts": {
     "compile": "tsc -p ./",
-    "test": "npm run compile && node dist/test/metrics.test.js && node dist/test/processEvents.test.js && node dist/test/bootstrapDryRun.test.js",
+    "test": "npm run compile && node dist/test/metrics.test.js && node dist/test/processEvents.test.js && node dist/test/bootstrapDryRun.test.js && node dist/test/bootstrapApply.test.js && node dist/test/bootstrapProcessEvents.test.js && node dist/test/bootstrapHealth.test.js && node dist/test/codebaseMiles.test.js && node dist/test/codebases.test.js && node dist/test/scriptBlueprint.test.js && node dist/test/scriptDna.test.js && node dist/test/schemaValidation.test.js && node dist/test/lawToc.test.js && node dist/test/updateSync.test.js",
     "verify": "npm run test"
   },
   "devDependencies": {
     "@types/node": "^20.19.21",
     "@types/vscode": "^1.92.0",
+    "ajv": "^8.20.0",
     "typescript": "^5.8.2"
   }
 }
