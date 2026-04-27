@@ -1,0 +1,2956 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-04-26T12:30:52.459Z",
+  "workspace_root": "E:\\refer-script-factory",
+  "summary": {
+    "file_count": 192,
+    "directory_count": 16,
+    "important_entrypoints": [
+      "src/chat/referOrchestratorRunner.ts",
+      "src/chat/referParticipant.ts",
+      "src/chat/referResolutionLoop.ts",
+      "src/cockpit/scriptFactoryPanel.ts",
+      "src/contracts/codebaseTree.ts",
+      "src/contracts/referOrchestrator.ts",
+      "src/contracts/scriptFactory.ts",
+      "src/extension.ts",
+      "src/server/referOrchestratorServer.ts",
+      "src/server/referTargetRegistry.ts",
+      "test/bootstrapApply.test.ts",
+      "test/bootstrapDryRun.test.ts",
+      "test/bootstrapHealth.test.ts",
+      "test/bootstrapProcessEvents.test.ts",
+      "test/codebaseMiles.test.ts",
+      "test/codebases.test.ts",
+      "test/factoryGaps.test.ts",
+      "test/lawToc.test.ts"
+    ]
+  },
+  "files": [
+    {
+      "path": ".gitignore",
+      "kind": "file",
+      "size_bytes": 156,
+      "modified_at": "2026-04-25T13:12:51.614Z",
+      "hash": "e854887972c53046",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": ".vscode/launch.json",
+      "kind": "json",
+      "size_bytes": 390,
+      "modified_at": "2026-04-26T03:32:38.743Z",
+      "hash": "a06ac7e9d1b04f56",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": ".vscode/settings.json",
+      "kind": "json",
+      "size_bytes": 157,
+      "modified_at": "2026-04-26T03:32:07.570Z",
+      "hash": "fa2ed7b8fe23f688",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "AGENTS.md",
+      "kind": "markdown",
+      "size_bytes": 5073,
+      "modified_at": "2026-04-26T11:28:50.010Z",
+      "hash": "f17952367e77b1ec",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "docs/bootstrap-handoff.md",
+      "kind": "markdown",
+      "size_bytes": 1396,
+      "modified_at": "2026-04-25T14:48:01.656Z",
+      "hash": "b4314d33c95d194a",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "docs/factory-system-doctrine.md",
+      "kind": "markdown",
+      "size_bytes": 5088,
+      "modified_at": "2026-04-26T11:28:42.839Z",
+      "hash": "db17cab2b43e859c",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "docs/PLAN-REFER-FACTORY-001.md",
+      "kind": "markdown",
+      "size_bytes": 1239,
+      "modified_at": "2026-04-25T13:31:38.070Z",
+      "hash": "9080de11a0f6d194",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "docs/refer-orchestrator-roadmap.md",
+      "kind": "markdown",
+      "size_bytes": 4276,
+      "modified_at": "2026-04-25T23:58:43.642Z",
+      "hash": "9a403d9f2016af62",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "docs/script-legend.md",
+      "kind": "markdown",
+      "size_bytes": 19195,
+      "modified_at": "2026-04-26T12:30:52.432Z",
+      "hash": "bf8848752143ec33",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/e2e_artifact_map.md",
+      "kind": "markdown",
+      "size_bytes": 5215,
+      "modified_at": "2026-01-30T18:01:53.444Z",
+      "hash": "9911ff982b86af96",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/ESCL_2.0_Schematic.md",
+      "kind": "markdown",
+      "size_bytes": 19994,
+      "modified_at": "2026-01-30T18:01:53.441Z",
+      "hash": "1d54047dc4c0484b",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/inference.md",
+      "kind": "markdown",
+      "size_bytes": 6459,
+      "modified_at": "2026-04-24T18:28:10.240Z",
+      "hash": "3691d79db48786c1",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/msc.template.list.md",
+      "kind": "markdown",
+      "size_bytes": 1940,
+      "modified_at": "2026-01-30T18:01:53.445Z",
+      "hash": "8d5d5ba9e70bb46e",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.aisettings.md",
+      "kind": "markdown",
+      "size_bytes": 3777,
+      "modified_at": "2026-04-24T18:32:20.082Z",
+      "hash": "0aa198ba7a964466",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.analytics.md",
+      "kind": "markdown",
+      "size_bytes": 2253,
+      "modified_at": "2026-01-30T18:01:53.451Z",
+      "hash": "4aab1346fdca7659",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.angular.md",
+      "kind": "markdown",
+      "size_bytes": 3594,
+      "modified_at": "2026-01-30T18:01:53.453Z",
+      "hash": "26ab9ec04adb8a73",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.api.md",
+      "kind": "markdown",
+      "size_bytes": 3254,
+      "modified_at": "2026-01-30T18:01:53.454Z",
+      "hash": "4eab8d212029bb15",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.app.md",
+      "kind": "markdown",
+      "size_bytes": 3267,
+      "modified_at": "2026-04-19T08:09:07.131Z",
+      "hash": "a5ca8f4fe55cdd26",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.audit.md",
+      "kind": "markdown",
+      "size_bytes": 9706,
+      "modified_at": "2026-04-24T18:28:10.236Z",
+      "hash": "b103cd86065998ee",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.auth.md",
+      "kind": "markdown",
+      "size_bytes": 3447,
+      "modified_at": "2026-01-30T18:01:53.456Z",
+      "hash": "4d1bc704c05cb09f",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.automated.md",
+      "kind": "markdown",
+      "size_bytes": 2585,
+      "modified_at": "2026-01-30T18:01:53.457Z",
+      "hash": "f146239f0d06544c",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.boot.md",
+      "kind": "markdown",
+      "size_bytes": 2022,
+      "modified_at": "2026-01-30T18:01:53.458Z",
+      "hash": "5054bf859b6a082b",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.branch.md",
+      "kind": "markdown",
+      "size_bytes": 2429,
+      "modified_at": "2026-02-03T18:49:02.668Z",
+      "hash": "86084a22208f59c2",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.build.md",
+      "kind": "markdown",
+      "size_bytes": 7563,
+      "modified_at": "2026-04-24T18:24:42.862Z",
+      "hash": "f7a9ef4049a7705d",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.cli.md",
+      "kind": "markdown",
+      "size_bytes": 2625,
+      "modified_at": "2026-04-19T08:09:07.171Z",
+      "hash": "9e2a407d1d917fee",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.cloudflare.md",
+      "kind": "markdown",
+      "size_bytes": 10625,
+      "modified_at": "2026-04-18T22:06:38.778Z",
+      "hash": "45b87587cda43701",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.codebases.md",
+      "kind": "markdown",
+      "size_bytes": 3192,
+      "modified_at": "2026-04-25T14:00:08.920Z",
+      "hash": "0a53151221b900b1",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.combing.md",
+      "kind": "markdown",
+      "size_bytes": 8539,
+      "modified_at": "2026-03-19T12:22:48.564Z",
+      "hash": "28ee6d9930fd49d6",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.commit.md",
+      "kind": "markdown",
+      "size_bytes": 3291,
+      "modified_at": "2026-02-08T01:05:03.441Z",
+      "hash": "d3b1f14a00cfa08a",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.compiler.blueprint.md",
+      "kind": "markdown",
+      "size_bytes": 19113,
+      "modified_at": "2026-02-11T04:47:57.820Z",
+      "hash": "af019dab855bd546",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.compiler.init.md",
+      "kind": "markdown",
+      "size_bytes": 19511,
+      "modified_at": "2026-02-11T04:47:57.998Z",
+      "hash": "f986bf971d169972",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.compiler.md",
+      "kind": "markdown",
+      "size_bytes": 3414,
+      "modified_at": "2026-01-30T18:01:53.480Z",
+      "hash": "426b3db7474f55c3",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.compiler.metrics.md",
+      "kind": "markdown",
+      "size_bytes": 5233,
+      "modified_at": "2026-01-30T18:01:53.481Z",
+      "hash": "016f8b19bb8099f1",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.compiler.pages.md",
+      "kind": "markdown",
+      "size_bytes": 3949,
+      "modified_at": "2026-01-30T18:01:53.484Z",
+      "hash": "332c9ed1cf14aa62",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.cron.md",
+      "kind": "markdown",
+      "size_bytes": 15196,
+      "modified_at": "2026-01-30T18:01:53.485Z",
+      "hash": "30363fa0a2c93fb6",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.daily.md",
+      "kind": "markdown",
+      "size_bytes": 1230,
+      "modified_at": "2026-01-30T18:01:53.486Z",
+      "hash": "ec5b8dce3af367a5",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.daylight.md",
+      "kind": "markdown",
+      "size_bytes": 2170,
+      "modified_at": "2026-01-30T18:01:53.487Z",
+      "hash": "c49b9073844f7bb3",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.design.md",
+      "kind": "markdown",
+      "size_bytes": 435,
+      "modified_at": "2026-03-06T06:05:55.300Z",
+      "hash": "9e23b065a1309189",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.designlab.md",
+      "kind": "markdown",
+      "size_bytes": 5063,
+      "modified_at": "2026-01-30T18:01:53.489Z",
+      "hash": "5d200784ccbcfcf6",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.efficiency.md",
+      "kind": "markdown",
+      "size_bytes": 3650,
+      "modified_at": "2026-04-24T17:56:21.961Z",
+      "hash": "ceba66f032a01603",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.engine.md",
+      "kind": "markdown",
+      "size_bytes": 5200,
+      "modified_at": "2026-04-25T14:48:43.401Z",
+      "hash": "d56601b0a60798c7",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.expand.md",
+      "kind": "markdown",
+      "size_bytes": 1668,
+      "modified_at": "2026-02-11T04:47:58.022Z",
+      "hash": "252bf47f2d96685e",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.factory.md",
+      "kind": "markdown",
+      "size_bytes": 4831,
+      "modified_at": "2026-04-25T14:48:28.487Z",
+      "hash": "fe890609e2565cba",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.figma.md",
+      "kind": "markdown",
+      "size_bytes": 7798,
+      "modified_at": "2026-04-19T21:59:30.147Z",
+      "hash": "b128f03ab2e1ace6",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.file.md",
+      "kind": "markdown",
+      "size_bytes": 2321,
+      "modified_at": "2026-02-03T18:49:02.670Z",
+      "hash": "d6f7cacf7c655264",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.flow.md",
+      "kind": "markdown",
+      "size_bytes": 18621,
+      "modified_at": "2026-04-24T18:28:10.234Z",
+      "hash": "fa77bd9a69c914c5",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.forge.md",
+      "kind": "markdown",
+      "size_bytes": 1995,
+      "modified_at": "2026-02-10T04:47:28.568Z",
+      "hash": "000ebdd7c8f2d69b",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.gears.md",
+      "kind": "markdown",
+      "size_bytes": 4362,
+      "modified_at": "2026-04-24T17:56:21.962Z",
+      "hash": "b58ec365d4d8a93b",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.github.md",
+      "kind": "markdown",
+      "size_bytes": 2645,
+      "modified_at": "2026-04-19T08:09:07.582Z",
+      "hash": "9cb5a9c16cfa0aac",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.governance.md",
+      "kind": "markdown",
+      "size_bytes": 3260,
+      "modified_at": "2026-04-24T18:32:20.084Z",
+      "hash": "c312d92fea672203",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.governance.publish.md",
+      "kind": "markdown",
+      "size_bytes": 3025,
+      "modified_at": "2026-04-18T18:48:12.875Z",
+      "hash": "ff2077693ce069e9",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.honeycomb.md",
+      "kind": "markdown",
+      "size_bytes": 11328,
+      "modified_at": "2026-01-30T18:01:53.495Z",
+      "hash": "c3c92602734d9c17",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.housekeeping.md",
+      "kind": "markdown",
+      "size_bytes": 2319,
+      "modified_at": "2026-01-30T18:01:53.495Z",
+      "hash": "8b1dfdbca67cbfc6",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.icons.md",
+      "kind": "markdown",
+      "size_bytes": 585,
+      "modified_at": "2026-01-30T18:01:53.496Z",
+      "hash": "2f50c3b293d85913",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.identity.md",
+      "kind": "markdown",
+      "size_bytes": 5340,
+      "modified_at": "2026-02-11T04:47:58.104Z",
+      "hash": "72ac69d589528338",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.init.md",
+      "kind": "markdown",
+      "size_bytes": 4229,
+      "modified_at": "2026-04-19T08:09:07.828Z",
+      "hash": "016dea2d68e4ae44",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.instantiation.md",
+      "kind": "markdown",
+      "size_bytes": 1160,
+      "modified_at": "2026-01-30T18:01:53.500Z",
+      "hash": "978e0d48df29ae32",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.knowledge.md",
+      "kind": "markdown",
+      "size_bytes": 1233,
+      "modified_at": "2026-01-30T18:01:53.502Z",
+      "hash": "a175982935453ae4",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.law.crossref.md",
+      "kind": "markdown",
+      "size_bytes": 96370,
+      "modified_at": "2026-03-06T06:05:56.135Z",
+      "hash": "71eb782082fc63b8",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.law.index.md",
+      "kind": "markdown",
+      "size_bytes": 103238,
+      "modified_at": "2026-03-06T06:05:57.369Z",
+      "hash": "7bec23e0827d21b0",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.law.md",
+      "kind": "markdown",
+      "size_bytes": 16699,
+      "modified_at": "2026-03-03T03:55:56.030Z",
+      "hash": "fd2d4968f9219665",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.library.md",
+      "kind": "markdown",
+      "size_bytes": 260328,
+      "modified_at": "2026-03-06T06:06:00.593Z",
+      "hash": "38536dc6b292e0fe",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.localrepo.md",
+      "kind": "markdown",
+      "size_bytes": 2294,
+      "modified_at": "2026-04-25T14:01:36.334Z",
+      "hash": "db92d08256a32210",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.md",
+      "kind": "markdown",
+      "size_bytes": 20331,
+      "modified_at": "2026-04-25T14:01:28.703Z",
+      "hash": "f0c60ddde7ce643d",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.migrate.md",
+      "kind": "markdown",
+      "size_bytes": 1243,
+      "modified_at": "2026-01-30T18:01:53.542Z",
+      "hash": "a536b639e95e685d",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.odometer.md",
+      "kind": "markdown",
+      "size_bytes": 3253,
+      "modified_at": "2026-04-24T17:56:21.960Z",
+      "hash": "e2fcaad6301de6c6",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.og.md",
+      "kind": "markdown",
+      "size_bytes": 5918,
+      "modified_at": "2026-01-30T18:01:53.543Z",
+      "hash": "ce70a5fe0871c4bf",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.ontology.md",
+      "kind": "markdown",
+      "size_bytes": 5109,
+      "modified_at": "2026-01-30T18:01:53.544Z",
+      "hash": "4a45a29e82620232",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.os.md",
+      "kind": "markdown",
+      "size_bytes": 55661,
+      "modified_at": "2026-04-24T18:32:36.186Z",
+      "hash": "2d6c595948b1709c",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.plan.md",
+      "kind": "markdown",
+      "size_bytes": 65524,
+      "modified_at": "2026-04-24T18:28:10.242Z",
+      "hash": "067bf523c41231ea",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.provider.chatgpt.md",
+      "kind": "markdown",
+      "size_bytes": 875,
+      "modified_at": "2026-01-30T18:01:53.550Z",
+      "hash": "b06fec32a1256b30",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.provider.cli.md",
+      "kind": "markdown",
+      "size_bytes": 844,
+      "modified_at": "2026-01-30T18:01:53.551Z",
+      "hash": "b39d1e1039ac9609",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.provider.codex.md",
+      "kind": "markdown",
+      "size_bytes": 1412,
+      "modified_at": "2026-01-30T18:01:53.552Z",
+      "hash": "da1ba032752031cd",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.providers.md",
+      "kind": "markdown",
+      "size_bytes": 3581,
+      "modified_at": "2026-04-19T08:09:09.136Z",
+      "hash": "0837f82cbe04c27b",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.qc.md",
+      "kind": "markdown",
+      "size_bytes": 6781,
+      "modified_at": "2026-04-24T18:24:42.864Z",
+      "hash": "39ade2a5852fa438",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.repair.md",
+      "kind": "markdown",
+      "size_bytes": 682,
+      "modified_at": "2026-03-19T12:22:48.570Z",
+      "hash": "565ece362402c663",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.seamless-ui.md",
+      "kind": "markdown",
+      "size_bytes": 5812,
+      "modified_at": "2026-03-07T08:20:50.252Z",
+      "hash": "16205475b1c5e27f",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.shortlink.md",
+      "kind": "markdown",
+      "size_bytes": 2290,
+      "modified_at": "2026-01-30T18:01:53.556Z",
+      "hash": "847c19639c21540d",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.skills.md",
+      "kind": "markdown",
+      "size_bytes": 4682,
+      "modified_at": "2026-04-24T18:32:20.084Z",
+      "hash": "4f48043c656174c0",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.spirit-runtime.md",
+      "kind": "markdown",
+      "size_bytes": 17181,
+      "modified_at": "2026-03-03T03:44:45.681Z",
+      "hash": "ce76f82dce18ce0a",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.spirit.md",
+      "kind": "markdown",
+      "size_bytes": 10498,
+      "modified_at": "2026-03-03T03:55:56.480Z",
+      "hash": "ae98392f6845f947",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.stripe.md",
+      "kind": "markdown",
+      "size_bytes": 1730,
+      "modified_at": "2026-01-30T18:01:53.557Z",
+      "hash": "d23a07820ab655ca",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.structure.md",
+      "kind": "markdown",
+      "size_bytes": 14269,
+      "modified_at": "2026-03-07T00:53:23.758Z",
+      "hash": "e51d7318654af442",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.subagents.md",
+      "kind": "markdown",
+      "size_bytes": 14206,
+      "modified_at": "2026-04-19T21:59:41.284Z",
+      "hash": "72bb7d4effd8c597",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.supabase.md",
+      "kind": "markdown",
+      "size_bytes": 6159,
+      "modified_at": "2026-04-19T08:09:09.700Z",
+      "hash": "ce7ef68b699e096e",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.systems.security.md",
+      "kind": "markdown",
+      "size_bytes": 2441,
+      "modified_at": "2026-01-30T18:01:53.574Z",
+      "hash": "5461f6fff823ffc2",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.talents.md",
+      "kind": "markdown",
+      "size_bytes": 3855,
+      "modified_at": "2026-01-30T18:01:53.575Z",
+      "hash": "84091425fec7396d",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.tests.md",
+      "kind": "markdown",
+      "size_bytes": 1424,
+      "modified_at": "2026-01-30T18:01:53.576Z",
+      "hash": "535438a1b623e05c",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.tooling.md",
+      "kind": "markdown",
+      "size_bytes": 11421,
+      "modified_at": "2026-04-24T18:28:10.239Z",
+      "hash": "f2491682da945155",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.turbocharge-build.md",
+      "kind": "markdown",
+      "size_bytes": 7237,
+      "modified_at": "2026-02-10T04:47:29.412Z",
+      "hash": "6a9cdcb100fdc126",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/refer.turnstyle.md",
+      "kind": "markdown",
+      "size_bytes": 3974,
+      "modified_at": "2026-02-10T13:08:22.715Z",
+      "hash": "09b2be43ce13a38b",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/reverent.deltatheme.md",
+      "kind": "markdown",
+      "size_bytes": 3106,
+      "modified_at": "2026-01-30T18:01:53.578Z",
+      "hash": "e9b7b11d37503830",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/theme.spec.md",
+      "kind": "markdown",
+      "size_bytes": 14355,
+      "modified_at": "2026-01-30T18:01:53.580Z",
+      "hash": "0563dc7cce552bb2",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "law/REFER.OS/UNIVERSAL_STATES.md",
+      "kind": "markdown",
+      "size_bytes": 3285,
+      "modified_at": "2026-01-30T18:01:53.442Z",
+      "hash": "c11d301f0bc1f4a4",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "package.json",
+      "kind": "json",
+      "size_bytes": 7776,
+      "modified_at": "2026-04-26T12:24:24.651Z",
+      "hash": "2b7521c73b7a5040",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": [
+        "npm-scripts",
+        "vscode-views",
+        "vscode-commands"
+      ]
+    },
+    {
+      "path": "resources/refer.svg",
+      "kind": "svg",
+      "size_bytes": 668,
+      "modified_at": "2026-04-25T14:02:39.832Z",
+      "hash": "51b00e22f41cf134",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "schemas/adapter-contract.schema.json",
+      "kind": "json",
+      "size_bytes": 1705,
+      "modified_at": "2026-04-25T18:02:44.992Z",
+      "hash": "c12ba350eab96254",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "schemas/bootstrap-dry-run.schema.json",
+      "kind": "json",
+      "size_bytes": 830,
+      "modified_at": "2026-04-24T22:28:18.459Z",
+      "hash": "e32b4d6aef027c47",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "schemas/codebases.schema.json",
+      "kind": "json",
+      "size_bytes": 1469,
+      "modified_at": "2026-04-25T18:02:54.401Z",
+      "hash": "4c01282064146223",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "schemas/metrics.schema.json",
+      "kind": "json",
+      "size_bytes": 1263,
+      "modified_at": "2026-04-25T02:50:54.915Z",
+      "hash": "1996b7df6e8579a6",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "schemas/orchestrator-roadmap.schema.json",
+      "kind": "json",
+      "size_bytes": 898,
+      "modified_at": "2026-04-25T21:01:56.401Z",
+      "hash": "cf648cfe72eba231",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "schemas/process-event.schema.json",
+      "kind": "json",
+      "size_bytes": 844,
+      "modified_at": "2026-04-24T22:28:18.457Z",
+      "hash": "4453feabc9cd7bc0",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "schemas/script-blueprint.schema.json",
+      "kind": "json",
+      "size_bytes": 2339,
+      "modified_at": "2026-04-25T14:27:06.055Z",
+      "hash": "7b39a4e32f9f26e5",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "schemas/script-dna.schema.json",
+      "kind": "json",
+      "size_bytes": 3825,
+      "modified_at": "2026-04-25T14:47:13.317Z",
+      "hash": "4fe1415e9bf52775",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "schemas/send-contract.schema.json",
+      "kind": "json",
+      "size_bytes": 1021,
+      "modified_at": "2026-04-24T22:28:18.455Z",
+      "hash": "5ea560bca8021a0d",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "schemas/update-manifest.schema.json",
+      "kind": "json",
+      "size_bytes": 1098,
+      "modified_at": "2026-04-25T12:54:19.967Z",
+      "hash": "84004aff5322b65c",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "src/adapters/adapterContract.ts",
+      "kind": "typescript",
+      "size_bytes": 524,
+      "modified_at": "2026-04-25T18:02:04.473Z",
+      "hash": "b54f9294376aad15",
+      "role": [],
+      "exports": [
+        "AdapterContract"
+      ],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "src/adapters/angularAdapter.ts",
+      "kind": "typescript",
+      "size_bytes": 1113,
+      "modified_at": "2026-04-25T18:02:26.437Z",
+      "hash": "9b3169c9dcd64c77",
+      "role": [],
+      "exports": [
+        "angularAdapter"
+      ],
+      "imports": [
+        "./adapterContract"
+      ],
+      "detects": []
+    },
+    {
+      "path": "src/adapters/genericAdapter.ts",
+      "kind": "typescript",
+      "size_bytes": 948,
+      "modified_at": "2026-04-25T18:02:10.385Z",
+      "hash": "48237acb04480e31",
+      "role": [],
+      "exports": [
+        "genericAdapter"
+      ],
+      "imports": [
+        "./adapterContract"
+      ],
+      "detects": []
+    },
+    {
+      "path": "src/adapters/nodeAdapter.ts",
+      "kind": "typescript",
+      "size_bytes": 1129,
+      "modified_at": "2026-04-25T18:02:34.485Z",
+      "hash": "ec5cf786dc1c5020",
+      "role": [],
+      "exports": [
+        "nodeAdapter"
+      ],
+      "imports": [
+        "./adapterContract"
+      ],
+      "detects": []
+    },
+    {
+      "path": "src/adapters/reactAdapter.ts",
+      "kind": "typescript",
+      "size_bytes": 1064,
+      "modified_at": "2026-04-25T18:02:17.254Z",
+      "hash": "06203448ff5834b5",
+      "role": [],
+      "exports": [
+        "reactAdapter"
+      ],
+      "imports": [
+        "./adapterContract"
+      ],
+      "detects": []
+    },
+    {
+      "path": "src/bootstrap/apply.ts",
+      "kind": "typescript",
+      "size_bytes": 8258,
+      "modified_at": "2026-04-25T18:02:59.776Z",
+      "hash": "a44b215a76010f75",
+      "role": [],
+      "exports": [
+        "BootstrapApplyOptions",
+        "BootstrapApplyReport",
+        "applyBootstrap"
+      ],
+      "imports": [
+        "node:fs",
+        "node:path",
+        "../adapters/angularAdapter",
+        "../adapters/adapterContract",
+        "../adapters/genericAdapter",
+        "../adapters/nodeAdapter",
+        "../adapters/reactAdapter",
+        "../telemetry/metrics",
+        "./codebases",
+        "./lawManifest",
+        "./dryRun",
+        "./workspacePlan"
+      ],
+      "detects": []
+    },
+    {
+      "path": "src/bootstrap/codebases.ts",
+      "kind": "typescript",
+      "size_bytes": 6632,
+      "modified_at": "2026-04-25T18:02:50.438Z",
+      "hash": "8c889b3583a8082e",
+      "role": [],
+      "exports": [
+        "CodebaseStatus",
+        "CodebaseEntry",
+        "CodebaseRegistry",
+        "codebaseRegistryPath",
+        "createCodebaseRegistry",
+        "refreshCodebaseRegistry",
+        "readCodebaseRegistry",
+        "writeCodebaseRegistry",
+        "discoverCodebases"
+      ],
+      "imports": [
+        "node:fs",
+        "node:path"
+      ],
+      "detects": []
+    },
+    {
+      "path": "src/bootstrap/dryRun.ts",
+      "kind": "typescript",
+      "size_bytes": 2648,
+      "modified_at": "2026-04-25T13:27:59.206Z",
+      "hash": "3cd460e1efb026f3",
+      "role": [],
+      "exports": [
+        "BootstrapDryRunInput",
+        "BootstrapDryRunReport",
+        "BootstrapTarget",
+        "bootstrapTargets",
+        "createBootstrapDryRun"
+      ],
+      "imports": [
+        "node:fs",
+        "node:path",
+        "./lawManifest"
+      ],
+      "detects": []
+    },
+    {
+      "path": "src/bootstrap/lawManifest.ts",
+      "kind": "typescript",
+      "size_bytes": 2004,
+      "modified_at": "2026-04-25T14:00:14.582Z",
+      "hash": "04b153c9521d2a00",
+      "role": [],
+      "exports": [
+        "fullUniversalLawFiles"
+      ],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "src/bootstrap/lawPack.ts",
+      "kind": "typescript",
+      "size_bytes": 1781,
+      "modified_at": "2026-04-25T12:21:52.779Z",
+      "hash": "6a1b9961fc1298b6",
+      "role": [],
+      "exports": [
+        "LawPackReference",
+        "bootstrapLawReferences",
+        "minimumBootstrapLawFiles"
+      ],
+      "imports": [
+        "./lawManifest"
+      ],
+      "detects": []
+    },
+    {
+      "path": "src/bootstrap/lawToc.ts",
+      "kind": "typescript",
+      "size_bytes": 13824,
+      "modified_at": "2026-04-25T14:00:48.393Z",
+      "hash": "737b860ff10eb635",
+      "role": [],
+      "exports": [
+        "LawTocEntry",
+        "referLawToc"
+      ],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "src/bootstrap/processEvents.ts",
+      "kind": "typescript",
+      "size_bytes": 2312,
+      "modified_at": "2026-04-24T23:01:36.737Z",
+      "hash": "85bcc1244555ea1d",
+      "role": [],
+      "exports": [
+        "BootstrapProcessEventOptions",
+        "createBootstrapDryRunEvent",
+        "createBootstrapApplyEvent",
+        "createBootstrapCancelledEvent"
+      ],
+      "imports": [
+        "./apply",
+        "./dryRun",
+        "../telemetry/processEvents"
+      ],
+      "detects": []
+    },
+    {
+      "path": "src/bootstrap/workspacePlan.ts",
+      "kind": "typescript",
+      "size_bytes": 537,
+      "modified_at": "2026-04-24T22:28:18.431Z",
+      "hash": "ae0e018019406639",
+      "role": [],
+      "exports": [
+        "WorkspacePlan",
+        "createWorkspacePlan"
+      ],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "src/chat/referModelProvider.ts",
+      "kind": "typescript",
+      "size_bytes": 1307,
+      "modified_at": "2026-04-26T02:40:04.436Z",
+      "hash": "317bf4e66c99b974",
+      "role": [],
+      "exports": [
+        "createVsCodeReferPromptModel",
+        "createConfiguredReferPromptModel"
+      ],
+      "imports": [
+        "vscode",
+        "./referOllamaPromptModel",
+        "./referPromptModel"
+      ],
+      "detects": []
+    },
+    {
+      "path": "src/chat/referOllamaPromptModel.ts",
+      "kind": "typescript",
+      "size_bytes": 2543,
+      "modified_at": "2026-04-26T02:37:53.895Z",
+      "hash": "18e2acd13342d1e9",
+      "role": [],
+      "exports": [
+        "createOllamaReferPromptModel"
+      ],
+      "imports": [
+        "./referPromptModel"
+      ],
+      "detects": []
+    },
+    {
+      "path": "src/chat/referOrchestratorRunner.ts",
+      "kind": "typescript",
+      "size_bytes": 7231,
+      "modified_at": "2026-04-26T02:42:30.559Z",
+      "hash": "6fb47edb191368e5",
+      "role": [
+        "orchestration"
+      ],
+      "exports": [
+        "ReferOrchestratorRunResult",
+        "ReferOrchestratorRunInput",
+        "runReferOrchestratorPrompt",
+        "createNeverCancelledToken",
+        "outputForSession"
+      ],
+      "imports": [
+        "../contracts/referChatSession",
+        "../contracts/referIntake",
+        "../contracts/referChatMode",
+        "../contracts/referOrchestrator",
+        "../telemetry/processEvents",
+        "./referProcessEvents",
+        "./referResolutionLoop",
+        "./referPromptModel"
+      ],
+      "detects": []
+    },
+    {
+      "path": "src/chat/referParticipant.ts",
+      "kind": "typescript",
+      "size_bytes": 8251,
+      "modified_at": "2026-04-26T03:27:57.078Z",
+      "hash": "5f890940f5e248c4",
+      "role": [
+        "chat-participant"
+      ],
+      "exports": [
+        "registerReferChatParticipant"
+      ],
+      "imports": [
+        "vscode",
+        "../contracts/referChatSession",
+        "../contracts/referIntake",
+        "../contracts/referChatMode",
+        "../contracts/referOrchestrator",
+        "../telemetry/processEvents",
+        "./referModelProvider",
+        "./referProcessEvents",
+        "./referResolutionLoop"
+      ],
+      "detects": [
+        "chat-participant"
+      ]
+    },
+    {
+      "path": "src/chat/referProcessEvents.ts",
+      "kind": "typescript",
+      "size_bytes": 2427,
+      "modified_at": "2026-04-26T02:09:26.183Z",
+      "hash": "c266f05872990fec",
+      "role": [],
+      "exports": [
+        "createReferChatEvent"
+      ],
+      "imports": [
+        "../contracts/referOrchestrator",
+        "../telemetry/processEvents"
+      ],
+      "detects": []
+    },
+    {
+      "path": "src/chat/referPromptModel.ts",
+      "kind": "typescript",
+      "size_bytes": 390,
+      "modified_at": "2026-04-26T02:40:23.148Z",
+      "hash": "52667061c7f3862c",
+      "role": [],
+      "exports": [
+        "ReferCancellationToken",
+        "ReferPromptModel"
+      ],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "src/chat/referResolutionLoop.ts",
+      "kind": "typescript",
+      "size_bytes": 2457,
+      "modified_at": "2026-04-26T02:37:53.897Z",
+      "hash": "1ffc0c910739a3e0",
+      "role": [
+        "resolution-loop"
+      ],
+      "exports": [
+        "ReferResolutionLoopInput",
+        "runReferResolutionLoop"
+      ],
+      "imports": [
+        "./referPromptModel",
+        "../contracts/referIntake",
+        "../contracts/referOrchestrator"
+      ],
+      "detects": []
+    },
+    {
+      "path": "src/cockpit/contractChatPanel.ts",
+      "kind": "typescript",
+      "size_bytes": 8453,
+      "modified_at": "2026-04-26T04:20:50.240Z",
+      "hash": "a52a68f5a2d7fa08",
+      "role": [],
+      "exports": [
+        "ContractChatPanel"
+      ],
+      "imports": [
+        "node:fs",
+        "vscode",
+        "../contracts/referChatSession",
+        "../contracts/referChatMode",
+        "./html"
+      ],
+      "detects": []
+    },
+    {
+      "path": "src/cockpit/dashboardPanel.ts",
+      "kind": "typescript",
+      "size_bytes": 15220,
+      "modified_at": "2026-04-26T04:20:29.566Z",
+      "hash": "c3dc7db114af41eb",
+      "role": [],
+      "exports": [
+        "DashboardPanel"
+      ],
+      "imports": [
+        "vscode",
+        "./html",
+        "../telemetry/metrics",
+        "../telemetry/codebaseMiles",
+        "../telemetry/bootstrapHealth"
+      ],
+      "detects": []
+    },
+    {
+      "path": "src/cockpit/html.ts",
+      "kind": "typescript",
+      "size_bytes": 30713,
+      "modified_at": "2026-04-26T12:24:19.648Z",
+      "hash": "98d766f589249147",
+      "role": [],
+      "exports": [
+        "escapeHtml",
+        "PanelIcon",
+        "panelTitle",
+        "cockpitStyles"
+      ],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "src/cockpit/libraryPanel.ts",
+      "kind": "typescript",
+      "size_bytes": 7618,
+      "modified_at": "2026-04-26T04:20:25.750Z",
+      "hash": "79cc300993f93348",
+      "role": [],
+      "exports": [
+        "BootstrapLibraryPanel",
+        "ReferLibraryPanel"
+      ],
+      "imports": [
+        "node:fs",
+        "node:path",
+        "vscode",
+        "../bootstrap/lawPack",
+        "../bootstrap/lawToc",
+        "./html"
+      ],
+      "detects": []
+    },
+    {
+      "path": "src/cockpit/processPanel.ts",
+      "kind": "typescript",
+      "size_bytes": 4162,
+      "modified_at": "2026-04-26T04:20:33.551Z",
+      "hash": "00f192dcb249a085",
+      "role": [],
+      "exports": [
+        "ProcessPanel"
+      ],
+      "imports": [
+        "vscode",
+        "./html",
+        "../telemetry/processEvents"
+      ],
+      "detects": []
+    },
+    {
+      "path": "src/cockpit/scriptFactoryPanel.ts",
+      "kind": "typescript",
+      "size_bytes": 44645,
+      "modified_at": "2026-04-26T12:30:27.003Z",
+      "hash": "5d4bcef9418e1f46",
+      "role": [
+        "script-registry"
+      ],
+      "exports": [
+        "ScriptRegistryPanel",
+        "ScriptFactoryPanel",
+        "CommandPromptsPanel",
+        "RequestTypePanel",
+        "HttpEndpointsPanel"
+      ],
+      "imports": [
+        "vscode",
+        "../contracts/scriptFactory",
+        "../telemetry/processEvents",
+        "./html"
+      ],
+      "detects": []
+    },
+    {
+      "path": "src/commands/contractMode.ts",
+      "kind": "typescript",
+      "size_bytes": 1662,
+      "modified_at": "2026-04-25T21:59:14.052Z",
+      "hash": "0e26f14c618904f2",
+      "role": [],
+      "exports": [
+        "contractModeOnCommand",
+        "contractModeOffCommand",
+        "contractModeToggleCommand"
+      ],
+      "imports": [
+        "vscode",
+        "../contracts/referChatMode"
+      ],
+      "detects": []
+    },
+    {
+      "path": "src/commands/emitScriptBlueprint.ts",
+      "kind": "typescript",
+      "size_bytes": 470,
+      "modified_at": "2026-04-25T14:26:18.218Z",
+      "hash": "9b12864c73e0947a",
+      "role": [],
+      "exports": [
+        "emitScriptBlueprintCommand"
+      ],
+      "imports": [
+        "vscode",
+        "../contracts/scriptBlueprint",
+        "../contracts/scriptBlueprint"
+      ],
+      "detects": []
+    },
+    {
+      "path": "src/commands/emitScriptDnaSeed.ts",
+      "kind": "typescript",
+      "size_bytes": 696,
+      "modified_at": "2026-04-25T14:46:22.253Z",
+      "hash": "cd1a9e4b26bdc73c",
+      "role": [],
+      "exports": [
+        "emitScriptDnaSeedCommand"
+      ],
+      "imports": [
+        "vscode",
+        "../contracts/scriptDna",
+        "../contracts/scriptDna"
+      ],
+      "detects": []
+    },
+    {
+      "path": "src/commands/emitSendContract.ts",
+      "kind": "typescript",
+      "size_bytes": 576,
+      "modified_at": "2026-04-25T01:46:49.132Z",
+      "hash": "cdd060e009c11816",
+      "role": [],
+      "exports": [
+        "emitSendContractCommand"
+      ],
+      "imports": [
+        "vscode",
+        "../contracts/sendContract",
+        "../contracts/sendContract"
+      ],
+      "detects": []
+    },
+    {
+      "path": "src/commands/initializeRepo.ts",
+      "kind": "typescript",
+      "size_bytes": 3217,
+      "modified_at": "2026-04-25T12:18:51.496Z",
+      "hash": "0634dd445e5f5d4d",
+      "role": [],
+      "exports": [
+        "initializeRepoCommand"
+      ],
+      "imports": [
+        "vscode",
+        "../bootstrap/apply",
+        "../bootstrap/dryRun",
+        "../bootstrap/processEvents",
+        "../telemetry/bootstrapHealth",
+        "../telemetry/processEvents"
+      ],
+      "detects": []
+    },
+    {
+      "path": "src/commands/refreshCodebases.ts",
+      "kind": "typescript",
+      "size_bytes": 1296,
+      "modified_at": "2026-04-25T13:28:31.712Z",
+      "hash": "261986d8f11a7289",
+      "role": [],
+      "exports": [
+        "refreshCodebasesCommand",
+        "refreshCodebasesOnActivation"
+      ],
+      "imports": [
+        "vscode",
+        "../bootstrap/codebases"
+      ],
+      "detects": []
+    },
+    {
+      "path": "src/commands/runScriptographer.ts",
+      "kind": "typescript",
+      "size_bytes": 3640,
+      "modified_at": "2026-04-26T12:01:39.091Z",
+      "hash": "43b4fec8351fb4f3",
+      "role": [],
+      "exports": [
+        "runScriptographerCommand",
+        "viewScriptographerReportCommand"
+      ],
+      "imports": [
+        "node:fs",
+        "vscode",
+        "../contracts/scriptographer",
+        "../telemetry/processEvents"
+      ],
+      "detects": []
+    },
+    {
+      "path": "src/commands/scanCodebase.ts",
+      "kind": "typescript",
+      "size_bytes": 3621,
+      "modified_at": "2026-04-26T11:08:44.590Z",
+      "hash": "fe3df6bd83df2a26",
+      "role": [],
+      "exports": [
+        "scanCodebaseCommand",
+        "viewCodebaseTreeCommand"
+      ],
+      "imports": [
+        "node:fs",
+        "vscode",
+        "../contracts/codebaseTree",
+        "../contracts/scriptLegend",
+        "../telemetry/processEvents"
+      ],
+      "detects": []
+    },
+    {
+      "path": "src/commands/scanFactoryGaps.ts",
+      "kind": "typescript",
+      "size_bytes": 3520,
+      "modified_at": "2026-04-26T11:32:09.176Z",
+      "hash": "4b45b4978a8a9e74",
+      "role": [],
+      "exports": [
+        "scanFactoryGapsCommand",
+        "viewFactoryGapsCommand"
+      ],
+      "imports": [
+        "node:fs",
+        "vscode",
+        "../contracts/factoryGaps",
+        "../telemetry/processEvents"
+      ],
+      "detects": []
+    },
+    {
+      "path": "src/commands/updateSync.ts",
+      "kind": "typescript",
+      "size_bytes": 4296,
+      "modified_at": "2026-04-25T12:54:19.979Z",
+      "hash": "0fd6225e4209919d",
+      "role": [],
+      "exports": [
+        "checkForUpdatesCommand",
+        "applyUpdateCommand",
+        "checkForUpdatesOnActivation"
+      ],
+      "imports": [
+        "vscode",
+        "../telemetry/processEvents",
+        "../updates/updateEvents",
+        "../updates/updateSync"
+      ],
+      "detects": []
+    },
+    {
+      "path": "src/contracts/codebaseTree.ts",
+      "kind": "typescript",
+      "size_bytes": 9067,
+      "modified_at": "2026-04-26T11:15:57.381Z",
+      "hash": "4380fc30e8bbaca2",
+      "role": [
+        "webview-provider-registration"
+      ],
+      "exports": [
+        "CodebaseTreeFile",
+        "CodebaseTreeDirectory",
+        "CodebaseTree",
+        "codebaseTreePath",
+        "agentContextPath",
+        "scanCodebaseTree",
+        "writeCodebaseTree",
+        "writeAgentContext",
+        "renderAgentContext"
+      ],
+      "imports": [
+        "node:crypto",
+        "node:fs",
+        "node:path"
+      ],
+      "detects": [
+        "chat-participant",
+        "webview-provider",
+        "http-endpoint"
+      ]
+    },
+    {
+      "path": "src/contracts/factoryGaps.ts",
+      "kind": "typescript",
+      "size_bytes": 11005,
+      "modified_at": "2026-04-26T12:02:42.733Z",
+      "hash": "99433d9d966183d9",
+      "role": [],
+      "exports": [
+        "FactoryGapSeverity",
+        "FactoryGapCategory",
+        "FactoryGap",
+        "FactoryGapReport",
+        "factoryGapReportPath",
+        "scanFactoryGaps",
+        "writeFactoryGapReport"
+      ],
+      "imports": [
+        "node:fs",
+        "node:path",
+        "./scriptFactory",
+        "./scriptLegend",
+        "./scriptographer"
+      ],
+      "detects": []
+    },
+    {
+      "path": "src/contracts/orchestratorRoadmap.ts",
+      "kind": "typescript",
+      "size_bytes": 4708,
+      "modified_at": "2026-04-25T23:58:49.997Z",
+      "hash": "ba42d18e95244444",
+      "role": [],
+      "exports": [
+        "OrchestratorRoadmapStatus",
+        "OrchestratorRoadmapCapability",
+        "OrchestratorRoadmap",
+        "createOrchestratorRoadmap"
+      ],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "src/contracts/referChatMode.ts",
+      "kind": "typescript",
+      "size_bytes": 2935,
+      "modified_at": "2026-04-25T21:59:03.108Z",
+      "hash": "4f8f32239234ee16",
+      "role": [],
+      "exports": [
+        "ReferActiveContractMode",
+        "ReferLastTurnMode",
+        "ReferChatModeState",
+        "defaultReferChatModeState",
+        "referChatModePath",
+        "readReferChatModeState",
+        "writeReferChatModeState",
+        "setPersistentContractMode",
+        "markTemporaryContractActive",
+        "markContractTurnComplete"
+      ],
+      "imports": [
+        "node:fs",
+        "node:path"
+      ],
+      "detects": []
+    },
+    {
+      "path": "src/contracts/referChatSession.ts",
+      "kind": "typescript",
+      "size_bytes": 2785,
+      "modified_at": "2026-04-26T02:46:00.963Z",
+      "hash": "2ff4f0fb251d2598",
+      "role": [],
+      "exports": [
+        "ReferChatTurn",
+        "ReferChatSession",
+        "createReferChatSession",
+        "appendReferChatTurn",
+        "referChatSessionsDir",
+        "referChatSessionPath",
+        "writeReferChatSession",
+        "readLatestReferChatSession"
+      ],
+      "imports": [
+        "node:crypto",
+        "node:fs",
+        "node:path",
+        "./referIntake",
+        "./referOrchestrator"
+      ],
+      "detects": []
+    },
+    {
+      "path": "src/contracts/referCoach.ts",
+      "kind": "typescript",
+      "size_bytes": 1962,
+      "modified_at": "2026-04-25T23:59:07.217Z",
+      "hash": "e8c94703301ee1d9",
+      "role": [],
+      "exports": [
+        "ReferCoachChecklistItem",
+        "ReferCoachPlan",
+        "createReferCoachPlan"
+      ],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "src/contracts/referIntake.ts",
+      "kind": "typescript",
+      "size_bytes": 3018,
+      "modified_at": "2026-04-25T20:17:14.025Z",
+      "hash": "6331a521172cf9a4",
+      "role": [],
+      "exports": [
+        "ReferIntakeContract",
+        "ReferIntakeRecord",
+        "createReferIntakeRecord",
+        "writeReferIntakeRecord",
+        "createModelPrompt"
+      ],
+      "imports": [
+        "node:crypto",
+        "node:fs",
+        "node:path"
+      ],
+      "detects": []
+    },
+    {
+      "path": "src/contracts/referOrchestrator.ts",
+      "kind": "typescript",
+      "size_bytes": 5163,
+      "modified_at": "2026-04-25T20:54:05.330Z",
+      "hash": "ae945234b515ceb7",
+      "role": [
+        "orchestration"
+      ],
+      "exports": [
+        "ReferResolutionState",
+        "ReferNextAction",
+        "ReferResolutionEnvelope",
+        "ReferLoopDecision",
+        "maxReferOrchestratorPasses",
+        "createOrchestratorPrompt",
+        "parseResolutionEnvelope",
+        "decideReferNextAction"
+      ],
+      "imports": [
+        "./referIntake"
+      ],
+      "detects": []
+    },
+    {
+      "path": "src/contracts/scriptBlueprint.ts",
+      "kind": "typescript",
+      "size_bytes": 7724,
+      "modified_at": "2026-04-25T18:03:23.808Z",
+      "hash": "7c507477a1eb276d",
+      "role": [],
+      "exports": [
+        "ScriptBlueprintNodeKind",
+        "ScriptBlueprintNode",
+        "ScriptBlueprintEdge",
+        "ScriptBlueprint",
+        "createScriptBlueprint"
+      ],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "src/contracts/scriptDna.ts",
+      "kind": "typescript",
+      "size_bytes": 6519,
+      "modified_at": "2026-04-25T18:03:15.573Z",
+      "hash": "a8dfd315f3a8eba1",
+      "role": [],
+      "exports": [
+        "ScriptDnaValueType",
+        "ScriptDnaOpcode",
+        "ScriptDnaPort",
+        "ScriptDnaInstruction",
+        "ScriptDnaStation",
+        "ScriptDnaGuard",
+        "ScriptDnaSpec",
+        "createScriptDnaSeed"
+      ],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "src/contracts/scriptFactory.ts",
+      "kind": "typescript",
+      "size_bytes": 17132,
+      "modified_at": "2026-04-26T12:01:54.474Z",
+      "hash": "142402fa73529671",
+      "role": [
+        "script-registry"
+      ],
+      "exports": [
+        "ScriptFactoryEntry",
+        "ScriptPoint",
+        "scriptFactoryEntries"
+      ],
+      "imports": [],
+      "detects": [
+        "http-endpoint"
+      ]
+    },
+    {
+      "path": "src/contracts/scriptLegend.ts",
+      "kind": "typescript",
+      "size_bytes": 27522,
+      "modified_at": "2026-04-26T12:29:35.207Z",
+      "hash": "3df4f28301ddb535",
+      "role": [],
+      "exports": [
+        "ScriptLegendTerm",
+        "ScriptLegendCategory",
+        "ScriptLegendField",
+        "ScriptLegendTransition",
+        "ScriptLegendArtifact",
+        "ScriptLegendExample",
+        "ScriptLegend",
+        "scriptLegendPath",
+        "createScriptLegend",
+        "renderScriptLegendMarkdown",
+        "writeScriptLegend"
+      ],
+      "imports": [
+        "node:fs",
+        "node:path",
+        "./scriptFactory"
+      ],
+      "detects": []
+    },
+    {
+      "path": "src/contracts/scriptographer.ts",
+      "kind": "typescript",
+      "size_bytes": 5396,
+      "modified_at": "2026-04-26T12:01:17.769Z",
+      "hash": "5ff3decda3a59b58",
+      "role": [],
+      "exports": [
+        "ScriptographerClassification",
+        "ScriptographerCandidate",
+        "ScriptographerReport",
+        "scriptographerReportPath",
+        "runScriptographer",
+        "writeScriptographerReport"
+      ],
+      "imports": [
+        "node:fs",
+        "node:path",
+        "./scriptFactory",
+        "./scriptLegend"
+      ],
+      "detects": []
+    },
+    {
+      "path": "src/contracts/sendContract.ts",
+      "kind": "typescript",
+      "size_bytes": 1408,
+      "modified_at": "2026-04-25T11:19:43.622Z",
+      "hash": "e4624f7c124a8b13",
+      "role": [],
+      "exports": [
+        "SendContractDraft",
+        "createSendContractDraft"
+      ],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "src/extension.ts",
+      "kind": "typescript",
+      "size_bytes": 4292,
+      "modified_at": "2026-04-26T12:02:48.040Z",
+      "hash": "633064c3d5fd313e",
+      "role": [
+        "extension-entrypoint",
+        "webview-provider-registration"
+      ],
+      "exports": [
+        "activate",
+        "deactivate"
+      ],
+      "imports": [
+        "vscode",
+        "./cockpit/contractChatPanel",
+        "./cockpit/dashboardPanel",
+        "./cockpit/libraryPanel",
+        "./cockpit/processPanel",
+        "./cockpit/scriptFactoryPanel",
+        "./commands/initializeRepo",
+        "./commands/contractMode",
+        "./commands/emitSendContract",
+        "./commands/emitScriptDnaSeed",
+        "./commands/emitScriptBlueprint",
+        "./commands/scanCodebase",
+        "./commands/scanFactoryGaps",
+        "./commands/runScriptographer",
+        "./commands/updateSync",
+        "./commands/refreshCodebases",
+        "./chat/referParticipant"
+      ],
+      "detects": [
+        "webview-provider"
+      ]
+    },
+    {
+      "path": "src/server/referOrchestratorServer.ts",
+      "kind": "typescript",
+      "size_bytes": 3709,
+      "modified_at": "2026-04-26T02:51:28.060Z",
+      "hash": "b575f32d3f5e39ce",
+      "role": [
+        "orchestration",
+        "server"
+      ],
+      "exports": [],
+      "imports": [
+        "node:http",
+        "../chat/referOllamaPromptModel",
+        "../chat/referOrchestratorRunner",
+        "./referTargetRegistry"
+      ],
+      "detects": [
+        "http-endpoint"
+      ]
+    },
+    {
+      "path": "src/server/referTargetRegistry.ts",
+      "kind": "typescript",
+      "size_bytes": 3699,
+      "modified_at": "2026-04-26T02:51:28.060Z",
+      "hash": "f0f6171d8c4aed1a",
+      "role": [
+        "server"
+      ],
+      "exports": [
+        "ReferEndpointTarget",
+        "ReferEndpointTargetRegistry",
+        "loadReferEndpointTargetRegistry",
+        "resolveReferEndpointTarget"
+      ],
+      "imports": [
+        "node:fs",
+        "node:path"
+      ],
+      "detects": []
+    },
+    {
+      "path": "src/telemetry/bootstrapHealth.ts",
+      "kind": "typescript",
+      "size_bytes": 2903,
+      "modified_at": "2026-04-24T23:03:47.225Z",
+      "hash": "6af67c62bb14bbae",
+      "role": [],
+      "exports": [
+        "BootstrapHealthPhase",
+        "BootstrapHealthSnapshot",
+        "getBootstrapHealthSnapshot",
+        "setBootstrapHealthSnapshot",
+        "createDryRunHealthSnapshot",
+        "createApplyHealthSnapshot",
+        "createCancelledHealthSnapshot"
+      ],
+      "imports": [
+        "../bootstrap/apply",
+        "../bootstrap/dryRun",
+        "./repoHealth"
+      ],
+      "detects": []
+    },
+    {
+      "path": "src/telemetry/codebaseMiles.ts",
+      "kind": "typescript",
+      "size_bytes": 1614,
+      "modified_at": "2026-04-25T01:52:36.921Z",
+      "hash": "f19d5d172778cd69",
+      "role": [],
+      "exports": [
+        "CodebaseMiles",
+        "countCodebaseMiles"
+      ],
+      "imports": [
+        "node:fs",
+        "node:path"
+      ],
+      "detects": []
+    },
+    {
+      "path": "src/telemetry/metrics.ts",
+      "kind": "typescript",
+      "size_bytes": 2547,
+      "modified_at": "2026-04-25T02:50:54.913Z",
+      "hash": "4ee8d620866f4258",
+      "role": [],
+      "exports": [
+        "MetricInput",
+        "FactoryMetrics",
+        "sampleMetricInput",
+        "calculateMetrics"
+      ],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "src/telemetry/processEvents.ts",
+      "kind": "typescript",
+      "size_bytes": 6277,
+      "modified_at": "2026-04-25T13:10:27.711Z",
+      "hash": "c5ee15f8505b9558",
+      "role": [],
+      "exports": [
+        "ProcessStatus",
+        "ProcessEvent",
+        "DailyProcessSummary",
+        "ProcessState",
+        "sampleProcessEvents",
+        "appendProcessEvent",
+        "appendProcessEvents",
+        "getProcessEvents",
+        "getProcessState",
+        "onProcessEventsChanged",
+        "summarizeProcessEvents",
+        "processEventLogPath",
+        "processStatePath",
+        "collapseProcessEvents"
+      ],
+      "imports": [
+        "node:fs",
+        "node:path"
+      ],
+      "detects": []
+    },
+    {
+      "path": "src/telemetry/repoHealth.ts",
+      "kind": "typescript",
+      "size_bytes": 329,
+      "modified_at": "2026-04-24T22:28:18.422Z",
+      "hash": "b5f8c65044cbf5ed",
+      "role": [],
+      "exports": [
+        "RepoHealthInput",
+        "scoreRepoHealth"
+      ],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "src/updates/updateEvents.ts",
+      "kind": "typescript",
+      "size_bytes": 1552,
+      "modified_at": "2026-04-25T12:54:19.976Z",
+      "hash": "68271d405aa31ace",
+      "role": [],
+      "exports": [
+        "createUpdateCheckEvent",
+        "createUpdateApplyEvent"
+      ],
+      "imports": [
+        "../telemetry/processEvents",
+        "./updateTypes"
+      ],
+      "detects": []
+    },
+    {
+      "path": "src/updates/updateSync.ts",
+      "kind": "typescript",
+      "size_bytes": 7197,
+      "modified_at": "2026-04-25T12:54:19.974Z",
+      "hash": "86f8d608ffc3254c",
+      "role": [],
+      "exports": [
+        "UpdateContext",
+        "checkForReferUpdates",
+        "applyReferUpdate",
+        "createPackagedLawManifest",
+        "readLocalUpdateState",
+        "writeLocalUpdateState",
+        "updateStatePath"
+      ],
+      "imports": [
+        "node:crypto",
+        "node:fs",
+        "node:http",
+        "node:https",
+        "node:path",
+        "../bootstrap/lawManifest",
+        "./updateTypes"
+      ],
+      "detects": []
+    },
+    {
+      "path": "src/updates/updateTypes.ts",
+      "kind": "typescript",
+      "size_bytes": 1060,
+      "modified_at": "2026-04-25T12:54:19.973Z",
+      "hash": "2716973c1730256d",
+      "role": [],
+      "exports": [
+        "UpdateChannel",
+        "UpdateArtifactKind",
+        "UpdateArtifact",
+        "UpdateManifest",
+        "LocalUpdateState",
+        "UpdateCheckResult",
+        "UpdateApplyReport"
+      ],
+      "imports": [],
+      "detects": []
+    },
+    {
+      "path": "test/bootstrapApply.test.ts",
+      "kind": "typescript",
+      "size_bytes": 3823,
+      "modified_at": "2026-04-25T13:31:00.804Z",
+      "hash": "856799b57a8d2c1b",
+      "role": [
+        "test"
+      ],
+      "exports": [],
+      "imports": [
+        "node:assert/strict",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "../src/bootstrap/apply"
+      ],
+      "detects": []
+    },
+    {
+      "path": "test/bootstrapDryRun.test.ts",
+      "kind": "typescript",
+      "size_bytes": 1442,
+      "modified_at": "2026-04-25T12:22:03.801Z",
+      "hash": "471a00b129ba8e71",
+      "role": [
+        "test"
+      ],
+      "exports": [],
+      "imports": [
+        "node:assert/strict",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "../src/bootstrap/dryRun"
+      ],
+      "detects": []
+    },
+    {
+      "path": "test/bootstrapHealth.test.ts",
+      "kind": "typescript",
+      "size_bytes": 1778,
+      "modified_at": "2026-04-24T23:04:02.328Z",
+      "hash": "867f180e03db4a05",
+      "role": [
+        "test"
+      ],
+      "exports": [],
+      "imports": [
+        "node:assert/strict",
+        "../src/telemetry/bootstrapHealth"
+      ],
+      "detects": []
+    },
+    {
+      "path": "test/bootstrapProcessEvents.test.ts",
+      "kind": "typescript",
+      "size_bytes": 2362,
+      "modified_at": "2026-04-24T23:01:56.086Z",
+      "hash": "22fe9dc04e45a1b3",
+      "role": [
+        "test"
+      ],
+      "exports": [],
+      "imports": [
+        "node:assert/strict",
+        "../src/bootstrap/processEvents"
+      ],
+      "detects": []
+    },
+    {
+      "path": "test/codebaseMiles.test.ts",
+      "kind": "typescript",
+      "size_bytes": 870,
+      "modified_at": "2026-04-25T01:52:36.934Z",
+      "hash": "40c80dbe82c31ec9",
+      "role": [
+        "test"
+      ],
+      "exports": [],
+      "imports": [
+        "node:assert/strict",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "../src/telemetry/codebaseMiles"
+      ],
+      "detects": []
+    },
+    {
+      "path": "test/codebases.test.ts",
+      "kind": "typescript",
+      "size_bytes": 2814,
+      "modified_at": "2026-04-25T18:03:31.647Z",
+      "hash": "82e80d6c7a112045",
+      "role": [
+        "test"
+      ],
+      "exports": [],
+      "imports": [
+        "node:assert/strict",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "../src/bootstrap/codebases"
+      ],
+      "detects": []
+    },
+    {
+      "path": "test/factoryGaps.test.ts",
+      "kind": "typescript",
+      "size_bytes": 1553,
+      "modified_at": "2026-04-26T11:57:50.052Z",
+      "hash": "8a37d7ef375d9eee",
+      "role": [
+        "test"
+      ],
+      "exports": [],
+      "imports": [
+        "node:assert/strict",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "../src/contracts/factoryGaps"
+      ],
+      "detects": []
+    },
+    {
+      "path": "test/lawToc.test.ts",
+      "kind": "typescript",
+      "size_bytes": 1171,
+      "modified_at": "2026-04-25T12:42:45.501Z",
+      "hash": "bcd54c6cffe7c387",
+      "role": [
+        "test"
+      ],
+      "exports": [],
+      "imports": [
+        "node:assert/strict",
+        "node:fs",
+        "node:path",
+        "../src/bootstrap/lawManifest",
+        "../src/bootstrap/lawToc"
+      ],
+      "detects": []
+    },
+    {
+      "path": "test/metrics.test.ts",
+      "kind": "typescript",
+      "size_bytes": 671,
+      "modified_at": "2026-04-25T02:50:54.916Z",
+      "hash": "6b1cf7d9f43fd631",
+      "role": [
+        "test"
+      ],
+      "exports": [],
+      "imports": [
+        "node:assert/strict",
+        "../src/telemetry/metrics"
+      ],
+      "detects": []
+    },
+    {
+      "path": "test/orchestratorRoadmap.test.ts",
+      "kind": "typescript",
+      "size_bytes": 727,
+      "modified_at": "2026-04-25T23:58:54.786Z",
+      "hash": "4a2bb73a4d2fb39d",
+      "role": [
+        "test"
+      ],
+      "exports": [],
+      "imports": [
+        "node:assert/strict",
+        "../src/contracts/orchestratorRoadmap"
+      ],
+      "detects": []
+    },
+    {
+      "path": "test/processEvents.test.ts",
+      "kind": "typescript",
+      "size_bytes": 2215,
+      "modified_at": "2026-04-25T13:13:17.815Z",
+      "hash": "1209aef534fef971",
+      "role": [
+        "test"
+      ],
+      "exports": [],
+      "imports": [
+        "node:assert/strict",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "../src/telemetry/processEvents"
+      ],
+      "detects": []
+    },
+    {
+      "path": "test/referChatMode.test.ts",
+      "kind": "typescript",
+      "size_bytes": 1659,
+      "modified_at": "2026-04-25T22:00:18.783Z",
+      "hash": "02d6c957ff0bd80b",
+      "role": [
+        "test"
+      ],
+      "exports": [],
+      "imports": [
+        "node:assert/strict",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "../src/contracts/referChatMode"
+      ],
+      "detects": []
+    },
+    {
+      "path": "test/referChatSession.test.ts",
+      "kind": "typescript",
+      "size_bytes": 1656,
+      "modified_at": "2026-04-25T21:28:01.637Z",
+      "hash": "5a18d34cb44b6514",
+      "role": [
+        "test"
+      ],
+      "exports": [],
+      "imports": [
+        "node:assert/strict",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "../src/contracts/referChatSession",
+        "../src/contracts/referIntake"
+      ],
+      "detects": []
+    },
+    {
+      "path": "test/referCoach.test.ts",
+      "kind": "typescript",
+      "size_bytes": 614,
+      "modified_at": "2026-04-25T23:59:15.841Z",
+      "hash": "d6808a8475430d81",
+      "role": [
+        "test"
+      ],
+      "exports": [],
+      "imports": [
+        "node:assert/strict",
+        "../src/contracts/referCoach"
+      ],
+      "detects": []
+    },
+    {
+      "path": "test/referIntake.test.ts",
+      "kind": "typescript",
+      "size_bytes": 1349,
+      "modified_at": "2026-04-25T20:17:46.999Z",
+      "hash": "a575e690f2f060a2",
+      "role": [
+        "test"
+      ],
+      "exports": [],
+      "imports": [
+        "node:assert/strict",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "../src/contracts/referIntake"
+      ],
+      "detects": []
+    },
+    {
+      "path": "test/referOrchestrator.test.ts",
+      "kind": "typescript",
+      "size_bytes": 1902,
+      "modified_at": "2026-04-25T20:55:01.836Z",
+      "hash": "0d5580c65cd520c3",
+      "role": [
+        "orchestration",
+        "test"
+      ],
+      "exports": [],
+      "imports": [
+        "node:assert/strict",
+        "../src/contracts/referIntake",
+        "../src/contracts/referOrchestrator"
+      ],
+      "detects": []
+    },
+    {
+      "path": "test/referOrchestratorRunner.test.ts",
+      "kind": "typescript",
+      "size_bytes": 1779,
+      "modified_at": "2026-04-26T02:43:18.395Z",
+      "hash": "01f6475e07e89b0d",
+      "role": [
+        "orchestration",
+        "test"
+      ],
+      "exports": [],
+      "imports": [
+        "node:assert/strict",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "../src/chat/referOrchestratorRunner",
+        "../src/chat/referPromptModel",
+        "../src/contracts/referChatMode"
+      ],
+      "detects": []
+    },
+    {
+      "path": "test/referProcessEvents.test.ts",
+      "kind": "typescript",
+      "size_bytes": 1726,
+      "modified_at": "2026-04-26T02:09:49.309Z",
+      "hash": "cd086c60a080785f",
+      "role": [
+        "test"
+      ],
+      "exports": [],
+      "imports": [
+        "node:assert/strict",
+        "../src/chat/referProcessEvents"
+      ],
+      "detects": []
+    },
+    {
+      "path": "test/referTargetRegistry.test.ts",
+      "kind": "typescript",
+      "size_bytes": 1450,
+      "modified_at": "2026-04-26T02:51:51.858Z",
+      "hash": "5adcd78bfd910284",
+      "role": [
+        "test"
+      ],
+      "exports": [],
+      "imports": [
+        "node:assert/strict",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "../src/server/referTargetRegistry"
+      ],
+      "detects": []
+    },
+    {
+      "path": "test/schemaValidation.test.ts",
+      "kind": "typescript",
+      "size_bytes": 2472,
+      "modified_at": "2026-04-25T21:02:30.655Z",
+      "hash": "93ca1e94d4291c42",
+      "role": [
+        "test"
+      ],
+      "exports": [],
+      "imports": [
+        "node:assert/strict",
+        "node:fs",
+        "node:path",
+        "ajv/dist/2020",
+        "../src/adapters/angularAdapter",
+        "../src/adapters/genericAdapter",
+        "../src/adapters/nodeAdapter",
+        "../src/adapters/reactAdapter",
+        "../src/bootstrap/codebases",
+        "../src/bootstrap/dryRun",
+        "../src/contracts/sendContract",
+        "../src/contracts/orchestratorRoadmap",
+        "../src/contracts/scriptBlueprint",
+        "../src/contracts/scriptDna",
+        "../src/telemetry/metrics",
+        "../src/telemetry/processEvents"
+      ],
+      "detects": []
+    },
+    {
+      "path": "test/scriptBlueprint.test.ts",
+      "kind": "typescript",
+      "size_bytes": 1216,
+      "modified_at": "2026-04-25T18:03:46.765Z",
+      "hash": "f08e60c7e4bb3d1d",
+      "role": [
+        "test"
+      ],
+      "exports": [],
+      "imports": [
+        "node:assert/strict",
+        "../src/contracts/scriptBlueprint"
+      ],
+      "detects": []
+    },
+    {
+      "path": "test/scriptDna.test.ts",
+      "kind": "typescript",
+      "size_bytes": 1444,
+      "modified_at": "2026-04-25T18:03:39.439Z",
+      "hash": "5b7320cdcabcf85c",
+      "role": [
+        "test"
+      ],
+      "exports": [],
+      "imports": [
+        "node:assert/strict",
+        "../src/contracts/scriptDna"
+      ],
+      "detects": []
+    },
+    {
+      "path": "test/scriptographer.test.ts",
+      "kind": "typescript",
+      "size_bytes": 1264,
+      "modified_at": "2026-04-26T12:03:31.483Z",
+      "hash": "098612c370d1792c",
+      "role": [
+        "test"
+      ],
+      "exports": [],
+      "imports": [
+        "node:assert/strict",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "../src/contracts/scriptographer"
+      ],
+      "detects": []
+    },
+    {
+      "path": "test/updateSync.test.ts",
+      "kind": "typescript",
+      "size_bytes": 2254,
+      "modified_at": "2026-04-25T12:55:38.386Z",
+      "hash": "c28e35183e6f34e9",
+      "role": [
+        "test"
+      ],
+      "exports": [],
+      "imports": [
+        "node:assert/strict",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "../src/updates/updateSync"
+      ],
+      "detects": []
+    },
+    {
+      "path": "tsconfig.json",
+      "kind": "json",
+      "size_bytes": 368,
+      "modified_at": "2026-04-24T22:28:18.406Z",
+      "hash": "0c780a862adac40f",
+      "role": [],
+      "exports": [],
+      "imports": [],
+      "detects": []
+    }
+  ],
+  "directories": [
+    {
+      "path": ".vscode",
+      "file_count": 2,
+      "role": []
+    },
+    {
+      "path": "docs",
+      "file_count": 5,
+      "role": []
+    },
+    {
+      "path": "law/REFER.OS",
+      "file_count": 85,
+      "role": []
+    },
+    {
+      "path": "resources",
+      "file_count": 1,
+      "role": []
+    },
+    {
+      "path": "schemas",
+      "file_count": 10,
+      "role": []
+    },
+    {
+      "path": "src",
+      "file_count": 1,
+      "role": []
+    },
+    {
+      "path": "src/adapters",
+      "file_count": 5,
+      "role": []
+    },
+    {
+      "path": "src/bootstrap",
+      "file_count": 8,
+      "role": []
+    },
+    {
+      "path": "src/chat",
+      "file_count": 7,
+      "role": [
+        "chat-orchestration"
+      ]
+    },
+    {
+      "path": "src/cockpit",
+      "file_count": 6,
+      "role": [
+        "webview-ui"
+      ]
+    },
+    {
+      "path": "src/commands",
+      "file_count": 10,
+      "role": [
+        "vscode-commands"
+      ]
+    },
+    {
+      "path": "src/contracts",
+      "file_count": 14,
+      "role": [
+        "contracts"
+      ]
+    },
+    {
+      "path": "src/server",
+      "file_count": 2,
+      "role": [
+        "http-server"
+      ]
+    },
+    {
+      "path": "src/telemetry",
+      "file_count": 5,
+      "role": []
+    },
+    {
+      "path": "src/updates",
+      "file_count": 3,
+      "role": []
+    },
+    {
+      "path": "test",
+      "file_count": 24,
+      "role": []
+    }
+  ]
+}

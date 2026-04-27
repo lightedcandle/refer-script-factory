@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { cockpitStyles, escapeHtml } from "./html";
+import { cockpitStyles, escapeHtml, panelTitle } from "./html";
 import { calculateMetrics, sampleMetricInput } from "../telemetry/metrics";
 import { countCodebaseMiles } from "../telemetry/codebaseMiles";
 import { getBootstrapHealthSnapshot } from "../telemetry/bootstrapHealth";
@@ -48,7 +48,7 @@ function renderDashboard(
 <head>${cockpitStyles()}</head>
 <body>
   <main class="surface">
-    <h1>REFER Dashboard</h1>
+    ${panelTitle("REFER Dashboard", "dashboard")}
     <p class="summary">Factory metrics and current workspace bootstrap posture.</p>
     <div class="segment-control" role="tablist" aria-label="Metric mode">
       <button class="segment active" type="button" data-mode="live">Live</button>

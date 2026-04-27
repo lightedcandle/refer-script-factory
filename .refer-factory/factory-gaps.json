@@ -1,0 +1,140 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-04-26T12:30:52.453Z",
+  "summary": {
+    "total": 16,
+    "errors": 0,
+    "warnings": 0,
+    "info": 16
+  },
+  "gaps": [
+    {
+      "id": "status.unmapped.refer.context.picker",
+      "severity": "info",
+      "category": "status",
+      "title": "No status mapping: Context Picker",
+      "detail": "refer.context.picker has no known process-event mapping, so its Script Factory light may stay gray.",
+      "repair_hint": "Emit process events for the script or add its process name to the Script Factory status mapper."
+    },
+    {
+      "id": "status.unmapped.refer.script.legend",
+      "severity": "info",
+      "category": "status",
+      "title": "No status mapping: Script Legend",
+      "detail": "refer.script.legend has no known process-event mapping, so its Script Factory light may stay gray.",
+      "repair_hint": "Emit process events for the script or add its process name to the Script Factory status mapper."
+    },
+    {
+      "id": "status.unmapped.refer.server.health",
+      "severity": "info",
+      "category": "status",
+      "title": "No status mapping: Server Health Route",
+      "detail": "refer.server.health has no known process-event mapping, so its Script Factory light may stay gray.",
+      "repair_hint": "Emit process events for the script or add its process name to the Script Factory status mapper."
+    },
+    {
+      "id": "status.unmapped.refer.server.targets",
+      "severity": "info",
+      "category": "status",
+      "title": "No status mapping: Server Targets Route",
+      "detail": "refer.server.targets has no known process-event mapping, so its Script Factory light may stay gray.",
+      "repair_hint": "Emit process events for the script or add its process name to the Script Factory status mapper."
+    },
+    {
+      "id": "status.unmapped.refer.emitScriptBlueprint",
+      "severity": "info",
+      "category": "status",
+      "title": "No status mapping: Emit Script Blueprint",
+      "detail": "refer.emitScriptBlueprint has no known process-event mapping, so its Script Factory light may stay gray.",
+      "repair_hint": "Emit process events for the script or add its process name to the Script Factory status mapper."
+    },
+    {
+      "id": "status.unmapped.refer.emitScriptDnaSeed",
+      "severity": "info",
+      "category": "status",
+      "title": "No status mapping: Emit Script DNA Seed",
+      "detail": "refer.emitScriptDnaSeed has no known process-event mapping, so its Script Factory light may stay gray.",
+      "repair_hint": "Emit process events for the script or add its process name to the Script Factory status mapper."
+    },
+    {
+      "id": "status.unmapped.refer.refreshCodebases",
+      "severity": "info",
+      "category": "status",
+      "title": "No status mapping: Refresh Codebases",
+      "detail": "refer.refreshCodebases has no known process-event mapping, so its Script Factory light may stay gray.",
+      "repair_hint": "Emit process events for the script or add its process name to the Script Factory status mapper."
+    },
+    {
+      "id": "status.unmapped.refer.viewCodebaseTree",
+      "severity": "info",
+      "category": "status",
+      "title": "No status mapping: View Codebase Tree",
+      "detail": "refer.viewCodebaseTree has no known process-event mapping, so its Script Factory light may stay gray.",
+      "repair_hint": "Emit process events for the script or add its process name to the Script Factory status mapper."
+    },
+    {
+      "id": "status.unmapped.refer.viewFactoryGaps",
+      "severity": "info",
+      "category": "status",
+      "title": "No status mapping: View Factory Gaps",
+      "detail": "refer.viewFactoryGaps has no known process-event mapping, so its Script Factory light may stay gray.",
+      "repair_hint": "Emit process events for the script or add its process name to the Script Factory status mapper."
+    },
+    {
+      "id": "status.unmapped.refer.contractModeOn",
+      "severity": "info",
+      "category": "status",
+      "title": "No status mapping: Contract Mode On",
+      "detail": "refer.contractModeOn has no known process-event mapping, so its Script Factory light may stay gray.",
+      "repair_hint": "Emit process events for the script or add its process name to the Script Factory status mapper."
+    },
+    {
+      "id": "status.unmapped.refer.contractModeOff",
+      "severity": "info",
+      "category": "status",
+      "title": "No status mapping: Contract Mode Off",
+      "detail": "refer.contractModeOff has no known process-event mapping, so its Script Factory light may stay gray.",
+      "repair_hint": "Emit process events for the script or add its process name to the Script Factory status mapper."
+    },
+    {
+      "id": "status.unmapped.refer.contractModeToggle",
+      "severity": "info",
+      "category": "status",
+      "title": "No status mapping: Toggle Contract Mode",
+      "detail": "refer.contractModeToggle has no known process-event mapping, so its Script Factory light may stay gray.",
+      "repair_hint": "Emit process events for the script or add its process name to the Script Factory status mapper."
+    },
+    {
+      "id": "status.unmapped.npm.compile",
+      "severity": "info",
+      "category": "status",
+      "title": "No status mapping: Compile",
+      "detail": "npm.compile has no known process-event mapping, so its Script Factory light may stay gray.",
+      "repair_hint": "Emit process events for the script or add its process name to the Script Factory status mapper."
+    },
+    {
+      "id": "status.unmapped.npm.test",
+      "severity": "info",
+      "category": "status",
+      "title": "No status mapping: Test",
+      "detail": "npm.test has no known process-event mapping, so its Script Factory light may stay gray.",
+      "repair_hint": "Emit process events for the script or add its process name to the Script Factory status mapper."
+    },
+    {
+      "id": "status.unmapped.npm.verify",
+      "severity": "info",
+      "category": "status",
+      "title": "No status mapping: Verify",
+      "detail": "npm.verify has no known process-event mapping, so its Script Factory light may stay gray.",
+      "repair_hint": "Emit process events for the script or add its process name to the Script Factory status mapper."
+    },
+    {
+      "id": "status.unmapped.npm.refer.server",
+      "severity": "info",
+      "category": "status",
+      "title": "No status mapping: REFER Server",
+      "detail": "npm.refer.server has no known process-event mapping, so its Script Factory light may stay gray.",
+      "repair_hint": "Emit process events for the script or add its process name to the Script Factory status mapper."
+    }
+  ]
+}

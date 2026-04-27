@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { cockpitStyles, escapeHtml } from "./html";
+import { cockpitStyles, escapeHtml, panelTitle } from "./html";
 import {
   getProcessEvents,
   getProcessState,
@@ -18,7 +18,7 @@ export class ProcessPanel implements vscode.WebviewViewProvider {
 <head>${cockpitStyles()}</head>
 <body>
   <main class="surface">
-    <h1>Factory Process</h1>
+    ${panelTitle("Factory Process", "process")}
     <p class="summary">Current process state, bounded recent events, and daily history.</p>
     <section aria-label="Process state" id="process-state">${state ? renderProcessState(state) : ""}</section>
     <section class="process-list" aria-label="Process events" id="process-list">${renderRows(getProcessEvents(workspaceRoot))}</section>

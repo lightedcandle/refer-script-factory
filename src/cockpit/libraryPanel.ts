@@ -3,7 +3,7 @@ import * as path from "node:path";
 import * as vscode from "vscode";
 import { bootstrapLawReferences } from "../bootstrap/lawPack";
 import { referLawToc } from "../bootstrap/lawToc";
-import { cockpitStyles, escapeHtml } from "./html";
+import { cockpitStyles, escapeHtml, panelTitle } from "./html";
 
 export class BootstrapLibraryPanel implements vscode.WebviewViewProvider {
   constructor(private readonly context: vscode.ExtensionContext) {}
@@ -21,7 +21,7 @@ export class BootstrapLibraryPanel implements vscode.WebviewViewProvider {
 <head>${cockpitStyles()}</head>
 <body>
   <main class="surface">
-    <h1>Bootstrap Library</h1>
+    ${panelTitle("Bootstrap Library", "archive")}
     <p class="summary">Inspectable REFER bootstrap source references. Active repo governance lives in AGENTS.md and .refer-factory after install.</p>
     <section class="process-list" aria-label="Bootstrap law library">${bootstrapRows}</section>
   </main>
@@ -45,7 +45,7 @@ export class ReferLibraryPanel implements vscode.WebviewViewProvider {
 <head>${cockpitStyles()}</head>
 <body>
   <main class="surface">
-    <h1>Refer Library</h1>
+    ${panelTitle("Refer Library", "book")}
     <p class="summary">Universal REFER.OS documents available for repo bootstrap and operator review.</p>
     <section class="process-list" aria-label="REFER.OS library">${rows}</section>
   </main>

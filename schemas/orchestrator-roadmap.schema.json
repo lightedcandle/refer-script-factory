@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "REFER Orchestrator Roadmap",
+  "type": "object",
+  "required": ["schema_version", "capabilities"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "capabilities": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "capability",
+          "status",
+          "integrate_when_available",
+          "target_hook"
+        ],
+        "properties": {
+          "id": { "type": "string" },
+          "capability": { "type": "string" },
+          "status": {
+            "enum": ["scaffolded", "available", "integrated", "deferred"]
+          },
+          "integrate_when_available": { "type": "string" },
+          "target_hook": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

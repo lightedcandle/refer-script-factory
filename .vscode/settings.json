@@ -1,0 +1,6 @@
+{
+  "refer.modelProvider": "vscode",
+  "refer.ollamaUrl": "http://127.0.0.1:11434",
+  "refer.ollamaModel": "qwen3:0.6b",
+  "refer.ollamaTimeoutMs": 120000
+}

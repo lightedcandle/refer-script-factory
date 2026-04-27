@@ -1,0 +1,837 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-04-26T12:30:52.432Z",
+  "summary": {
+    "total": 118,
+    "ratified": 118,
+    "unratified": 0
+  },
+  "candidates": [
+    {
+      "name": "@Refer Chat History",
+      "classification": "cockpit-view-label",
+      "source": "package.json contributes.views",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Bootstrap Library",
+      "classification": "cockpit-view-label",
+      "source": "package.json contributes.views",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Dashboard",
+      "classification": "cockpit-view-label",
+      "source": "package.json contributes.views",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Factory System",
+      "classification": "cockpit-view-label",
+      "source": "package.json contributes.views",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Process",
+      "classification": "cockpit-view-label",
+      "source": "package.json contributes.views",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Refer Library",
+      "classification": "cockpit-view-label",
+      "source": "package.json contributes.views",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "REFER",
+      "classification": "cockpit-view-label",
+      "source": "package.json contributes.views",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "REFER: Apply Update",
+      "classification": "entrypoint-label",
+      "source": "package.json contributes.commands",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "REFER: Check for Updates",
+      "classification": "entrypoint-label",
+      "source": "package.json contributes.commands",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "REFER: Contract Mode Off",
+      "classification": "entrypoint-label",
+      "source": "package.json contributes.commands",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "REFER: Contract Mode On",
+      "classification": "entrypoint-label",
+      "source": "package.json contributes.commands",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "REFER: Emit Script Blueprint",
+      "classification": "entrypoint-label",
+      "source": "package.json contributes.commands",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "REFER: Emit Script DNA Seed",
+      "classification": "entrypoint-label",
+      "source": "package.json contributes.commands",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "REFER: Emit Send Contract Draft",
+      "classification": "entrypoint-label",
+      "source": "package.json contributes.commands",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "REFER: Initialize Repo",
+      "classification": "entrypoint-label",
+      "source": "package.json contributes.commands",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "REFER: Refresh Codebases",
+      "classification": "entrypoint-label",
+      "source": "package.json contributes.commands",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "REFER: Run Scriptographer",
+      "classification": "entrypoint-label",
+      "source": "package.json contributes.commands",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "REFER: Scan Codebase",
+      "classification": "entrypoint-label",
+      "source": "package.json contributes.commands",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "REFER: Scan Factory Gaps",
+      "classification": "entrypoint-label",
+      "source": "package.json contributes.commands",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "REFER: Toggle Contract Mode",
+      "classification": "entrypoint-label",
+      "source": "package.json contributes.commands",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "REFER: View Codebase Tree",
+      "classification": "entrypoint-label",
+      "source": "package.json contributes.commands",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "REFER: View Factory Gaps",
+      "classification": "entrypoint-label",
+      "source": "package.json contributes.commands",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "REFER: View Scriptographer Report",
+      "classification": "entrypoint-label",
+      "source": "package.json contributes.commands",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Artifact Factory",
+      "classification": "factory-layer-label",
+      "source": "Script Legend Factory Layer Label taxonomy",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Command Surface",
+      "classification": "factory-layer-label",
+      "source": "Script Legend Factory Layer Label taxonomy",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Context Factory",
+      "classification": "factory-layer-label",
+      "source": "Script Legend Factory Layer Label taxonomy",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Factories",
+      "classification": "factory-layer-label",
+      "source": "Script Legend Factory Layer Label taxonomy",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Factory System",
+      "classification": "factory-layer-label",
+      "source": "Script Legend Factory Layer Label taxonomy",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Forge",
+      "classification": "factory-layer-label",
+      "source": "Script Legend Factory Layer Label taxonomy",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Forges",
+      "classification": "factory-layer-label",
+      "source": "Script Legend Factory Layer Label taxonomy",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "HTTP Endpoint Surface",
+      "classification": "factory-layer-label",
+      "source": "Script Legend Factory Layer Label taxonomy",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Map",
+      "classification": "factory-layer-label",
+      "source": "Script Legend Factory Layer Label taxonomy",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Model Factory",
+      "classification": "factory-layer-label",
+      "source": "Script Legend Factory Layer Label taxonomy",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Multi Script",
+      "classification": "factory-layer-label",
+      "source": "Script Legend Factory Layer Label taxonomy",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Request Intake",
+      "classification": "factory-layer-label",
+      "source": "Script Legend Factory Layer Label taxonomy",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Runtime Entrypoints",
+      "classification": "factory-layer-label",
+      "source": "Script Legend Factory Layer Label taxonomy",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Scanners",
+      "classification": "factory-layer-label",
+      "source": "Script Legend Factory Layer Label taxonomy",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Script Creation Forges",
+      "classification": "factory-layer-label",
+      "source": "Script Legend Factory Layer Label taxonomy",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Script Factory",
+      "classification": "factory-layer-label",
+      "source": "Script Legend Factory Layer Label taxonomy",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Script Forge",
+      "classification": "factory-layer-label",
+      "source": "Script Legend Factory Layer Label taxonomy",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Script Inspection Forges",
+      "classification": "factory-layer-label",
+      "source": "Script Legend Factory Layer Label taxonomy",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Script Legend",
+      "classification": "factory-layer-label",
+      "source": "Script Legend Factory Layer Label taxonomy",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Script Registry",
+      "classification": "factory-layer-label",
+      "source": "Script Legend Factory Layer Label taxonomy",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Script Runtime Forges",
+      "classification": "factory-layer-label",
+      "source": "Script Legend Factory Layer Label taxonomy",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Script Verification Forges",
+      "classification": "factory-layer-label",
+      "source": "Script Legend Factory Layer Label taxonomy",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Scriptionary",
+      "classification": "factory-layer-label",
+      "source": "Script Legend Factory Layer Label taxonomy",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Scriptograph",
+      "classification": "factory-layer-label",
+      "source": "Script Legend Factory Layer Label taxonomy",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Scriptographer",
+      "classification": "factory-layer-label",
+      "source": "Script Legend Factory Layer Label taxonomy",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Scriptonomy",
+      "classification": "factory-layer-label",
+      "source": "Script Legend Factory Layer Label taxonomy",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Single Script",
+      "classification": "factory-layer-label",
+      "source": "Script Legend Factory Layer Label taxonomy",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Verification",
+      "classification": "factory-layer-label",
+      "source": "Script Legend Factory Layer Label taxonomy",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "@refer Chat Pipeline",
+      "classification": "registered-script-label",
+      "source": "src/contracts/scriptFactory.ts refer.chat.pipeline",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "@refer Chat Request",
+      "classification": "registered-script-label",
+      "source": "src/contracts/scriptFactory.ts request.type.chat",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "@refer Participant",
+      "classification": "registered-script-label",
+      "source": "src/contracts/scriptFactory.ts refer.chat.participant",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Apply Update",
+      "classification": "registered-script-label",
+      "source": "src/contracts/scriptFactory.ts refer.applyUpdate",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Check For Updates",
+      "classification": "registered-script-label",
+      "source": "src/contracts/scriptFactory.ts refer.checkForUpdates",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Command Request",
+      "classification": "registered-script-label",
+      "source": "src/contracts/scriptFactory.ts request.type.command",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Compile",
+      "classification": "registered-script-label",
+      "source": "src/contracts/scriptFactory.ts npm.compile",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Context Picker",
+      "classification": "registered-script-label",
+      "source": "src/contracts/scriptFactory.ts refer.context.picker",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Contract Mode Off",
+      "classification": "registered-script-label",
+      "source": "src/contracts/scriptFactory.ts refer.contractModeOff",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Contract Mode On",
+      "classification": "registered-script-label",
+      "source": "src/contracts/scriptFactory.ts refer.contractModeOn",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Emit Script Blueprint",
+      "classification": "registered-script-label",
+      "source": "src/contracts/scriptFactory.ts refer.emitScriptBlueprint",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Emit Script DNA Seed",
+      "classification": "registered-script-label",
+      "source": "src/contracts/scriptFactory.ts refer.emitScriptDnaSeed",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Emit Send Contract",
+      "classification": "registered-script-label",
+      "source": "src/contracts/scriptFactory.ts refer.emitSendContract",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "HTTP Request",
+      "classification": "registered-script-label",
+      "source": "src/contracts/scriptFactory.ts request.type.http",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Initialize Repo",
+      "classification": "registered-script-label",
+      "source": "src/contracts/scriptFactory.ts refer.initializeRepo",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "REFER Orchestrator",
+      "classification": "registered-script-label",
+      "source": "src/contracts/scriptFactory.ts refer.orchestrate.chat",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "REFER Server",
+      "classification": "registered-script-label",
+      "source": "src/contracts/scriptFactory.ts npm.refer.server",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Refresh Codebases",
+      "classification": "registered-script-label",
+      "source": "src/contracts/scriptFactory.ts refer.refreshCodebases",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Resolution Loop",
+      "classification": "registered-script-label",
+      "source": "src/contracts/scriptFactory.ts refer.resolution.loop",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Run Scriptographer",
+      "classification": "registered-script-label",
+      "source": "src/contracts/scriptFactory.ts refer.runScriptographer",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Scan Codebase",
+      "classification": "registered-script-label",
+      "source": "src/contracts/scriptFactory.ts refer.scan.codebase",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Scan Codebase",
+      "classification": "registered-script-label",
+      "source": "src/contracts/scriptFactory.ts refer.scanCodebase",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Scan Factory Gaps",
+      "classification": "registered-script-label",
+      "source": "src/contracts/scriptFactory.ts refer.scan.factoryGaps",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Scan Factory Gaps",
+      "classification": "registered-script-label",
+      "source": "src/contracts/scriptFactory.ts refer.scanFactoryGaps",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Script Legend",
+      "classification": "registered-script-label",
+      "source": "src/contracts/scriptFactory.ts refer.script.legend",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Scriptographer",
+      "classification": "registered-script-label",
+      "source": "src/contracts/scriptFactory.ts refer.scriptographer",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Server Chat Route",
+      "classification": "registered-script-label",
+      "source": "src/contracts/scriptFactory.ts refer.server.chat",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Server Health Route",
+      "classification": "registered-script-label",
+      "source": "src/contracts/scriptFactory.ts refer.server.health",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Server Targets Route",
+      "classification": "registered-script-label",
+      "source": "src/contracts/scriptFactory.ts refer.server.targets",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Test",
+      "classification": "registered-script-label",
+      "source": "src/contracts/scriptFactory.ts npm.test",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Toggle Contract Mode",
+      "classification": "registered-script-label",
+      "source": "src/contracts/scriptFactory.ts refer.contractModeToggle",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Verify",
+      "classification": "registered-script-label",
+      "source": "src/contracts/scriptFactory.ts npm.verify",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "View Codebase Tree",
+      "classification": "registered-script-label",
+      "source": "src/contracts/scriptFactory.ts refer.viewCodebaseTree",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "View Factory Gaps",
+      "classification": "registered-script-label",
+      "source": "src/contracts/scriptFactory.ts refer.viewFactoryGaps",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "View Scriptographer Report",
+      "classification": "registered-script-label",
+      "source": "src/contracts/scriptFactory.ts refer.viewScriptographerReport",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Agent Context",
+      "classification": "term",
+      "source": "src/contracts/scriptLegend.ts terms",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Artifact Factory",
+      "classification": "term",
+      "source": "src/contracts/scriptLegend.ts terms",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Chat History",
+      "classification": "term",
+      "source": "src/contracts/scriptLegend.ts terms",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Codebase Tree",
+      "classification": "term",
+      "source": "src/contracts/scriptLegend.ts terms",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Command Surface",
+      "classification": "term",
+      "source": "src/contracts/scriptLegend.ts terms",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Context Factory",
+      "classification": "term",
+      "source": "src/contracts/scriptLegend.ts terms",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Context Picker",
+      "classification": "term",
+      "source": "src/contracts/scriptLegend.ts terms",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Factory System",
+      "classification": "term",
+      "source": "src/contracts/scriptLegend.ts terms",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Forge",
+      "classification": "term",
+      "source": "src/contracts/scriptLegend.ts terms",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "HTTP Endpoint Surface",
+      "classification": "term",
+      "source": "src/contracts/scriptLegend.ts terms",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Latest Process",
+      "classification": "term",
+      "source": "src/contracts/scriptLegend.ts terms",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Local-First Maturity",
+      "classification": "term",
+      "source": "src/contracts/scriptLegend.ts terms",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Model Factory",
+      "classification": "term",
+      "source": "src/contracts/scriptLegend.ts terms",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Model",
+      "classification": "term",
+      "source": "src/contracts/scriptLegend.ts terms",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Multi Script",
+      "classification": "term",
+      "source": "src/contracts/scriptLegend.ts terms",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Process Events",
+      "classification": "term",
+      "source": "src/contracts/scriptLegend.ts terms",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Request Intake",
+      "classification": "term",
+      "source": "src/contracts/scriptLegend.ts terms",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Runtime Entrypoints",
+      "classification": "term",
+      "source": "src/contracts/scriptLegend.ts terms",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Scanners",
+      "classification": "term",
+      "source": "src/contracts/scriptLegend.ts terms",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Script Factory",
+      "classification": "term",
+      "source": "src/contracts/scriptLegend.ts terms",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Script Forge",
+      "classification": "term",
+      "source": "src/contracts/scriptLegend.ts terms",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Script Registry Entries",
+      "classification": "term",
+      "source": "src/contracts/scriptLegend.ts terms",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Script Registry",
+      "classification": "term",
+      "source": "src/contracts/scriptLegend.ts terms",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Scriptionary",
+      "classification": "term",
+      "source": "src/contracts/scriptLegend.ts terms",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Scriptograph",
+      "classification": "term",
+      "source": "src/contracts/scriptLegend.ts terms",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Scriptographer",
+      "classification": "term",
+      "source": "src/contracts/scriptLegend.ts terms",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Scriptonomy",
+      "classification": "term",
+      "source": "src/contracts/scriptLegend.ts terms",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Self-Healing",
+      "classification": "term",
+      "source": "src/contracts/scriptLegend.ts terms",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Single Script",
+      "classification": "term",
+      "source": "src/contracts/scriptLegend.ts terms",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Status Light",
+      "classification": "term",
+      "source": "src/contracts/scriptLegend.ts terms",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "User Prompt",
+      "classification": "term",
+      "source": "src/contracts/scriptLegend.ts terms",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    },
+    {
+      "name": "Verification",
+      "classification": "term",
+      "source": "src/contracts/scriptLegend.ts terms",
+      "ratified": true,
+      "repair_hint": "No repair needed."
+    }
+  ]
+}

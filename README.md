@@ -14,6 +14,7 @@ Telechurch is the pilot consumer, not a product dependency.
 - Process panel that renders local process events
 - Bootstrap Library panel that inventories REFER bootstrap source references
 - Refer Library panel that browses readable REFER.OS document aliases
+- Contract Reader panel that displays contract-track turns separately from normal chat
 - `REFER: Initialize Repo` dry-run command with explicit apply confirmation
 - `REFER: Emit Send Contract Draft` command
 - `REFER: Emit Script Blueprint` command for chat-to-contract-to-script routing
@@ -120,6 +121,98 @@ Send Contract, target paths, and `workspace_context` JSON, then emit portable
 JSON packets such as `framework_operations` and `artifact_manifest`. Adapters
 translate those packets into the local repo shape for Angular, React, Node, or a
 generic codebase.
+
+## REFER Chat Intake
+
+The extension contributes the `@refer` chat participant. Prompts sent to
+`@refer` enter REFER before the selected model sees them: raw input is stored
+under `.refer-factory/intake/`, a compact contract is sent to the model, and the
+response is driven through a bounded resolution loop. Every loop terminates as
+`resolved_as_is`, `needs_more_info`, `needs_script`,
+`blocked_by_policy_or_scope`, or `failed_with_reason`.
+
+The orchestrator backlog is tracked in `docs/refer-orchestrator-roadmap.md` and
+mirrored by `createOrchestratorRoadmap()` so new capabilities can be marked
+available and integrated without losing the intended sequence.
+
+The REFER sidebar also contributes Contract Reader below Refer Library. It is a
+read-only transcript surface for contract-track work sent through `@refer`: each
+turn stores raw intake, compact contract, resolution state, assistant output, and
+progress under `.refer-factory/chat/sessions/`.
+
+Contract Reader shows three mode lights: Idle, Temp, and On. Temp is automatic
+for a single `@refer` turn and returns to Idle when complete. On is persistent
+contract mode, controlled by `REFER: Contract Mode On`, `REFER: Contract Mode
+Off`, or `REFER: Toggle Contract Mode`.
+
+REFER Coach is scaffolded as a future `@refer coach` mode for helping users set
+up local LLMs, provider routing, workspace readiness, and efficient REFER usage.
+
+## REFER Orchestrator Endpoint
+
+The local endpoint is a developer/simulation surface for pushing prompts into
+the same REFER intake and bounded orchestrator used by `@refer`, without typing
+through the VS Code Chat composer.
+
+Start it from this repo:
+
+```powershell
+$env:REFER_WORKSPACE_ROOT = "e:\refer-script-factory"
+$env:REFER_OLLAMA_MODEL = "qwen3:0.6b"
+npm run refer:server
+```
+
+Default base URL:
+
+```text
+http://127.0.0.1:39741
+```
+
+Routes:
+
+```text
+GET  /health
+GET  /refer/targets
+POST /refer/chat
+```
+
+`GET /refer/targets` returns the target ids the endpoint can write to. By
+default, the server exposes local targets that exist beside this repo, including
+`refer-script-factory`, `jamaicaeats`, and `telechurch-e2e-v2` when present.
+For explicit control, create `.refer-factory/orchestrator-targets.json`:
+
+```json
+{
+  "targets": [
+    {
+      "id": "jamaicaeats",
+      "workspaceRoot": "e:\\jamaicaeats",
+      "label": "JamaicaEats"
+    }
+  ]
+}
+```
+
+Send a simulated chat prompt:
+
+```powershell
+$body = @{
+  target = "jamaicaeats"
+  prompt = "explain this workspace in one sentence"
+} | ConvertTo-Json
+
+Invoke-RestMethod `
+  -Uri http://127.0.0.1:39741/refer/chat `
+  -Method Post `
+  -ContentType "application/json" `
+  -Body $body
+```
+
+`POST /refer/chat` accepts `target` as the preferred workspace selector.
+`workspaceRoot` is still accepted as a development fallback, but target ids are
+the stable contract for simulations. Successful calls write the same
+`.refer-factory/intake/`, `.refer-factory/chat/sessions/`, and
+`.refer-factory/process-state.json` artifacts used by Contract Reader.
 
 ## Law Library
 

@@ -16,13 +16,27 @@
     "onView:refer.process",
     "onView:refer.library",
     "onView:refer.referLibrary",
+    "onView:refer.scriptFactory",
+
+    "onView:refer.chat",
     "onCommand:refer.initializeRepo",
     "onCommand:refer.emitSendContract",
     "onCommand:refer.emitScriptBlueprint",
     "onCommand:refer.emitScriptDnaSeed",
     "onCommand:refer.refreshCodebases",
+    "onCommand:refer.scanCodebase",
+    "onCommand:refer.viewCodebaseTree",
+    "onCommand:refer.scanFactoryGaps",
+    "onCommand:refer.viewFactoryGaps",
+    "onCommand:refer.runScriptographer",
+    "onCommand:refer.viewScriptographerReport",
     "onCommand:refer.checkForUpdates",
-    "onCommand:refer.applyUpdate"
+    "onCommand:refer.applyUpdate",
+    "onCommand:refer.contractModeOn",
+    "onCommand:refer.contractModeOff",
+    "onCommand:refer.contractModeToggle",
+    "onChatParticipant:refer-script-factory.refer",
+    "onStartupFinished"
   ],
   "main": "./dist/src/extension.js",
   "contributes": {
@@ -48,12 +62,57 @@
         "title": "REFER: Refresh Codebases"
       },
       {
+        "command": "refer.scanCodebase",
+        "title": "REFER: Scan Codebase"
+      },
+      {
+        "command": "refer.viewCodebaseTree",
+        "title": "REFER: View Codebase Tree"
+      },
+      {
+        "command": "refer.scanFactoryGaps",
+        "title": "REFER: Scan Factory Gaps"
+      },
+      {
+        "command": "refer.viewFactoryGaps",
+        "title": "REFER: View Factory Gaps"
+      },
+      {
+        "command": "refer.runScriptographer",
+        "title": "REFER: Run Scriptographer"
+      },
+      {
+        "command": "refer.viewScriptographerReport",
+        "title": "REFER: View Scriptographer Report"
+      },
+      {
         "command": "refer.checkForUpdates",
         "title": "REFER: Check for Updates"
       },
       {
         "command": "refer.applyUpdate",
         "title": "REFER: Apply Update"
+      },
+      {
+        "command": "refer.contractModeOn",
+        "title": "REFER: Contract Mode On"
+      },
+      {
+        "command": "refer.contractModeOff",
+        "title": "REFER: Contract Mode Off"
+      },
+      {
+        "command": "refer.contractModeToggle",
+        "title": "REFER: Toggle Contract Mode"
+      }
+    ],
+    "chatParticipants": [
+      {
+        "id": "refer-script-factory.refer",
+        "fullName": "REFER",
+        "name": "refer",
+        "description": "Ask Refer Script Factory about this workspace.",
+        "isSticky": true
       }
     ],
     "configuration": {
@@ -79,6 +138,28 @@
           "type": "boolean",
           "default": true,
           "description": "Refresh the REFER codebase/subspace registry when the extension activates."
+        },
+        "refer.modelProvider": {
+          "type": "string",
+          "enum": ["vscode", "ollama"],
+          "default": "vscode",
+          "description": "Model provider used by the @refer bounded resolution loop. Use vscode for the selected VS Code chat model or ollama for a local Ollama server."
+        },
+        "refer.ollamaUrl": {
+          "type": "string",
+          "default": "http://127.0.0.1:11434",
+          "description": "Base URL for the local Ollama server used when refer.modelProvider is ollama."
+        },
+        "refer.ollamaModel": {
+          "type": "string",
+          "default": "qwen3:0.6b",
+          "description": "Ollama model name used by @refer when refer.modelProvider is ollama."
+        },
+        "refer.ollamaTimeoutMs": {
+          "type": "number",
+          "default": 120000,
+          "minimum": 1000,
+          "description": "Maximum time in milliseconds to wait for one Ollama response before failing the @refer resolution pass."
         }
       }
     },
@@ -86,6 +167,7 @@
       "activitybar": [
         {
           "id": "refer",
+          "name": "REFER",
           "title": "REFER",
           "icon": "resources/refer.svg"
         }
@@ -95,31 +177,49 @@
       "refer": [
         {
           "type": "webview",
+          "id": "refer.referLibrary",
+          "name": "Refer Library",
+          "visibility": "collapsed"
+        },
+        {
+          "type": "webview",
+          "id": "refer.scriptFactory",
+          "name": "Refer Factory System",
+          "visibility": "collapsed"
+        },
+
+        {
+          "type": "webview",
           "id": "refer.dashboard",
-          "name": "Dashboard"
+          "name": "Dashboard",
+          "visibility": "collapsed"
+        },
+        {
+          "type": "webview",
+          "id": "refer.chat",
+          "name": "@Refer Chat History",
+          "visibility": "collapsed"
         },
         {
           "type": "webview",
           "id": "refer.process",
-          "name": "Process"
+          "name": "Process",
+          "visibility": "collapsed"
         },
         {
           "type": "webview",
           "id": "refer.library",
-          "name": "Bootstrap Library"
-        },
-        {
-          "type": "webview",
-          "id": "refer.referLibrary",
-          "name": "Refer Library"
+          "name": "Bootstrap Library",
+          "visibility": "collapsed"
         }
       ]
     }
   },
   "scripts": {
     "compile": "tsc -p ./",
-    "test": "npm run compile && node dist/test/metrics.test.js && node dist/test/processEvents.test.js && node dist/test/bootstrapDryRun.test.js && node dist/test/bootstrapApply.test.js && node dist/test/bootstrapProcessEvents.test.js && node dist/test/bootstrapHealth.test.js && node dist/test/codebaseMiles.test.js && node dist/test/codebases.test.js && node dist/test/scriptBlueprint.test.js && node dist/test/scriptDna.test.js && node dist/test/schemaValidation.test.js && node dist/test/lawToc.test.js && node dist/test/updateSync.test.js",
-    "verify": "npm run test"
+    "test": "npm run compile && node dist/test/metrics.test.js && node dist/test/processEvents.test.js && node dist/test/bootstrapDryRun.test.js && node dist/test/bootstrapApply.test.js && node dist/test/bootstrapProcessEvents.test.js && node dist/test/bootstrapHealth.test.js && node dist/test/codebaseMiles.test.js && node dist/test/codebases.test.js && node dist/test/scriptBlueprint.test.js && node dist/test/scriptDna.test.js && node dist/test/scriptographer.test.js && node dist/test/referIntake.test.js && node dist/test/referOrchestrator.test.js && node dist/test/referProcessEvents.test.js && node dist/test/referChatSession.test.js && node dist/test/referChatMode.test.js && node dist/test/referOrchestratorRunner.test.js && node dist/test/referTargetRegistry.test.js && node dist/test/referCoach.test.js && node dist/test/orchestratorRoadmap.test.js && node dist/test/factoryGaps.test.js && node dist/test/schemaValidation.test.js && node dist/test/lawToc.test.js && node dist/test/updateSync.test.js",
+    "verify": "npm run test",
+    "refer:server": "npm run compile && node dist/src/server/referOrchestratorServer.js"
   },
   "devDependencies": {
     "@types/node": "^20.19.21",
