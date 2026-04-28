@@ -2,9 +2,10 @@
 
 `refer.zo` governs REFER-aligned use of Zo Computer as a provider, workspace, hosted surface, AI chat surface, and possible operator node.
 
-Zo knowledge lives in:
+Zo bootstrap and portable knowledge live in:
 
-- `E:/refer/zo-computer/**`
+- `https://github.com/lightedcandle/refer-zo-bootstrap`
+- local clone when present: `E:/refer-zo-bootstrap/**`
 
 Zo-first operator cockpit lives in:
 
@@ -33,7 +34,7 @@ Zo-facing work should pass through a compact intake router before specialist beh
 
 Current intake skill source:
 
-- `E:/refer/zo-computer/skills/refer-zo-intake-router/SKILL.md`
+- `E:/refer-zo-bootstrap/skills/refer-zo-intake-router/SKILL.md`
 
 The intake router classifies the request into one primary mode:
 
@@ -112,8 +113,8 @@ Zo capability claims must be labeled according to evidence:
 
 Operationally important claims should update:
 
-- `E:/refer/zo-computer/zo-validation-log.md`
-- the relevant Zo corpus file under `E:/refer/zo-computer/**`
+- the relevant Zo corpus file under `E:/refer-zo-bootstrap/docs/**`
+- the standalone bootstrap repo at `https://github.com/lightedcandle/refer-zo-bootstrap`
 
 ## 6. Specialist Skill Relationship
 
@@ -121,8 +122,8 @@ Specialist Zo skills may package repeatable behavior, but they do not own author
 
 For Telechurch visual design, the specialist skill is:
 
-- `E:/refer/zo-computer/skills/zo-design-driver/SKILL.md`
-- `E:/refer/zo-computer/skills/telechurch-figma-design-driver/SKILL.md`
+- `E:/refer-zo-bootstrap/skills/zo-design-driver/SKILL.md`
+- `E:/refer-zo-bootstrap/skills/telechurch-figma-design-driver/SKILL.md`
 
 `zo-design-driver` contains platform-agnostic design principles. Scoped app overlays, such as the Telechurch design driver, must not duplicate universal principles unless the scoped rule intentionally narrows them.
 
@@ -137,5 +138,5 @@ Telechurch visual work should still obey app-local law, including the prototype-
 - `refer.skills.md`
 - `refer.providers.md`
 - `refer.systems.security.md`
-- `E:/refer/zo-computer/zo-master-knowledge-base.md`
+- `E:/refer-zo-bootstrap/docs/zo-vipc-bootstrap-blueprint.md`
 - `E:/refer/captains-bridge/README.md`
