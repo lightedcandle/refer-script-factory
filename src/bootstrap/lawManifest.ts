@@ -82,6 +82,7 @@ export const fullUniversalLawFiles = [
   "refer.tooling.md",
   "refer.turbocharge-build.md",
   "refer.turnstyle.md",
+  "refer.zo.md",
   "reverent.deltatheme.md",
   "theme.spec.md",
 ] as const;

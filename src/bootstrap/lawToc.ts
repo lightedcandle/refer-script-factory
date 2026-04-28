@@ -57,6 +57,7 @@ export const referLawToc: LawTocEntry[] = [
   { sequence: 450, file: "refer.provider.codex.md", title: "Provider: Codex", group: "Agents & Providers", status: "reference", summary: "Codex provider guidance." },
   { sequence: 460, file: "refer.provider.chatgpt.md", title: "Provider: ChatGPT", group: "Agents & Providers", status: "reference", summary: "ChatGPT provider guidance." },
   { sequence: 470, file: "refer.provider.cli.md", title: "Provider: CLI", group: "Agents & Providers", status: "reference", summary: "CLI provider guidance." },
+  { sequence: 480, file: "refer.zo.md", title: "Provider: Zo", group: "Agents & Providers", status: "reference", summary: "Zo Computer provider, VIPC bootstrap, and chat-to-Codex guidance." },
 
   { sequence: 510, file: "refer.structure.md", title: "Structure", group: "App Structure", status: "canonical", summary: "Structural doctrine for app manifestation." },
   { sequence: 520, file: "refer.identity.md", title: "Identity", group: "App Structure", status: "canonical", summary: "Identity and registration rules." },

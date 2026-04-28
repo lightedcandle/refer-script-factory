@@ -9,3 +9,4 @@ npm-debug.log*
 .refer-factory/*.local.json
 .refer-factory/process-state.json
 .refer-factory/updates/
+zo-computer/usage/*.jsonl
