@@ -1,0 +1,96 @@
+{
+  "schema": "refer.hive.talkback-validation.v1",
+  "ok": true,
+  "contract_id": "hive.task.telechurch.route-rectification-ratification.20260429",
+  "item_id": "hive.task.telechurch.route-rectification-ratification.20260429",
+  "created_at": "2026-04-29T22:01:30.587Z",
+  "contract_path": ".refer-factory\\hive-contracts\\outbox\\hive.task.telechurch.route-rectification-ratification.20260429.json",
+  "talkback_path": "refer-zo-bootstrap\\datasets\\tandem-talkback\\inbox\\hive.task.telechurch.route-rectification-ratification.20260429.decoded.json",
+  "checks": [
+    {
+      "id": "contract-id",
+      "ok": true,
+      "detail": "passed"
+    },
+    {
+      "id": "status-done",
+      "ok": true,
+      "detail": "passed"
+    },
+    {
+      "id": "no-blockers",
+      "ok": true,
+      "detail": "passed"
+    },
+    {
+      "id": "evidence:decoded_transport:zo_task",
+      "ok": true,
+      "detail": "passed"
+    },
+    {
+      "id": "evidence:runner:contract-inbox-runner",
+      "ok": true,
+      "detail": "passed"
+    },
+    {
+      "id": "evidence:executor",
+      "ok": true,
+      "detail": "passed"
+    },
+    {
+      "id": "executor",
+      "ok": true,
+      "detail": "passed"
+    },
+    {
+      "id": "execution-mode",
+      "ok": true,
+      "detail": "passed"
+    },
+    {
+      "id": "operation-count",
+      "ok": true,
+      "detail": "passed"
+    },
+    {
+      "id": "operation:0:op",
+      "ok": true,
+      "detail": "passed"
+    },
+    {
+      "id": "operation:0:ok",
+      "ok": true,
+      "detail": "passed"
+    },
+    {
+      "id": "operation:0:path",
+      "ok": true,
+      "detail": "passed"
+    },
+    {
+      "id": "operation:0:exists",
+      "ok": true,
+      "detail": "passed"
+    },
+    {
+      "id": "operation:1:op",
+      "ok": true,
+      "detail": "passed"
+    },
+    {
+      "id": "operation:1:ok",
+      "ok": true,
+      "detail": "passed"
+    },
+    {
+      "id": "operation:1:path",
+      "ok": true,
+      "detail": "passed"
+    },
+    {
+      "id": "operation:1:entries",
+      "ok": true,
+      "detail": "passed"
+    }
+  ]
+}

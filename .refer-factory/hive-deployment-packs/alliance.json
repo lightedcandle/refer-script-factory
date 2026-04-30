@@ -1,0 +1,188 @@
+{
+  "schema": "refer.hive.node-deployment-pack.v1",
+  "created_at": "2026-04-29T21:23:06.589Z",
+  "node": {
+    "id": "alliance",
+    "name": "Alliance Zo",
+    "kind": "zo_computer",
+    "role": "alliance application build node",
+    "account": "zo:alliance",
+    "instance": "alliance",
+    "status": "active",
+    "transport": "file_api_tandem",
+    "persona": "governance-synced",
+    "rules": "governance-synced"
+  },
+  "authority": {
+    "source_repo": "refer-script-factory",
+    "zo_repo": "refer-zo-bootstrap",
+    "registry": ".refer-factory/hive-node-registry.json"
+  },
+  "required_datasets": [
+    "datasets/tandem-contracts/inbox",
+    "datasets/tandem-contracts/outbox",
+    "datasets/tandem-talkback/inbox",
+    "datasets/tandem-talkback/outbox",
+    "datasets/tandem-dispatch/reports",
+    "datasets/tandem-usage"
+  ],
+  "required_files": [
+    {
+      "local": "refer-zo-bootstrap\\scripts\\factory\\compression-codec.mjs",
+      "remote": "/home/workspace/refer-zo-bootstrap/scripts/factory/compression-codec.mjs",
+      "exists": true,
+      "kind": "runtime"
+    },
+    {
+      "local": "refer-zo-bootstrap\\scripts\\factory\\token-log-bridge.mjs",
+      "remote": "/home/workspace/refer-zo-bootstrap/scripts/factory/token-log-bridge.mjs",
+      "exists": true,
+      "kind": "runtime"
+    },
+    {
+      "local": "refer-zo-bootstrap\\scripts\\factory\\contract-inbox-runner.mjs",
+      "remote": "/home/workspace/refer-zo-bootstrap/scripts/factory/contract-inbox-runner.mjs",
+      "exists": true,
+      "kind": "runtime"
+    },
+    {
+      "local": "refer-zo-bootstrap\\scripts\\factory\\backfill-zo-local-usage.mjs",
+      "remote": "/home/workspace/refer-zo-bootstrap/scripts/factory/backfill-zo-local-usage.mjs",
+      "exists": true,
+      "kind": "runtime"
+    },
+    {
+      "local": "refer-zo-bootstrap\\docs\\file-transport-tandem.md",
+      "remote": "/home/workspace/refer-zo-bootstrap/docs/file-transport-tandem.md",
+      "exists": true,
+      "kind": "doc"
+    },
+    {
+      "local": "refer-zo-bootstrap\\datasets\\tandem-contracts\\README.md",
+      "remote": "/home/workspace/refer-zo-bootstrap/datasets/tandem-contracts/README.md",
+      "exists": true,
+      "kind": "dataset-metadata"
+    },
+    {
+      "local": "refer-zo-bootstrap\\datasets\\tandem-contracts\\datapackage.json",
+      "remote": "/home/workspace/refer-zo-bootstrap/datasets/tandem-contracts/datapackage.json",
+      "exists": true,
+      "kind": "dataset-metadata"
+    },
+    {
+      "local": "refer-zo-bootstrap\\datasets\\tandem-talkback\\README.md",
+      "remote": "/home/workspace/refer-zo-bootstrap/datasets/tandem-talkback/README.md",
+      "exists": true,
+      "kind": "dataset-metadata"
+    },
+    {
+      "local": "refer-zo-bootstrap\\datasets\\tandem-talkback\\datapackage.json",
+      "remote": "/home/workspace/refer-zo-bootstrap/datasets/tandem-talkback/datapackage.json",
+      "exists": true,
+      "kind": "dataset-metadata"
+    },
+    {
+      "local": "refer-zo-bootstrap\\datasets\\tandem-dispatch\\README.md",
+      "remote": "/home/workspace/refer-zo-bootstrap/datasets/tandem-dispatch/README.md",
+      "exists": true,
+      "kind": "dataset-metadata"
+    },
+    {
+      "local": "refer-zo-bootstrap\\datasets\\tandem-dispatch\\datapackage.json",
+      "remote": "/home/workspace/refer-zo-bootstrap/datasets/tandem-dispatch/datapackage.json",
+      "exists": true,
+      "kind": "dataset-metadata"
+    },
+    {
+      "local": "refer-zo-bootstrap\\datasets\\tandem-usage\\README.md",
+      "remote": "/home/workspace/refer-zo-bootstrap/datasets/tandem-usage/README.md",
+      "exists": true,
+      "kind": "dataset-metadata"
+    },
+    {
+      "local": "refer-zo-bootstrap\\datasets\\tandem-usage\\datapackage.json",
+      "remote": "/home/workspace/refer-zo-bootstrap/datasets/tandem-usage/datapackage.json",
+      "exists": true,
+      "kind": "dataset-metadata"
+    },
+    {
+      "local": "refer-zo-bootstrap\\AGENTS.md",
+      "remote": "/home/workspace/refer-zo-bootstrap/AGENTS.md",
+      "exists": true,
+      "kind": "runtime"
+    },
+    {
+      "local": "refer-zo-bootstrap\\docs\\known-limits-and-constraints.md",
+      "remote": "/home/workspace/refer-zo-bootstrap/docs/known-limits-and-constraints.md",
+      "exists": true,
+      "kind": "doc"
+    },
+    {
+      "local": "refer-zo-bootstrap\\docs\\parallel-factory-orchestration.md",
+      "remote": "/home/workspace/refer-zo-bootstrap/docs/parallel-factory-orchestration.md",
+      "exists": true,
+      "kind": "doc"
+    },
+    {
+      "local": "refer-zo-bootstrap\\docs\\factory-topology.md",
+      "remote": "/home/workspace/refer-zo-bootstrap/docs/factory-topology.md",
+      "exists": true,
+      "kind": "doc"
+    },
+    {
+      "local": "refer-zo-bootstrap\\law\\REFER.OS\\refer.factory.md",
+      "remote": "/home/workspace/refer-zo-bootstrap/law/REFER.OS/refer.factory.md",
+      "exists": true,
+      "kind": "runtime"
+    },
+    {
+      "local": "refer-zo-bootstrap\\law\\REFER.OS\\refer.zo.md",
+      "remote": "/home/workspace/refer-zo-bootstrap/law/REFER.OS/refer.zo.md",
+      "exists": true,
+      "kind": "runtime"
+    }
+  ],
+  "local_missing_files": [],
+  "remote_health_checks": [
+    "cd /home/workspace/refer-zo-bootstrap && node --check scripts/factory/compression-codec.mjs",
+    "cd /home/workspace/refer-zo-bootstrap && node --check scripts/factory/token-log-bridge.mjs",
+    "cd /home/workspace/refer-zo-bootstrap && node --check scripts/factory/contract-inbox-runner.mjs",
+    "cd /home/workspace/refer-zo-bootstrap && node scripts/factory/compression-codec.mjs self-test"
+  ],
+  "local_commands": {
+    "syntax": "npm --prefix refer-zo-bootstrap run check",
+    "codec": "npm --prefix refer-zo-bootstrap run codec:self-test",
+    "sync_runtime": "npm --prefix refer-zo-bootstrap run tandem:sync-runtime -- --instance alliance --preset all --check",
+    "dry_dispatch": "npm run hive:dispatch -- --id <ratification-item-id> --dry-run",
+    "live_dispatch": "npm run hive:dispatch -- --id <ratification-item-id> --trigger --fetch",
+    "validate_talkback": "npm run hive:validate-talkback -- --id <ratification-item-id>",
+    "heartbeat": "npm run hive:registry:heartbeat -- --id alliance --status ratifying --activity recent_activity --evidence \"deployment pack ratification passed\""
+  },
+  "ratification_contracts": [
+    {
+      "title": "Ratify Alliance Zo transport",
+      "template": "ratification-test",
+      "operation": "file_exists:/home/workspace/refer-zo-bootstrap/package.json",
+      "acceptance": [
+        "contract ships through file/API lane",
+        "talkback returns status done",
+        "talkback validates with root hive director"
+      ]
+    },
+    {
+      "title": "Ratify Alliance Zo bounded execution",
+      "template": "ratification-test",
+      "operations": [
+        "file_exists:/home/workspace/refer-zo-bootstrap/package.json",
+        "list_dir:/home/workspace/refer-zo-bootstrap/scripts/factory"
+      ],
+      "acceptance": [
+        "executor:zo.bounded.v1 evidence returned",
+        "file_exists returns true",
+        "list_dir returns factory script entries"
+      ]
+    }
+  ],
+  "ready_to_stage": true,
+  "next": "sync runtime to node, run remote checks, dispatch ratification contracts, validate talkback, then update hive registry"
+}

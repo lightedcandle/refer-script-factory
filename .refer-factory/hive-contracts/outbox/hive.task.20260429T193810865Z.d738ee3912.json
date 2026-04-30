@@ -1,0 +1,54 @@
+{
+  "schema": "refer.hive.contract.v1",
+  "contract_id": "hive.task.20260429T193810865Z.d738ee3912",
+  "created_at": "2026-04-29T19:38:34.941Z",
+  "owner_factory": "refer-script-factory",
+  "authority": "typed_contract",
+  "template": "ratification-test",
+  "target_node": "telechurch",
+  "target_instance": "telechurch",
+  "mode": "VERIFY",
+  "priority": "high",
+  "task": "Run guarded non-mutating operations on Telechurch through the hive director contract path and return execution evidence in compressed talkback.",
+  "scope": [
+    "hive-director",
+    "bounded-execution",
+    "telechurch-talkback"
+  ],
+  "out_of_scope": [
+    "secrets",
+    "production mutation without explicit approval"
+  ],
+  "acceptance": [
+    "file_exists operation returns true",
+    "list_dir operation returns factory script entries",
+    "talkback includes executor:zo.bounded.v1"
+  ],
+  "execution": {
+    "executor": "zo.bounded.v1",
+    "mode": "non_mutating",
+    "operations": [
+      {
+        "op": "file_exists",
+        "path": "/home/workspace/refer-zo-bootstrap/package.json"
+      },
+      {
+        "op": "list_dir",
+        "path": "/home/workspace/refer-zo-bootstrap/scripts/factory"
+      }
+    ]
+  },
+  "required_talkback": {
+    "schema": "refer.hive.talkback.v1",
+    "include": [
+      "ok",
+      "contract_id",
+      "node",
+      "summary",
+      "evidence",
+      "limits",
+      "next"
+    ]
+  },
+  "ratification_rule": "Talkback is evidence only; source changes plus local verification remain ratification."
+}

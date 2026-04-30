@@ -1,0 +1,54 @@
+{
+  "schema": "refer.hive.contract.v1",
+  "contract_id": "hive.task.telechurch.route-rectification-ratification.20260429",
+  "created_at": "2026-04-29T22:01:03.329Z",
+  "owner_factory": "refer-script-factory",
+  "authority": "typed_contract",
+  "template": "ratification-test",
+  "target_node": "telechurch",
+  "target_instance": "telechurch",
+  "mode": "VERIFY",
+  "priority": "high",
+  "task": "Telechurch must prove it received the updated file-transport tandem doctrine that defines route-build rectification and cross-ratification after direct Zo route builds.",
+  "scope": [
+    "Telechurch cross-ratification",
+    "route build rectification",
+    "tandem doctrine"
+  ],
+  "out_of_scope": [
+    "secrets",
+    "production mutation without explicit approval"
+  ],
+  "acceptance": [
+    "Telechurch confirms updated tandem doc exists",
+    "Telechurch runner returns talkback",
+    "local talkback validation passes"
+  ],
+  "execution": {
+    "executor": "zo.bounded.v1",
+    "mode": "non_mutating",
+    "operations": [
+      {
+        "op": "file_exists",
+        "path": "/home/workspace/refer-zo-bootstrap/docs/file-transport-tandem.md"
+      },
+      {
+        "op": "list_dir",
+        "path": "/home/workspace/refer-zo-bootstrap/docs"
+      }
+    ]
+  },
+  "required_talkback": {
+    "schema": "refer.hive.talkback.v1",
+    "include": [
+      "ok",
+      "contract_id",
+      "node",
+      "summary",
+      "evidence",
+      "limits",
+      "next"
+    ]
+  },
+  "ratification_rule": "Talkback is evidence only; source changes plus local verification remain ratification."
+}

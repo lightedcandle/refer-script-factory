@@ -1,0 +1,172 @@
+{
+  "schema": "refer.hive.route-ratification.v1",
+  "created_at": "2026-04-29T22:48:14.319Z",
+  "instance": "alliance",
+  "item_id": "hive.task.alliance.app-shell-completion.20260429",
+  "ok": true,
+  "expected": [
+    {
+      "path": "/",
+      "present": true
+    },
+    {
+      "path": "/organizations",
+      "present": true
+    },
+    {
+      "path": "/people",
+      "present": true
+    },
+    {
+      "path": "/calendar",
+      "present": true
+    },
+    {
+      "path": "/initiatives",
+      "present": true
+    },
+    {
+      "path": "/documents",
+      "present": true
+    },
+    {
+      "path": "/governance",
+      "present": true
+    },
+    {
+      "path": "/compliance",
+      "present": true
+    },
+    {
+      "path": "/communications",
+      "present": true
+    },
+    {
+      "path": "/profiles",
+      "present": true
+    },
+    {
+      "path": "/settings",
+      "present": true
+    }
+  ],
+  "routes": [
+    {
+      "path": "/",
+      "route_type": "page",
+      "public": "False"
+    },
+    {
+      "path": "/organizations",
+      "route_type": "page",
+      "public": "False"
+    },
+    {
+      "path": "/initiatives",
+      "route_type": "page",
+      "public": "False"
+    },
+    {
+      "path": "/documents",
+      "route_type": "page",
+      "public": "False"
+    },
+    {
+      "path": "/compliance",
+      "route_type": "page",
+      "public": "False"
+    },
+    {
+      "path": "/governance",
+      "route_type": "page",
+      "public": "False"
+    },
+    {
+      "path": "/calendar",
+      "route_type": "page",
+      "public": "False"
+    },
+    {
+      "path": "/communications",
+      "route_type": "page",
+      "public": "False"
+    },
+    {
+      "path": "/profiles",
+      "route_type": "page",
+      "public": "False"
+    },
+    {
+      "path": "/settings",
+      "route_type": "page",
+      "public": "False"
+    },
+    {
+      "path": "/people",
+      "route_type": "page",
+      "public": "False"
+    }
+  ],
+  "route_sources": [
+    {
+      "path": "/",
+      "ok": true,
+      "chars": 15020
+    },
+    {
+      "path": "/organizations",
+      "ok": true,
+      "chars": 7669
+    },
+    {
+      "path": "/initiatives",
+      "ok": true,
+      "chars": 6951
+    },
+    {
+      "path": "/documents",
+      "ok": true,
+      "chars": 7592
+    },
+    {
+      "path": "/compliance",
+      "ok": true,
+      "chars": 8133
+    },
+    {
+      "path": "/governance",
+      "ok": true,
+      "chars": 8193
+    },
+    {
+      "path": "/calendar",
+      "ok": true,
+      "chars": 8932
+    },
+    {
+      "path": "/communications",
+      "ok": true,
+      "chars": 9565
+    },
+    {
+      "path": "/profiles",
+      "ok": true,
+      "chars": 8610
+    },
+    {
+      "path": "/settings",
+      "ok": true,
+      "chars": 7546
+    },
+    {
+      "path": "/people",
+      "ok": true,
+      "chars": 7307
+    }
+  ],
+  "blockers": [],
+  "evidence": [
+    "list_space_routes:alliance",
+    "get_space_route:queried"
+  ]
+}

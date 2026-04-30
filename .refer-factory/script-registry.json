@@ -1,0 +1,373 @@
+{
+  "schema": "refer.domain-script-registry.v1",
+  "updated_at": "2026-04-29T22:18:20.888Z",
+  "rule": "Before direct work, identify the domain and check that domain's registry/check_first surfaces for an existing script.",
+  "domains": [
+    {
+      "id": "refer-script-factory",
+      "label": "REFER Script Factory",
+      "scope": "Codex/VS Code source, provider-neutral doctrine, extension scripts.",
+      "authority": "src/contracts/scriptFactory.ts",
+      "check_first": [
+        "src/contracts/scriptFactory.ts",
+        "docs/script-legend.md",
+        "package.json"
+      ],
+      "scripts": [
+        {
+          "id": "refer.extension.script-registry",
+          "command": "source registry",
+          "entrypoint": "src/contracts/scriptFactory.ts",
+          "purpose": "Authoritative VS Code extension and provider-neutral script contract registry.",
+          "status": "active"
+        }
+      ],
+      "discovered_package_scripts": [
+        {
+          "name": "compile",
+          "command": "tsc -p ./"
+        },
+        {
+          "name": "test",
+          "command": "npm run compile && node dist/test/metrics.test.js && node dist/test/processEvents.test.js && node dist/test/bootstrapDryRun.test.js && node dist/test/bootstrapApply.test.js && node dist/test/bootstrapProcessEvents.test.js && node dist/test/bootstrapHealth.test.js && node dist/test/codebaseMiles.test.js && node dist/test/codebases.test.js && node dist/test/scriptBlueprint.test.js && node dist/test/scriptDna.test.js && node dist/test/scriptographer.test.js && node dist/test/referIntake.test.js && node dist/test/referOrchestrator.test.js && node dist/test/referProcessEvents.test.js && node dist/test/referChatSession.test.js && node dist/test/referChatMode.test.js && node dist/test/referOrchestratorRunner.test.js && node dist/test/referTargetRegistry.test.js && node dist/test/referCoach.test.js && node dist/test/orchestratorRoadmap.test.js && node dist/test/factoryGaps.test.js && node dist/test/schemaValidation.test.js && node dist/test/lawToc.test.js && node dist/test/updateSync.test.js"
+        },
+        {
+          "name": "verify",
+          "command": "npm run test"
+        },
+        {
+          "name": "refer:server",
+          "command": "npm run compile && node dist/src/server/referOrchestratorServer.js"
+        },
+        {
+          "name": "tokens:log",
+          "command": "node scripts/chat-surface/token-useage.mjs log"
+        },
+        {
+          "name": "tokens:chat",
+          "command": "node scripts/chat-surface/token-useage.mjs chat"
+        },
+        {
+          "name": "tokens:reset-chat",
+          "command": "node scripts/chat-surface/token-useage.mjs reset-chat"
+        },
+        {
+          "name": "tokens:zo-chat",
+          "command": "node scripts/chat-surface/token-useage.mjs zo-chat"
+        },
+        {
+          "name": "tokens:script",
+          "command": "node scripts/chat-surface/token-useage.mjs script"
+        },
+        {
+          "name": "tokens:backfill-zo",
+          "command": "node scripts/chat-surface/token-useage.mjs backfill-zo"
+        },
+        {
+          "name": "tokens:backfill-chat",
+          "command": "node scripts/chat-surface/token-useage.mjs backfill-chat"
+        },
+        {
+          "name": "tokens:summary",
+          "command": "node scripts/chat-surface/token-useage.mjs summary"
+        },
+        {
+          "name": "tokens:lanes",
+          "command": "node scripts/chat-surface/token-useage.mjs lanes"
+        },
+        {
+          "name": "tokens:audit-chat",
+          "command": "node scripts/chat-surface/token-useage.mjs audit-chat"
+        },
+        {
+          "name": "scripts:registry",
+          "command": "node scripts/registry/domain-script-registry.mjs build"
+        },
+        {
+          "name": "hive:registry",
+          "command": "node scripts/hive/hive-node-registry.mjs report"
+        },
+        {
+          "name": "hive:registry:init",
+          "command": "node scripts/hive/hive-node-registry.mjs init"
+        },
+        {
+          "name": "hive:registry:upsert",
+          "command": "node scripts/hive/hive-node-registry.mjs upsert"
+        },
+        {
+          "name": "hive:registry:heartbeat",
+          "command": "node scripts/hive/hive-node-registry.mjs heartbeat"
+        },
+        {
+          "name": "hive:backlog",
+          "command": "node scripts/hive/hive-director.mjs report"
+        },
+        {
+          "name": "hive:backlog:init",
+          "command": "node scripts/hive/hive-director.mjs init"
+        },
+        {
+          "name": "hive:backlog:add",
+          "command": "node scripts/hive/hive-director.mjs add"
+        },
+        {
+          "name": "hive:contract",
+          "command": "node scripts/hive/hive-director.mjs contract"
+        },
+        {
+          "name": "hive:dispatch",
+          "command": "node scripts/hive/hive-director.mjs dispatch"
+        },
+        {
+          "name": "hive:validate-talkback",
+          "command": "node scripts/hive/hive-director.mjs validate-talkback"
+        },
+        {
+          "name": "hive:record",
+          "command": "node scripts/hive/hive-director.mjs record"
+        },
+        {
+          "name": "hive:build-intake",
+          "command": "node scripts/hive/hive-build-intake.mjs"
+        },
+        {
+          "name": "hive:deployment-pack",
+          "command": "node scripts/hive/hive-node-deployment-pack.mjs build"
+        },
+        {
+          "name": "hive:ratify-routes",
+          "command": "node scripts/hive/hive-route-ratifier.mjs"
+        }
+      ]
+    },
+    {
+      "id": "chat-surface",
+      "label": "Current Chat Surface",
+      "scope": "Token tracking, script-use logging, current-context reset, and chat-surface self-observation.",
+      "authority": ".refer-factory/script-registry.json",
+      "check_first": [
+        "docs/chat-surface-scripts.md",
+        "scripts/chat-surface/",
+        "package.json"
+      ],
+      "scripts": [
+        {
+          "id": "chat.tokens",
+          "command": "npm run tokens:chat",
+          "entrypoint": "scripts/chat-surface/token-useage.mjs",
+          "purpose": "Log current Codex chat usage with 4 characters = 1 token estimates.",
+          "status": "active"
+        },
+        {
+          "id": "chat.tokens.reset",
+          "command": "npm run tokens:reset-chat",
+          "entrypoint": "scripts/chat-surface/token-useage.mjs",
+          "purpose": "Log a context ceiling marker and start the current context total fresh.",
+          "status": "active"
+        },
+        {
+          "id": "chat.tokens.script",
+          "command": "npm run tokens:script",
+          "entrypoint": "scripts/chat-surface/token-useage.mjs",
+          "purpose": "Record reusable script execution in the same usage ledger.",
+          "status": "active"
+        },
+        {
+          "id": "chat.tokens.backfill",
+          "command": "npm run tokens:backfill-chat",
+          "entrypoint": "scripts/chat-surface/token-useage.mjs",
+          "purpose": "Backfill zero-count current-chat ledger records with manual estimates.",
+          "status": "active"
+        },
+        {
+          "id": "chat.tokens.audit",
+          "command": "npm run tokens:audit-chat",
+          "entrypoint": "scripts/chat-surface/token-useage.mjs",
+          "purpose": "Report zero-count current-chat records that need measured or manual usage.",
+          "status": "active"
+        }
+      ],
+      "discovered_package_scripts": []
+    },
+    {
+      "id": "hive",
+      "label": "Hive Director",
+      "scope": "Cross-node identity, hive build plan, node heartbeat, and ratification status.",
+      "authority": ".refer-factory/hive-node-registry.json",
+      "check_first": [
+        "docs/hive-build-plan.md",
+        ".refer-factory/hive-node-registry.md",
+        "scripts/hive/"
+      ],
+      "scripts": [
+        {
+          "id": "hive.node-registry",
+          "command": "npm run hive:registry",
+          "entrypoint": "scripts/hive/hive-node-registry.mjs",
+          "purpose": "Render the current hive node map from the JSON registry.",
+          "status": "active"
+        },
+        {
+          "id": "hive.node-upsert",
+          "command": "npm run hive:registry:upsert",
+          "entrypoint": "scripts/hive/hive-node-registry.mjs",
+          "purpose": "Add or update a hive/factory node with role, account, datasets, scripts, and state.",
+          "status": "active"
+        },
+        {
+          "id": "hive.node-heartbeat",
+          "command": "npm run hive:registry:heartbeat",
+          "entrypoint": "scripts/hive/hive-node-registry.mjs",
+          "purpose": "Record node liveness, status, and ratification evidence.",
+          "status": "active"
+        },
+        {
+          "id": "hive.backlog",
+          "command": "npm run hive:backlog",
+          "entrypoint": "scripts/hive/hive-director.mjs",
+          "purpose": "Render the typed hive backlog and contract queue.",
+          "status": "active"
+        },
+        {
+          "id": "hive.contract",
+          "command": "npm run hive:contract",
+          "entrypoint": "scripts/hive/hive-director.mjs",
+          "purpose": "Emit a root-authoritative hive contract from a backlog item.",
+          "status": "active"
+        },
+        {
+          "id": "hive.dispatch",
+          "command": "npm run hive:dispatch",
+          "entrypoint": "scripts/hive/hive-director.mjs",
+          "purpose": "Dispatch a typed hive contract through the appropriate node lane and record evidence.",
+          "status": "active"
+        },
+        {
+          "id": "hive.validate-talkback",
+          "command": "npm run hive:validate-talkback",
+          "entrypoint": "scripts/hive/hive-director.mjs",
+          "purpose": "Validate decoded talkback against the typed hive contract before ratification.",
+          "status": "active"
+        },
+        {
+          "id": "hive.build-intake",
+          "command": "npm run hive:build-intake",
+          "entrypoint": "scripts/hive/hive-build-intake.mjs",
+          "purpose": "Emit and dispatch governed build-intake contracts so Zo route changes originate from typed intake.",
+          "status": "active"
+        },
+        {
+          "id": "hive.deployment-pack",
+          "command": "npm run hive:deployment-pack",
+          "entrypoint": "scripts/hive/hive-node-deployment-pack.mjs",
+          "purpose": "Build a non-mutating deployment checklist for staging and ratifying a hive node.",
+          "status": "active"
+        },
+        {
+          "id": "hive.ratify-routes",
+          "command": "npm run hive:ratify-routes",
+          "entrypoint": "scripts/hive/hive-route-ratifier.mjs",
+          "purpose": "Capture live zo.space route state for a hive node and record upstream ratification evidence.",
+          "status": "active"
+        }
+      ],
+      "discovered_package_scripts": []
+    },
+    {
+      "id": "refer-zo-bootstrap",
+      "label": "REFER Zo Bootstrap",
+      "scope": "Zo computer bootstrap, file/API tandem, compression, dispatch, talkback, datasets, and live ratification.",
+      "authority": "refer-zo-bootstrap/scripts/factory/script-registry.json",
+      "check_first": [
+        "refer-zo-bootstrap/AGENTS.md",
+        "refer-zo-bootstrap/docs/file-transport-tandem.md",
+        "refer-zo-bootstrap/scripts/factory/script-registry.json",
+        "refer-zo-bootstrap/package.json"
+      ],
+      "scripts": [
+        {
+          "id": "zo.dispatch-contract",
+          "command": "npm --prefix refer-zo-bootstrap run dispatch:contract",
+          "entrypoint": "refer-zo-bootstrap/scripts/factory/dispatch-contract.mjs",
+          "purpose": "Ship a contract to Zo, optionally trigger the runner, and fetch talkback.",
+          "status": "active"
+        },
+        {
+          "id": "zo.sync-tandem-runtime",
+          "command": "npm --prefix refer-zo-bootstrap run tandem:sync-runtime",
+          "entrypoint": "refer-zo-bootstrap/scripts/factory/sync-tandem-runtime-to-zo.mjs",
+          "purpose": "Sync known tandem runtime files to a Zo computer through MCP/file API.",
+          "status": "active"
+        },
+        {
+          "id": "zo.codec-self-test",
+          "command": "npm --prefix refer-zo-bootstrap run codec:self-test",
+          "entrypoint": "refer-zo-bootstrap/scripts/factory/compression-codec.mjs",
+          "purpose": "Verify bidirectional machine compression/decompression before transport use.",
+          "status": "active"
+        },
+        {
+          "id": "zo.contract-runner",
+          "command": "npm --prefix refer-zo-bootstrap run contract:run-once",
+          "entrypoint": "refer-zo-bootstrap/scripts/factory/contract-inbox-runner.mjs",
+          "purpose": "Run one Zo-side inbox contract and emit talkback.",
+          "status": "active"
+        },
+        {
+          "id": "zo.adaptive-heartbeat",
+          "command": "node refer-zo-bootstrap/scripts/factory/heartbeat.mjs --status",
+          "entrypoint": "refer-zo-bootstrap/scripts/factory/heartbeat.mjs",
+          "purpose": "Run/status the Zo node-local adaptive heartbeat, tightening during work and relaxing up to a 24-hour dormant pulse.",
+          "status": "active"
+        }
+      ],
+      "discovered_package_scripts": [
+        {
+          "name": "check",
+          "command": "node --check tools/vipc-bootstrap.mjs && node --check tools/zo-mcp.mjs && node --check scripts/factory/compression-codec.mjs && node --check scripts/factory/bilateral-sim.mjs && node --check scripts/factory/token-log-bridge.mjs && node --check scripts/factory/dataset-store.mjs && node --check scripts/factory/heartbeat.mjs && node --check scripts/factory/contract-inbox-runner.mjs && node --check scripts/factory/backfill-zo-local-usage.mjs && node --check scripts/factory/ship-contract-to-zo.mjs && node --check scripts/factory/fetch-zo-talkback.mjs && node --check scripts/factory/dispatch-contract.mjs && node --check scripts/factory/sync-tandem-runtime-to-zo.mjs"
+        },
+        {
+          "name": "bootstrap",
+          "command": "node tools/vipc-bootstrap.mjs"
+        },
+        {
+          "name": "verify",
+          "command": "node tools/vipc-bootstrap.mjs --mode verify"
+        },
+        {
+          "name": "simulate",
+          "command": "node scripts/factory/bilateral-sim.mjs"
+        },
+        {
+          "name": "codec:self-test",
+          "command": "node scripts/factory/compression-codec.mjs self-test"
+        },
+        {
+          "name": "contract:run-once",
+          "command": "node scripts/factory/contract-inbox-runner.mjs --once"
+        },
+        {
+          "name": "tandem:ship",
+          "command": "node scripts/factory/ship-contract-to-zo.mjs"
+        },
+        {
+          "name": "tandem:fetch",
+          "command": "node scripts/factory/fetch-zo-talkback.mjs"
+        },
+        {
+          "name": "dispatch:contract",
+          "command": "node scripts/factory/dispatch-contract.mjs"
+        },
+        {
+          "name": "tandem:sync-runtime",
+          "command": "node scripts/factory/sync-tandem-runtime-to-zo.mjs"
+        },
+        {
+          "name": "tandem:backfill-usage",
+          "command": "node scripts/factory/backfill-zo-local-usage.mjs"
+        }
+      ]
+    }
+  ]
+}

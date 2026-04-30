@@ -1,0 +1,51 @@
+{
+  "schema": "refer.hive.talkback-validation.v1",
+  "ok": true,
+  "contract_id": "hive.task.alliance.app-shell-completion.20260429",
+  "item_id": "hive.task.alliance.app-shell-completion.20260429",
+  "created_at": "2026-04-29T22:46:15.211Z",
+  "contract_path": ".refer-factory\\hive-build-intake\\outbox\\hive.task.alliance.app-shell-completion.20260429.json",
+  "talkback_path": "refer-zo-bootstrap\\datasets\\tandem-talkback\\inbox\\hive.task.alliance.app-shell-completion.20260429.decoded.json",
+  "checks": [
+    {
+      "id": "contract-id",
+      "ok": true,
+      "detail": "passed"
+    },
+    {
+      "id": "status-done",
+      "ok": true,
+      "detail": "passed"
+    },
+    {
+      "id": "no-blockers",
+      "ok": true,
+      "detail": "passed"
+    },
+    {
+      "id": "evidence:decoded_transport:zo_task",
+      "ok": true,
+      "detail": "passed"
+    },
+    {
+      "id": "evidence:runner:contract-inbox-runner",
+      "ok": true,
+      "detail": "passed"
+    },
+    {
+      "id": "evidence:build-intake",
+      "ok": true,
+      "detail": "passed"
+    },
+    {
+      "id": "build-intake-result",
+      "ok": true,
+      "detail": "passed"
+    },
+    {
+      "id": "build-intake-activity-path",
+      "ok": true,
+      "detail": "passed"
+    }
+  ]
+}

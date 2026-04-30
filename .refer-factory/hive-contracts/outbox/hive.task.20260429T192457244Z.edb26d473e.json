@@ -1,0 +1,40 @@
+{
+  "schema": "refer.hive.contract.v1",
+  "contract_id": "hive.task.20260429T192457244Z.edb26d473e",
+  "created_at": "2026-04-29T19:29:56.518Z",
+  "owner_factory": "refer-script-factory",
+  "authority": "typed_contract",
+  "template": "ratification-test",
+  "target_node": "telechurch",
+  "target_instance": "telechurch",
+  "mode": "VERIFY",
+  "priority": "high",
+  "task": "Run a non-mutating ratification test proving the root hive director can emit a typed contract and delegate transport to the Zo tandem dispatcher.",
+  "scope": [
+    "hive-director",
+    "typed-contract",
+    "zo-dispatch-dry-run"
+  ],
+  "out_of_scope": [
+    "secrets",
+    "production mutation without explicit approval"
+  ],
+  "acceptance": [
+    "typed contract emitted",
+    "dry-run dispatch succeeds",
+    "node registry heartbeat records evidence"
+  ],
+  "required_talkback": {
+    "schema": "refer.hive.talkback.v1",
+    "include": [
+      "ok",
+      "contract_id",
+      "node",
+      "summary",
+      "evidence",
+      "limits",
+      "next"
+    ]
+  },
+  "ratification_rule": "Talkback is evidence only; source changes plus local verification remain ratification."
+}

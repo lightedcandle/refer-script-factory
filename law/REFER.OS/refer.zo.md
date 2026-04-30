@@ -93,7 +93,41 @@ Default verbosity budgets:
 - `contract`: 500-900 words
 - `full`: explicit request only
 
-## 4. Mutation Boundary
+## 4. Zo Script-First Transport Law
+
+Zo chat is not the default transport for machine work.
+
+For Codex-to-Zo, hive, bootstrap, tandem, dispatch, build, verification, and talkback workflows:
+
+1. save the full contract, script, or packet to Zo Files through MCP/API;
+2. trigger a short script command through MCP/API;
+3. write results to a file or dataset;
+4. fetch results through MCP/API;
+5. use Zo chat only for a tiny activation prompt or when the live persona/rule model itself must judge the work.
+
+Do not paste full contracts, code, or long result bodies into Zo chat when file/API transport can carry them.
+
+If an ad hoc transfer, command, or chat pattern is repeated, build a reusable script and document it before using it again.
+
+Zo-specific machine tandem work should use isolated datasets:
+
+- `datasets/tandem-contracts/`
+- `datasets/tandem-talkback/`
+- `datasets/tandem-dispatch/`
+
+Live user Zo activity should remain in the live Zo datasets unless deliberately promoted.
+
+## 5. Zo Limits Ledger
+
+Zo provider limits and observed constraints must be documented.
+
+When Zo MCP/API, Zo Files, Zo chat, Zo automations, Zo Space routes, or local commands produce a size limit, timeout, altered readback format, tool behavior, missing path, or runner mismatch, update:
+
+- `refer-zo-bootstrap/docs/known-limits-and-constraints.md`
+
+The mitigation should become a script, not a repeated workaround.
+
+## 6. Mutation Boundary
 
 Zo should default to non-mutating output unless the user or orchestrating agent explicitly asks Zo to edit, update, create, delete, publish, deploy, or run state-changing commands.
 
@@ -101,7 +135,7 @@ If a mutation request is unclear, Zo should ask one short clarifying question.
 
 Zo Space mutation does not authorize mutation of Telechurch, Supabase, Cloudflare, GitHub, local repos, or production infrastructure unless the governing app and provider laws also authorize that action.
 
-## 5. Evidence Boundary
+## 7. Evidence Boundary
 
 Zo capability claims must be labeled according to evidence:
 
@@ -116,7 +150,7 @@ Operationally important claims should update:
 - the relevant Zo corpus file under `E:/refer-zo-bootstrap/docs/**`
 - the standalone bootstrap repo at `https://github.com/lightedcandle/refer-zo-bootstrap`
 
-## 6. Specialist Skill Relationship
+## 8. Specialist Skill Relationship
 
 Specialist Zo skills may package repeatable behavior, but they do not own authority.
 
@@ -131,7 +165,7 @@ Telechurch visual work should still obey app-local law, including the prototype-
 
 `prototype -> approval -> contract -> wiring`
 
-## 7. Cross-References
+## 9. Cross-References
 
 - `refer.plan.md`
 - `refer.flow.md`
@@ -139,4 +173,6 @@ Telechurch visual work should still obey app-local law, including the prototype-
 - `refer.providers.md`
 - `refer.systems.security.md`
 - `E:/refer-zo-bootstrap/docs/zo-vipc-bootstrap-blueprint.md`
+- `E:/refer-zo-bootstrap/docs/file-transport-tandem.md`
+- `E:/refer-zo-bootstrap/docs/known-limits-and-constraints.md`
 - `E:/refer/captains-bridge/README.md`

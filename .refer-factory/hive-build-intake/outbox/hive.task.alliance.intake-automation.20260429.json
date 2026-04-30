@@ -1,0 +1,71 @@
+{
+  "schema": "refer.hive.contract.v1",
+  "contract_id": "hive.task.alliance.intake-automation.20260429",
+  "created_at": "2026-04-29T22:22:11.662Z",
+  "owner_factory": "refer-script-factory",
+  "authority": "typed_contract",
+  "template": "zo-runtime-fix",
+  "target_node": "alliance",
+  "target_instance": "alliance",
+  "mode": "BUILD",
+  "priority": "high",
+  "task": "Add a governed Alliance build lane so app route changes are initiated from typed intake contracts and return talkback, route evidence, and usage records instead of direct untracked Zo route edits.",
+  "scope": [
+    "Alliance intake automation",
+    "Skills directory",
+    "script factory activity",
+    "route-change talkback",
+    "dataset evidence"
+  ],
+  "out_of_scope": [
+    "secrets",
+    "external integrations",
+    "production auth"
+  ],
+  "acceptance": [
+    "Alliance has a Skills or factory runner surface",
+    "build requests create intake or dispatch records",
+    "route changes produce talkback evidence",
+    "datasets contain build activity beyond tandem ratification"
+  ],
+  "build_intake": {
+    "schema": "refer.zo.build-intake.v1",
+    "change_id": "hive.task.alliance.intake-automation.20260429",
+    "summary": "Add a governed Alliance build lane so app route changes are initiated from typed intake contracts and return talkback, route evidence, and usage records instead of direct untracked Zo route edits.",
+    "routes": [
+      "/",
+      "/organizations",
+      "/people",
+      "/calendar",
+      "/initiatives",
+      "/documents",
+      "/governance",
+      "/compliance",
+      "/communications",
+      "/profiles",
+      "/settings"
+    ],
+    "route_policy": "Route mutation must follow this typed intake and return talkback, route ratification, and usage evidence.",
+    "evidence_required": [
+      "typed intake",
+      "talkback",
+      "route ratification",
+      "usage record"
+    ],
+    "next": "Use this intake record as the required origin for subsequent Alliance route changes."
+  },
+  "required_talkback": {
+    "schema": "refer.hive.talkback.v1",
+    "include": [
+      "ok",
+      "contract_id",
+      "node",
+      "summary",
+      "evidence",
+      "build_intake",
+      "limits",
+      "next"
+    ]
+  },
+  "ratification_rule": "Build intake proves governed origin only; route mutation still requires route ratification before source is ratified."
+}

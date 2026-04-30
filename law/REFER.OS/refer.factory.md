@@ -46,7 +46,50 @@ The preferred progression is:
 
 The chat surface does not need to be owned by the factory. A prevailing assistant, IDE assistant, or external chat provider may perform intake if it emits or requests the same contract and blueprint packets before execution.
 
-## 4. Base Factory and Seed Factory Doctrine
+## 4. Script-First Law
+
+Known work must become a script before it becomes a habit.
+
+When an operator, agent, or chat instance needs to repeat an action, push files, transform packets, spawn workers, sync a runtime, count tokens, fetch talkback, validate a contract, or work around a platform limit, the lawful path is:
+
+1. create or update a reusable script;
+2. document the inputs, outputs, limits, and verification command;
+3. run the script instead of repeating ad hoc shell/chat steps;
+4. record any discovered constraints in the known limits ledger;
+5. reuse the script on the next occurrence.
+
+Ad hoc tool use is allowed for discovery and emergency diagnosis. Once the action is understood, the next execution should use a script route.
+
+Agents must not repeatedly solve the same transport, sync, counting, or dispatch problem in freeform chat. If a script is missing, build the smallest safe script, verify it, and register or document it.
+
+## 5. Known Limits and Constraint Ledger
+
+Factory work must preserve platform constraints as durable knowledge.
+
+When a script or tool hits a limit, timeout, response formatting problem, packet-size ceiling, command-line length failure, API behavior, missing local dependency, or provider-specific edge case, update a known limits ledger before final response.
+
+Each limit record should include:
+
+- observed date;
+- domain/provider;
+- operation;
+- symptom;
+- likely cause;
+- working mitigation;
+- script or doc that now encodes the mitigation;
+- verification command.
+
+The ledger turns failures into factory memory and prevents future agents from spending tokens rediscovering the same boundary.
+
+Current root ledger:
+
+- `docs/known-limits-and-constraints.md`
+
+Zo-specific ledger:
+
+- `refer-zo-bootstrap/docs/known-limits-and-constraints.md`
+
+## 6. Base Factory and Seed Factory Doctrine
 
 REFER should ship a base factory so every operator does not start from zero.
 
@@ -69,7 +112,7 @@ Therefore:
 - specialized factory = registered reusable local machinery,
 - repeated work = script/interpreter/compiler route.
 
-## 5. Artifact Assembly
+## 7. Artifact Assembly
 
 Artifacts do not jump directly from intent to code.
 
@@ -87,7 +130,7 @@ They travel through transform points such as:
 
 These points may be decomposed into smaller stations when needed, but they must remain explicit.
 
-## 6. Codebase Assembly
+## 8. Codebase Assembly
 
 Artifact assembly requires codebase assembly.
 
@@ -104,7 +147,7 @@ Codebase assembly should provide:
 
 Without this plant layout, scripts are forced to guess and the factory degrades back into inference-heavy handcrafting.
 
-## 7. Send Contract Doctrine
+## 9. Send Contract Doctrine
 
 Once intent is resolved, Planner output must condense into a **Send Contract** before it leaves conversational space.
 
@@ -117,7 +160,7 @@ A Send Contract is:
 
 The Send Contract is the artifact seed that enters the factory.
 
-## 8. Stations and Routes
+## 10. Stations and Routes
 
 Every factory route should define:
 
@@ -129,7 +172,7 @@ Every factory route should define:
 
 Station responsibilities must be narrow. One station should perform one lawful transformation.
 
-## 9. Anchors
+## 11. Anchors
 
 Scripts require lawful anchors.
 
@@ -145,7 +188,7 @@ Anchors may be:
 
 The factory should prefer explicit anchor maps over ad hoc placement.
 
-## 10. Artifact Registry
+## 12. Artifact Registry
 
 Factory output should be reusable.
 
@@ -160,7 +203,7 @@ Manifested artifacts should be registrable by:
 
 No stable artifact should require fresh invention after it has been successfully built and registered.
 
-## 11. Cross-References
+## 13. Cross-References
 
 - `refer.md`
 - `refer.plan.md`
@@ -168,3 +211,4 @@ No stable artifact should require fresh invention after it has been successfully
 - `refer.codebases.md`
 - `refer.engine.md`
 - `refer.efficiency.md`
+- `docs/known-limits-and-constraints.md`

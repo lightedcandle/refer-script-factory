@@ -1,0 +1,348 @@
+{
+  "schema": "refer.hive.node-registry.v1",
+  "updated_at": "2026-04-30T01:35:27.422Z",
+  "purpose": "Track hive-capable factory and Zo computer nodes, their roles, deployment state, and ratification evidence.",
+  "nodes": [
+    {
+      "id": "alliance",
+      "created_at": "2026-04-29T17:10:06.907Z",
+      "evidence": [
+        {
+          "ts": "2026-04-29T20:13:22.316Z",
+          "value": "deployment pack generated and local source requirements present"
+        },
+        {
+          "ts": "2026-04-29T21:14:03.613Z",
+          "value": "Alliance MCP list-tools timed out after about 124 seconds"
+        },
+        {
+          "ts": "2026-04-29T21:18:23.078Z",
+          "value": "Alliance tandem runtime synced and remote syntax check passed"
+        },
+        {
+          "ts": "2026-04-29T21:19:53.370Z",
+          "value": "hive director dispatch recorded for hive.task.alliance.registered-node-ratification.20260429"
+        },
+        {
+          "ts": "2026-04-29T21:22:45.130Z",
+          "value": "Alliance full deployment pack synced, remote syntax check passed, codec self-test passed, and registered-node ratification talkback validated"
+        },
+        {
+          "ts": "2026-04-29T21:58:29.125Z",
+          "value": "Alliance app-shell route ratification passed for /, /organizations, /people, /calendar, /initiatives, /documents, /governance, /compliance, /communications, /profiles, /settings"
+        },
+        {
+          "ts": "2026-04-29T22:02:03.719Z",
+          "value": "Alliance received updated route-build rectification doctrine after app-shell route ratification"
+        },
+        {
+          "ts": "2026-04-29T22:23:45.754Z",
+          "value": "build intake automation ratified for hive.task.alliance.intake-automation.20260429"
+        },
+        {
+          "ts": "2026-04-29T22:44:56.698Z",
+          "value": "build-activity dataset registered after intake automation ratification"
+        },
+        {
+          "ts": "2026-04-29T22:48:35.032Z",
+          "value": "Alliance app-shell completion route source inspection passed with zero space errors"
+        },
+        {
+          "ts": "2026-04-29T23:02:05.763Z",
+          "value": "node self-scoping capability deployed and local scope record written"
+        },
+        {
+          "ts": "2026-04-29T23:02:05.821Z",
+          "value": "Alliance wrote local node-scope record alliance-application-build"
+        },
+        {
+          "ts": "2026-04-29T23:20:41.725Z",
+          "value": "automatic node-scope resolution ratified in Alliance talkback"
+        },
+        {
+          "ts": "2026-04-30T00:31:04.644Z",
+          "value": "Alliance Script Factory local intake and inbox automation ratified on 2026-04-30."
+        },
+        {
+          "ts": "2026-04-30T00:31:41.138Z",
+          "value": "Alliance Script Factory local intake, registry, and automation scripts registered after live ratification."
+        },
+        {
+          "ts": "2026-04-30T00:31:52.270Z",
+          "value": "Alliance Script Factory scripts and datasets registered; active_build heartbeat restored."
+        },
+        {
+          "ts": "2026-04-30T01:02:08.050Z",
+          "value": "Alliance self-evolution loop and hourly automation ratified on 2026-04-30."
+        },
+        {
+          "ts": "2026-04-30T01:02:21.052Z",
+          "value": "Alliance hourly self-evolution automation is active."
+        },
+        {
+          "ts": "2026-04-30T01:16:45.306Z",
+          "value": "Alliance REFER skills, startup rules, REFER law directory, and active VIPC startup persona verified."
+        },
+        {
+          "ts": "2026-04-30T01:35:09.469Z",
+          "value": "Alliance base atomic forge pack synced and registry doctor reported missing_executable_count=0."
+        },
+        {
+          "ts": "2026-04-30T01:35:27.404Z",
+          "value": "Alliance base atomic forge pack executable and registered."
+        }
+      ],
+      "notes": [
+        {
+          "ts": "2026-04-29T17:10:06.907Z",
+          "value": "Created for the universal alliance webapp build; live ratification pending."
+        },
+        {
+          "ts": "2026-04-29T17:23:47.963Z",
+          "value": "adaptive heartbeat will relax while deployment is pending"
+        },
+        {
+          "ts": "2026-04-29T20:13:22.316Z",
+          "value": "ready_to_stage true in .refer-factory/hive-deployment-packs/alliance.json"
+        },
+        {
+          "ts": "2026-04-29T21:14:03.613Z",
+          "value": "Live staging blocked before runtime sync; verify ZO_COMPUTER_ALLIANCE token/instance connectivity without printing secrets."
+        },
+        {
+          "ts": "2026-04-29T21:18:23.078Z",
+          "value": "Alliance MCP reachable with bounded timeout; staged tandem runtime through file/API transport."
+        },
+        {
+          "ts": "2026-04-29T21:22:45.130Z",
+          "value": "Registration page and automatic bootstrap generator slated for later; current registered Alliance node is operational through file/API tandem."
+        },
+        {
+          "ts": "2026-04-29T21:58:29.125Z",
+          "value": "Route surface exists; intake automation still needs rectification before feature expansion."
+        },
+        {
+          "ts": "2026-04-29T22:02:03.719Z",
+          "value": "Both Alliance and Telechurch now have the updated tandem docs; intake automation remains the next queued fix."
+        },
+        {
+          "ts": "2026-04-29T23:02:05.821Z",
+          "value": "Scope is node-owned and may expand as local user purpose changes; root should route from scope evidence, not assign a permanent domain."
+        },
+        {
+          "ts": "2026-04-30T00:31:47.423Z",
+          "value": "Restored active node metadata after registering Script Factory datasets/scripts."
+        },
+        {
+          "ts": "2026-04-30T01:02:20.300Z",
+          "value": "Restored active node metadata after registering self-evolution loop."
+        },
+        {
+          "ts": "2026-04-30T01:35:26.712Z",
+          "value": "Restored active node metadata after registering base atomic forge pack."
+        }
+      ],
+      "datasets": [
+        "tandem-contracts",
+        "tandem-talkback",
+        "tandem-dispatch",
+        "tandem-usage",
+        "build-activity",
+        "node-scope",
+        "local-intake",
+        "script-registry",
+        "evolution-log",
+        "script-artifacts"
+      ],
+      "scripts": [
+        "contract-inbox-runner",
+        "dispatch-contract",
+        "ship-contract-to-zo",
+        "fetch-zo-talkback",
+        "sync-tandem-runtime-to-zo",
+        "node-scope",
+        "local-script-registry",
+        "local-intake-runner",
+        "inbox-automation",
+        "registry-doctor",
+        "evolution-loop",
+        "page-add",
+        "section-add",
+        "card-add",
+        "button-add",
+        "field-add",
+        "text-add",
+        "form-add",
+        "scan-workspace",
+        "auto-chunker"
+      ],
+      "name": "Alliance Zo",
+      "kind": "zo_computer",
+      "role": "multi-scope Zo hive node; current ratified scope includes Alliance application build",
+      "account": "zo:alliance",
+      "instance": "alliance",
+      "status": "active",
+      "transport": "file_api_tandem",
+      "persona": "governance-synced",
+      "rules": "governance-synced",
+      "last_seen_at": "2026-04-30T01:35:27.404Z",
+      "updated_at": "2026-04-30T01:35:27.404Z",
+      "heartbeat": {
+        "policy": "adaptive",
+        "mode": "active_build",
+        "activity": "active_build",
+        "interval_ms": 300000,
+        "interval_label": "5m",
+        "max_interval_ms": 86400000,
+        "max_interval_label": "24h",
+        "next_due_at": "2026-04-30T01:40:27.405Z"
+      }
+    },
+    {
+      "id": "codex-script-factory",
+      "name": "Codex Script Factory",
+      "kind": "codex_factory",
+      "role": "director and provider-neutral doctrine source",
+      "account": "lightedcandle2018@gmail.com",
+      "instance": "refer-script-factory",
+      "status": "active",
+      "transport": "local_scripts",
+      "persona": "AGENTS.md",
+      "rules": "law/REFER.OS",
+      "datasets": [
+        "chat-surface-token-useage",
+        "hive-node-registry"
+      ],
+      "scripts": [
+        "token-useage",
+        "hive-node-registry"
+      ],
+      "evidence": [
+        {
+          "ts": "2026-04-29T17:09:16.543Z",
+          "value": "local token dashboard and script-first ledger active"
+        }
+      ],
+      "notes": [
+        {
+          "ts": "2026-04-29T17:09:16.543Z",
+          "value": "Promote provider-neutral lessons from Zo back into this repo."
+        }
+      ],
+      "created_at": "2026-04-29T17:09:16.543Z",
+      "updated_at": "2026-04-29T17:09:16.543Z",
+      "last_seen_at": "2026-04-29T17:09:16.543Z",
+      "heartbeat": {
+        "policy": "adaptive",
+        "mode": "watch",
+        "activity": "watch",
+        "interval_ms": 3600000,
+        "interval_label": "1h",
+        "max_interval_ms": 86400000,
+        "max_interval_label": "24h",
+        "next_due_at": "2026-04-29T18:23:36.720Z"
+      }
+    },
+    {
+      "id": "telechurch",
+      "name": "Telechurch Zo",
+      "kind": "zo_computer",
+      "role": "first hive proving node",
+      "account": "zo:telechurch",
+      "instance": "telechurch",
+      "status": "active",
+      "transport": "file_api_tandem",
+      "persona": "installed",
+      "rules": "installed",
+      "datasets": [
+        "tandem-contracts",
+        "tandem-talkback",
+        "tandem-dispatch",
+        "tandem-usage"
+      ],
+      "scripts": [
+        "contract-inbox-runner",
+        "ship-contract-to-zo",
+        "fetch-zo-talkback",
+        "dispatch-contract"
+      ],
+      "evidence": [
+        {
+          "ts": "2026-04-29T17:09:16.541Z",
+          "value": "live tandem dispatch verified through file/API lane"
+        },
+        {
+          "ts": "2026-04-29T17:23:36.721Z",
+          "value": "adaptive heartbeat policy added"
+        },
+        {
+          "ts": "2026-04-29T17:23:43.205Z",
+          "value": "adaptive heartbeat policy added"
+        },
+        {
+          "ts": "2026-04-29T17:27:52.580Z",
+          "value": "Telechurch adaptive heartbeat synced and policy status verified"
+        },
+        {
+          "ts": "2026-04-29T19:25:09.602Z",
+          "value": "hive director dry-run dispatch recorded for hive.task.20260429T192457244Z.edb26d473e"
+        },
+        {
+          "ts": "2026-04-29T19:27:05.124Z",
+          "value": "hive director dry-run dispatch recorded for hive.task.20260429T192457244Z.edb26d473e"
+        },
+        {
+          "ts": "2026-04-29T19:30:11.633Z",
+          "value": "hive director dispatch recorded for hive.task.20260429T192457244Z.edb26d473e"
+        },
+        {
+          "ts": "2026-04-29T19:38:23.337Z",
+          "value": "hive director dry-run dispatch recorded for hive.task.20260429T193810865Z.d738ee3912"
+        },
+        {
+          "ts": "2026-04-29T19:39:55.472Z",
+          "value": "hive director dispatch recorded for hive.task.20260429T193810865Z.d738ee3912"
+        },
+        {
+          "ts": "2026-04-29T21:24:54.389Z",
+          "value": "Telechurch MCP handshake succeeded with bounded timeout on 2026-04-29"
+        },
+        {
+          "ts": "2026-04-29T22:01:24.917Z",
+          "value": "hive director dispatch recorded for hive.task.telechurch.route-rectification-ratification.20260429"
+        },
+        {
+          "ts": "2026-04-29T22:02:17.150Z",
+          "value": "Telechurch cross-ratified route-build rectification pattern via hive.task.telechurch.route-rectification-ratification.20260429"
+        }
+      ],
+      "notes": [
+        {
+          "ts": "2026-04-29T17:09:16.543Z",
+          "value": "Zo chat should stay minimal; use Files/API contracts and talkback."
+        },
+        {
+          "ts": "2026-04-29T21:24:54.389Z",
+          "value": "Existing Telechurch transport and bounded-execution ratification remains valid; fresh MCP reachability confirmed."
+        },
+        {
+          "ts": "2026-04-29T22:02:17.150Z",
+          "value": "Updated tandem doctrine synced and validated with bounded talkback."
+        }
+      ],
+      "created_at": "2026-04-29T17:09:16.543Z",
+      "updated_at": "2026-04-29T22:02:17.150Z",
+      "last_seen_at": "2026-04-29T22:02:17.150Z",
+      "heartbeat": {
+        "policy": "adaptive",
+        "mode": "ratifying",
+        "activity": "ratifying",
+        "interval_ms": 900000,
+        "interval_label": "15m",
+        "max_interval_ms": 86400000,
+        "max_interval_label": "24h",
+        "next_due_at": "2026-04-29T22:17:17.151Z"
+      }
+    }
+  ]
+}

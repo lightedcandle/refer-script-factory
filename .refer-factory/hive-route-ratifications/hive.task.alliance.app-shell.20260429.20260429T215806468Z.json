@@ -1,0 +1,116 @@
+{
+  "schema": "refer.hive.route-ratification.v1",
+  "created_at": "2026-04-29T21:58:06.468Z",
+  "instance": "alliance",
+  "item_id": "hive.task.alliance.app-shell.20260429",
+  "ok": true,
+  "expected": [
+    {
+      "path": "/",
+      "present": true
+    },
+    {
+      "path": "/organizations",
+      "present": true
+    },
+    {
+      "path": "/people",
+      "present": true
+    },
+    {
+      "path": "/calendar",
+      "present": true
+    },
+    {
+      "path": "/initiatives",
+      "present": true
+    },
+    {
+      "path": "/documents",
+      "present": true
+    },
+    {
+      "path": "/governance",
+      "present": true
+    },
+    {
+      "path": "/compliance",
+      "present": true
+    },
+    {
+      "path": "/communications",
+      "present": true
+    },
+    {
+      "path": "/profiles",
+      "present": true
+    },
+    {
+      "path": "/settings",
+      "present": true
+    }
+  ],
+  "routes": [
+    {
+      "path": "/",
+      "route_type": "page",
+      "public": "False"
+    },
+    {
+      "path": "/organizations",
+      "route_type": "page",
+      "public": "False"
+    },
+    {
+      "path": "/initiatives",
+      "route_type": "page",
+      "public": "False"
+    },
+    {
+      "path": "/documents",
+      "route_type": "page",
+      "public": "False"
+    },
+    {
+      "path": "/compliance",
+      "route_type": "page",
+      "public": "False"
+    },
+    {
+      "path": "/governance",
+      "route_type": "page",
+      "public": "False"
+    },
+    {
+      "path": "/calendar",
+      "route_type": "page",
+      "public": "False"
+    },
+    {
+      "path": "/communications",
+      "route_type": "page",
+      "public": "False"
+    },
+    {
+      "path": "/profiles",
+      "route_type": "page",
+      "public": "False"
+    },
+    {
+      "path": "/settings",
+      "route_type": "page",
+      "public": "False"
+    },
+    {
+      "path": "/people",
+      "route_type": "page",
+      "public": "False"
+    }
+  ],
+  "route_sources": [],
+  "blockers": [],
+  "evidence": [
+    "list_space_routes:alliance",
+    "get_space_route:skipped"
+  ]
+}

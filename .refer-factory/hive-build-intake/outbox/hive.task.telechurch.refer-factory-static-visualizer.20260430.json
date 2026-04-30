@@ -1,0 +1,65 @@
+{
+  "schema": "refer.hive.contract.v1",
+  "contract_id": "hive.task.telechurch.refer-factory-static-visualizer.20260430",
+  "created_at": "2026-04-30T02:35:23.149Z",
+  "owner_factory": "refer-script-factory",
+  "authority": "typed_contract",
+  "template": "hive-feature",
+  "target_node": "telechurch",
+  "target_instance": "telechurch",
+  "mode": "BUILD",
+  "priority": "high",
+  "task": "Build a Zo-hosted static REFER Factory visualization at /refer-factory-map that serves as the source of truth for ratification and expansion. The page should render factory domains, ratification nodes, expansion edges, status, authority, evidence, and last verified dates. Keep it static, readable, and data-model-first; no animation yet.",
+  "scope": [
+    "Telechurch Zo route /refer-factory-map",
+    "static ratification map",
+    "factory domains",
+    "nodes",
+    "edges",
+    "evidence"
+  ],
+  "out_of_scope": [
+    "root repo implementation",
+    "secrets",
+    "animation",
+    "production mutation outside typed Zo build intake"
+  ],
+  "acceptance": [
+    "Zo page loads at /refer-factory-map",
+    "Every visible item has a stable machine ID",
+    "Ratification status is visible for each node",
+    "Ratified structure is visually distinct from proposed expansion candidates",
+    "Node details include type authority evidence and last_verified",
+    "Data model can later be updated from contracts datasets or source registries"
+  ],
+  "build_intake": {
+    "schema": "refer.zo.build-intake.v1",
+    "change_id": "hive.task.telechurch.refer-factory-static-visualizer.20260430",
+    "summary": "Build a Zo-hosted static REFER Factory visualization at /refer-factory-map that serves as the source of truth for ratification and expansion. The page should render factory domains, ratification nodes, expansion edges, status, authority, evidence, and last verified dates. Keep it static, readable, and data-model-first; no animation yet.",
+    "routes": [
+      "/refer-factory-map"
+    ],
+    "route_policy": "Route mutation must follow this typed intake and return talkback, route ratification, and usage evidence.",
+    "evidence_required": [
+      "typed intake",
+      "talkback",
+      "route ratification",
+      "usage record"
+    ],
+    "next": "Use this intake record as the required origin for subsequent Alliance route changes."
+  },
+  "required_talkback": {
+    "schema": "refer.hive.talkback.v1",
+    "include": [
+      "ok",
+      "contract_id",
+      "node",
+      "summary",
+      "evidence",
+      "build_intake",
+      "limits",
+      "next"
+    ]
+  },
+  "ratification_rule": "Build intake proves governed origin only; route mutation still requires route ratification before source is ratified."
+}
