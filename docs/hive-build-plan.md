@@ -4,11 +4,18 @@
 
 The hive is a network of factory nodes that can receive governed work, execute or ratify it through scripts, and return evidence without letting chat become the primary transport.
 
-This repo is the Codex-side director and doctrine factory. The nested `refer-zo-bootstrap` repo owns Zo-specific deployment and runtime behavior. Telechurch Zo is the first live proving node.
+This repo is the Codex-side director and doctrine factory. The nested `refer-zo-bootstrap` repo owns Zo-specific deployment and runtime behavior. ApostleJ is the restored original hive deployment/distribution node, Telechurch Zo is the first live proving node, and Alliance Zo is the current app-build node.
 
 ## Current Capabilities
 
 The first build-out capabilities are the Hive Node Registry and Hive Director backlog.
+
+Current registered node roles:
+
+- `apostlej`: original hive deployment/distribution node restored from historical hive references.
+- `telechurch`: proving node for live Zo runtime behavior and tandem ratification.
+- `alliance`: app-build node for Alliance scoped application work.
+- `codex-script-factory`: root director and provider-neutral doctrine source.
 
 Authoritative local artifacts:
 
@@ -125,6 +132,8 @@ The pack is non-mutating. It records:
 - remote syntax and codec health checks;
 - local sync, dispatch, validation, and heartbeat commands;
 - ratification contract templates for transport and bounded execution.
+
+Every deployment pack must include the expandable scriptionary layer. For Zo bootstrap deployments this means `scripts/factory/scriptionary.json` and `scripts/factory/script-dictionary.mjs` travel with the runtime. Missing terminology assets are deployment blockers because a node without the scriptionary cannot explain, expand, or evolve factory vocabulary deterministically.
 
 Alliance staging sequence:
 
@@ -252,6 +261,9 @@ ordinary prompt
 -> script registry match
 -> executable script if present
 -> script-gap draft if missing
+-> AI exploratory build if authorized
+-> build trace
+-> script distillation and replay
 -> talkback packet
 ```
 
@@ -280,6 +292,7 @@ Self-evolution adds one more bounded tick:
 queued intake
 -> inbox automation
 -> registry doctor
+-> script draft promotion candidate
 -> evolution-log event
 -> talkback
 ```
@@ -298,7 +311,45 @@ Use:
 npm --prefix refer-zo-bootstrap run factory:evolve -- --json
 ```
 
-This layer records and scaffolds script gaps. It does not certify that generated placeholders are complete business logic; implementation and ratification are still required before a draft forge becomes an active production script.
+This layer records and scaffolds script gaps. A draft is not a denial of AI
+capability; it is the birth record for a future forge. If the intent is valid
+and approved for the node, Zo may build the first working solution with AI
+freedom, record the build trace, and then distill the successful path into a
+repeatable script.
+
+The complete promotion loop is:
+
+```text
+script-gap draft
+-> exploratory AI build
+-> build trace under the node dataset
+-> working artifact or route
+-> generated/revised script artifact
+-> registry update
+-> replay from the original intent
+-> talkback and ratification evidence
+```
+
+Generated placeholders are not complete business logic by themselves. A draft
+forge becomes active only after a working build trace has been distilled,
+replayed, registered, and ratified.
+
+Gap resolution is part of the user request path, not just a heartbeat cleanup.
+Users should experience a normal request/response. The factory should hide the
+mechanics:
+
+```text
+user request
+-> intake
+-> registry lookup
+-> existing script OR immediate gap promotion
+-> replay/check
+-> result returned
+-> script retained for the next similar request
+```
+
+The heartbeat/evolution loop is for maintenance, recovery, and interrupted
+drafts. It must not be the only way a new valid intent becomes useful.
 
 ## Base Atomic Forge Pack
 

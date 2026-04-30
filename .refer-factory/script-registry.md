@@ -1,6 +1,6 @@
 # Domain Script Registry
 
-Updated: 2026-04-29T22:18:20.888Z
+Updated: 2026-04-30T22:20:49.641Z
 
 Before direct work, identify the domain and check that domain's registry/check_first surfaces for an existing script.
 
@@ -24,7 +24,7 @@ Before direct work, identify the domain and check that domain's registry/check_f
 Package scripts discovered in this domain:
 
 - `compile`: `tsc -p ./`
-- `test`: `npm run compile && node dist/test/metrics.test.js && node dist/test/processEvents.test.js && node dist/test/bootstrapDryRun.test.js && node dist/test/bootstrapApply.test.js && node dist/test/bootstrapProcessEvents.test.js && node dist/test/bootstrapHealth.test.js && node dist/test/codebaseMiles.test.js && node dist/test/codebases.test.js && node dist/test/scriptBlueprint.test.js && node dist/test/scriptDna.test.js && node dist/test/scriptographer.test.js && node dist/test/referIntake.test.js && node dist/test/referOrchestrator.test.js && node dist/test/referProcessEvents.test.js && node dist/test/referChatSession.test.js && node dist/test/referChatMode.test.js && node dist/test/referOrchestratorRunner.test.js && node dist/test/referTargetRegistry.test.js && node dist/test/referCoach.test.js && node dist/test/orchestratorRoadmap.test.js && node dist/test/factoryGaps.test.js && node dist/test/schemaValidation.test.js && node dist/test/lawToc.test.js && node dist/test/updateSync.test.js`
+- `test`: `npm run compile && node dist/test/metrics.test.js && node dist/test/processEvents.test.js && node dist/test/bootstrapDryRun.test.js && node dist/test/bootstrapApply.test.js && node dist/test/bootstrapProcessEvents.test.js && node dist/test/bootstrapHealth.test.js && node dist/test/codebaseMiles.test.js && node dist/test/codebases.test.js && node dist/test/scriptBlueprint.test.js && node dist/test/scriptDna.test.js && node dist/test/scriptographer.test.js && node dist/test/referIntake.test.js && node dist/test/referOrchestrator.test.js && node dist/test/referProcessEvents.test.js && node dist/test/referChatSession.test.js && node dist/test/referChatMode.test.js && node dist/test/referOrchestratorRunner.test.js && node dist/test/referTargetRegistry.test.js && node dist/test/referCoach.test.js && node dist/test/orchestratorRoadmap.test.js && node dist/test/factoryGaps.test.js && node dist/test/schemaValidation.test.js && node dist/test/lawToc.test.js && node dist/test/updateSync.test.js && node dist/test/factoryRegistries.test.js && node dist/test/authorityResolver.test.js && node dist/test/doctrineCompiler.test.js && node dist/test/scriptionaryTerm.test.js && node dist/test/modificationLoop.test.js`
 - `verify`: `npm run test`
 - `refer:server`: `npm run compile && node dist/src/server/referOrchestratorServer.js`
 - `tokens:log`: `node scripts/chat-surface/token-useage.mjs log`
@@ -38,6 +38,19 @@ Package scripts discovered in this domain:
 - `tokens:lanes`: `node scripts/chat-surface/token-useage.mjs lanes`
 - `tokens:audit-chat`: `node scripts/chat-surface/token-useage.mjs audit-chat`
 - `scripts:registry`: `node scripts/registry/domain-script-registry.mjs build`
+- `scripts:class-registry`: `node scripts/registry/script-class-registry.mjs build`
+- `scripts:forge-registry`: `node scripts/registry/forge-registry.mjs build`
+- `lineage:create`: `node scripts/lineage/lineage-packet.mjs create`
+- `lineage:report`: `node scripts/lineage/lineage-packet.mjs report`
+- `failure:detect`: `node scripts/repair/modification-loop.mjs`
+- `repair:modification-loop`: `node scripts/repair/modification-loop.mjs`
+- `authority:resolve`: `node scripts/reference/authority-resolver.mjs resolve`
+- `authority:report`: `node scripts/reference/authority-resolver.mjs report`
+- `doctrine:compile`: `node scripts/doctrine/doctrine-compiler.mjs compile`
+- `doctrine:report`: `node scripts/doctrine/doctrine-compiler.mjs report`
+- `scriptionary:candidate`: `node scripts/scriptionary/scriptionary-term.mjs candidate`
+- `scriptionary:promote`: `node scripts/scriptionary/scriptionary-term.mjs promote`
+- `scriptionary:report`: `node scripts/scriptionary/scriptionary-term.mjs report`
 - `hive:registry`: `node scripts/hive/hive-node-registry.mjs report`
 - `hive:registry:init`: `node scripts/hive/hive-node-registry.mjs init`
 - `hive:registry:upsert`: `node scripts/hive/hive-node-registry.mjs upsert`
@@ -90,7 +103,7 @@ Package scripts discovered in this domain:
 
 Package scripts discovered in this domain:
 
-- `check`: `node --check tools/vipc-bootstrap.mjs && node --check tools/zo-mcp.mjs && node --check scripts/factory/compression-codec.mjs && node --check scripts/factory/bilateral-sim.mjs && node --check scripts/factory/token-log-bridge.mjs && node --check scripts/factory/dataset-store.mjs && node --check scripts/factory/heartbeat.mjs && node --check scripts/factory/contract-inbox-runner.mjs && node --check scripts/factory/backfill-zo-local-usage.mjs && node --check scripts/factory/ship-contract-to-zo.mjs && node --check scripts/factory/fetch-zo-talkback.mjs && node --check scripts/factory/dispatch-contract.mjs && node --check scripts/factory/sync-tandem-runtime-to-zo.mjs`
+- `check`: `node --check tools/vipc-bootstrap.mjs && node --check tools/zo-mcp.mjs && node --check scripts/factory.mjs && node --check scripts/bootstrap.mjs && node --check scripts/hive/api.mjs && node --check scripts/hive/dispatcher.mjs && node --check scripts/hive/receive.mjs && node --check scripts/hive/talkback.mjs && node --check scripts/factory/factory.mjs && node --check scripts/factory/bootstrap.mjs && node --check scripts/factory/compression-codec.mjs && node --check scripts/factory/bilateral-sim.mjs && node --check scripts/factory/token-log-bridge.mjs && node --check scripts/factory/dataset-store.mjs && node --check scripts/factory/heartbeat.mjs && node --check scripts/factory/train-cars/01-dashboard.mjs && node --check scripts/factory/train-cars/02-spawn-worker.mjs && node --check scripts/factory/train-cars/03-scan-workspace.mjs && node --check scripts/factory/train-cars/04-hive-sync.mjs && node --check scripts/factory/contract-inbox-runner.mjs && node --check scripts/factory/backfill-zo-local-usage.mjs && node --check scripts/factory/ship-contract-to-zo.mjs && node --check scripts/factory/fetch-zo-talkback.mjs && node --check scripts/factory/dispatch-contract.mjs && node --check scripts/factory/sync-tandem-runtime-to-zo.mjs && node --check scripts/factory/node-scope.mjs && node --check scripts/factory/local-script-registry.mjs && node --check scripts/factory/draft-promotion-runner.mjs && node --check scripts/factory/local-intake-runner.mjs && node --check scripts/factory/inbox-automation.mjs && node --check scripts/factory/registry-doctor.mjs && node --check scripts/factory/evolution-loop.mjs && node --check scripts/factory/script-dictionary.mjs && node --check scripts/factory/hive/api.mjs && node --check scripts/factory/hive/dispatcher.mjs && node --check scripts/factory/hive/receive.mjs && node --check scripts/factory/hive/talkback.mjs && node -e "JSON.parse(require('fs').readFileSync('scripts/factory/scriptionary.json','utf8'));" && node --check scripts/factory/artifacts/atomic-common.mjs && node --check scripts/factory/artifacts/page-add.mjs && node --check scripts/factory/artifacts/section-add.mjs && node --check scripts/factory/artifacts/card-add.mjs && node --check scripts/factory/artifacts/button-add.mjs && node --check scripts/factory/artifacts/field-add.mjs && node --check scripts/factory/artifacts/text-add.mjs && node --check scripts/factory/artifacts/form-add.mjs && node --check scripts/factory/artifacts/scan-workspace.mjs`
 - `bootstrap`: `node tools/vipc-bootstrap.mjs`
 - `verify`: `node tools/vipc-bootstrap.mjs --mode verify`
 - `simulate`: `node scripts/factory/bilateral-sim.mjs`
@@ -101,6 +114,15 @@ Package scripts discovered in this domain:
 - `dispatch:contract`: `node scripts/factory/dispatch-contract.mjs`
 - `tandem:sync-runtime`: `node scripts/factory/sync-tandem-runtime-to-zo.mjs`
 - `tandem:backfill-usage`: `node scripts/factory/backfill-zo-local-usage.mjs`
+- `scope:record`: `node scripts/factory/node-scope.mjs record`
+- `scope:report`: `node scripts/factory/node-scope.mjs report`
+- `factory:registry`: `node scripts/factory/local-script-registry.mjs`
+- `factory:promote-drafts`: `node scripts/factory/draft-promotion-runner.mjs --all`
+- `factory:intake`: `node scripts/factory/local-intake-runner.mjs`
+- `factory:automation-once`: `node scripts/factory/inbox-automation.mjs --once`
+- `factory:automation-status`: `node scripts/factory/inbox-automation.mjs --status`
+- `factory:registry-doctor`: `node scripts/factory/registry-doctor.mjs`
+- `factory:evolve`: `node scripts/factory/evolution-loop.mjs`
 
 ## Files
 

@@ -84,6 +84,177 @@ chat/request happens
 -> future turns use the improved system
 ```
 
+## Script Effect Determinism
+
+In the Script Factory, a script is not judged as good or bad. It is compared
+against the intended effect declared by the contract.
+
+The effect loop:
+
+```text
+intent contract
+-> script attempt
+-> observed effect
+-> compare observed effect to intended effect
+```
+
+If the observed effect matches the intended effect inside the allowed boundary,
+the script is functional for that contract.
+
+If the observed effect does not match, the script enters a modification loop:
+
+```text
+effect mismatch
+-> classify mismatch
+   contract unclear
+   input missing
+   script logic mismatch
+   boundary conflict
+   environment missing
+   verification missing
+-> apply smallest repair
+-> rerun the same contract
+-> compare effect again
+```
+
+The loop continues until one of these states is reached:
+
+- `functional`: the intended effect is achieved and verified.
+- `blocked`: the loop cannot continue without missing authority, input, environment, or permission.
+- `superseded`: a different script or contract now owns the intended effect.
+
+This principle replaces moral or stylistic judgment of scripts. Failure is not a
+terminal identity. It is an unfinished loop.
+
+Deterministic rule:
+
+```text
+No script is judged. It is iterated until the intended effect is achieved,
+blocked, or superseded.
+```
+
+## Kernel And Natural Rule Intake
+
+A clean Script Factory should not ship every REFER, provider, domain, or user
+preference law as always-active force. The shipped kernel is limited to rules
+required for Smart Intake and the Script Factory to operate deterministically:
+contract intake, bounded clarification, registry lookup, effect comparison,
+modification loops, evidence, lineage, and safe execution.
+
+Users do not label laws as unscripted, dormant, domain, project, or user method.
+They provide rules naturally by prompt, document, correction, or preference.
+Smart Intake captures that material and routes it into doctrine compilation.
+
+Historical REFER laws live as internal source material:
+
+```text
+unscripted-laws/REFER.OS/
+```
+
+A source document may inform a future script, validator, resolver, or rule pack,
+but it does not control builds merely because it exists in the repository.
+
+Activation path:
+
+```text
+rule document, correction, preference, or prompt
+-> Smart Intake contract
+-> doctrine compiler
+-> candidate script/validator/resolver
+-> fixture and modification loop
+-> registry entry
+-> active only inside declared scope
+```
+
+Canonical execution ranks:
+
+```text
+SEQ-A Kernel Governance
+SEQ-B Request Intake
+SEQ-C Clarification Resolver
+SEQ-D Authority And Context
+SEQ-E Strategy Selection
+SEQ-F Forge Or Script Generation
+SEQ-G Script Execution
+SEQ-H Evidence Capture
+SEQ-I Effect Comparison
+SEQ-J Modification Loop
+SEQ-K Promotion And Registration
+SEQ-L Scriptionary Refresh
+```
+
+Sub-sequences live inside parent ranks. The first canonized sub-sequences are:
+
+```text
+SEQ-E.1 Condition Read
+SEQ-E.2 Chain Decision
+SEQ-E.3 Collision Check
+SEQ-J.1 Mismatch Classifier
+SEQ-J.2 Repair Action
+SEQ-J.3 Replay Gate
+```
+
+The conditional chain controller governs `continue`, `branch`, `fork`, `merge`,
+`modify`, `delete`, `skip`, `block`, `supersede`, and `promote`. These are not
+stylistic choices. They are deterministic actions selected from measured
+conditions. Forks require collision checks. Deletes require reason, affected
+surfaces, archive or rollback path, and registry update. Merges must produce a
+single evidence packet or effect comparison unless a branch is blocked or
+superseded.
+
+Methods and strategies must be named against this sequence. A method is a
+repeatable way of working. A strategy is a coordinated plan pattern. Both should
+state activation trigger, sequence ranks, intended effect, scope, and evidence
+path before they are registered.
+
+This preserves the original REFER reference library without forcing every user
+or project to inherit laws they never invoked.
+
+## AI Build And Canonicalization
+
+Scripts do not exist to keep a capable AI from building. They exist to
+canonicalize a build that worked so the same intent can be replayed
+deterministically later.
+
+When no script exists for a valid intent, the factory should not treat the
+missing script as a permanent blocker. It should create a draft/gap record,
+allow an authorized AI build lane to explore and produce the first working
+artifact, then capture the working path as factory knowledge:
+
+```text
+intent contract
+-> script registry miss
+-> script-gap draft
+-> AI exploratory build
+-> build trace
+-> working artifact
+-> distill repeatable script/forge
+-> replay script against the intent
+-> register and ratify
+-> future turns use the script
+```
+
+The draft is a birth record for a future forge, not a stop sign. The AI build
+lane may use judgment, iteration, and tool calls within the approved intent
+contract. The deterministic requirement applies to the canonicalized replay:
+inputs, outputs, side effects, verification, and status must become explicit
+before the script is marked active or ratified.
+
+This must happen in the request path whenever the intent is safe and sufficiently
+specified. Users should not see "gap" as the outcome of an ordinary request.
+Heartbeat and evolution loops may recover interrupted drafts, but they are not a
+substitute for satisfying the current user request.
+
+The factory should preserve the AI's successful path in durable evidence:
+
+- intent contract;
+- files, routes, datasets, or artifacts changed;
+- errors and fixes encountered;
+- verification commands or live checks;
+- talkback/evidence packets;
+- distilled script inputs and outputs;
+- replay result.
+
 Every resolved turn should ask:
 
 ```text
@@ -97,10 +268,13 @@ If the answer reveals a gap, the preferred repair order is:
 
 1. Update terminology or doctrine when the gap is conceptual.
 2. Update the script registry when the gap is about available capabilities.
-3. Add or update a forge/script when the gap is repeatable work.
-4. Add or refresh scan/context artifacts when the gap is missing knowledge.
-5. Add tests when the gap could regress.
-6. Add status/process events when the gap affects observability.
+3. For missing repeatable capability, let the authorized AI build the first
+   working solution from the intent contract and record a build trace.
+4. Distill the working trace into a forge/script and replay it.
+5. Add or refresh scan/context artifacts when the gap is missing knowledge.
+6. Add tests when the gap could regress.
+7. Add status/process events when the gap affects observability.
+8. Register and ratify only after evidence and replay exist.
 
 ## Naming Rules
 

@@ -24,7 +24,7 @@ Telechurch is the pilot consumer, not a product dependency.
 - Agent governance bootstrap through `AGENTS.md` and `.refer-factory/agent-profile.json`
 - JSON schemas for contracts, metrics, process events, adapters, and bootstrap
 - Portable JSON script packets with Angular, React, Node, and generic adapters
-- Universal REFER.OS law library under `law/REFER.OS`
+- Dormant REFER.OS reference library under `unscripted-laws/REFER.OS`
 - TypeScript tests for metrics, process events, and bootstrap dry-run
 
 ## Verify
@@ -65,7 +65,7 @@ Bootstrap installs/updates these REFER-owned files:
 - `REFER.OS/refer.factory.md`
 - `REFER.OS/refer.engine.md`
 - `REFER.OS/refer.efficiency.md`
-- the rest of the universal `REFER.OS/*.md` law/reference library
+- the rest of the dormant `REFER.OS/*.md` reference library
 - `.refer-factory/agent-profile.json`
 - `.refer-factory/adapter.json`
 - `.refer-factory/codebases.json`
@@ -74,7 +74,9 @@ Bootstrap installs/updates these REFER-owned files:
 
 These define contract-first prompt handling, safe script rules, secret-file
 exclusions, local tracking paths, and the machine-readable discovery contract
-other agents can follow before searching.
+other agents can follow before searching. Installed `REFER.OS/*.md` documents are
+reference material until a doctrine compiler or authorized user action converts
+them into registered scripts, validators, or rule packs.
 
 REFER bootstrap state is kept under `.refer-factory/` instead of `public/` so
 web application production builds do not expose the plan by default.
@@ -121,6 +123,52 @@ Send Contract, target paths, and `workspace_context` JSON, then emit portable
 JSON packets such as `framework_operations` and `artifact_manifest`. Adapters
 translate those packets into the local repo shape for Angular, React, Node, or a
 generic codebase.
+
+## Classification And Lineage
+
+The Script Factory now has an executable first slice of the deterministic build
+plan:
+
+```powershell
+npm run scripts:class-registry
+npm run scripts:forge-registry
+npm run lineage:create
+npm run lineage:report
+npm run authority:resolve -- --intent "Build Stripe checkout" --domain stripe
+npm run authority:report
+npm run doctrine:compile -- --rule "Stripe checkout must use official Stripe docs before script generation." --domain stripe
+npm run doctrine:report
+npm run scriptionary:candidate -- --term "New Effect" --plain "New Reusable Effect" --meaning "..." --use "..."
+npm run scriptionary:promote -- --term "New Effect" --plain "New Reusable Effect" --meaning "..." --use "..."
+npm run scriptionary:report
+```
+
+These write:
+
+- `.refer-factory/script-class-registry.json`
+- `.refer-factory/script-class-registry.md`
+- `.refer-factory/forge-registry.json`
+- `.refer-factory/forge-registry.md`
+- `.refer-factory/lineage/*.json`
+- `.refer-factory/authority/latest.json`
+- `.refer-factory/authority/latest.md`
+- `.refer-factory/doctrine-candidates/latest.json`
+- `.refer-factory/doctrine-candidates/latest.md`
+- `.refer-factory/scriptionary/term-candidates/latest.json`
+- `.refer-factory/scriptionary/term-candidates/latest.md`
+
+The class registry assigns each script a governed class, execution sequence
+rank, forge owner, read/write surfaces, lock surfaces, and intended effect. The
+forge registry groups scripts by production pattern. Lineage packets preserve
+the chain from intent and authority to script, run, evidence, repair, and
+promotion. Authority packets resolve known domain work to official or local
+references before generation, and create an experimental authority path when no
+known authority exists. Doctrine candidates turn natural rule input into
+classified, authority-backed candidate scripts or validators with fixtures; they
+remain inactive until future verification and promotion steps pass. Scriptionary
+term candidates capture new words, methods, strategies, sequence ranks, chain
+actions, artifacts, statuses, rules, or reusable system effects; promotion can
+insert a vetted term into the Script Legend source.
 
 ## REFER Chat Intake
 
@@ -214,20 +262,29 @@ the stable contract for simulations. Successful calls write the same
 `.refer-factory/intake/`, `.refer-factory/chat/sessions/`, and
 `.refer-factory/process-state.json` artifacts used by Contract Reader.
 
-## Law Library
+## Unscripted Law Library
 
-The extension ships the full universal REFER.OS markdown library in
-`law/REFER.OS`. The Refer Library view shows readable document aliases without
-the `refer.` prefix or `.md` suffix, and each row can open the source document
-directly in VS Code.
+The extension keeps the historical REFER.OS markdown library in
+`unscripted-laws/REFER.OS`. These documents are dormant references, not active
+shipped governance. The always-on shipped rules should be limited to how Smart
+Intake and the Script Factory work: contract-first intake, deterministic
+resolution, registry use, effect checks, and safe script execution.
+
+Users can add rules by prompt or document. The intended path is natural to the
+system: intake captures the rule source, the doctrine compiler classifies it,
+generates candidate scripts or validators, runs fixtures and modification loops,
+then registers only verified output as active governance. Users do not need to
+know there is a rule-to-script generator.
 
 Refer Library ordering is controlled by `src/bootstrap/lawToc.ts`. Each document
 has a sequence number, group, status, and summary so the view renders as an
 intentional table of contents instead of raw filename order.
 
+The expansion model is documented in `docs/user-law-expansion.md`.
+
 ## Updates
 
-REFER checks for law/script updates on activation when `refer.autoCheckUpdates`
+REFER checks for reference/script updates on activation when `refer.autoCheckUpdates`
 is enabled. Operators can also run `REFER: Check for Updates` manually. Updates
 are driven by a manifest, filtered by `refer.updateChannel`, previewed in a VS
 Code notification, and applied only after explicit confirmation.

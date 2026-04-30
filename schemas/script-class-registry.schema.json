@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Script Class Registry",
+  "type": "object",
+  "required": ["schema_version", "generated_at", "entries"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "generated_at": { "type": "string" },
+    "entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "script_id",
+          "label",
+          "script_class",
+          "sequence_rank",
+          "forge_id",
+          "reads",
+          "writes",
+          "locks",
+          "source_authority",
+          "effect_contract",
+          "status"
+        ],
+        "properties": {
+          "script_id": { "type": "string" },
+          "label": { "type": "string" },
+          "script_class": {
+            "enum": [
+              "Request Type",
+              "Governing Script",
+              "Resolver Script",
+              "Sequencer Script",
+              "Collision Guard Script",
+              "Forge Script",
+              "Reference Script",
+              "Domain Script",
+              "UI Script",
+              "Function Script",
+              "Validator Script",
+              "Repair Script",
+              "Installer Script",
+              "Telemetry Script"
+            ]
+          },
+          "sequence_rank": {
+            "enum": [
+              "SEQ-A",
+              "SEQ-B",
+              "SEQ-C",
+              "SEQ-D",
+              "SEQ-E",
+              "SEQ-F",
+              "SEQ-G",
+              "SEQ-H",
+              "SEQ-I",
+              "SEQ-J",
+              "SEQ-K",
+              "SEQ-L"
+            ]
+          },
+          "forge_id": { "type": "string" },
+          "reads": { "type": "array", "items": { "type": "string" } },
+          "writes": { "type": "array", "items": { "type": "string" } },
+          "locks": { "type": "array", "items": { "type": "string" } },
+          "source_authority": { "type": "array", "items": { "type": "string" } },
+          "effect_contract": {
+            "type": "object",
+            "required": ["intended_effect", "allowed_boundary"],
+            "properties": {
+              "intended_effect": { "type": "string" },
+              "allowed_boundary": { "type": "string" }
+            },
+            "additionalProperties": false
+          },
+          "status": {
+            "enum": [
+              "draft",
+              "ready",
+              "running",
+              "functional",
+              "mismatched",
+              "blocked",
+              "superseded",
+              "unverified"
+            ]
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

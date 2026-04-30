@@ -17,6 +17,8 @@ const prompt = createOrchestratorPrompt({
 });
 assert.ok(prompt.includes("REFER bounded orchestrator"));
 assert.ok(prompt.includes(record.contract.contract_id));
+assert.ok(prompt.includes("execution_gate"));
+assert.ok(prompt.includes("Do not create selector/resolver scripts"));
 assert.ok(!prompt.includes(record.raw_input));
 
 const parsed = parseResolutionEnvelope(`\`\`\`json

@@ -161,7 +161,11 @@ function readReferLaw(fileName: string): string {
   if (!fullUniversalLawFiles.includes(fileName as (typeof fullUniversalLawFiles)[number])) {
     throw new Error(`Law file is not part of the bootstrap pack: ${fileName}`);
   }
-  const source = path.resolve(__dirname, "../../../law/REFER.OS", fileName);
+  const source = path.resolve(
+    __dirname,
+    "../../../unscripted-laws/REFER.OS",
+    fileName,
+  );
   return ensureTrailingNewline(fs.readFileSync(source, "utf8"));
 }
 

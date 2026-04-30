@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Forge Registry",
+  "type": "object",
+  "required": ["schema_version", "generated_at", "forges"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "generated_at": { "type": "string" },
+    "forges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "forge_id",
+          "label",
+          "forge_family",
+          "generated_script_classes",
+          "authority_refs",
+          "status",
+          "modification_status",
+          "fixtures",
+          "lineage_packets",
+          "generated_scripts"
+        ],
+        "properties": {
+          "forge_id": { "type": "string" },
+          "label": { "type": "string" },
+          "forge_family": { "type": "string" },
+          "generated_script_classes": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "authority_refs": { "type": "array", "items": { "type": "string" } },
+          "status": {
+            "enum": [
+              "draft",
+              "stable",
+              "needs_modification",
+              "modifying",
+              "regenerating",
+              "ratified",
+              "superseded",
+              "blocked"
+            ]
+          },
+          "modification_status": {
+            "enum": ["none", "needs_modification", "modifying", "blocked"]
+          },
+          "fixtures": { "type": "array", "items": { "type": "string" } },
+          "lineage_packets": { "type": "array", "items": { "type": "string" } },
+          "generated_scripts": { "type": "array", "items": { "type": "string" } }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

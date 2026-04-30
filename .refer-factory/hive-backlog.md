@@ -1,6 +1,6 @@
 # Hive Backlog
 
-Updated: 2026-04-30T02:35:23.153Z
+Updated: 2026-04-30T20:30:49.845Z
 
 Track hive work as typed contracts before dispatching to factory nodes.
 
@@ -109,6 +109,7 @@ Track hive work as typed contracts before dispatching to factory nodes.
 - Contract: `.refer-factory\hive-build-intake\outbox\hive.task.alliance.app-shell-completion.20260429.json`
 - Summary: Complete the Alliance Hub app shell content after intake automation ratification. Ensure all eleven routes render meaningful demo content, consistent navigation, universal alliance data, and Faith / Church Alliance profile content without external integrations.
 - Acceptance: all eleven app routes render meaningful non-placeholder content; navigation is consistent across routes; Faith / Church Alliance demo profile is present; talkback lists changed routes and build activity evidence; route ratification passes with source inspection
+- Latest dispatch: 2026-04-29T23:20:27.282Z to `alliance` (live, ok=true)
 - Evidence:
   - 2026-04-29T22:48:14.319Z: route ratification passed: .refer-factory\hive-route-ratifications\hive.task.alliance.app-shell-completion.20260429.20260429T224814319Z.json
   - 2026-04-29T22:48:35.099Z: Alliance app-shell completion pass ratified: build intake recorded, source-inspected route ratification passed for all eleven routes, and get_space_errors returned count=0.
@@ -128,6 +129,7 @@ Track hive work as typed contracts before dispatching to factory nodes.
 - Contract: `.refer-factory\hive-contracts\outbox\hive.task.telechurch.route-rectification-ratification.20260429.json`
 - Summary: Telechurch must prove it received the updated file-transport tandem doctrine that defines route-build rectification and cross-ratification after direct Zo route builds.
 - Acceptance: Telechurch confirms updated tandem doc exists; Telechurch runner returns talkback; local talkback validation passes
+- Latest dispatch: 2026-04-29T22:01:24.765Z to `telechurch` (live, ok=true)
 - Evidence:
   - 2026-04-29T22:01:24.765Z: dispatch and talkback fetch completed for telechurch
   - 2026-04-29T22:01:30.587Z: talkback validation passed: .refer-factory\hive-validations\hive.task.telechurch.route-rectification-ratification.20260429.json
@@ -140,6 +142,7 @@ Track hive work as typed contracts before dispatching to factory nodes.
 - Contract: `.refer-factory\hive-build-intake\outbox\hive.task.alliance.intake-automation.20260429.json`
 - Summary: Add a governed Alliance build lane so app route changes are initiated from typed intake contracts and return talkback, route evidence, and usage records instead of direct untracked Zo route edits.
 - Acceptance: Alliance has a Skills or factory runner surface; build requests create intake or dispatch records; route changes produce talkback evidence; datasets contain build activity beyond tandem ratification
+- Latest dispatch: 2026-04-29T22:22:31.483Z to `alliance` (live, ok=true)
 - Evidence:
   - 2026-04-29T22:22:11.663Z: build intake contract emitted: .refer-factory\hive-build-intake\outbox\hive.task.alliance.intake-automation.20260429.json
   - 2026-04-29T22:22:31.483Z: build intake recorded on alliance; talkback fetched
@@ -170,6 +173,7 @@ Track hive work as typed contracts before dispatching to factory nodes.
 - Contract: `.refer-factory\hive-contracts\outbox\hive.task.alliance.registered-node-ratification.20260429.json`
 - Summary: Alliance must prove registered-node file/API tandem execution with bounded non-mutating operations.
 - Acceptance: Alliance receives typed contract through file/API transport; Alliance runner writes talkback; talkback validates locally
+- Latest dispatch: 2026-04-29T21:19:53.281Z to `alliance` (live, ok=true)
 - Evidence:
   - 2026-04-29T21:19:53.281Z: dispatch and talkback fetch completed for alliance
   - 2026-04-29T21:19:59.694Z: talkback validation passed: .refer-factory\hive-validations\hive.task.alliance.registered-node-ratification.20260429.json
@@ -182,6 +186,7 @@ Track hive work as typed contracts before dispatching to factory nodes.
 - Contract: `.refer-factory\hive-contracts\outbox\hive.task.20260429T193810865Z.d738ee3912.json`
 - Summary: Run guarded non-mutating operations on Telechurch through the hive director contract path and return execution evidence in compressed talkback.
 - Acceptance: file_exists operation returns true; list_dir operation returns factory script entries; talkback includes executor:zo.bounded.v1
+- Latest dispatch: 2026-04-29T19:39:55.342Z to `telechurch` (live, ok=true)
 - Evidence:
   - 2026-04-29T19:38:23.241Z: dry-run dispatch path verified for telechurch
   - 2026-04-29T19:39:55.342Z: dispatch and talkback fetch completed for telechurch
@@ -196,6 +201,7 @@ Track hive work as typed contracts before dispatching to factory nodes.
 - Contract: `.refer-factory\hive-contracts\outbox\hive.task.20260429T192457244Z.edb26d473e.json`
 - Summary: Run a non-mutating ratification test proving the root hive director can emit a typed contract and delegate transport to the Zo tandem dispatcher.
 - Acceptance: typed contract emitted; dry-run dispatch succeeds; node registry heartbeat records evidence
+- Latest dispatch: 2026-04-29T19:30:11.564Z to `telechurch` (live, ok=true)
 - Evidence:
   - 2026-04-29T19:25:09.527Z: dry-run dispatch path verified for telechurch
   - 2026-04-29T19:27:05.048Z: dry-run dispatch path verified for telechurch
@@ -224,8 +230,8 @@ Track hive work as typed contracts before dispatching to factory nodes.
 
 ```powershell
 npm run hive:backlog
-npm run hive:build-intake -- emit --id <item-id> --routes "/,/organizations,/people"
-npm run hive:build-intake -- dispatch --id <item-id> --routes "/,/organizations,/people" --dry-run
+npm run hive:backlog:add -- --title "Verify Telechurch talkback" --summary "Run a non-mutating ratification test" --acceptance "talkback returned;registry updated"
+npm run hive:backlog:add -- --title "List Zo factory scripts" --summary "Run a bounded remote list_dir operation" --operation "list_dir:/home/workspace/refer-zo-bootstrap/scripts/factory"
 npm run hive:contract -- --id <item-id>
 npm run hive:dispatch -- --id <item-id> --dry-run
 npm run hive:validate-talkback -- --id <item-id>

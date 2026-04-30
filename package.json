@@ -132,7 +132,7 @@
         "refer.autoCheckUpdates": {
           "type": "boolean",
           "default": true,
-          "description": "Check for REFER law/script updates when the extension activates."
+          "description": "Check for REFER reference/script updates when the extension activates."
         },
         "refer.autoRefreshCodebases": {
           "type": "boolean",
@@ -217,7 +217,7 @@
   },
   "scripts": {
     "compile": "tsc -p ./",
-    "test": "npm run compile && node dist/test/metrics.test.js && node dist/test/processEvents.test.js && node dist/test/bootstrapDryRun.test.js && node dist/test/bootstrapApply.test.js && node dist/test/bootstrapProcessEvents.test.js && node dist/test/bootstrapHealth.test.js && node dist/test/codebaseMiles.test.js && node dist/test/codebases.test.js && node dist/test/scriptBlueprint.test.js && node dist/test/scriptDna.test.js && node dist/test/scriptographer.test.js && node dist/test/referIntake.test.js && node dist/test/referOrchestrator.test.js && node dist/test/referProcessEvents.test.js && node dist/test/referChatSession.test.js && node dist/test/referChatMode.test.js && node dist/test/referOrchestratorRunner.test.js && node dist/test/referTargetRegistry.test.js && node dist/test/referCoach.test.js && node dist/test/orchestratorRoadmap.test.js && node dist/test/factoryGaps.test.js && node dist/test/schemaValidation.test.js && node dist/test/lawToc.test.js && node dist/test/updateSync.test.js",
+    "test": "npm run compile && node dist/test/metrics.test.js && node dist/test/processEvents.test.js && node dist/test/bootstrapDryRun.test.js && node dist/test/bootstrapApply.test.js && node dist/test/bootstrapProcessEvents.test.js && node dist/test/bootstrapHealth.test.js && node dist/test/codebaseMiles.test.js && node dist/test/codebases.test.js && node dist/test/scriptBlueprint.test.js && node dist/test/scriptDna.test.js && node dist/test/scriptographer.test.js && node dist/test/referIntake.test.js && node dist/test/referOrchestrator.test.js && node dist/test/referProcessEvents.test.js && node dist/test/referChatSession.test.js && node dist/test/referChatMode.test.js && node dist/test/referOrchestratorRunner.test.js && node dist/test/referTargetRegistry.test.js && node dist/test/referCoach.test.js && node dist/test/orchestratorRoadmap.test.js && node dist/test/factoryGaps.test.js && node dist/test/schemaValidation.test.js && node dist/test/lawToc.test.js && node dist/test/updateSync.test.js && node dist/test/factoryRegistries.test.js && node dist/test/authorityResolver.test.js && node dist/test/doctrineCompiler.test.js && node dist/test/scriptionaryTerm.test.js && node dist/test/modificationLoop.test.js",
     "verify": "npm run test",
     "refer:server": "npm run compile && node dist/src/server/referOrchestratorServer.js",
     "tokens:log": "node scripts/chat-surface/token-useage.mjs log",
@@ -231,6 +231,19 @@
     "tokens:lanes": "node scripts/chat-surface/token-useage.mjs lanes",
     "tokens:audit-chat": "node scripts/chat-surface/token-useage.mjs audit-chat",
     "scripts:registry": "node scripts/registry/domain-script-registry.mjs build",
+    "scripts:class-registry": "node scripts/registry/script-class-registry.mjs build",
+    "scripts:forge-registry": "node scripts/registry/forge-registry.mjs build",
+    "lineage:create": "node scripts/lineage/lineage-packet.mjs create",
+    "lineage:report": "node scripts/lineage/lineage-packet.mjs report",
+    "failure:detect": "node scripts/repair/modification-loop.mjs",
+    "repair:modification-loop": "node scripts/repair/modification-loop.mjs",
+    "authority:resolve": "node scripts/reference/authority-resolver.mjs resolve",
+    "authority:report": "node scripts/reference/authority-resolver.mjs report",
+    "doctrine:compile": "node scripts/doctrine/doctrine-compiler.mjs compile",
+    "doctrine:report": "node scripts/doctrine/doctrine-compiler.mjs report",
+    "scriptionary:candidate": "node scripts/scriptionary/scriptionary-term.mjs candidate",
+    "scriptionary:promote": "node scripts/scriptionary/scriptionary-term.mjs promote",
+    "scriptionary:report": "node scripts/scriptionary/scriptionary-term.mjs report",
     "hive:registry": "node scripts/hive/hive-node-registry.mjs report",
     "hive:registry:init": "node scripts/hive/hive-node-registry.mjs init",
     "hive:registry:upsert": "node scripts/hive/hive-node-registry.mjs upsert",

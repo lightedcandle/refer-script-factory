@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "candidate_id": "doctrine.ui-ui-buttons-should-use-compact-labels-and-avoid-bulky-layouts.20260430204156",
+  "created_at": "2026-04-30T20:41:56.972Z",
+  "source": {
+    "kind": "prompt",
+    "path": null,
+    "excerpt": "UI buttons should use compact labels and avoid bulky layouts."
+  },
+  "natural_rule_intake": {
+    "received_as": "prompt_rule",
+    "user_label_required": false
+  },
+  "classification": "user_method_rule",
+  "domain": "ui",
+  "activation_trigger": "user method ui",
+  "invariant": "UI buttons should use compact labels and avoid bulky layouts.",
+  "authority_packet": {
+    "schema_version": 1,
+    "authority_packet_id": "authority.created.20260430204156",
+    "created_at": "2026-04-30T20:41:56.971Z",
+    "intent": "UI buttons should use compact labels and avoid bulky layouts. UI buttons should use compact labels and avoid bulky layouts.",
+    "domain": "ui",
+    "authority_state": "created",
+    "references": [
+      {
+        "id": "created.local-experiment",
+        "label": "Created Local Authority Experiment",
+        "authority_class": "created",
+        "url": null,
+        "source_path": ".refer-factory/authority/experiments/ui.md",
+        "scope": "Local experimental authority until an official or ratified local source exists."
+      }
+    ],
+    "created_authority": {
+      "required": true,
+      "reason": "No known official or local authority matched the intent.",
+      "experiment_path": ".refer-factory/authority/experiments/ui.md"
+    },
+    "lineage": {
+      "sequence_rank": "SEQ-D",
+      "script_id": "refer.authority.resolve",
+      "evidence": [
+        "created.local-experiment"
+      ]
+    }
+  },
+  "script_blueprint": {
+    "script_id": "candidate.ui-ui-buttons-should-use-compact-labels-and-avoid-bulky-layouts",
+    "script_class": "UI Script",
+    "intended_effect": "Enforce or apply rule: UI buttons should use compact labels and avoid bulky layouts.",
+    "allowed_boundary": "Candidate only. No active governance until fixtures pass and registry promotion occurs.",
+    "reads": [
+      "natural-rule-intake",
+      ".refer-factory/authority/latest.json"
+    ],
+    "writes": [
+      ".refer-factory/doctrine-candidates/**"
+    ],
+    "locks": [
+      ".refer-factory/doctrine-candidates/ui-ui-buttons-should-use-compact-labels-and-avoid-bulky-layouts"
+    ]
+  },
+  "fixtures": [
+    {
+      "id": "ui-ui-buttons-should-use-compact-labels-and-avoid-bulky-layouts.positive",
+      "given": "A request matching trigger: user method ui",
+      "expect": "Candidate rule applies: UI buttons should use compact labels and avoid bulky layouts."
+    },
+    {
+      "id": "ui-ui-buttons-should-use-compact-labels-and-avoid-bulky-layouts.inactive-until-promoted",
+      "given": "Candidate has not been promoted.",
+      "expect": "Rule remains inactive and does not control builds."
+    }
+  ],
+  "sequence": {
+    "rank": "SEQ-F",
+    "sub_sequence": [
+      "SEQ-F"
+    ],
+    "conditional_action": "continue"
+  },
+  "status": "candidate"
+}

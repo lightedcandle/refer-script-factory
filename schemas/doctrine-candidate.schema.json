@@ -1,0 +1,130 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Doctrine Candidate",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "candidate_id",
+    "created_at",
+    "source",
+    "natural_rule_intake",
+    "classification",
+    "domain",
+    "activation_trigger",
+    "invariant",
+    "authority_packet",
+    "script_blueprint",
+    "fixtures",
+    "sequence",
+    "status"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "candidate_id": { "type": "string" },
+    "created_at": { "type": "string" },
+    "source": {
+      "type": "object",
+      "required": ["kind", "path", "excerpt"],
+      "properties": {
+        "kind": { "enum": ["prompt", "document"] },
+        "path": { "type": ["string", "null"] },
+        "excerpt": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "natural_rule_intake": {
+      "type": "object",
+      "required": ["received_as", "user_label_required"],
+      "properties": {
+        "received_as": { "type": "string" },
+        "user_label_required": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "classification": {
+      "enum": [
+        "kernel_rule",
+        "domain_rule",
+        "project_rule",
+        "provider_rule",
+        "user_method_rule",
+        "inactive_source"
+      ]
+    },
+    "domain": { "type": "string" },
+    "activation_trigger": { "type": "string" },
+    "invariant": { "type": "string" },
+    "authority_packet": {
+      "type": "object",
+      "required": ["schema_version", "authority_packet_id", "domain", "authority_state", "references"],
+      "properties": {
+        "schema_version": { "const": 1 },
+        "authority_packet_id": { "type": "string" },
+        "domain": { "type": "string" },
+        "authority_state": {
+          "enum": ["official", "local", "created", "blocked"]
+        },
+        "references": { "type": "array" }
+      },
+      "additionalProperties": true
+    },
+    "script_blueprint": {
+      "type": "object",
+      "required": [
+        "script_id",
+        "script_class",
+        "intended_effect",
+        "allowed_boundary",
+        "reads",
+        "writes",
+        "locks"
+      ],
+      "properties": {
+        "script_id": { "type": "string" },
+        "script_class": {
+          "enum": [
+            "Governing Script",
+            "Resolver Script",
+            "Reference Script",
+            "Domain Script",
+            "UI Script",
+            "Validator Script",
+            "Repair Script"
+          ]
+        },
+        "intended_effect": { "type": "string" },
+        "allowed_boundary": { "type": "string" },
+        "reads": { "type": "array", "items": { "type": "string" } },
+        "writes": { "type": "array", "items": { "type": "string" } },
+        "locks": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": false
+    },
+    "fixtures": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "given", "expect"],
+        "properties": {
+          "id": { "type": "string" },
+          "given": { "type": "string" },
+          "expect": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "sequence": {
+      "type": "object",
+      "required": ["rank", "sub_sequence", "conditional_action"],
+      "properties": {
+        "rank": { "const": "SEQ-F" },
+        "sub_sequence": { "type": "array", "items": { "type": "string" } },
+        "conditional_action": { "const": "continue" }
+      },
+      "additionalProperties": false
+    },
+    "status": { "enum": ["candidate", "blocked", "registered"] }
+  },
+  "additionalProperties": false
+}

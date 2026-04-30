@@ -170,3 +170,69 @@ Update this file whenever a tool, provider, transport path, script, runner, or p
 - Mitigation: support both response shapes in the fetch helper before treating a read as empty
 - Script/doc now encoding mitigation: `refer-zo-bootstrap/scripts/factory/fetch-zo-talkback.mjs`, `docs/known-limits-and-constraints.md`
 - Verification: rerun compressed fetch for the Telechurch visualizer contract and validate decoded talkback
+
+### Large Zo Full-Bundle Syncs Can Terminate Internally
+
+- Date: 2026-04-30
+- Domain/provider: Zo MCP / tandem runtime sync
+- Operation: syncing the full updated tandem runtime bundle to Alliance with `--preset all --check --json`
+- Symptom: MCP upload failed with `create_or_rewrite_file failed: modal-http: internal error: function was terminated by signal`
+- Likely cause: full-bundle upload size/duration exceeded a provider execution limit during repeated `create_or_rewrite_file` calls
+- Mitigation: sync changed files narrowly with repeated `--file <path>` arguments, then run `--check`
+- Script/doc now encoding mitigation: `docs/known-limits-and-constraints.md`
+- Verification: narrow changed-file Alliance sync completed and remote syntax check returned `returncode=0`
+
+### Nested Zo Token Files Can Drift From Root Tokens
+
+- Date: 2026-04-30
+- Domain/provider: Zo MCP / nested Zo bootstrap repo
+- Operation: syncing Telechurch with `sync-tandem-runtime-to-zo.mjs --instance telechurch --check`
+- Symptom: the nested repo token returned `Authentication failed: 401: Invalid API key`, while the parent private token succeeded
+- Likely cause: ignored nested `.env.local` / `.env.master` can become stale independently from the root private token source
+- Mitigation: when a nested token fails, inject the current parent token into the process environment without printing it, then update the ignored nested token file out of band if desired
+- Script/doc now encoding mitigation: `docs/known-limits-and-constraints.md`, `refer-zo-bootstrap/docs/known-limits-and-constraints.md`
+- Verification: parent-token bridged Telechurch sync completed with remote syntax check `returncode=0`
+
+### Hive Dispatcher Packaging Must Be Cross-Platform
+
+- Date: 2026-04-30
+- Domain/provider: Zo bootstrap packaging / Windows PowerShell
+- Operation: building the upstream hive bundle with `node scripts/factory/hive/dispatcher.mjs package --type=hive`
+- Symptom: packaging failed because Unix `cp` was not available on Windows
+- Likely cause: dispatcher used shell-specific `cp` and `find` instead of Node filesystem APIs, and its repo root resolved to `scripts/`
+- Mitigation: package through Node `cpSync`/recursive traversal, use a temp directory outside the repo, and keep only `tar` as the archive command
+- Script/doc now encoding mitigation: `refer-zo-bootstrap/scripts/factory/hive/dispatcher.mjs`, this ledger
+- Verification: hive and cell packages built successfully on Windows
+
+### Alliance Bootstrap Verify Can Exceed Chat Command Timeout
+
+- Date: 2026-04-30
+- Domain/provider: Zo MCP / Alliance bootstrap verification
+- Operation: `node tools/vipc-bootstrap.mjs --profile alliance --instance alliance --mode verify`
+- Symptom: local command timed out before returning a verifier result
+- Likely cause: full bootstrap verification can take longer than the current chat command timeout or wait on slow MCP file/API calls
+- Mitigation: verify live build state with bounded MCP probes (`list_space_routes`, `get_space_errors`, targeted `get_space_route`, and `list_files`) while rerunning full bootstrap verification with a longer out-of-band timeout when needed
+- Script/doc now encoding mitigation: `docs/known-limits-and-constraints.md`, `refer-zo-bootstrap/docs/known-limits-and-constraints.md`
+- Verification: Alliance MCP probes returned app routes, clean space errors, route source for `/` and `/organizations`, and workspace files including `Skills/`, `REFER.OS/`, datasets, and `refer-zo-bootstrap/`
+
+### Alliance MCP Tool Discovery Can Exceed Chat Command Timeout
+
+- Date: 2026-04-30
+- Domain/provider: Zo MCP / Alliance live verification
+- Operation: `node refer-zo-bootstrap\tools\zo-mcp.mjs list-tools --instance alliance`
+- Symptom: local command timed out after 30 seconds before returning the tool list; the paired non-mutating bootstrap verify also timed out after 120 seconds
+- Likely cause: Alliance MCP discovery/verification can wait on slow live API calls and exceed short interactive command budgets
+- Mitigation: use targeted, bounded MCP calls for the specific evidence needed, and reserve full `list-tools` / `vipc-bootstrap --mode verify` for longer-running verification windows
+- Script/doc now encoding mitigation: `docs/known-limits-and-constraints.md`
+- Verification: local `npm run test` passed; Alliance live verification was not ratified in this chat turn because both non-mutating commands timed out
+
+### Parallel Node Verification Can Exhaust Chat Heap
+
+- Date: 2026-04-30
+- Domain/provider: Windows PowerShell / Node verification
+- Operation: running root `npm run test` and nested `npm --prefix refer-zo-bootstrap run check` concurrently from the chat surface
+- Symptom: both Node processes terminated with V8 out-of-memory errors during compile/check startup
+- Likely cause: concurrent TypeScript compilation and long `node --check` chains exceeded the available interactive Node heap/memory budget
+- Mitigation: run Node-heavy verification sequentially, and set `NODE_OPTIONS=--max-old-space-size=4096` when the chat host has enough memory
+- Script/doc now encoding mitigation: `docs/known-limits-and-constraints.md`
+- Verification: sequential reruns passed with `NODE_OPTIONS=--max-old-space-size=4096`: root `npm run test` and nested `npm --prefix refer-zo-bootstrap run check`

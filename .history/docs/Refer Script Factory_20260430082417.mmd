@@ -1,0 +1,58 @@
+---
+config:
+  layout: elk
+id: 4fd9c05e-f5f8-4c90-947a-28994438a73d
+---
+graph TD
+  A[Factory System] --> B[Script Factory]
+  B --> C[Scriptionary]
+  B --> D[Scriptonomy]
+  B --> E[Script Registry]
+  B --> F[Scriptograph]
+  B --> G[Forges]
+  
+  H[User Prompt] --> I[Request Intake]
+  I --> J[Intake Engine]
+  J --> K{Active Forge Match?}
+  K -->|yes| L[Script Forge]
+  K -->|no| M[Script Gap Draft]
+  
+  L --> N[Artifact/Dataset/Talkback]
+  N --> O[Process Events]
+  O --> P[Verification]
+  P --> Q[Self-Healing]
+  Q --> E
+  
+  M --> R[Exploratory Build]
+  R --> S[Build Trace]
+  S --> T[Script Distillation]
+  T --> U[Script Replay]
+  U --> E
+  
+  V[Repo] --> W[Scan Codebase]
+  W --> X[Scriptographer]
+  X --> Y[Context Picker]
+  Y --> Z[Orchestrator]
+  Z --> P
+  
+  AA[Heartbeat] --> AB[Dashboard Car]
+  AB --> AC[Spawn Worker Car]
+  AC --> AD[Scan Workspace Car]
+  AD --> AE[Hive Sync Car]
+  AE --> AF[Hive API]
+  
+  AG[Hive] --> AH[Dispatcher]
+  AH --> AI[Cell Receive]
+  AI --> AJ[Cell Worker]
+  AJ --> AK[Talkback]
+  AK --> AL[Hive Registry Evidence]
+  
+  class A,B indigo
+  class C,D,E,F,G teal
+  class H,I,J,K violet
+  class L,M,R,T orange
+  class N,O,P,Q fuchsia
+  class V,W,X,Y,Z cyan
+  class AA,AB,AC,AD,AE green
+  class AF,AG,AH,AI,AJ yellow
+  class AK,AL rose

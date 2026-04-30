@@ -35,6 +35,14 @@ export interface ScriptLegendArtifact {
   freshness_rule: string;
 }
 
+export interface ScriptLegendSequenceStep {
+  rank: string;
+  name: string;
+  meaning: string;
+  rule: string;
+  sub_sequence?: ScriptLegendSequenceStep[];
+}
+
 export interface ScriptLegendExample {
   title: string;
   body: string;
@@ -50,6 +58,7 @@ export interface ScriptLegend {
   surface_rules: ScriptLegendCategory[];
   status_transitions: ScriptLegendTransition[];
   artifacts: ScriptLegendArtifact[];
+  execution_sequence: ScriptLegendSequenceStep[];
   authority_order: string[];
   examples: ScriptLegendExample[];
   graph_symbols: ScriptLegendTerm[];
@@ -161,6 +170,206 @@ export function createScriptLegend(): ScriptLegend {
         meaning: "Detecting missing or ambiguous structure and turning it into governed scripts, context, tests, statuses, or doctrine.",
         deterministic_use:
           "Use it after each resolved turn to identify what was missing, ambiguous, or manually inferred.",
+      },
+      {
+        term: "Exploratory Build",
+        plain_name: "First Working AI Build",
+        meaning:
+          "An authorized AI-led build used when no script exists yet for a valid intent.",
+        deterministic_use:
+          "Use it for the first solution pass only. It must produce evidence that can later be distilled and replayed.",
+      },
+      {
+        term: "Build Trace",
+        plain_name: "Working Path Record",
+        meaning:
+          "A durable record of the intent, changed artifacts, errors, fixes, checks, and evidence from an exploratory build.",
+        deterministic_use:
+          "Use it as the memory that lets the factory turn a successful AI build into a repeatable script.",
+      },
+      {
+        term: "Script Distillation",
+        plain_name: "Build-To-Script Conversion",
+        meaning:
+          "The process of extracting inputs, outputs, operations, checks, and status rules from a working build trace into a reusable script or forge.",
+        deterministic_use:
+          "Use it after a working build trace exists. Do not mark the script active until replay succeeds.",
+      },
+      {
+        term: "Script Replay",
+        plain_name: "Deterministic Re-run",
+        meaning:
+          "Running a distilled script from the original or equivalent intent to prove it produces the expected output without ad hoc AI rebuilding.",
+        deterministic_use:
+          "Use it as the determinism gate before registry promotion or ratification.",
+      },
+      {
+        term: "Intended Effect",
+        plain_name: "Expected Result",
+        meaning:
+          "The contract-declared output, side effect, or state change a script is supposed to produce.",
+        deterministic_use:
+          "Use it as the comparison target for script runs. A script is evaluated by whether its observed effect matches this contract.",
+      },
+      {
+        term: "Observed Effect",
+        plain_name: "Actual Result",
+        meaning:
+          "The output, side effect, or state change actually produced by a script run.",
+        deterministic_use:
+          "Use it only for evidence gathered from a run, fixture, receipt, talkback, or verification check.",
+      },
+      {
+        term: "Effect Mismatch",
+        plain_name: "Result Did Not Match",
+        meaning:
+          "A script run produced an observed effect that differs from the intended effect or crossed the allowed boundary.",
+        deterministic_use:
+          "Use it to enter the modification loop. Do not call the script bad; classify the mismatch and repair.",
+      },
+      {
+        term: "Modification Loop",
+        plain_name: "Repair And Rerun Loop",
+        meaning:
+          "The repeated process where the failure detector classifies an effect mismatch, a repair executor applies the smallest named repair, and the same contract reruns through the detector until functional, blocked, or superseded.",
+        deterministic_use:
+          "Use it whenever a script has not achieved its intended effect. The detector is the loop gate; repair executors consume detector flags and must return reruns to the detector before promotion.",
+      },
+      {
+        term: "Functional Script",
+        plain_name: "Effect Achieved",
+        meaning:
+          "A script that achieved the intended effect for the declared contract and passed the required checks.",
+        deterministic_use:
+          "Use it as an effect-state label after evidence proves the script achieved the contract; do not use it as a permanent guarantee for all future contracts.",
+      },
+      {
+        term: "Kernel Law",
+        plain_name: "Always-On Factory Rule",
+        meaning:
+          "A minimal shipped rule required for Smart Intake, Script Factory operation, deterministic routing, verification, or safe script execution.",
+        deterministic_use:
+          "Use it only for the factory's own operating rules. Do not put provider, domain, project, or user preferences in the kernel by default.",
+      },
+      {
+        term: "Unscripted Law",
+        plain_name: "Internal Rule Source State",
+        meaning:
+          "An internal storage state for a prose law, rule, preference, or method document before the factory compiles and verifies it.",
+        deterministic_use:
+          "Use this term in implementation and storage paths, not user prompts. Users provide rules naturally; Smart Intake routes them into doctrine compilation automatically.",
+      },
+      {
+        term: "Natural Rule Intake",
+        plain_name: "User Says The Rule Normally",
+        meaning:
+          "The user-facing behavior where a user uploads a document, writes a preference, corrects an output, or gives a rule in ordinary language.",
+        deterministic_use:
+          "Use it as the entry point for user laws. Do not require users to label rules as unscripted, dormant, domain, project, or user method.",
+      },
+      {
+        term: "Doctrine Compiler",
+        plain_name: "Rule-To-Script Generator",
+        meaning:
+          "The forge path that converts prose laws, uploaded rule documents, and prompted preferences into classified candidate scripts, validators, fixtures, and registry entries.",
+        deterministic_use:
+          "Invoke it automatically from Natural Rule Intake when a rule source needs to become categorized, tested, registered deterministic behavior.",
+      },
+      {
+        term: "Active Rule Pack",
+        plain_name: "Verified Applied Rules",
+        meaning:
+          "A registered set of scripts, validators, or resolvers that has passed fixtures and is allowed to affect future routing or generation.",
+        deterministic_use:
+          "Promote a rule pack to active only after classification, fixture checks, modification-loop repair if needed, and registry update.",
+      },
+      {
+        term: "User Method Law",
+        plain_name: "Learned User Preference",
+        meaning:
+          "A user-scoped rule learned from uploaded documents, direct prompt instruction, dissatisfaction intake, or accepted repairs.",
+        deterministic_use:
+          "Compile it into scoped scripts or validators instead of making it a global shipped law.",
+      },
+      {
+        term: "Execution Sequence",
+        plain_name: "Ordered Governance Chain",
+        meaning:
+          "The canonical rank order for how factory rules, intake, resolvers, references, scripts, runs, evidence, repairs, and promotion are applied.",
+        deterministic_use:
+          "Use the sequence ranks when deciding what executes before what. Do not reorder steps by preference when a canonical rank applies.",
+      },
+      {
+        term: "Sequence Rank",
+        plain_name: "Deterministic Step Code",
+        meaning:
+          "A stable code such as SEQ-A or SEQ-F that names one layer in the execution sequence.",
+        deterministic_use:
+          "Use rank codes in registries, scriptionary entries, lineage packets, and docs so the hierarchy can be rebuilt from text.",
+      },
+      {
+        term: "Sub-Sequence",
+        plain_name: "Nested Deterministic Steps",
+        meaning:
+          "A stable nested rank such as SEQ-E.1 or SEQ-J.3 that describes ordered work inside a parent execution sequence layer.",
+        deterministic_use:
+          "Use sub-sequences when a main sequence step needs deterministic internal branching, checks, or repair without creating a new top-level law.",
+      },
+      {
+        term: "Conditional Chain Controller",
+        plain_name: "Branch And Fork Manager",
+        meaning:
+          "The deterministic layer that decides whether a script chain continues, splits, forks, merges, modifies, deletes, skips, blocks, or promotes.",
+        deterministic_use:
+          "Use it after a condition is measured, never as guesswork. Every split or mutation must record the condition, chosen branch, affected scripts, and evidence.",
+      },
+      {
+        term: "Chain Fork",
+        plain_name: "Parallel Deterministic Split",
+        meaning:
+          "A script chain splits into two or more bounded branches that can run in parallel because their read, write, and lock surfaces do not collide.",
+        deterministic_use:
+          "Use it only when the sequencer or collision guard proves the branches can run independently.",
+      },
+      {
+        term: "Chain Merge",
+        plain_name: "Branch Rejoin",
+        meaning:
+          "A deterministic point where forked or conditional branches rejoin into one evidence packet, effect comparison, or promotion decision.",
+        deterministic_use:
+          "Use it after every fork unless a branch is explicitly blocked, deleted, or superseded.",
+      },
+      {
+        term: "Chain Delete",
+        plain_name: "Remove Script Link",
+        meaning:
+          "A governed operation that removes a script, branch, route, or candidate from a chain because it is superseded, unsafe, duplicate, or out of scope.",
+        deterministic_use:
+          "Use delete only with recorded reason, affected surfaces, rollback or archive path, and registry update.",
+      },
+      {
+        term: "Method Name",
+        plain_name: "Named Way Of Working",
+        meaning:
+          "A stable name for a repeatable way a user, project, domain, forge, or factory prefers to perform work.",
+        deterministic_use:
+          "Name a method before encoding it. A method can become a strategy, script, validator, or active rule pack after evidence proves its effect.",
+      },
+      {
+        term: "Strategy Name",
+        plain_name: "Named Plan Pattern",
+        meaning:
+          "A stable name for a reusable plan that coordinates methods, scripts, sequence ranks, and checks to reach an intended effect.",
+        deterministic_use:
+          "Use strategy names to coordinate multi-step behavior. A strategy must state its sequence ranks, activation trigger, and success evidence.",
+      },
+      {
+        term: "Text Map Blueprint",
+        plain_name: "Rebuildable System Description",
+        meaning:
+          "A scriptionary and legend form detailed enough for a future factory to reconstruct terms, hierarchy, sequence, methods, strategies, and activation rules from text.",
+        deterministic_use:
+          "Use it as the goal for dictionary entries: every new term should name its layer, sequence position, activation rule, and evidence path when applicable.",
       },
       {
         term: "Script Factory",
@@ -404,6 +613,48 @@ export function createScriptLegend(): ScriptLegend {
           "Status must come from script/process events or explicit state. UI colors are derived from status, not hand-picked.",
       },
       {
+        name: "Sequence Rank",
+        allowed_values: [
+          "SEQ-A",
+          "SEQ-B",
+          "SEQ-C",
+          "SEQ-D",
+          "SEQ-E",
+          "SEQ-F",
+          "SEQ-G",
+          "SEQ-H",
+          "SEQ-I",
+          "SEQ-J",
+          "SEQ-K",
+          "SEQ-L",
+        ],
+        rule:
+          "Execution hierarchy must use these stable ranks. Add a new rank only when a new layer cannot fit an existing rank.",
+      },
+      {
+        name: "Conditional Chain Action",
+        allowed_values: [
+          "continue",
+          "branch",
+          "fork",
+          "merge",
+          "modify",
+          "delete",
+          "skip",
+          "block",
+          "supersede",
+          "promote",
+        ],
+        rule:
+          "Conditional chain actions must be selected from measured state and recorded with evidence. Forks require non-colliding surfaces; deletes require archive or rollback path.",
+      },
+      {
+        name: "Named Pattern Kind",
+        allowed_values: ["Method", "Strategy", "Script", "Validator", "Resolver", "Rule Pack"],
+        rule:
+          "Every named pattern must declare its kind before it is registered, compiled, or used in orchestration.",
+      },
+      {
         name: "Factory Layer Label",
         allowed_values: factoryLayerLabels,
         rule:
@@ -614,6 +865,164 @@ export function createScriptLegend(): ScriptLegend {
         freshness_rule:
           "Build per request. Do not reuse if prompt, treefile, or selected files changed.",
       },
+      {
+        path: "refer-zo-bootstrap/datasets/build-traces/records/<id>.json",
+        owner: "Zo Build Trace",
+        meaning:
+          "Durable evidence from an authorized Zo AI exploratory build before script distillation.",
+        freshness_rule:
+          "Write after an exploratory build and update through distillation, replay, and ratification.",
+      },
+    ],
+    execution_sequence: [
+      {
+        rank: "SEQ-A",
+        name: "Kernel Governance",
+        meaning:
+          "Always-on Script Factory and Smart Intake rules that make the system deterministic and safe.",
+        rule:
+          "Kernel rules execute before user, project, provider, or domain rules.",
+      },
+      {
+        rank: "SEQ-B",
+        name: "Request Intake",
+        meaning:
+          "The user prompt, document, command, or API request is converted into a compact contract.",
+        rule:
+          "No downstream script should run until the request has a contract or a documented block.",
+      },
+      {
+        rank: "SEQ-C",
+        name: "Clarification Resolver",
+        meaning:
+          "Ambiguity is reduced with bounded choices or a deterministic route.",
+        rule:
+          "Clarify before researching, building, or mutating when target, intent, or boundary is ambiguous.",
+      },
+      {
+        rank: "SEQ-D",
+        name: "Authority And Context",
+        meaning:
+          "The factory gathers official references, local context, active rule packs, and user method scope.",
+        rule:
+          "Domain work must prefer authoritative references and recorded local context over memory.",
+      },
+      {
+        rank: "SEQ-E",
+        name: "Strategy Selection",
+        meaning:
+          "The sequencer chooses the named strategy, method, forge, and script route.",
+        rule:
+          "Strategies must state their activation trigger, sequence ranks, and success evidence.",
+        sub_sequence: [
+          {
+            rank: "SEQ-E.1",
+            name: "Condition Read",
+            meaning:
+              "Read the contract, registry, active rule packs, locks, and evidence needed to choose a route.",
+            rule:
+              "Conditions must come from measured input or durable artifacts, not speculation.",
+          },
+          {
+            rank: "SEQ-E.2",
+            name: "Chain Decision",
+            meaning:
+              "Choose continue, branch, fork, merge, modify, delete, skip, block, supersede, or promote.",
+            rule:
+              "Every decision records the condition, selected action, rejected alternatives when relevant, and evidence.",
+          },
+          {
+            rank: "SEQ-E.3",
+            name: "Collision Check",
+            meaning:
+              "Compare read, write, and lock surfaces before allowing parallel branches.",
+            rule:
+              "Fork only when surfaces do not collide; otherwise serialize or block.",
+          },
+        ],
+      },
+      {
+        rank: "SEQ-F",
+        name: "Forge Or Script Generation",
+        meaning:
+          "Missing deterministic behavior is generated or modified as a candidate forge, script, resolver, validator, or rule pack.",
+        rule:
+          "Generated candidates remain inactive until fixtures and effect checks pass.",
+      },
+      {
+        rank: "SEQ-G",
+        name: "Script Execution",
+        meaning:
+          "The selected registered script or candidate script runs against the contract.",
+        rule:
+          "Script execution must record process status and declared intended effect.",
+      },
+      {
+        rank: "SEQ-H",
+        name: "Evidence Capture",
+        meaning:
+          "The run records observed effect, changed artifacts, checks, receipts, and talkback when available.",
+        rule:
+          "Evidence must be durable enough to explain the outcome after chat context is gone.",
+      },
+      {
+        rank: "SEQ-I",
+        name: "Effect Comparison",
+        meaning:
+          "Observed effect is compared with intended effect and allowed boundary.",
+        rule:
+          "Classify as functional, mismatched, blocked, superseded, or unverified.",
+      },
+      {
+        rank: "SEQ-J",
+        name: "Modification Loop",
+        meaning:
+          "The failure detector flags the responsible layer; repair executors apply that repair and rerun the same contract back through the detector.",
+        rule:
+          "The detector is the automatic loop gate: functional may continue, mismatched repairs and reruns, blocked waits for missing inputs, and superseded points to the new owner.",
+        sub_sequence: [
+          {
+            rank: "SEQ-J.1",
+            name: "Mismatch Classifier",
+            meaning:
+              "Classify the mismatch as contract, resolver, script, forge, schema, fixture, authority, environment, boundary, or user-method mismatch.",
+            rule:
+              "The classifier chooses the smallest responsible repair layer.",
+          },
+          {
+            rank: "SEQ-J.2",
+            name: "Repair Action",
+            meaning:
+              "Modify, delete, replace, regenerate, or block the affected script chain element.",
+            rule:
+              "Repair actions must preserve rollback or archive evidence for destructive changes.",
+          },
+          {
+            rank: "SEQ-J.3",
+            name: "Replay Gate",
+            meaning:
+              "Rerun the same contract after repair through the failure detector and compare the observed effect again.",
+            rule:
+              "Do not promote until replay or fixtures prove the intended effect.",
+          },
+        ],
+      },
+      {
+        rank: "SEQ-K",
+        name: "Promotion And Registration",
+        meaning:
+          "Verified scripts, methods, strategies, or rule packs are registered as active in their declared scope.",
+        rule:
+          "Promotion requires evidence, scope, registry update, and replay or fixture success.",
+      },
+      {
+        rank: "SEQ-L",
+        name: "Scriptionary Refresh",
+        meaning:
+          "New terms, sequence changes, methods, strategies, and artifacts are written back to the text map blueprint.",
+        rule:
+          "The scriptionary must be refreshed when the factory learns a reusable name or hierarchy rule.",
+      },
     ],
     authority_order: [
       "User explicit instruction in the current turn",
@@ -643,6 +1052,26 @@ export function createScriptLegend(): ScriptLegend {
         title: "Deterministic Chain",
         body:
           "User Prompt -> @refer Participant -> REFER Orchestrator -> Context Picker -> Resolution Loop -> Model -> Chat History.",
+      },
+      {
+        title: "Execution Sequence Rank",
+        body:
+          "A script that fetches Stripe docs belongs at SEQ-D Authority And Context before a checkout builder runs at SEQ-G Script Execution.",
+      },
+      {
+        title: "Named Strategy",
+        body:
+          "Strategy Name = Clarify Then Build; sequence = SEQ-B -> SEQ-C -> SEQ-D -> SEQ-E -> SEQ-G -> SEQ-I; evidence = bounded resolver plus passing checks.",
+      },
+      {
+        title: "Conditional Fork",
+        body:
+          "SEQ-E.2 action = fork only after SEQ-E.3 proves branch A writes docs/* and branch B reads src/* with no shared lock.",
+      },
+      {
+        title: "Modification Delete",
+        body:
+          "SEQ-J.2 action = delete when a candidate script is superseded; archive the candidate, update registry state, then rerun SEQ-J.3 replay.",
       },
     ],
     graph_symbols: [
@@ -693,7 +1122,19 @@ export function createScriptLegend(): ScriptLegend {
       "The Orchestrator owns the run order and calls supporting scripts.",
       "The Script Legend is authoritative when terms conflict in UI text, registry text, or agent prompts.",
       "Generated agent context should cite this legend instead of redefining terminology ad hoc.",
+      "A script-gap draft is a launch point for authorized exploratory build, build trace, script distillation, replay, and ratification; it is not a terminal state.",
+      "AI may build the first working solution inside an approved intent contract; deterministic guarantees apply to the distilled script replay.",
+      "A script is not good or bad; it is compared against its intended effect and classified as functional, mismatched, blocked, or superseded for that contract.",
+      "The failure detector is the modification-loop gate: it classifies the gap, flags the repair layer, and every repair rerun returns through the detector until functional, blocked, or superseded.",
       "Every resolved turn should ask what was missing, ambiguous, or manually inferred and repair the right factory layer.",
+      "Execution Sequence ranks are canonical; use SEQ-A through SEQ-L to decide hierarchy before choosing a script route.",
+      "Sub-sequences use dotted ranks such as SEQ-E.1 and must stay inside their parent sequence layer.",
+      "Conditional chain actions are deterministic control decisions: continue, branch, fork, merge, modify, delete, skip, block, supersede, or promote.",
+      "Forked script chains require collision checks before parallel execution and a merge point before final effect comparison unless blocked or superseded.",
+      "Delete is a governed chain action, not an ad hoc removal; record reason, affected surfaces, archive or rollback path, and registry update.",
+      "Methods and strategies must be named before they are registered so the scriptionary can rebuild the system from text.",
+      "The scriptionary is a text map blueprint: it must capture terms, sequence ranks, activation triggers, evidence paths, and scope for reusable behavior.",
+      "Users do not label laws as unscripted or dormant; Smart Intake captures natural rule input and the factory internally compiles, categorizes, tests, and registers it.",
     ],
   };
 }
@@ -760,6 +1201,11 @@ ${legend.artifacts
   )
   .join("\n\n")}
 
+## Execution Sequence
+${legend.execution_sequence
+  .map(renderSequenceStep)
+  .join("\n\n")}
+
 ## Authority Order
 ${legend.authority_order.map((item, index) => `${index + 1}. ${item}`).join("\n")}
 
@@ -788,4 +1234,20 @@ function renderTerm(term: ScriptLegendTerm): string {
 - Plain English: ${term.plain_name}
 - Meaning: ${term.meaning}
 - Deterministic use: ${term.deterministic_use}`;
+}
+
+function renderSequenceStep(step: ScriptLegendSequenceStep): string {
+  const subSequence = step.sub_sequence?.length
+    ? `\n\n${step.sub_sequence
+        .map(
+          (subStep) =>
+            `#### ${subStep.rank} ${subStep.name}
+- Meaning: ${subStep.meaning}
+- Rule: ${subStep.rule}`,
+        )
+        .join("\n\n")}`
+    : "";
+  return `### ${step.rank} ${step.name}
+- Meaning: ${step.meaning}
+- Rule: ${step.rule}${subSequence}`;
 }

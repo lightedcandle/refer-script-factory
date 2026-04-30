@@ -21,6 +21,12 @@ assert.equal(
   record.contract.routing.model_prompt_policy,
   "send_compact_contract_only",
 );
+assert.equal(record.contract.routing.execution_gate.gate_id, "failure_detector");
+assert.equal(record.contract.routing.execution_gate.command, "npm run failure:detect");
+assert.equal(record.contract.routing.execution_gate.applies_to, "ai_watched_script_result_verdict");
+assert.equal(record.contract.routing.execution_gate.bypass_policy, "direct_execution_is_ungoverned");
+assert.equal(record.contract.routing.execution_gate.ai_boundary, "ai_watcher_executes_scripts_and_repairs");
+assert.equal(record.contract.routing.execution_gate.readiness_policy, "functional_verdict_marks_script_ready_for_future_script_first_use");
 assert.ok(record.contract.active_contract.relevant_excerpt.includes("[truncated]"));
 assert.ok(record.raw_input.includes("execute"));
 

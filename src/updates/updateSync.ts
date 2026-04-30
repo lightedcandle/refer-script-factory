@@ -122,14 +122,14 @@ export function createPackagedLawManifest(
     manifest_version: version,
     channel,
     published_at: new Date(0).toISOString(),
-    notes: "Packaged REFER.OS law library manifest.",
+    notes: "Packaged dormant REFER.OS reference library manifest.",
     artifacts: fullUniversalLawFiles.map((fileName) => ({
       id: `law:${fileName}`,
       kind: "law",
       version,
       target_path: `REFER.OS/${fileName}`,
-      source_path: `law/REFER.OS/${fileName}`,
-      summary: `Update ${fileName}`,
+      source_path: `unscripted-laws/REFER.OS/${fileName}`,
+      summary: `Update dormant reference ${fileName}`,
     })),
   };
 }

@@ -1,6 +1,6 @@
 {
   "schema": "refer.hive.backlog.v1",
-  "updated_at": "2026-04-30T02:35:23.153Z",
+  "updated_at": "2026-04-30T20:30:49.845Z",
   "purpose": "Track hive work as typed contracts before dispatching to factory nodes.",
   "templates": [
     {

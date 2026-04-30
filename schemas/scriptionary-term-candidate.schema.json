@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Scriptionary Term Candidate",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "candidate_id",
+    "created_at",
+    "term",
+    "plain_name",
+    "meaning",
+    "deterministic_use",
+    "kind",
+    "observed_effect",
+    "sequence",
+    "status"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "candidate_id": { "type": "string" },
+    "created_at": { "type": "string" },
+    "term": { "type": "string" },
+    "plain_name": { "type": "string" },
+    "meaning": { "type": "string" },
+    "deterministic_use": { "type": "string" },
+    "kind": {
+      "enum": [
+        "Term",
+        "Method",
+        "Strategy",
+        "Sequence Rank",
+        "Script Class",
+        "Chain Action",
+        "Artifact",
+        "Status",
+        "Rule"
+      ]
+    },
+    "observed_effect": { "type": "string" },
+    "sequence": {
+      "type": "object",
+      "required": ["rank", "sub_sequence", "conditional_action"],
+      "properties": {
+        "rank": { "const": "SEQ-L" },
+        "sub_sequence": { "type": "array", "items": { "type": "string" } },
+        "conditional_action": { "enum": ["continue", "promote", "block"] }
+      },
+      "additionalProperties": false
+    },
+    "status": { "enum": ["candidate", "promoted", "blocked", "duplicate"] }
+  },
+  "additionalProperties": false
+}

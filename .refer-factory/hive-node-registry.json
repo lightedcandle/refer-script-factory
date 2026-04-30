@@ -1,6 +1,6 @@
 {
   "schema": "refer.hive.node-registry.v1",
-  "updated_at": "2026-04-30T01:35:27.422Z",
+  "updated_at": "2026-04-30T20:30:49.859Z",
   "purpose": "Track hive-capable factory and Zo computer nodes, their roles, deployment state, and ratification evidence.",
   "nodes": [
     {
@@ -90,6 +90,46 @@
         {
           "ts": "2026-04-30T01:35:27.404Z",
           "value": "Alliance base atomic forge pack executable and registered."
+        },
+        {
+          "ts": "2026-04-30T03:10:05.555Z",
+          "value": "Alliance synced with AI build-trace and script-distillation doctrine via narrow changed-file sync after full-bundle provider termination; remote syntax check passed on 2026-04-30."
+        },
+        {
+          "ts": "2026-04-30T03:28:40.412Z",
+          "value": "Alliance synced with draft-promotion-runner auto-create runtime; remote syntax check passed on 2026-04-30."
+        },
+        {
+          "ts": "2026-04-30T03:40:00.562Z",
+          "value": "auto gap resolver runtime synced with remote syntax check returncode=0"
+        },
+        {
+          "ts": "2026-04-30T03:41:26.452Z",
+          "value": "live remote intake auto-promoted qaremote-alliance-gap and replay passed"
+        },
+        {
+          "ts": "2026-04-30T03:49:47.418Z",
+          "value": "scriptionary and script-dictionary deployed; remote manifest includes both; dispatcher no longer strips scriptionary"
+        },
+        {
+          "ts": "2026-04-30T04:30:33.877Z",
+          "value": "full factory gap closure bundle synced to Alliance; remote syntax check returncode=0; heartbeat train cars and hive scripts active"
+        },
+        {
+          "ts": "2026-04-30T04:30:46.067Z",
+          "value": "full factory gap closure bundle synced to Alliance; remote syntax check returncode=0; heartbeat train cars and hive scripts active"
+        },
+        {
+          "ts": "2026-04-30T04:34:18.553Z",
+          "value": "portable dispatcher fix synced to Alliance; remote syntax check returncode=0"
+        },
+        {
+          "ts": "2026-04-30T11:47:10.718Z",
+          "value": "root scripts/hive communication layer synced to Alliance; remote syntax check returncode=0"
+        },
+        {
+          "ts": "2026-04-30T12:15:54.631Z",
+          "value": "Alliance local intake compression verified in place: scripts import encode/decode, codec self-test passed, sx1 round-trip ok ratio about 0.50, empty inbox automation reported compression=sx1"
         }
       ],
       "notes": [
@@ -140,6 +180,38 @@
         {
           "ts": "2026-04-30T01:35:26.712Z",
           "value": "Restored active node metadata after registering base atomic forge pack."
+        },
+        {
+          "ts": "2026-04-30T03:40:00.562Z",
+          "value": "Immediate user-path script gap promotion deployed; heartbeat remains recovery only."
+        },
+        {
+          "ts": "2026-04-30T03:41:26.452Z",
+          "value": "Live missing-script request path returned done without waiting for heartbeat."
+        },
+        {
+          "ts": "2026-04-30T03:49:47.418Z",
+          "value": "Alliance deployment bundle now carries expandable scriptionary terminology layer."
+        },
+        {
+          "ts": "2026-04-30T04:30:33.877Z",
+          "value": "Alliance deployment now includes root factory CLI shim, heartbeat train cars, hive scripts, active scriptionary, and registry doctor missing_executable_count=0"
+        },
+        {
+          "ts": "2026-04-30T04:30:46.067Z",
+          "value": "Alliance deployment now includes root factory CLI shim, heartbeat train cars, hive scripts, active scriptionary, and registry doctor missing_executable_count=0"
+        },
+        {
+          "ts": "2026-04-30T04:34:18.553Z",
+          "value": "Upstream hive/cell package builder now works from Windows source before deployment"
+        },
+        {
+          "ts": "2026-04-30T11:47:10.718Z",
+          "value": "Hive communication gap closed at contract paths scripts/hive/api.mjs, dispatcher.mjs, receive.mjs, talkback.mjs"
+        },
+        {
+          "ts": "2026-04-30T12:15:54.631Z",
+          "value": "Alliance was ahead of repo for local-intake compression; source was ported from verified behavior"
         }
       ],
       "datasets": [
@@ -152,7 +224,8 @@
         "local-intake",
         "script-registry",
         "evolution-log",
-        "script-artifacts"
+        "script-artifacts",
+        "build-traces"
       ],
       "scripts": [
         "contract-inbox-runner",
@@ -174,7 +247,8 @@
         "text-add",
         "form-add",
         "scan-workspace",
-        "auto-chunker"
+        "auto-chunker",
+        "draft-promotion-runner"
       ],
       "name": "Alliance Zo",
       "kind": "zo_computer",
@@ -183,19 +257,150 @@
       "instance": "alliance",
       "status": "active",
       "transport": "file_api_tandem",
-      "persona": "governance-synced",
-      "rules": "governance-synced",
-      "last_seen_at": "2026-04-30T01:35:27.404Z",
-      "updated_at": "2026-04-30T01:35:27.404Z",
+      "persona": "unknown",
+      "rules": "unknown",
+      "last_seen_at": "2026-04-30T12:15:54.631Z",
+      "updated_at": "2026-04-30T12:15:54.631Z",
       "heartbeat": {
         "policy": "adaptive",
-        "mode": "active_build",
-        "activity": "active_build",
-        "interval_ms": 300000,
-        "interval_label": "5m",
+        "mode": "ratifying",
+        "activity": "ratifying",
+        "interval_ms": 900000,
+        "interval_label": "15m",
         "max_interval_ms": 86400000,
         "max_interval_label": "24h",
-        "next_due_at": "2026-04-30T01:40:27.405Z"
+        "next_due_at": "2026-04-30T12:30:54.632Z"
+      }
+    },
+    {
+      "id": "apostlej",
+      "created_at": "2026-04-30T03:21:01.586Z",
+      "evidence": [
+        {
+          "ts": "2026-04-30T03:21:01.586Z",
+          "value": "Registered from historical apostlej hive references and root ZO_COMPUTER_APOSTLEJ token presence; user identified it as first hive deployment used to deploy Alliance."
+        },
+        {
+          "ts": "2026-04-30T03:28:46.421Z",
+          "value": "ApostleJ MCP reachable and tandem runtime fully synced with draft-promotion-runner; remote syntax check passed on 2026-04-30."
+        },
+        {
+          "ts": "2026-04-30T03:40:01.628Z",
+          "value": "auto gap resolver runtime synced with remote syntax check returncode=0"
+        },
+        {
+          "ts": "2026-04-30T03:41:27.263Z",
+          "value": "live remote intake auto-promoted qaremote-apostlej-gap and replay passed"
+        },
+        {
+          "ts": "2026-04-30T03:49:48.228Z",
+          "value": "scriptionary and script-dictionary deployed; remote manifest includes both; dispatcher no longer strips scriptionary"
+        },
+        {
+          "ts": "2026-04-30T04:30:33.930Z",
+          "value": "full factory gap closure bundle synced to ApostleJ; remote syntax check returncode=0"
+        },
+        {
+          "ts": "2026-04-30T04:30:47.644Z",
+          "value": "full factory gap closure bundle synced to ApostleJ; remote syntax check returncode=0"
+        },
+        {
+          "ts": "2026-04-30T04:34:20.115Z",
+          "value": "portable dispatcher fix synced to ApostleJ; remote syntax check returncode=0"
+        },
+        {
+          "ts": "2026-04-30T11:47:13.660Z",
+          "value": "root scripts/hive communication layer synced to ApostleJ; remote syntax check returncode=0"
+        },
+        {
+          "ts": "2026-04-30T12:15:56.209Z",
+          "value": "ApostleJ received local-intake compression fix; remote syntax check and sx1 round-trip passed ratio about 0.50"
+        }
+      ],
+      "notes": [
+        {
+          "ts": "2026-04-30T03:21:01.586Z",
+          "value": "Telechurch remains first proving node; apostlej is restored as original hive/deployment node pending live sync ratification."
+        },
+        {
+          "ts": "2026-04-30T03:28:46.421Z",
+          "value": "ApostleJ is registered as the original hive deployment/distribution node; Telechurch remains the proving node and Alliance remains the app build node."
+        },
+        {
+          "ts": "2026-04-30T03:40:01.628Z",
+          "value": "Original hive deployment now carries the same immediate resolver runtime as Telechurch and Alliance."
+        },
+        {
+          "ts": "2026-04-30T03:41:27.263Z",
+          "value": "Live missing-script request path returned done without waiting for heartbeat."
+        },
+        {
+          "ts": "2026-04-30T03:49:48.228Z",
+          "value": "ApostleJ deployment bundle now carries expandable scriptionary terminology layer."
+        },
+        {
+          "ts": "2026-04-30T04:30:33.930Z",
+          "value": "ApostleJ original hive deployment node now carries the same heartbeat train car and hive closure bundle"
+        },
+        {
+          "ts": "2026-04-30T04:30:47.644Z",
+          "value": "ApostleJ original hive deployment node now carries the same heartbeat train car and hive closure bundle"
+        },
+        {
+          "ts": "2026-04-30T04:34:20.115Z",
+          "value": "ApostleJ carries the cross-platform dispatcher used for upstream bundle creation"
+        },
+        {
+          "ts": "2026-04-30T11:47:13.660Z",
+          "value": "ApostleJ carries root scripts/hive shims plus factory hive implementation fixes"
+        },
+        {
+          "ts": "2026-04-30T12:15:56.209Z",
+          "value": "local-intake-runner and inbox-automation now match Alliance compression behavior"
+        }
+      ],
+      "datasets": [
+        "tandem-contracts",
+        "tandem-talkback",
+        "tandem-dispatch",
+        "tandem-usage",
+        "build-traces",
+        "script-registry",
+        "script-artifacts",
+        "evolution-log"
+      ],
+      "scripts": [
+        "contract-inbox-runner",
+        "ship-contract-to-zo",
+        "fetch-zo-talkback",
+        "dispatch-contract",
+        "local-script-registry",
+        "local-intake-runner",
+        "inbox-automation",
+        "registry-doctor",
+        "evolution-loop",
+        "draft-promotion-runner"
+      ],
+      "name": "ApostleJ Zo Hive",
+      "kind": "zo_computer",
+      "role": "original hive deployment and distribution node; historical source for early hive files and Alliance deployment path",
+      "account": "zo:apostlej",
+      "instance": "apostlej",
+      "status": "active",
+      "transport": "file_api_tandem",
+      "persona": "governance-synced",
+      "rules": "governance-synced",
+      "last_seen_at": "2026-04-30T12:15:56.209Z",
+      "updated_at": "2026-04-30T12:15:56.209Z",
+      "heartbeat": {
+        "policy": "adaptive",
+        "mode": "ratifying",
+        "activity": "ratifying",
+        "interval_ms": 900000,
+        "interval_label": "15m",
+        "max_interval_ms": 86400000,
+        "max_interval_label": "24h",
+        "next_due_at": "2026-04-30T12:30:56.210Z"
       }
     },
     {
@@ -208,7 +413,7 @@
       "status": "active",
       "transport": "local_scripts",
       "persona": "AGENTS.md",
-      "rules": "law/REFER.OS",
+      "rules": "unscripted-laws/REFER.OS",
       "datasets": [
         "chat-surface-token-useage",
         "hive-node-registry"
@@ -252,19 +457,29 @@
       "instance": "telechurch",
       "status": "active",
       "transport": "file_api_tandem",
-      "persona": "installed",
-      "rules": "installed",
+      "persona": "unknown",
+      "rules": "unknown",
       "datasets": [
         "tandem-contracts",
         "tandem-talkback",
         "tandem-dispatch",
-        "tandem-usage"
+        "tandem-usage",
+        "build-traces",
+        "script-registry",
+        "script-artifacts",
+        "evolution-log"
       ],
       "scripts": [
         "contract-inbox-runner",
         "ship-contract-to-zo",
         "fetch-zo-talkback",
-        "dispatch-contract"
+        "dispatch-contract",
+        "local-script-registry",
+        "local-intake-runner",
+        "draft-promotion-runner",
+        "inbox-automation",
+        "registry-doctor",
+        "evolution-loop"
       ],
       "evidence": [
         {
@@ -314,6 +529,46 @@
         {
           "ts": "2026-04-29T22:02:17.150Z",
           "value": "Telechurch cross-ratified route-build rectification pattern via hive.task.telechurch.route-rectification-ratification.20260429"
+        },
+        {
+          "ts": "2026-04-30T03:09:58.318Z",
+          "value": "Telechurch synced with AI build-trace and script-distillation doctrine; remote syntax check passed on 2026-04-30."
+        },
+        {
+          "ts": "2026-04-30T03:28:35.202Z",
+          "value": "Telechurch synced with draft-promotion-runner auto-create runtime; remote syntax check passed on 2026-04-30."
+        },
+        {
+          "ts": "2026-04-30T03:39:59.393Z",
+          "value": "auto gap resolver runtime synced with remote syntax check returncode=0"
+        },
+        {
+          "ts": "2026-04-30T03:41:25.698Z",
+          "value": "live remote intake auto-promoted qaremote-telechurch-gap and replay passed"
+        },
+        {
+          "ts": "2026-04-30T04:30:46.836Z",
+          "value": "full factory gap closure bundle synced to Telechurch using parent-token bridge; remote syntax check returncode=0"
+        },
+        {
+          "ts": "2026-04-30T04:34:19.335Z",
+          "value": "portable dispatcher fix synced to Telechurch; remote syntax check returncode=0"
+        },
+        {
+          "ts": "2026-04-30T11:47:12.335Z",
+          "value": "root scripts/hive communication layer synced to Telechurch; remote syntax check returncode=0"
+        },
+        {
+          "ts": "2026-04-30T12:02:13.060Z",
+          "value": "Telechurch Scriptionary catalog gap closed; artifact forges and atomic-common catalogued; remote syntax check returncode=0"
+        },
+        {
+          "ts": "2026-04-30T12:07:57.302Z",
+          "value": "Telechurch Scriptionary second gap pass validated remotely: count=30, missing=[], pending=[], updated=2026-04-30T12:15:00.000Z"
+        },
+        {
+          "ts": "2026-04-30T12:15:55.355Z",
+          "value": "Telechurch received local-intake compression fix; remote syntax check and sx1 round-trip passed ratio about 0.50"
         }
       ],
       "notes": [
@@ -328,11 +583,43 @@
         {
           "ts": "2026-04-29T22:02:17.150Z",
           "value": "Updated tandem doctrine synced and validated with bounded talkback."
+        },
+        {
+          "ts": "2026-04-30T03:39:59.393Z",
+          "value": "Immediate user-path script gap promotion deployed; heartbeat remains recovery only."
+        },
+        {
+          "ts": "2026-04-30T03:41:25.698Z",
+          "value": "Live missing-script request path returned done without waiting for heartbeat."
+        },
+        {
+          "ts": "2026-04-30T04:30:46.836Z",
+          "value": "Nested Telechurch token was stale; parent private token bridge succeeded without printing token"
+        },
+        {
+          "ts": "2026-04-30T04:34:19.335Z",
+          "value": "Telechurch carries the cross-platform dispatcher used for upstream bundle creation"
+        },
+        {
+          "ts": "2026-04-30T11:47:12.335Z",
+          "value": "Telechurch carries root scripts/hive shims plus factory hive implementation fixes"
+        },
+        {
+          "ts": "2026-04-30T12:02:13.060Z",
+          "value": "Scriptionary now has no pending statuses, includes artifact forge entries, and clarifies scan-workspace artifact vs train-car wrapper"
+        },
+        {
+          "ts": "2026-04-30T12:07:57.302Z",
+          "value": "Added decompress, emit-contract, forge-auto-capture, interlink, and script-dictionary to Scriptionary; resynced artifact forge files to guard against empty artifacts drift"
+        },
+        {
+          "ts": "2026-04-30T12:15:55.355Z",
+          "value": "local-intake-runner and inbox-automation now match Alliance compression behavior"
         }
       ],
       "created_at": "2026-04-29T17:09:16.543Z",
-      "updated_at": "2026-04-29T22:02:17.150Z",
-      "last_seen_at": "2026-04-29T22:02:17.150Z",
+      "updated_at": "2026-04-30T12:15:55.355Z",
+      "last_seen_at": "2026-04-30T12:15:55.355Z",
       "heartbeat": {
         "policy": "adaptive",
         "mode": "ratifying",
@@ -341,7 +628,7 @@
         "interval_label": "15m",
         "max_interval_ms": 86400000,
         "max_interval_label": "24h",
-        "next_due_at": "2026-04-29T22:17:17.151Z"
+        "next_due_at": "2026-04-30T12:30:55.357Z"
       }
     }
   ]

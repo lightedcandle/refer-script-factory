@@ -1,0 +1,994 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-04-30T22:27:13.676Z",
+  "entries": [
+    {
+      "script_id": "request.type.chat",
+      "label": "@refer Chat Request",
+      "script_class": "Request Type",
+      "sequence_rank": "SEQ-B",
+      "forge_id": "request-intake-forge",
+      "reads": [
+        "user:intent"
+      ],
+      "writes": [
+        "refer.intake"
+      ],
+      "locks": [],
+      "source_authority": [
+        "src/contracts/scriptFactory.ts",
+        "docs/script-legend.md"
+      ],
+      "effect_contract": {
+        "intended_effect": "A user asks REFER for help from the VS Code Chat box.",
+        "allowed_boundary": "This is the normal human-facing request type. You type @refer in VS Code Chat, REFER receives the message, and the request is handed to the REFER Orchestrator script."
+      },
+      "status": "ready"
+    },
+    {
+      "script_id": "request.type.http",
+      "label": "HTTP Request",
+      "script_class": "Request Type",
+      "sequence_rank": "SEQ-B",
+      "forge_id": "request-intake-forge",
+      "reads": [
+        "user:intent"
+      ],
+      "writes": [
+        "refer.intake"
+      ],
+      "locks": [],
+      "source_authority": [
+        "src/contracts/scriptFactory.ts",
+        "docs/script-legend.md"
+      ],
+      "effect_contract": {
+        "intended_effect": "Another app sends REFER a prompt through the local server.",
+        "allowed_boundary": "This request type is for tools outside VS Code. A local app or script sends a prompt to the REFER server, and the server forwards it to the REFER Orchestrator script."
+      },
+      "status": "ready"
+    },
+    {
+      "script_id": "request.type.command",
+      "label": "Command Request",
+      "script_class": "Request Type",
+      "sequence_rank": "SEQ-B",
+      "forge_id": "request-intake-forge",
+      "reads": [
+        "user:intent"
+      ],
+      "writes": [
+        "refer.intake"
+      ],
+      "locks": [],
+      "source_authority": [
+        "src/contracts/scriptFactory.ts",
+        "docs/script-legend.md"
+      ],
+      "effect_contract": {
+        "intended_effect": "A user starts a REFER action from the command palette.",
+        "allowed_boundary": "This request type covers actions like Initialize Repo, Check for Updates, or Refresh Codebases. These do not start from chat; they start from explicit VS Code commands."
+      },
+      "status": "ready"
+    },
+    {
+      "script_id": "refer.chat.pipeline",
+      "label": "@refer Chat Pipeline",
+      "script_class": "Sequencer Script",
+      "sequence_rank": "SEQ-E",
+      "forge_id": "refer-chat-forge",
+      "reads": [
+        ".refer-factory/**",
+        "user:intent"
+      ],
+      "writes": [
+        ".refer-factory/chat/sessions/**",
+        ".refer-factory/process-state.json"
+      ],
+      "locks": [
+        ".refer-factory/chat"
+      ],
+      "source_authority": [
+        "src/contracts/scriptFactory.ts",
+        "docs/script-legend.md"
+      ],
+      "effect_contract": {
+        "intended_effect": "Receives your @refer message, runs the work pipeline, and saves the result.",
+        "allowed_boundary": "This is the normal @refer workflow bundled as one multi script. It starts at the VS Code Chat participant, hands the request to the orchestrator, uses the resolution loop for model work, and writes the final turn into chat history."
+      },
+      "status": "ready"
+    },
+    {
+      "script_id": "refer.chat.participant",
+      "label": "@refer Participant",
+      "script_class": "Function Script",
+      "sequence_rank": "SEQ-G",
+      "forge_id": "script-factory-kernel-forge",
+      "reads": [
+        ".refer-factory/**"
+      ],
+      "writes": [
+        ".refer-factory/**"
+      ],
+      "locks": [],
+      "source_authority": [
+        "src/contracts/scriptFactory.ts",
+        "docs/script-legend.md"
+      ],
+      "effect_contract": {
+        "intended_effect": "Makes @refer appear as a native VS Code Chat participant.",
+        "allowed_boundary": "This connects the VS Code Chat box to REFER. When you type @refer, this script receives your message, handles simple controls like on, off, and status, shows progress, and sends real work through the REFER orchestration flow."
+      },
+      "status": "ready"
+    },
+    {
+      "script_id": "refer.orchestrate.chat",
+      "label": "REFER Orchestrator",
+      "script_class": "Sequencer Script",
+      "sequence_rank": "SEQ-E",
+      "forge_id": "refer-chat-forge",
+      "reads": [
+        ".refer-factory/**",
+        "user:intent"
+      ],
+      "writes": [
+        ".refer-factory/chat/sessions/**",
+        ".refer-factory/process-state.json"
+      ],
+      "locks": [
+        ".refer-factory/chat"
+      ],
+      "source_authority": [
+        "src/contracts/scriptFactory.ts",
+        "docs/script-legend.md"
+      ],
+      "effect_contract": {
+        "intended_effect": "Turns your @refer message into a tracked work request and saves the answer.",
+        "allowed_boundary": "Use this when you send a message to @refer in VS Code Chat or through the local server. It saves what you asked, makes a smaller work order from it, sends that work order to the selected model, tracks the steps, and adds the result to @Refer Chat History."
+      },
+      "status": "ready"
+    },
+    {
+      "script_id": "refer.resolution.loop",
+      "label": "Resolution Loop",
+      "script_class": "Resolver Script",
+      "sequence_rank": "SEQ-I",
+      "forge_id": "refer-chat-forge",
+      "reads": [
+        ".refer-factory/codebase-tree.json",
+        ".refer-factory/agent-context.md"
+      ],
+      "writes": [
+        ".refer-factory/chat/sessions/**"
+      ],
+      "locks": [],
+      "source_authority": [
+        "src/contracts/scriptFactory.ts",
+        "docs/script-legend.md"
+      ],
+      "effect_contract": {
+        "intended_effect": "Keeps asking the model until REFER has a clear final outcome.",
+        "allowed_boundary": "This is the part that prevents a chat request from wandering forever. It checks each model answer and stops when the request is resolved, needs more information, needs a new script, is blocked, or failed for a clear reason."
+      },
+      "status": "ready"
+    },
+    {
+      "script_id": "refer.context.picker",
+      "label": "Context Picker",
+      "script_class": "Resolver Script",
+      "sequence_rank": "SEQ-D",
+      "forge_id": "refer-chat-forge",
+      "reads": [
+        ".refer-factory/codebase-tree.json",
+        ".refer-factory/agent-context.md"
+      ],
+      "writes": [
+        ".refer-factory/context-packs/**"
+      ],
+      "locks": [],
+      "source_authority": [
+        "src/contracts/scriptFactory.ts",
+        "docs/script-legend.md"
+      ],
+      "effect_contract": {
+        "intended_effect": "Builds a compact context pack for one bounded request.",
+        "allowed_boundary": "Use this when REFER needs to route a prompt through local context instead of sending the whole repo. It reads generated factory artifacts such as the codebase tree, agent context, script legend, and selected source anchors, then writes a prompt-specific context pack under .refer-factory/context-packs/."
+      },
+      "status": "ready"
+    },
+    {
+      "script_id": "refer.scan.codebase",
+      "label": "Scan Codebase",
+      "script_class": "Reference Script",
+      "sequence_rank": "SEQ-D",
+      "forge_id": "local-context-forge",
+      "reads": [
+        "src/**",
+        "docs/**",
+        "schemas/**",
+        "resources/**"
+      ],
+      "writes": [
+        ".refer-factory/**"
+      ],
+      "locks": [
+        ".refer-factory/context"
+      ],
+      "source_authority": [
+        "src/contracts/scriptFactory.ts",
+        "docs/script-legend.md"
+      ],
+      "effect_contract": {
+        "intended_effect": "Builds a local map of this repo and opens the treefile.",
+        "allowed_boundary": "Use this when REFER needs a fresh map of the project. It scans useful source, test, config, docs, and resource files, writes .refer-factory/codebase-tree.json, writes .refer-factory/agent-context.md, and opens the treefile in VS Code."
+      },
+      "status": "ready"
+    },
+    {
+      "script_id": "refer.script.legend",
+      "label": "Script Legend",
+      "script_class": "Governing Script",
+      "sequence_rank": "SEQ-A",
+      "forge_id": "script-legend-forge",
+      "reads": [
+        "src/contracts/scriptLegend.ts",
+        "src/contracts/scriptFactory.ts"
+      ],
+      "writes": [
+        ".refer-factory/script-legend.md"
+      ],
+      "locks": [
+        ".refer-factory/script-legend.md"
+      ],
+      "source_authority": [
+        "src/contracts/scriptFactory.ts",
+        "docs/script-legend.md"
+      ],
+      "effect_contract": {
+        "intended_effect": "Defines the shared script terminology used by humans, agents, and local LLMs.",
+        "allowed_boundary": "Use this as the meaning layer for deterministic script work. It explains terms like Single Script, Multi Script, Scriptograph, Scriptionary, Scriptonomy, status colors, input points, exit points, and relationship symbols."
+      },
+      "status": "ready"
+    },
+    {
+      "script_id": "refer.scriptographer",
+      "label": "Scriptographer",
+      "script_class": "Reference Script",
+      "sequence_rank": "SEQ-D",
+      "forge_id": "local-context-forge",
+      "reads": [
+        "src/**",
+        "docs/**",
+        "schemas/**",
+        "resources/**"
+      ],
+      "writes": [
+        ".refer-factory/**"
+      ],
+      "locks": [
+        ".refer-factory/context"
+      ],
+      "source_authority": [
+        "src/contracts/scriptFactory.ts",
+        "docs/script-legend.md"
+      ],
+      "effect_contract": {
+        "intended_effect": "Discovers factory names and classifies whether they are ratified vocabulary.",
+        "allowed_boundary": "Use this before adding new labels, scripts, or UI surfaces. It scans bounded factory sources, classifies candidate names against the Script Legend and Script Registry, writes .refer-factory/scriptographer-report.json, and leaves unratified names for the gap scanner to report."
+      },
+      "status": "ready"
+    },
+    {
+      "script_id": "refer.scan.factoryGaps",
+      "label": "Scan Factory Gaps",
+      "script_class": "Reference Script",
+      "sequence_rank": "SEQ-D",
+      "forge_id": "local-context-forge",
+      "reads": [
+        "src/**",
+        "docs/**",
+        "schemas/**",
+        "resources/**"
+      ],
+      "writes": [
+        ".refer-factory/**"
+      ],
+      "locks": [
+        ".refer-factory/context"
+      ],
+      "source_authority": [
+        "src/contracts/scriptFactory.ts",
+        "docs/script-legend.md"
+      ],
+      "effect_contract": {
+        "intended_effect": "Finds missing pieces in the Script Factory system.",
+        "allowed_boundary": "Use this when REFER needs to inspect itself. It checks doctrine terms, registry entries, command contributions, generated artifacts, status mappings, and self-healing gaps, then writes .refer-factory/factory-gaps.json."
+      },
+      "status": "ready"
+    },
+    {
+      "script_id": "refer.server.chat",
+      "label": "Server Chat Route",
+      "script_class": "Sequencer Script",
+      "sequence_rank": "SEQ-E",
+      "forge_id": "server-endpoint-forge",
+      "reads": [
+        ".refer-factory/**",
+        "user:intent"
+      ],
+      "writes": [
+        ".refer-factory/chat/sessions/**",
+        ".refer-factory/process-state.json"
+      ],
+      "locks": [
+        ".refer-factory/chat"
+      ],
+      "source_authority": [
+        "src/contracts/scriptFactory.ts",
+        "docs/script-legend.md"
+      ],
+      "effect_contract": {
+        "intended_effect": "Lets another app send a prompt to REFER over HTTP.",
+        "allowed_boundary": "Use this when something outside VS Code needs to ask REFER to do work. It receives a prompt, chooses the target workspace, runs the same flow as @refer, and sends back a structured result."
+      },
+      "status": "ready"
+    },
+    {
+      "script_id": "refer.server.health",
+      "label": "Server Health Route",
+      "script_class": "Sequencer Script",
+      "sequence_rank": "SEQ-E",
+      "forge_id": "server-endpoint-forge",
+      "reads": [
+        ".refer-factory/**",
+        "user:intent"
+      ],
+      "writes": [
+        ".refer-factory/chat/sessions/**",
+        ".refer-factory/process-state.json"
+      ],
+      "locks": [
+        ".refer-factory/chat"
+      ],
+      "source_authority": [
+        "src/contracts/scriptFactory.ts",
+        "docs/script-legend.md"
+      ],
+      "effect_contract": {
+        "intended_effect": "Checks whether the local REFER server is running.",
+        "allowed_boundary": "This is a quick status check. It tells you whether the server is alive, which workspace it is pointed at, which model provider it is using, and which server routes are available."
+      },
+      "status": "ready"
+    },
+    {
+      "script_id": "refer.server.targets",
+      "label": "Server Targets Route",
+      "script_class": "Sequencer Script",
+      "sequence_rank": "SEQ-E",
+      "forge_id": "server-endpoint-forge",
+      "reads": [
+        ".refer-factory/**",
+        "user:intent"
+      ],
+      "writes": [
+        ".refer-factory/chat/sessions/**",
+        ".refer-factory/process-state.json"
+      ],
+      "locks": [
+        ".refer-factory/chat"
+      ],
+      "source_authority": [
+        "src/contracts/scriptFactory.ts",
+        "docs/script-legend.md"
+      ],
+      "effect_contract": {
+        "intended_effect": "Shows which local workspaces the server can work on.",
+        "allowed_boundary": "Use this before sending a server prompt when you have more than one project. It lists the local workspaces REFER knows about so the server can route the request to the right place."
+      },
+      "status": "ready"
+    },
+    {
+      "script_id": "refer.initializeRepo",
+      "label": "Initialize Repo",
+      "script_class": "Installer Script",
+      "sequence_rank": "SEQ-G",
+      "forge_id": "bootstrap-forge",
+      "reads": [
+        "package.json",
+        "unscripted-laws/REFER.OS/**"
+      ],
+      "writes": [
+        ".refer-factory/**",
+        "AGENTS.md",
+        "REFER.OS/**"
+      ],
+      "locks": [
+        "workspace-bootstrap"
+      ],
+      "source_authority": [
+        "src/contracts/scriptFactory.ts",
+        "docs/script-legend.md"
+      ],
+      "effect_contract": {
+        "intended_effect": "Sets up REFER files in a repo after showing you what will change.",
+        "allowed_boundary": "Use this when you want to add REFER governance to a project. It scans the workspace, shows a preview of files it would create or update, and only applies those changes after you confirm."
+      },
+      "status": "ready"
+    },
+    {
+      "script_id": "refer.emitSendContract",
+      "label": "Emit Send Contract",
+      "script_class": "Function Script",
+      "sequence_rank": "SEQ-G",
+      "forge_id": "script-factory-kernel-forge",
+      "reads": [
+        ".refer-factory/**"
+      ],
+      "writes": [
+        ".refer-factory/**"
+      ],
+      "locks": [],
+      "source_authority": [
+        "src/contracts/scriptFactory.ts",
+        "docs/script-legend.md"
+      ],
+      "effect_contract": {
+        "intended_effect": "Opens a starter work contract you can review or edit.",
+        "allowed_boundary": "This creates a draft that describes what work should happen, what area it should affect, and how the result should be checked. It is useful when you want a clearer work request before execution."
+      },
+      "status": "ready"
+    },
+    {
+      "script_id": "refer.emitScriptBlueprint",
+      "label": "Emit Script Blueprint",
+      "script_class": "Function Script",
+      "sequence_rank": "SEQ-G",
+      "forge_id": "script-factory-kernel-forge",
+      "reads": [
+        ".refer-factory/**"
+      ],
+      "writes": [
+        ".refer-factory/**"
+      ],
+      "locks": [],
+      "source_authority": [
+        "src/contracts/scriptFactory.ts",
+        "docs/script-legend.md"
+      ],
+      "effect_contract": {
+        "intended_effect": "Shows how a chat request can become a reusable script.",
+        "allowed_boundary": "Use this when you want to understand or design the pipeline from a normal chat message to a repeatable automation. It opens a blueprint showing the stages REFER expects."
+      },
+      "status": "ready"
+    },
+    {
+      "script_id": "refer.emitScriptDnaSeed",
+      "label": "Emit Script DNA Seed",
+      "script_class": "Function Script",
+      "sequence_rank": "SEQ-G",
+      "forge_id": "script-factory-kernel-forge",
+      "reads": [
+        ".refer-factory/**"
+      ],
+      "writes": [
+        ".refer-factory/**"
+      ],
+      "locks": [],
+      "source_authority": [
+        "src/contracts/scriptFactory.ts",
+        "docs/script-legend.md"
+      ],
+      "effect_contract": {
+        "intended_effect": "Starts a new custom script definition.",
+        "allowed_boundary": "Use this when a repeated task deserves its own script. It opens a starter template with the script name, expected inputs, expected outputs, rules it should follow, and checks it should pass."
+      },
+      "status": "ready"
+    },
+    {
+      "script_id": "refer.refreshCodebases",
+      "label": "Refresh Codebases",
+      "script_class": "Function Script",
+      "sequence_rank": "SEQ-G",
+      "forge_id": "script-factory-kernel-forge",
+      "reads": [
+        ".refer-factory/**"
+      ],
+      "writes": [
+        ".refer-factory/**"
+      ],
+      "locks": [],
+      "source_authority": [
+        "src/contracts/scriptFactory.ts",
+        "docs/script-legend.md"
+      ],
+      "effect_contract": {
+        "intended_effect": "Updates REFER's map of the current repo.",
+        "allowed_boundary": "Use this after files or folders change. It scans the workspace and updates REFER's local map of projects, subfolders, and code areas so future work can target the right place."
+      },
+      "status": "ready"
+    },
+    {
+      "script_id": "refer.scanCodebase",
+      "label": "Scan Codebase",
+      "script_class": "Reference Script",
+      "sequence_rank": "SEQ-D",
+      "forge_id": "local-context-forge",
+      "reads": [
+        "src/**",
+        "docs/**",
+        "schemas/**",
+        "resources/**"
+      ],
+      "writes": [
+        ".refer-factory/**"
+      ],
+      "locks": [
+        ".refer-factory/context"
+      ],
+      "source_authority": [
+        "src/contracts/scriptFactory.ts",
+        "docs/script-legend.md"
+      ],
+      "effect_contract": {
+        "intended_effect": "Runs the codebase scanner from the command palette.",
+        "allowed_boundary": "Use this command to refresh REFER's codebase treefile and compact agent context file, then open the treefile in the normal VS Code editor."
+      },
+      "status": "ready"
+    },
+    {
+      "script_id": "refer.viewCodebaseTree",
+      "label": "View Codebase Tree",
+      "script_class": "Reference Script",
+      "sequence_rank": "SEQ-D",
+      "forge_id": "local-context-forge",
+      "reads": [
+        "src/**",
+        "docs/**",
+        "schemas/**",
+        "resources/**"
+      ],
+      "writes": [
+        ".refer-factory/**"
+      ],
+      "locks": [
+        ".refer-factory/context"
+      ],
+      "source_authority": [
+        "src/contracts/scriptFactory.ts",
+        "docs/script-legend.md"
+      ],
+      "effect_contract": {
+        "intended_effect": "Opens the latest codebase treefile in VS Code.",
+        "allowed_boundary": "Use this after a scan when you want to inspect .refer-factory/codebase-tree.json without running the scanner again."
+      },
+      "status": "ready"
+    },
+    {
+      "script_id": "refer.scanFactoryGaps",
+      "label": "Scan Factory Gaps",
+      "script_class": "Reference Script",
+      "sequence_rank": "SEQ-D",
+      "forge_id": "local-context-forge",
+      "reads": [
+        "src/**",
+        "docs/**",
+        "schemas/**",
+        "resources/**"
+      ],
+      "writes": [
+        ".refer-factory/**"
+      ],
+      "locks": [
+        ".refer-factory/context"
+      ],
+      "source_authority": [
+        "src/contracts/scriptFactory.ts",
+        "docs/script-legend.md"
+      ],
+      "effect_contract": {
+        "intended_effect": "Runs the factory gap scanner from the command palette.",
+        "allowed_boundary": "Use this command to check whether the Script Factory has missing terminology, missing registry entries, missing command contributions, missing generated artifacts, or unmapped statuses."
+      },
+      "status": "ready"
+    },
+    {
+      "script_id": "refer.viewFactoryGaps",
+      "label": "View Factory Gaps",
+      "script_class": "Reference Script",
+      "sequence_rank": "SEQ-D",
+      "forge_id": "local-context-forge",
+      "reads": [
+        "src/**",
+        "docs/**",
+        "schemas/**",
+        "resources/**"
+      ],
+      "writes": [
+        ".refer-factory/**"
+      ],
+      "locks": [
+        ".refer-factory/context"
+      ],
+      "source_authority": [
+        "src/contracts/scriptFactory.ts",
+        "docs/script-legend.md"
+      ],
+      "effect_contract": {
+        "intended_effect": "Opens the latest factory gap report in VS Code.",
+        "allowed_boundary": "Use this after a factory gap scan when you want to inspect .refer-factory/factory-gaps.json without running the scanner again."
+      },
+      "status": "ready"
+    },
+    {
+      "script_id": "refer.runScriptographer",
+      "label": "Run Scriptographer",
+      "script_class": "Function Script",
+      "sequence_rank": "SEQ-G",
+      "forge_id": "script-factory-kernel-forge",
+      "reads": [
+        ".refer-factory/**"
+      ],
+      "writes": [
+        ".refer-factory/**"
+      ],
+      "locks": [],
+      "source_authority": [
+        "src/contracts/scriptFactory.ts",
+        "docs/script-legend.md"
+      ],
+      "effect_contract": {
+        "intended_effect": "Runs the vocabulary discovery and classification scan.",
+        "allowed_boundary": "Use this command to discover candidate factory names, classify them against the Script Legend and Script Registry, and write .refer-factory/scriptographer-report.json."
+      },
+      "status": "ready"
+    },
+    {
+      "script_id": "refer.viewScriptographerReport",
+      "label": "View Scriptographer Report",
+      "script_class": "Reference Script",
+      "sequence_rank": "SEQ-D",
+      "forge_id": "local-context-forge",
+      "reads": [
+        "src/**",
+        "docs/**",
+        "schemas/**",
+        "resources/**"
+      ],
+      "writes": [
+        ".refer-factory/**"
+      ],
+      "locks": [
+        ".refer-factory/context"
+      ],
+      "source_authority": [
+        "src/contracts/scriptFactory.ts",
+        "docs/script-legend.md"
+      ],
+      "effect_contract": {
+        "intended_effect": "Opens the latest Scriptographer report in VS Code.",
+        "allowed_boundary": "Use this after running Scriptographer when you want to inspect discovered names and ratification status without running the scanner again."
+      },
+      "status": "ready"
+    },
+    {
+      "script_id": "refer.checkForUpdates",
+      "label": "Check For Updates",
+      "script_class": "Installer Script",
+      "sequence_rank": "SEQ-G",
+      "forge_id": "update-forge",
+      "reads": [
+        "package.json",
+        "unscripted-laws/REFER.OS/**"
+      ],
+      "writes": [
+        ".refer-factory/**",
+        "AGENTS.md",
+        "REFER.OS/**"
+      ],
+      "locks": [
+        "workspace-bootstrap"
+      ],
+      "source_authority": [
+        "src/contracts/scriptFactory.ts",
+        "docs/script-legend.md"
+      ],
+      "effect_contract": {
+        "intended_effect": "Checks whether REFER has updates available.",
+        "allowed_boundary": "Use this to see whether the dormant REFER reference library, scripts, or packaged files in this repo are behind the current update list. It reports what would need to change without applying anything."
+      },
+      "status": "ready"
+    },
+    {
+      "script_id": "refer.applyUpdate",
+      "label": "Apply Update",
+      "script_class": "Installer Script",
+      "sequence_rank": "SEQ-G",
+      "forge_id": "update-forge",
+      "reads": [
+        "package.json",
+        "unscripted-laws/REFER.OS/**"
+      ],
+      "writes": [
+        ".refer-factory/**",
+        "AGENTS.md",
+        "REFER.OS/**"
+      ],
+      "locks": [
+        "workspace-bootstrap"
+      ],
+      "source_authority": [
+        "src/contracts/scriptFactory.ts",
+        "docs/script-legend.md"
+      ],
+      "effect_contract": {
+        "intended_effect": "Installs pending REFER updates after you approve them.",
+        "allowed_boundary": "Use this after checking for updates. It asks for confirmation, backs up existing files, applies the listed updates, records the update state, and tells you if anything failed."
+      },
+      "status": "ready"
+    },
+    {
+      "script_id": "refer.contractModeOn",
+      "label": "Contract Mode On",
+      "script_class": "Function Script",
+      "sequence_rank": "SEQ-G",
+      "forge_id": "script-factory-kernel-forge",
+      "reads": [
+        ".refer-factory/**"
+      ],
+      "writes": [
+        ".refer-factory/**"
+      ],
+      "locks": [],
+      "source_authority": [
+        "src/contracts/scriptFactory.ts",
+        "docs/script-legend.md"
+      ],
+      "effect_contract": {
+        "intended_effect": "Keeps REFER contract mode on for future chat turns.",
+        "allowed_boundary": "Use this when you want every future @refer turn in this workspace to be treated as governed contract work until you turn it off."
+      },
+      "status": "ready"
+    },
+    {
+      "script_id": "refer.contractModeOff",
+      "label": "Contract Mode Off",
+      "script_class": "Function Script",
+      "sequence_rank": "SEQ-G",
+      "forge_id": "script-factory-kernel-forge",
+      "reads": [
+        ".refer-factory/**"
+      ],
+      "writes": [
+        ".refer-factory/**"
+      ],
+      "locks": [],
+      "source_authority": [
+        "src/contracts/scriptFactory.ts",
+        "docs/script-legend.md"
+      ],
+      "effect_contract": {
+        "intended_effect": "Turns off always-on contract mode.",
+        "allowed_boundary": "Use this when you no longer want every @refer turn to stay in persistent contract mode. Individual @refer messages can still use temporary contract tracking."
+      },
+      "status": "ready"
+    },
+    {
+      "script_id": "refer.contractModeToggle",
+      "label": "Toggle Contract Mode",
+      "script_class": "Function Script",
+      "sequence_rank": "SEQ-G",
+      "forge_id": "script-factory-kernel-forge",
+      "reads": [
+        ".refer-factory/**"
+      ],
+      "writes": [
+        ".refer-factory/**"
+      ],
+      "locks": [],
+      "source_authority": [
+        "src/contracts/scriptFactory.ts",
+        "docs/script-legend.md"
+      ],
+      "effect_contract": {
+        "intended_effect": "Switches always-on contract mode to the opposite state.",
+        "allowed_boundary": "Use this when you do not want to remember whether contract mode is currently on or off. It checks the current setting and flips it."
+      },
+      "status": "ready"
+    },
+    {
+      "script_id": "npm.compile",
+      "label": "Compile",
+      "script_class": "Validator Script",
+      "sequence_rank": "SEQ-I",
+      "forge_id": "verification-forge",
+      "reads": [
+        "src/**",
+        "test/**",
+        "schemas/**",
+        "package.json"
+      ],
+      "writes": [
+        "dist/**"
+      ],
+      "locks": [
+        "dist"
+      ],
+      "source_authority": [
+        "src/contracts/scriptFactory.ts",
+        "docs/script-legend.md"
+      ],
+      "effect_contract": {
+        "intended_effect": "Builds the extension code.",
+        "allowed_boundary": "Use this after editing TypeScript. It checks the code for compile errors and writes the JavaScript files VS Code runs into the dist folder."
+      },
+      "status": "ready"
+    },
+    {
+      "script_id": "npm.test",
+      "label": "Test",
+      "script_class": "Validator Script",
+      "sequence_rank": "SEQ-I",
+      "forge_id": "verification-forge",
+      "reads": [
+        "src/**",
+        "test/**",
+        "schemas/**",
+        "package.json"
+      ],
+      "writes": [
+        "dist/**"
+      ],
+      "locks": [
+        "dist"
+      ],
+      "source_authority": [
+        "src/contracts/scriptFactory.ts",
+        "docs/script-legend.md"
+      ],
+      "effect_contract": {
+        "intended_effect": "Checks that the project still works after changes.",
+        "allowed_boundary": "Use this before trusting a change. It builds the extension and runs the full set of tests for metrics, process tracking, bootstrap, contracts, chat orchestration, schemas, law documents, and updates."
+      },
+      "status": "ready"
+    },
+    {
+      "script_id": "npm.verify",
+      "label": "Verify",
+      "script_class": "Validator Script",
+      "sequence_rank": "SEQ-I",
+      "forge_id": "verification-forge",
+      "reads": [
+        "src/**",
+        "test/**",
+        "schemas/**",
+        "package.json"
+      ],
+      "writes": [
+        "dist/**"
+      ],
+      "locks": [
+        "dist"
+      ],
+      "source_authority": [
+        "src/contracts/scriptFactory.ts",
+        "docs/script-legend.md"
+      ],
+      "effect_contract": {
+        "intended_effect": "Runs the same full project check as npm test.",
+        "allowed_boundary": "Use this as the standard verification command. Right now it simply runs the full test suite, so it is the same quality gate as npm test."
+      },
+      "status": "ready"
+    },
+    {
+      "script_id": "refer.authority.resolve",
+      "label": "Authority Resolver",
+      "script_class": "Reference Script",
+      "sequence_rank": "SEQ-D",
+      "forge_id": "authority-resolver-forge",
+      "reads": [
+        "docs/**",
+        "unscripted-laws/REFER.OS/**",
+        "user:intent"
+      ],
+      "writes": [
+        ".refer-factory/authority/**"
+      ],
+      "locks": [
+        ".refer-factory/authority"
+      ],
+      "source_authority": [
+        "src/contracts/scriptFactory.ts",
+        "docs/script-legend.md"
+      ],
+      "effect_contract": {
+        "intended_effect": "Finds the authority references that must govern a domain request.",
+        "allowed_boundary": "Use this before generating or modifying domain scripts. It maps known domains such as Stripe, OpenAI, Cloudflare, and Script Factory work to official or local authority references, and creates a scoped experimental authority packet when no known authority exists."
+      },
+      "status": "ready"
+    },
+    {
+      "script_id": "refer.doctrine.compile",
+      "label": "Doctrine Compiler",
+      "script_class": "Forge Script",
+      "sequence_rank": "SEQ-F",
+      "forge_id": "doctrine-compiler-forge",
+      "reads": [
+        "natural-rule-intake",
+        "docs/**",
+        "unscripted-laws/REFER.OS/**",
+        ".refer-factory/authority/**"
+      ],
+      "writes": [
+        ".refer-factory/doctrine-candidates/**"
+      ],
+      "locks": [
+        ".refer-factory/doctrine-candidates"
+      ],
+      "source_authority": [
+        "src/contracts/scriptFactory.ts",
+        "docs/script-legend.md"
+      ],
+      "effect_contract": {
+        "intended_effect": "Turns natural rule input into a candidate script or validator.",
+        "allowed_boundary": "Use this after Smart Intake captures a user rule, document, correction, or preference. It classifies the rule internally, attaches authority lineage, extracts the invariant, creates fixtures, and writes a candidate packet without activating it until future checks and promotion pass."
+      },
+      "status": "ready"
+    },
+    {
+      "script_id": "refer.scriptionary.term",
+      "label": "Scriptionary Term",
+      "script_class": "Governing Script",
+      "sequence_rank": "SEQ-L",
+      "forge_id": "scriptionary-term-forge",
+      "reads": [
+        "src/contracts/scriptLegend.ts",
+        ".refer-factory/scriptionary/**"
+      ],
+      "writes": [
+        "src/contracts/scriptLegend.ts",
+        ".refer-factory/scriptionary/**",
+        ".refer-factory/script-legend.md"
+      ],
+      "locks": [
+        "src/contracts/scriptLegend.ts",
+        ".refer-factory/script-legend.md"
+      ],
+      "source_authority": [
+        "src/contracts/scriptFactory.ts",
+        "docs/script-legend.md"
+      ],
+      "effect_contract": {
+        "intended_effect": "Captures or promotes new Script Factory vocabulary.",
+        "allowed_boundary": "Use this when a new word, method, strategy, sequence rank, chain action, artifact, status, or system effect becomes reusable. Candidate mode records the term without mutating source. Promote mode inserts a vetted term into the Script Legend source so generated scriptionary output can rebuild the vocabulary."
+      },
+      "status": "ready"
+    },
+    {
+      "script_id": "npm.refer.server",
+      "label": "REFER Server",
+      "script_class": "Sequencer Script",
+      "sequence_rank": "SEQ-E",
+      "forge_id": "server-endpoint-forge",
+      "reads": [
+        ".refer-factory/**",
+        "user:intent"
+      ],
+      "writes": [
+        ".refer-factory/chat/sessions/**",
+        ".refer-factory/process-state.json"
+      ],
+      "locks": [
+        ".refer-factory/chat"
+      ],
+      "source_authority": [
+        "src/contracts/scriptFactory.ts",
+        "docs/script-legend.md"
+      ],
+      "effect_contract": {
+        "intended_effect": "Runs REFER as a local server instead of only inside VS Code.",
+        "allowed_boundary": "Use this when another tool or app needs to call REFER through HTTP. It builds the project and starts the local server so routes like /refer/chat can receive prompts."
+      },
+      "status": "ready"
+    }
+  ]
+}

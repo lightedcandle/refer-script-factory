@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "candidate_id": "scriptionary.fixture-effect.20260430222212",
+  "created_at": "2026-04-30T22:22:12.104Z",
+  "term": "Fixture Effect",
+  "plain_name": "Fixture Reusable Effect",
+  "meaning": "A test-only term candidate that proves scriptionary vocabulary can be captured.",
+  "deterministic_use": "Use only as a test fixture.",
+  "kind": "Term",
+  "observed_effect": "A reusable system effect was discovered.",
+  "sequence": {
+    "rank": "SEQ-L",
+    "sub_sequence": [],
+    "conditional_action": "continue"
+  },
+  "status": "candidate"
+}

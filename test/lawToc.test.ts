@@ -4,7 +4,7 @@ import * as path from "node:path";
 import { fullUniversalLawFiles } from "../src/bootstrap/lawManifest";
 import { referLawToc } from "../src/bootstrap/lawToc";
 
-const lawRoot = path.join(process.cwd(), "law", "REFER.OS");
+const lawRoot = path.join(process.cwd(), "unscripted-laws", "REFER.OS");
 const lawFiles = fs
   .readdirSync(lawRoot)
   .filter((fileName) => fileName.endsWith(".md"))

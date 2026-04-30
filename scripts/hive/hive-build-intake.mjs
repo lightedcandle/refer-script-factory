@@ -172,7 +172,7 @@ function buildContract(item, routes, args) {
       routes,
       route_policy: "Route mutation must follow this typed intake and return talkback, route ratification, and usage evidence.",
       evidence_required: ["typed intake", "talkback", "route ratification", "usage record"],
-      next: "Use this intake record as the required origin for subsequent Alliance route changes.",
+      next: `Use this intake record as the required origin for subsequent ${nodeLabel(item.target_instance || item.target_node)} route changes.`,
     },
     required_talkback: {
       schema: "refer.hive.talkback.v1",
@@ -199,6 +199,12 @@ function writeContract(contract) {
 
 function safeName(value) {
   return String(value || "build-intake").replace(/[^a-zA-Z0-9_.-]/g, "_");
+}
+
+function nodeLabel(value) {
+  const raw = String(value || "Zo").trim();
+  if (!raw) return "Zo";
+  return raw.charAt(0).toUpperCase() + raw.slice(1);
 }
 
 function renderBacklogReport(backlog) {

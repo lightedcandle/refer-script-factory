@@ -85,6 +85,21 @@ talkback is evidence
 source commit is ratification
 ```
 
+For missing scripts, add one more invariant:
+
+```text
+AI exploration is allowed inside an approved intent
+build trace is the memory
+script replay is determinism
+registry/source update is canonicalization
+```
+
+A script gap should not strand work in draft state. If the intent is valid and
+authorized, the Zo or Codex AI lane may build the first working result directly,
+capture the build trace, and then distill the trace into a replayable script.
+Ratification applies to the replayable script and evidence, not to the mere fact
+that AI was involved in the first build.
+
 For machine-facing work, create inspectable typed packets first. Compress only after the packet exists and can round-trip.
 
 Current Zo-side codec:

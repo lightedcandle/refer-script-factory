@@ -269,7 +269,7 @@ const baseScriptFactoryEntries: ScriptFactoryEntry[] = [
     entrypoint: "REFER: Check for Updates",
     does: "Checks whether REFER has updates available.",
     detail:
-      "Use this to see whether the REFER law library, scripts, or packaged files in this repo are behind the current update list. It reports what would need to change without applying anything.",
+      "Use this to see whether the dormant REFER reference library, scripts, or packaged files in this repo are behind the current update list. It reports what would need to change without applying anything.",
   },
   {
     script_id: "refer.applyUpdate",
@@ -333,6 +333,33 @@ const baseScriptFactoryEntries: ScriptFactoryEntry[] = [
     does: "Runs the same full project check as npm test.",
     detail:
       "Use this as the standard verification command. Right now it simply runs the full test suite, so it is the same quality gate as npm test.",
+  },
+  {
+    script_id: "refer.authority.resolve",
+    label: "Authority Resolver",
+    surface: "npm",
+    entrypoint: "npm run authority:resolve -- --intent <intent>",
+    does: "Finds the authority references that must govern a domain request.",
+    detail:
+      "Use this before generating or modifying domain scripts. It maps known domains such as Stripe, OpenAI, Cloudflare, and Script Factory work to official or local authority references, and creates a scoped experimental authority packet when no known authority exists.",
+  },
+  {
+    script_id: "refer.doctrine.compile",
+    label: "Doctrine Compiler",
+    surface: "npm",
+    entrypoint: "npm run doctrine:compile -- --rule <rule>",
+    does: "Turns natural rule input into a candidate script or validator.",
+    detail:
+      "Use this after Smart Intake captures a user rule, document, correction, or preference. It classifies the rule internally, attaches authority lineage, extracts the invariant, creates fixtures, and writes a candidate packet without activating it until future checks and promotion pass.",
+  },
+  {
+    script_id: "refer.scriptionary.term",
+    label: "Scriptionary Term",
+    surface: "npm",
+    entrypoint: "npm run scriptionary:candidate -- --term <term>",
+    does: "Captures or promotes new Script Factory vocabulary.",
+    detail:
+      "Use this when a new word, method, strategy, sequence rank, chain action, artifact, status, or system effect becomes reusable. Candidate mode records the term without mutating source. Promote mode inserts a vetted term into the Script Legend source so generated scriptionary output can rebuild the vocabulary.",
   },
   {
     script_id: "npm.refer.server",

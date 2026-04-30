@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-04-26T12:30:52.453Z",
+  "generated_at": "2026-04-30T18:45:44.895Z",
   "summary": {
-    "total": 16,
+    "total": 19,
     "errors": 0,
     "warnings": 0,
-    "info": 16
+    "info": 19
   },
   "gaps": [
     {
@@ -126,6 +126,30 @@
       "category": "status",
       "title": "No status mapping: Verify",
       "detail": "npm.verify has no known process-event mapping, so its Script Factory light may stay gray.",
+      "repair_hint": "Emit process events for the script or add its process name to the Script Factory status mapper."
+    },
+    {
+      "id": "status.unmapped.refer.authority.resolve",
+      "severity": "info",
+      "category": "status",
+      "title": "No status mapping: Authority Resolver",
+      "detail": "refer.authority.resolve has no known process-event mapping, so its Script Factory light may stay gray.",
+      "repair_hint": "Emit process events for the script or add its process name to the Script Factory status mapper."
+    },
+    {
+      "id": "status.unmapped.refer.doctrine.compile",
+      "severity": "info",
+      "category": "status",
+      "title": "No status mapping: Doctrine Compiler",
+      "detail": "refer.doctrine.compile has no known process-event mapping, so its Script Factory light may stay gray.",
+      "repair_hint": "Emit process events for the script or add its process name to the Script Factory status mapper."
+    },
+    {
+      "id": "status.unmapped.refer.scriptionary.term",
+      "severity": "info",
+      "category": "status",
+      "title": "No status mapping: Scriptionary Term",
+      "detail": "refer.scriptionary.term has no known process-event mapping, so its Script Factory light may stay gray.",
       "repair_hint": "Emit process events for the script or add its process name to the Script Factory status mapper."
     },
     {

@@ -1,0 +1,261 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-04-30T22:27:13.799Z",
+  "forges": [
+    {
+      "forge_id": "authority-resolver-forge",
+      "label": "Authority Resolver Forge",
+      "forge_family": "Script Factory Kernel",
+      "generated_script_classes": [
+        "Reference Script"
+      ],
+      "authority_refs": [
+        "docs/script-legend.md",
+        "src/contracts/scriptFactory.ts"
+      ],
+      "status": "stable",
+      "modification_status": "none",
+      "fixtures": [],
+      "lineage_packets": [],
+      "generated_scripts": [
+        "refer.authority.resolve"
+      ]
+    },
+    {
+      "forge_id": "bootstrap-forge",
+      "label": "Bootstrap Forge",
+      "forge_family": "Installer",
+      "generated_script_classes": [
+        "Installer Script"
+      ],
+      "authority_refs": [
+        "docs/script-legend.md",
+        "src/contracts/scriptFactory.ts"
+      ],
+      "status": "stable",
+      "modification_status": "none",
+      "fixtures": [],
+      "lineage_packets": [],
+      "generated_scripts": [
+        "refer.initializeRepo"
+      ]
+    },
+    {
+      "forge_id": "doctrine-compiler-forge",
+      "label": "Doctrine Compiler Forge",
+      "forge_family": "Script Factory Kernel",
+      "generated_script_classes": [
+        "Forge Script"
+      ],
+      "authority_refs": [
+        "docs/script-legend.md",
+        "src/contracts/scriptFactory.ts"
+      ],
+      "status": "stable",
+      "modification_status": "none",
+      "fixtures": [],
+      "lineage_packets": [],
+      "generated_scripts": [
+        "refer.doctrine.compile"
+      ]
+    },
+    {
+      "forge_id": "local-context-forge",
+      "label": "Local Context Forge",
+      "forge_family": "Local Context",
+      "generated_script_classes": [
+        "Reference Script"
+      ],
+      "authority_refs": [
+        "docs/script-legend.md",
+        "src/contracts/scriptFactory.ts"
+      ],
+      "status": "stable",
+      "modification_status": "none",
+      "fixtures": [],
+      "lineage_packets": [],
+      "generated_scripts": [
+        "refer.scan.codebase",
+        "refer.scriptographer",
+        "refer.scan.factoryGaps",
+        "refer.scanCodebase",
+        "refer.viewCodebaseTree",
+        "refer.scanFactoryGaps",
+        "refer.viewFactoryGaps",
+        "refer.viewScriptographerReport"
+      ]
+    },
+    {
+      "forge_id": "refer-chat-forge",
+      "label": "Refer Chat Forge",
+      "forge_family": "Chat Orchestration",
+      "generated_script_classes": [
+        "Resolver Script",
+        "Sequencer Script"
+      ],
+      "authority_refs": [
+        "docs/script-legend.md",
+        "src/contracts/scriptFactory.ts"
+      ],
+      "status": "stable",
+      "modification_status": "none",
+      "fixtures": [],
+      "lineage_packets": [],
+      "generated_scripts": [
+        "refer.chat.pipeline",
+        "refer.orchestrate.chat",
+        "refer.resolution.loop",
+        "refer.context.picker"
+      ]
+    },
+    {
+      "forge_id": "request-intake-forge",
+      "label": "Request Intake Forge",
+      "forge_family": "Smart Intake",
+      "generated_script_classes": [
+        "Request Type"
+      ],
+      "authority_refs": [
+        "docs/script-legend.md",
+        "src/contracts/scriptFactory.ts"
+      ],
+      "status": "stable",
+      "modification_status": "none",
+      "fixtures": [],
+      "lineage_packets": [],
+      "generated_scripts": [
+        "request.type.chat",
+        "request.type.http",
+        "request.type.command"
+      ]
+    },
+    {
+      "forge_id": "script-factory-kernel-forge",
+      "label": "Script Factory Kernel Forge",
+      "forge_family": "Script Factory Kernel",
+      "generated_script_classes": [
+        "Function Script"
+      ],
+      "authority_refs": [
+        "docs/script-legend.md",
+        "src/contracts/scriptFactory.ts"
+      ],
+      "status": "stable",
+      "modification_status": "none",
+      "fixtures": [],
+      "lineage_packets": [],
+      "generated_scripts": [
+        "refer.chat.participant",
+        "refer.emitSendContract",
+        "refer.emitScriptBlueprint",
+        "refer.emitScriptDnaSeed",
+        "refer.refreshCodebases",
+        "refer.runScriptographer",
+        "refer.contractModeOn",
+        "refer.contractModeOff",
+        "refer.contractModeToggle"
+      ]
+    },
+    {
+      "forge_id": "script-legend-forge",
+      "label": "Script Legend Forge",
+      "forge_family": "Local Context",
+      "generated_script_classes": [
+        "Governing Script"
+      ],
+      "authority_refs": [
+        "docs/script-legend.md",
+        "src/contracts/scriptFactory.ts"
+      ],
+      "status": "stable",
+      "modification_status": "none",
+      "fixtures": [],
+      "lineage_packets": [],
+      "generated_scripts": [
+        "refer.script.legend"
+      ]
+    },
+    {
+      "forge_id": "scriptionary-term-forge",
+      "label": "Scriptionary Term Forge",
+      "forge_family": "Script Factory Kernel",
+      "generated_script_classes": [
+        "Governing Script"
+      ],
+      "authority_refs": [
+        "docs/script-legend.md",
+        "src/contracts/scriptFactory.ts"
+      ],
+      "status": "stable",
+      "modification_status": "none",
+      "fixtures": [],
+      "lineage_packets": [],
+      "generated_scripts": [
+        "refer.scriptionary.term"
+      ]
+    },
+    {
+      "forge_id": "server-endpoint-forge",
+      "label": "Server Endpoint Forge",
+      "forge_family": "Server",
+      "generated_script_classes": [
+        "Sequencer Script"
+      ],
+      "authority_refs": [
+        "docs/script-legend.md",
+        "src/contracts/scriptFactory.ts"
+      ],
+      "status": "stable",
+      "modification_status": "none",
+      "fixtures": [],
+      "lineage_packets": [],
+      "generated_scripts": [
+        "refer.server.chat",
+        "refer.server.health",
+        "refer.server.targets",
+        "npm.refer.server"
+      ]
+    },
+    {
+      "forge_id": "update-forge",
+      "label": "Update Forge",
+      "forge_family": "Installer",
+      "generated_script_classes": [
+        "Installer Script"
+      ],
+      "authority_refs": [
+        "docs/script-legend.md",
+        "src/contracts/scriptFactory.ts"
+      ],
+      "status": "stable",
+      "modification_status": "none",
+      "fixtures": [],
+      "lineage_packets": [],
+      "generated_scripts": [
+        "refer.checkForUpdates",
+        "refer.applyUpdate"
+      ]
+    },
+    {
+      "forge_id": "verification-forge",
+      "label": "Verification Forge",
+      "forge_family": "Verification",
+      "generated_script_classes": [
+        "Validator Script"
+      ],
+      "authority_refs": [
+        "docs/script-legend.md",
+        "src/contracts/scriptFactory.ts"
+      ],
+      "status": "stable",
+      "modification_status": "none",
+      "fixtures": [],
+      "lineage_packets": [],
+      "generated_scripts": [
+        "npm.compile",
+        "npm.test",
+        "npm.verify"
+      ]
+    }
+  ]
+}

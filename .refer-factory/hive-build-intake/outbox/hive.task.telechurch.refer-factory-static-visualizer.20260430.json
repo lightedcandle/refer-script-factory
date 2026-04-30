@@ -46,7 +46,7 @@
       "route ratification",
       "usage record"
     ],
-    "next": "Use this intake record as the required origin for subsequent Alliance route changes."
+    "next": "Use this intake record as the required origin for subsequent Telechurch route changes."
   },
   "required_talkback": {
     "schema": "refer.hive.talkback.v1",

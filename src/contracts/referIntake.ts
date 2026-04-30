@@ -17,6 +17,15 @@ export interface ReferIntakeContract {
     station_route: string[];
     model_prompt_policy: "send_compact_contract_only";
     fallback_rule: string;
+    execution_gate: {
+      gate_id: "failure_detector";
+      command: "npm run failure:detect";
+      applies_to: "ai_watched_script_result_verdict";
+      bypass_policy: "direct_execution_is_ungoverned";
+      rerun_policy: "ai_watcher_reruns_and_resubmits_verdict";
+      ai_boundary: "ai_watcher_executes_scripts_and_repairs";
+      readiness_policy: "functional_verdict_marks_script_ready_for_future_script_first_use";
+    };
   };
 }
 
@@ -60,6 +69,15 @@ export function createReferIntakeRecord(
         model_prompt_policy: "send_compact_contract_only",
         fallback_rule:
           "Use raw_input_ref only when the compact contract is ambiguous or insufficient.",
+        execution_gate: {
+          gate_id: "failure_detector",
+          command: "npm run failure:detect",
+          applies_to: "ai_watched_script_result_verdict",
+          bypass_policy: "direct_execution_is_ungoverned",
+          rerun_policy: "ai_watcher_reruns_and_resubmits_verdict",
+          ai_boundary: "ai_watcher_executes_scripts_and_repairs",
+          readiness_policy: "functional_verdict_marks_script_ready_for_future_script_first_use",
+        },
       },
     },
     raw_input: normalizedPrompt,

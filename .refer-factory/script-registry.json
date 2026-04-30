@@ -1,6 +1,6 @@
 {
   "schema": "refer.domain-script-registry.v1",
-  "updated_at": "2026-04-29T22:18:20.888Z",
+  "updated_at": "2026-04-30T22:20:49.641Z",
   "rule": "Before direct work, identify the domain and check that domain's registry/check_first surfaces for an existing script.",
   "domains": [
     {
@@ -29,7 +29,7 @@
         },
         {
           "name": "test",
-          "command": "npm run compile && node dist/test/metrics.test.js && node dist/test/processEvents.test.js && node dist/test/bootstrapDryRun.test.js && node dist/test/bootstrapApply.test.js && node dist/test/bootstrapProcessEvents.test.js && node dist/test/bootstrapHealth.test.js && node dist/test/codebaseMiles.test.js && node dist/test/codebases.test.js && node dist/test/scriptBlueprint.test.js && node dist/test/scriptDna.test.js && node dist/test/scriptographer.test.js && node dist/test/referIntake.test.js && node dist/test/referOrchestrator.test.js && node dist/test/referProcessEvents.test.js && node dist/test/referChatSession.test.js && node dist/test/referChatMode.test.js && node dist/test/referOrchestratorRunner.test.js && node dist/test/referTargetRegistry.test.js && node dist/test/referCoach.test.js && node dist/test/orchestratorRoadmap.test.js && node dist/test/factoryGaps.test.js && node dist/test/schemaValidation.test.js && node dist/test/lawToc.test.js && node dist/test/updateSync.test.js"
+          "command": "npm run compile && node dist/test/metrics.test.js && node dist/test/processEvents.test.js && node dist/test/bootstrapDryRun.test.js && node dist/test/bootstrapApply.test.js && node dist/test/bootstrapProcessEvents.test.js && node dist/test/bootstrapHealth.test.js && node dist/test/codebaseMiles.test.js && node dist/test/codebases.test.js && node dist/test/scriptBlueprint.test.js && node dist/test/scriptDna.test.js && node dist/test/scriptographer.test.js && node dist/test/referIntake.test.js && node dist/test/referOrchestrator.test.js && node dist/test/referProcessEvents.test.js && node dist/test/referChatSession.test.js && node dist/test/referChatMode.test.js && node dist/test/referOrchestratorRunner.test.js && node dist/test/referTargetRegistry.test.js && node dist/test/referCoach.test.js && node dist/test/orchestratorRoadmap.test.js && node dist/test/factoryGaps.test.js && node dist/test/schemaValidation.test.js && node dist/test/lawToc.test.js && node dist/test/updateSync.test.js && node dist/test/factoryRegistries.test.js && node dist/test/authorityResolver.test.js && node dist/test/doctrineCompiler.test.js && node dist/test/scriptionaryTerm.test.js && node dist/test/modificationLoop.test.js"
         },
         {
           "name": "verify",
@@ -82,6 +82,58 @@
         {
           "name": "scripts:registry",
           "command": "node scripts/registry/domain-script-registry.mjs build"
+        },
+        {
+          "name": "scripts:class-registry",
+          "command": "node scripts/registry/script-class-registry.mjs build"
+        },
+        {
+          "name": "scripts:forge-registry",
+          "command": "node scripts/registry/forge-registry.mjs build"
+        },
+        {
+          "name": "lineage:create",
+          "command": "node scripts/lineage/lineage-packet.mjs create"
+        },
+        {
+          "name": "lineage:report",
+          "command": "node scripts/lineage/lineage-packet.mjs report"
+        },
+        {
+          "name": "failure:detect",
+          "command": "node scripts/repair/modification-loop.mjs"
+        },
+        {
+          "name": "repair:modification-loop",
+          "command": "node scripts/repair/modification-loop.mjs"
+        },
+        {
+          "name": "authority:resolve",
+          "command": "node scripts/reference/authority-resolver.mjs resolve"
+        },
+        {
+          "name": "authority:report",
+          "command": "node scripts/reference/authority-resolver.mjs report"
+        },
+        {
+          "name": "doctrine:compile",
+          "command": "node scripts/doctrine/doctrine-compiler.mjs compile"
+        },
+        {
+          "name": "doctrine:report",
+          "command": "node scripts/doctrine/doctrine-compiler.mjs report"
+        },
+        {
+          "name": "scriptionary:candidate",
+          "command": "node scripts/scriptionary/scriptionary-term.mjs candidate"
+        },
+        {
+          "name": "scriptionary:promote",
+          "command": "node scripts/scriptionary/scriptionary-term.mjs promote"
+        },
+        {
+          "name": "scriptionary:report",
+          "command": "node scripts/scriptionary/scriptionary-term.mjs report"
         },
         {
           "name": "hive:registry",
@@ -325,7 +377,7 @@
       "discovered_package_scripts": [
         {
           "name": "check",
-          "command": "node --check tools/vipc-bootstrap.mjs && node --check tools/zo-mcp.mjs && node --check scripts/factory/compression-codec.mjs && node --check scripts/factory/bilateral-sim.mjs && node --check scripts/factory/token-log-bridge.mjs && node --check scripts/factory/dataset-store.mjs && node --check scripts/factory/heartbeat.mjs && node --check scripts/factory/contract-inbox-runner.mjs && node --check scripts/factory/backfill-zo-local-usage.mjs && node --check scripts/factory/ship-contract-to-zo.mjs && node --check scripts/factory/fetch-zo-talkback.mjs && node --check scripts/factory/dispatch-contract.mjs && node --check scripts/factory/sync-tandem-runtime-to-zo.mjs"
+          "command": "node --check tools/vipc-bootstrap.mjs && node --check tools/zo-mcp.mjs && node --check scripts/factory.mjs && node --check scripts/bootstrap.mjs && node --check scripts/hive/api.mjs && node --check scripts/hive/dispatcher.mjs && node --check scripts/hive/receive.mjs && node --check scripts/hive/talkback.mjs && node --check scripts/factory/factory.mjs && node --check scripts/factory/bootstrap.mjs && node --check scripts/factory/compression-codec.mjs && node --check scripts/factory/bilateral-sim.mjs && node --check scripts/factory/token-log-bridge.mjs && node --check scripts/factory/dataset-store.mjs && node --check scripts/factory/heartbeat.mjs && node --check scripts/factory/train-cars/01-dashboard.mjs && node --check scripts/factory/train-cars/02-spawn-worker.mjs && node --check scripts/factory/train-cars/03-scan-workspace.mjs && node --check scripts/factory/train-cars/04-hive-sync.mjs && node --check scripts/factory/contract-inbox-runner.mjs && node --check scripts/factory/backfill-zo-local-usage.mjs && node --check scripts/factory/ship-contract-to-zo.mjs && node --check scripts/factory/fetch-zo-talkback.mjs && node --check scripts/factory/dispatch-contract.mjs && node --check scripts/factory/sync-tandem-runtime-to-zo.mjs && node --check scripts/factory/node-scope.mjs && node --check scripts/factory/local-script-registry.mjs && node --check scripts/factory/draft-promotion-runner.mjs && node --check scripts/factory/local-intake-runner.mjs && node --check scripts/factory/inbox-automation.mjs && node --check scripts/factory/registry-doctor.mjs && node --check scripts/factory/evolution-loop.mjs && node --check scripts/factory/script-dictionary.mjs && node --check scripts/factory/hive/api.mjs && node --check scripts/factory/hive/dispatcher.mjs && node --check scripts/factory/hive/receive.mjs && node --check scripts/factory/hive/talkback.mjs && node -e \"JSON.parse(require('fs').readFileSync('scripts/factory/scriptionary.json','utf8'));\" && node --check scripts/factory/artifacts/atomic-common.mjs && node --check scripts/factory/artifacts/page-add.mjs && node --check scripts/factory/artifacts/section-add.mjs && node --check scripts/factory/artifacts/card-add.mjs && node --check scripts/factory/artifacts/button-add.mjs && node --check scripts/factory/artifacts/field-add.mjs && node --check scripts/factory/artifacts/text-add.mjs && node --check scripts/factory/artifacts/form-add.mjs && node --check scripts/factory/artifacts/scan-workspace.mjs"
         },
         {
           "name": "bootstrap",
@@ -366,6 +418,42 @@
         {
           "name": "tandem:backfill-usage",
           "command": "node scripts/factory/backfill-zo-local-usage.mjs"
+        },
+        {
+          "name": "scope:record",
+          "command": "node scripts/factory/node-scope.mjs record"
+        },
+        {
+          "name": "scope:report",
+          "command": "node scripts/factory/node-scope.mjs report"
+        },
+        {
+          "name": "factory:registry",
+          "command": "node scripts/factory/local-script-registry.mjs"
+        },
+        {
+          "name": "factory:promote-drafts",
+          "command": "node scripts/factory/draft-promotion-runner.mjs --all"
+        },
+        {
+          "name": "factory:intake",
+          "command": "node scripts/factory/local-intake-runner.mjs"
+        },
+        {
+          "name": "factory:automation-once",
+          "command": "node scripts/factory/inbox-automation.mjs --once"
+        },
+        {
+          "name": "factory:automation-status",
+          "command": "node scripts/factory/inbox-automation.mjs --status"
+        },
+        {
+          "name": "factory:registry-doctor",
+          "command": "node scripts/factory/registry-doctor.mjs"
+        },
+        {
+          "name": "factory:evolve",
+          "command": "node scripts/factory/evolution-loop.mjs"
         }
       ]
     }

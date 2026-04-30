@@ -52,7 +52,14 @@ const includedRootFiles = new Set([
   ".vscode/launch.json",
   ".vscode/settings.json",
 ]);
-const includedRoots = ["src", "test", "schemas", "resources", "docs", "law"];
+const includedRoots = [
+  "src",
+  "test",
+  "schemas",
+  "resources",
+  "docs",
+  "unscripted-laws",
+];
 
 export function codebaseTreePath(workspaceRoot: string): string {
   return path.join(workspaceRoot, ".refer-factory", "codebase-tree.json");

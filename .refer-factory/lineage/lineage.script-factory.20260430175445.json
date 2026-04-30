@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "lineage_packet_id": "lineage.script-factory.20260430175445",
+  "created_at": "2026-04-30T17:54:45.214Z",
+  "intent_contract": {
+    "intent": "Create foundational Script Factory registry lineage."
+  },
+  "authority_refs": [
+    "docs/script-factory-deterministic-evolution-plan.md",
+    "docs/script-legend.md"
+  ],
+  "factory": "Script Factory",
+  "forge_family": "Script Factory Kernel",
+  "forge_id": "script-factory-kernel-forge",
+  "forge_version": "0.0.1",
+  "script_class": "Telemetry Script",
+  "script_id": "refer.script-class-registry",
+  "script_version": "0.0.1",
+  "run_id": "run.refer.script-class-registry.20260430175445",
+  "sequence": {
+    "rank": "SEQ-H",
+    "sub_sequence": [],
+    "conditional_action": "continue"
+  },
+  "intended_effect": {
+    "summary": "Write a durable lineage packet."
+  },
+  "observed_effect": {
+    "summary": "Packet created."
+  },
+  "allowed_boundary": {
+    "writes": [
+      ".refer-factory/lineage/**"
+    ]
+  },
+  "effect_state": "functional",
+  "mismatch": {
+    "type": "none",
+    "detail": "",
+    "repair_layer": ""
+  },
+  "checks": [],
+  "evidence": [],
+  "repair_history": [],
+  "promotion": {
+    "status": "not_promoted",
+    "promoted_at": null,
+    "receipt": null
+  }
+}

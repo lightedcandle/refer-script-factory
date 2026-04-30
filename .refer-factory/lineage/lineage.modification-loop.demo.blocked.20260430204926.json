@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "lineage_packet_id": "lineage.modification-loop.demo.blocked.20260430204926",
+  "created_at": "2026-04-30T20:49:26.256Z",
+  "intent_contract": {
+    "intent": "Compare deterministic script output.",
+    "deterministic_output_compare": true
+  },
+  "authority_refs": [
+    "docs/script-factory-deterministic-evolution-plan.md",
+    "docs/script-legend.md"
+  ],
+  "factory": "Script Factory",
+  "forge_family": "Script Factory Kernel",
+  "forge_id": "script-factory-kernel-forge",
+  "forge_version": "0.0.1",
+  "script_class": "Validator Script",
+  "script_id": "demo.blocked",
+  "script_version": "0.0.1",
+  "run_id": "run.demo.blocked.20260430204926",
+  "sequence": {
+    "rank": "SEQ-J",
+    "sub_sequence": [
+      "SEQ-J.1"
+    ],
+    "conditional_action": "block"
+  },
+  "intended_effect": {
+    "deterministic_output": null
+  },
+  "observed_effect": {
+    "deterministic_output": null
+  },
+  "allowed_boundary": {
+    "writes": [
+      ".refer-factory/lineage/**",
+      ".refer-factory/modification-loop/flags/**"
+    ]
+  },
+  "effect_state": "blocked",
+  "mismatch": {
+    "type": "authority_missing",
+    "detail": "official source unavailable",
+    "repair_layer": "authority"
+  },
+  "checks": [
+    {
+      "name": "deterministic-output-compare",
+      "ok": false,
+      "expected_canonical": "",
+      "observed_canonical": ""
+    }
+  ],
+  "evidence": [
+    {
+      "type": "deterministic_compare",
+      "detail": "official source unavailable"
+    }
+  ],
+  "repair_history": [],
+  "promotion": {
+    "status": "not_promoted",
+    "promoted_at": null,
+    "receipt": null
+  }
+}

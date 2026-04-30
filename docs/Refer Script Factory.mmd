@@ -1,0 +1,86 @@
+---
+config:
+  layout: elk
+id: 4fd9c05e-f5f8-4c90-947a-28994438a73d
+---
+flowchart TD
+  FS[Factory System] --> SF[Script Factory]
+  FS --> CF[Context Factory]
+  FS --> MF[Model Factory]
+  FS --> AF[Artifact Factory]
+
+  SF --> SC[Scriptionary]
+  SF --> ST[Scriptonomy]
+  SF --> SR[Script Registry]
+  SF --> SG[Scriptograph]
+  SF --> F[Forges]
+
+  subgraph Core["Core Script Factory Runtime"]
+    UP[User Prompt] --> RI[Request Intake]
+    RI --> RP[@refer Participant]
+    RP --> IC[refer.intake Contract]
+    IC --> OR[REFER Orchestrator]
+    OR --> CP[Context Picker]
+    CP --> RL[Resolution Loop]
+    RL --> RS{Resolution State}
+    RS -->|resolved_as_is| CH[Chat History]
+    RS -->|needs_more_info| RU[Raw Input Fallback]
+    RU --> RL
+    RS -->|needs_script| SD[Script Gap Draft]
+    RS -->|blocked_or_failed| PE[Process Events]
+    CH --> PE
+  end
+
+  subgraph Maturity["Local-First Maturity Loop"]
+    Repo[Repo] --> Scan[Scan Codebase]
+    Scan --> Tree[Codebase Tree]
+    Scan --> AC[Agent Context]
+    Repo --> SGR[Scriptographer]
+    SGR --> Gaps[Factory Gaps]
+    SR --> OR
+    Tree --> CP
+    AC --> CP
+    SD --> EB[Exploratory Build]
+    EB --> BT[Build Trace]
+    BT --> Distill[Script Distillation]
+    Distill --> Replay[Script Replay]
+    Replay --> SR
+    PE --> Verify[Verification]
+    Verify --> Heal[Self-Healing]
+    Heal --> SR
+    Heal --> SG
+  end
+
+  subgraph ZoHive["Zo Bootstrap / Hive Sibling Lane"]
+    Contract[Typed Contract] --> Compress[Compression Transport]
+    Compress --> Dispatch[Hive Dispatcher]
+    Dispatch --> Receive[Cell Receive]
+    Receive --> Worker[Cell Worker]
+    Worker --> Talkback[Talkback]
+    Talkback --> Evidence[Hive Registry Evidence]
+    Evidence --> Ratify[Source Commit Ratification]
+    Heartbeat[Zo Heartbeat] --> Dashboard[Dashboard Car]
+    Dashboard --> Spawn[Spawn Worker Car]
+    Spawn --> WorkspaceScan[Scan Workspace Car]
+    WorkspaceScan --> HiveSync[Hive Sync Car]
+    HiveSync --> HiveAPI[Hive API]
+    HiveAPI --> Dispatch
+  end
+
+  IC -. typed contract is authority .-> Contract
+  Talkback -. evidence .-> PE
+  Ratify -. provider-neutral lessons .-> SF
+
+  classDef system fill:#eef2ff,stroke:#4f46e5,color:#111827
+  classDef vocab fill:#ecfeff,stroke:#0891b2,color:#111827
+  classDef runtime fill:#f5f3ff,stroke:#7c3aed,color:#111827
+  classDef maturity fill:#fff7ed,stroke:#ea580c,color:#111827
+  classDef evidence fill:#fdf2f8,stroke:#db2777,color:#111827
+  classDef hive fill:#f0fdf4,stroke:#16a34a,color:#111827
+
+  class FS,SF,CF,MF,AF system
+  class SC,ST,SR,SG,F vocab
+  class UP,RI,RP,IC,OR,CP,RL,RS,RU runtime
+  class Repo,Scan,Tree,AC,SGR,Gaps,SD,EB,BT,Distill,Replay,Verify,Heal maturity
+  class CH,PE,Talkback,Evidence,Ratify evidence
+  class Contract,Compress,Dispatch,Receive,Worker,Heartbeat,Dashboard,Spawn,WorkspaceScan,HiveSync,HiveAPI hive

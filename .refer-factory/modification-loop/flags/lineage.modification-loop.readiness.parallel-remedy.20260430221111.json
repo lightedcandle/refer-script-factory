@@ -1,0 +1,18 @@
+{
+  "schema": "refer.modification-loop.flag.v1",
+  "created_at": "2026-04-30T22:11:11.749Z",
+  "detector": "scripts/repair/modification-loop.mjs",
+  "loop_gate": "failure_detector",
+  "rerun_policy": "Every repair rerun must return through this detector with the same contract before promotion.",
+  "lineage_packet_id": "lineage.modification-loop.readiness.parallel-remedy.20260430221111",
+  "script_id": "readiness.parallel-remedy",
+  "forge_id": "script-factory-kernel-forge",
+  "effect_state": "mismatched",
+  "mismatch": {
+    "type": "forge_pattern_mismatch",
+    "detail": "Observed output does not match deterministic expected output.",
+    "repair_layer": "forge"
+  },
+  "repair_layer": "forge",
+  "next": "Enter modification loop: repair the smallest responsible layer, rerun the same contract, compare again."
+}

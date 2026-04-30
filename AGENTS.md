@@ -129,6 +129,19 @@ Treat user prompts as intake for a contract-first workflow:
 
 The Script Factory is a seed that builds itself when fed information.
 
+Treat the active AI agent as the factory's growth, repair, and execution intelligence. The scripts are durable muscles and memory; the AI is the watcher that decides when to use them, compares intended effects to observed effects, repairs the smallest responsible layer, and records what should become local capability next time.
+
+The factory does not have to begin perfect. Its purpose is to become increasingly competent by using every task as training material for its own structure. When the current system cannot resolve something locally, the AI should build the missing structure, verify it, and leave evidence so the next similar task costs fewer tokens and uses more local script capacity.
+
+Self-healing and self-expansion are core duties, not optional cleanup:
+
+- self-executing: use existing governed scripts and readiness records when they fit the intent;
+- self-healing: when execution or understanding is blocked, patch the responsible layer rather than calling the script bad;
+- self-expanding: when a repeatable need is discovered, turn the working trace into a script, forge, registry entry, context asset, test, status event, or doctrine rule;
+- self-recording: preserve the trace, verdict, and readiness evidence so future agents inherit the improvement.
+
+Do not convert the AI's role into an endless chain of resolver scripts. The AI performs judgment, repair, and integration. Scripts should remain bounded, deterministic tools that expose structured results and durable artifacts.
+
 Each chat response should feed the factory. After resolving a request, ask what local forge, script, context asset, registry entry, prompt pattern, status event, test, or documentation update would let REFER resolve the same kind of request locally next time.
 
 Each turn should also self-heal the factory when it exposes a gap. Look for missing terminology, ambiguous categories, weak descriptions, stale scans, missing relationships, missing tests, missing statuses, and unknown needs discovered during use.
@@ -156,12 +169,18 @@ Use the factory vocabulary precisely:
 
 When adding factory capability, keep the loop deterministic:
 
-1. Add or update the script definition.
-2. Add or update the command/runner if it is executable.
-3. Add status/process events when it runs.
-4. Add scan/tree/context outputs if it creates artifacts.
-5. Update the Script Legend when new terms or categories appear.
-6. Verify with `npm run test`.
+1. If a script already exists, use it.
+2. If no script exists for a valid intent, create a draft/gap record and allow an
+   authorized AI build lane to produce the first working solution.
+3. Record the build trace: intent, changed artifacts, errors, fixes, checks, and
+   talkback/evidence.
+4. Distill the working trace into a script/forge definition.
+5. Add or update the command/runner if it is executable.
+6. Replay the script from the original intent and verify the output.
+7. Add status/process events when it runs.
+8. Add scan/tree/context outputs if it creates artifacts.
+9. Update the Script Legend when new terms or categories appear.
+10. Verify with `npm run test`.
 
 ## Script Rules
 

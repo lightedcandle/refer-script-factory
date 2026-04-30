@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "lineage_packet_id": "lineage.modification-loop.demo.detector-runs-command-ok.20260430212124",
+  "created_at": "2026-04-30T21:21:24.154Z",
+  "intent_contract": {
+    "intent": "Compare deterministic script output.",
+    "deterministic_output_compare": true
+  },
+  "authority_refs": [
+    "docs/script-factory-deterministic-evolution-plan.md",
+    "docs/script-legend.md"
+  ],
+  "factory": "Script Factory",
+  "forge_family": "Script Factory Kernel",
+  "forge_id": "script-factory-kernel-forge",
+  "forge_version": "0.0.1",
+  "script_class": "Validator Script",
+  "script_id": "demo.detector-runs-command-ok",
+  "script_version": "0.0.1",
+  "run_id": "run.demo.detector-runs-command-ok.20260430212124",
+  "sequence": {
+    "rank": "SEQ-I",
+    "sub_sequence": [],
+    "conditional_action": "continue"
+  },
+  "intended_effect": {
+    "deterministic_output": "hello"
+  },
+  "observed_effect": {
+    "deterministic_output": "hello",
+    "run_result": {
+      "command": [
+        "node",
+        "-e",
+        "process.stdout.write('hello')"
+      ],
+      "exit_code": 0,
+      "stdout": "hello",
+      "stderr": "",
+      "error": ""
+    }
+  },
+  "allowed_boundary": {
+    "writes": [
+      ".refer-factory/lineage/**",
+      ".refer-factory/modification-loop/flags/**"
+    ]
+  },
+  "effect_state": "functional",
+  "mismatch": {
+    "type": "none",
+    "detail": "",
+    "repair_layer": ""
+  },
+  "checks": [
+    {
+      "name": "deterministic-output-compare",
+      "ok": true,
+      "expected_canonical": "hello",
+      "observed_canonical": "hello"
+    }
+  ],
+  "evidence": [
+    {
+      "type": "deterministic_compare",
+      "detail": "Expected and observed output match."
+    },
+    {
+      "type": "detector_run",
+      "detail": "Detector executed command: node -e process.stdout.write('hello')",
+      "exit_code": 0,
+      "stderr": "",
+      "error": ""
+    }
+  ],
+  "repair_history": [],
+  "promotion": {
+    "status": "not_promoted",
+    "promoted_at": null,
+    "receipt": null
+  }
+}

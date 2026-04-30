@@ -1,0 +1,16 @@
+{
+  "schema": "refer.modification-loop.flag.v1",
+  "created_at": "2026-04-30T20:49:26.256Z",
+  "detector": "scripts/repair/modification-loop.mjs",
+  "lineage_packet_id": "lineage.modification-loop.demo.blocked.20260430204926",
+  "script_id": "demo.blocked",
+  "forge_id": "script-factory-kernel-forge",
+  "effect_state": "blocked",
+  "mismatch": {
+    "type": "authority_missing",
+    "detail": "official source unavailable",
+    "repair_layer": "authority"
+  },
+  "repair_layer": "authority",
+  "next": "Provide missing input, authority, permission, environment, or boundary decision."
+}

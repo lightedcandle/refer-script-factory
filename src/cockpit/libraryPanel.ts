@@ -46,8 +46,8 @@ export class ReferLibraryPanel implements vscode.WebviewViewProvider {
 <body>
   <main class="surface">
     ${panelTitle("Refer Library", "book")}
-    <p class="summary">Universal REFER.OS documents available for repo bootstrap and operator review.</p>
-    <section class="process-list" aria-label="REFER.OS library">${rows}</section>
+    <p class="summary">Dormant REFER.OS reference documents available for review or later rule-to-script compilation. Active governance comes from Script Factory and Smart Intake scripts.</p>
+    <section class="process-list" aria-label="Dormant REFER.OS library">${rows}</section>
   </main>
   ${libraryScript()}
 </body>
@@ -147,7 +147,7 @@ function renderReferenceGroups(references: RenderableReference[]): string {
 }
 
 function referLawReferences(extensionRoot: string): RenderableReference[] {
-  const lawRoot = path.join(extensionRoot, "law", "REFER.OS");
+  const lawRoot = path.join(extensionRoot, "unscripted-laws", "REFER.OS");
   if (!fs.existsSync(lawRoot)) {
     return [];
   }
@@ -171,7 +171,7 @@ function referLawReferences(extensionRoot: string): RenderableReference[] {
       title: titleForLawFile(fileName),
       source: path.join(lawRoot, fileName),
       required: false,
-      description: `Uncatalogued REFER.OS document. (${fileName})`,
+      description: `Uncatalogued dormant REFER.OS reference document. (${fileName})`,
       sequence: 990 + index,
       group: "Uncatalogued",
       status: "reference",

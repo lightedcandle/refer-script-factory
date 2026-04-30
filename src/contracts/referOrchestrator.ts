@@ -49,6 +49,9 @@ export function createOrchestratorPrompt(input: {
 
 Rules:
 - Prefer the compact contract over raw input.
+- If a script route is selected, the AI watcher executes and inspects it; submit expected/observed results to compact_contract.routing.execution_gate.
+- Do not create selector/resolver scripts for script selection. Use existing registry, readiness records, lineage, and flags.
+- A functional gate verdict means the script is ready for future script-first use; mismatches are AI repair work, not another routing script.
 - If the compact contract is enough, answer with resolution_state "resolved_as_is".
 - If required fields are missing and raw_input_ref may clarify them, answer "needs_more_info" with missing_fields.
 - If no existing route/script can do the work, answer "needs_script" with script_gap.

@@ -45,6 +45,55 @@ validate(
     ),
   ),
 );
+validate(
+  "script-class-registry.schema.json",
+  JSON.parse(
+    fs.readFileSync(
+      path.join(process.cwd(), ".refer-factory", "script-class-registry.json"),
+      "utf8",
+    ),
+  ),
+);
+validate(
+  "forge-registry.schema.json",
+  JSON.parse(
+    fs.readFileSync(
+      path.join(process.cwd(), ".refer-factory", "forge-registry.json"),
+      "utf8",
+    ),
+  ),
+);
+validate(
+  "authority-reference.schema.json",
+  JSON.parse(
+    fs.readFileSync(
+      path.join(process.cwd(), ".refer-factory", "authority", "latest.json"),
+      "utf8",
+    ),
+  ),
+);
+validate(
+  "doctrine-candidate.schema.json",
+  JSON.parse(
+    fs.readFileSync(
+      path.join(process.cwd(), ".refer-factory", "doctrine-candidates", "latest.json"),
+      "utf8",
+    ),
+  ),
+);
+validate("effect-comparison.schema.json", {
+  schema_version: 1,
+  script_id: "schema.effect-comparison",
+  expected: { ok: true },
+  observed: { ok: false },
+  effect_state: "mismatched",
+  mismatch: {
+    type: "output_mismatch",
+    detail: "Observed output differs from expected output.",
+    repair_layer: "script",
+  },
+  next: "modification_loop_flagged",
+});
 
 function validate(schemaFile: string, payload: unknown): void {
   const schema = JSON.parse(

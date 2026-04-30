@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Lineage Packet",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "lineage_packet_id",
+    "created_at",
+    "intent_contract",
+    "authority_refs",
+    "factory",
+    "forge_family",
+    "forge_id",
+    "forge_version",
+    "script_class",
+    "script_id",
+    "script_version",
+    "run_id",
+    "sequence",
+    "intended_effect",
+    "observed_effect",
+    "allowed_boundary",
+    "effect_state",
+    "mismatch",
+    "checks",
+    "evidence",
+    "repair_history",
+    "promotion"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "lineage_packet_id": { "type": "string" },
+    "created_at": { "type": "string" },
+    "intent_contract": { "type": "object" },
+    "authority_refs": { "type": "array", "items": { "type": "string" } },
+    "factory": { "type": "string" },
+    "forge_family": { "type": "string" },
+    "forge_id": { "type": "string" },
+    "forge_version": { "type": "string" },
+    "script_class": { "type": "string" },
+    "script_id": { "type": "string" },
+    "script_version": { "type": "string" },
+    "run_id": { "type": "string" },
+    "sequence": {
+      "type": "object",
+      "required": ["rank", "sub_sequence", "conditional_action"],
+      "properties": {
+        "rank": { "type": "string" },
+        "sub_sequence": { "type": "array", "items": { "type": "string" } },
+        "conditional_action": {
+          "enum": [
+            "continue",
+            "branch",
+            "fork",
+            "merge",
+            "modify",
+            "delete",
+            "skip",
+            "block",
+            "supersede",
+            "promote"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "intended_effect": { "type": "object" },
+    "observed_effect": { "type": "object" },
+    "allowed_boundary": { "type": "object" },
+    "effect_state": {
+      "enum": ["functional", "mismatched", "blocked", "superseded", "unverified"]
+    },
+    "mismatch": {
+      "type": "object",
+      "required": ["type", "detail", "repair_layer"],
+      "properties": {
+        "type": { "type": "string" },
+        "detail": { "type": "string" },
+        "repair_layer": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "checks": { "type": "array", "items": { "type": "object" } },
+    "evidence": { "type": "array", "items": { "type": "object" } },
+    "repair_history": { "type": "array", "items": { "type": "object" } },
+    "promotion": {
+      "type": "object",
+      "required": ["status", "promoted_at", "receipt"],
+      "properties": {
+        "status": { "type": "string" },
+        "promoted_at": { "type": ["string", "null"] },
+        "receipt": { "type": ["string", "null"] }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,10 @@
+{
+  "schema": "refer.script-readiness.v1",
+  "created_at": "2026-04-30T22:21:14.157Z",
+  "script_id": "demo.boundary-ready",
+  "forge_id": "script-factory-kernel-forge",
+  "status": "ready_for_script_first_use",
+  "source_lineage_packet_id": "lineage.modification-loop.demo.boundary-ready.20260430222114",
+  "gate": "ai_watcher_parallel_inspection",
+  "next": "Prefer this script route next time the same intent/effect contract applies."
+}

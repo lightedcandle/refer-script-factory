@@ -63,5 +63,9 @@ refer-zo-bootstrap/package.json
 1. Classify the request domain.
 2. Check the domain registry first.
 3. Use an existing script when one fits.
-4. If no script fits and the action is likely to repeat, create or update a script and then update the registry.
-5. If a workflow crosses domains, update each affected domain registry or doc pointer.
+4. If no script fits and the action is valid, create a draft/gap record and route
+   the first build through the appropriate AI build lane instead of treating the
+   draft as terminal.
+5. Capture the working build trace, distill it into a repeatable script/forge,
+   replay it, and then update the registry after evidence exists.
+6. If a workflow crosses domains, update each affected domain registry or doc pointer.
