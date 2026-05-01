@@ -24,6 +24,8 @@ The factory doctrine is documented in `docs/factory-system-doctrine.md`: a forge
 
 This repo, `refer-script-factory`, remains the Codex/VS Code-scoped Script Factory and the broader factory doctrine source. Do not merge Zo-specific runtime assumptions into this repo by default.
 
+Current app-source rule: the public `telechurchlive` subdomain source is in `alliance-hub/`. Treat `refer-zo-bootstrap/` as reference material only unless the user explicitly asks for Zo, bootstrap, hive, Zo Files, Zo personas/rules, dispatch/talkback, or live Zo runtime work.
+
 When Zo development reveals a provider-neutral Script Factory pattern, doctrine rule, packet shape, registry concept, or verification loop, it may be promoted back into this repo deliberately. Keep the direction clear:
 
 1. Zo-specific runtime behavior lives in `refer-zo-bootstrap`.
@@ -76,6 +78,8 @@ Script registry lookup is domain-scoped. Before direct work, classify the reques
 
 ## Zo Connection Awareness
 
+Zo is not the default lane for Telechurchlive app work. Use this section only when the user explicitly asks for Zo, bootstrap, hive, Zo Files, Zo personas/rules, dispatch/talkback, or live Zo runtime work.
+
 Fresh chat instances may need to connect to a Zo computer while working from this workspace. Use the nested Zo repo's tools instead of inventing a new connection path:
 
 - Zo bootstrap/hive work happens in `e:\refer-script-factory\refer-zo-bootstrap`.
@@ -101,6 +105,19 @@ node refer-zo-bootstrap\tools\vipc-bootstrap.mjs --profile telechurch --instance
 When a live Zo instance should ratify source direction, use the Zo `/zo/ask` API with that instance token and a non-mutating prompt. Treat the answer as evidence to capture in source, not as a replacement for local verification or commits.
 
 Minimize Zo chat usage. Zo chat is an expensive lane and should not carry full contracts or long work results. Prefer the Zo file/API tandem in `refer-zo-bootstrap/docs/file-transport-tandem.md`: write the contract to Zo Files through MCP, trigger a short runner command through MCP, then fetch talkback from Zo Files. Use Zo chat only for tiny activation prompts or when the live persona/rule model itself must judge the work.
+
+## Telechurchlive Subdomain Focus
+
+When the user says Telechurch, Telechurch sub, Alliance profile page, profile save page, admin page, roles, church setup, or anything tied to the public Telechurch/Alliance web experience, assume the target product surface is the `telechurchlive` subdomain unless the user names another target explicitly.
+
+Default target interpretation:
+
+- `telechurchlive` subdomain work belongs to the Telechurch/Alliance app surface in `alliance-hub/`, not to a generic local demo, stale scaffold, unrelated Cloudflare Forms folder, or `refer-zo-bootstrap/`.
+- Local source for Telechurchlive profile, admin, roles, church setup, Cloudflare Pages/Functions, and public app behavior lives in `alliance-hub/` unless the user explicitly names another path.
+- Browser/profile/admin behavior should be reasoned about as the deployed `telechurchlive` subdomain experience first, then traced back to the authoritative local source that produces it.
+- `refer-zo-bootstrap/` is reference-only for this product surface unless the user explicitly requests Zo/bootstrap work.
+- If the IDE shows a folder such as `alliance-cloudflare-forms` but that folder is missing from this workspace, do not silently switch product targets. State the mismatch and continue against `alliance-hub/`, or ask for the missing path when the distinction matters.
+- Do not mutate, sync, or deploy the live `telechurchlive` subdomain without explicit user approval. Local source edits and local verification are allowed when requested.
 
 ## Nested Repo Safety Rule
 

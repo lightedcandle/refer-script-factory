@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Alliance Profile</title>
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section id="home-view" class="panel home-panel" aria-labelledby="home-title" hidden>
+        <img class="header-image" src="/assets/alliance-header.png" alt="Alliance" />
+        <nav class="branch-nav" aria-label="Alliance sections">
+          <a href="/" aria-current="page">Home</a>
+          <a href="/about/">About</a>
+          <a id="home-profile-link" href="/profile">Profile</a>
+        </nav>
+        <div class="mast">
+          <p class="eyebrow">Alliance Hub</p>
+          <h1 id="home-title">Become a part of the Alliance</h1>
+          <p class="copy">The Alliance connects churches, pastors, leaders, workers, members, gifts, and events into one shared rhythm of fellowship and mission.</p>
+        </div>
+        <div id="home-expired-alert" class="alert error floating-alert" role="status" hidden>
+          Link expired. Enter your phone number below and we will send a fresh secure profile link.
+        </div>
+        <form id="phone-start-form" class="phone-start" novalidate>
+          <div>
+            <h2>Sign up now</h2>
+            <p>Enter your phone number and we will text you a secure link to complete your Alliance profile.</p>
+          </div>
+          <label>
+            <span>Phone number</span>
+            <input id="start_phone" name="phone" type="tel" autocomplete="tel" inputmode="tel" placeholder="937-555-1234" required />
+          </label>
+          <button id="start_submit" type="submit">Send Profile Link</button>
+          <div id="start-alert" class="alert" role="status" hidden></div>
+        </form>
+        <div class="home-summary">
+          <article>
+            <h2>Fellowship</h2>
+            <p>Churches stay connected through shared gatherings, regional care, and a common calendar.</p>
+          </article>
+          <article>
+            <h2>Formation</h2>
+            <p>Pastors, leaders, members, and workers are guided into the next step of service.</p>
+          </article>
+          <article>
+            <h2>Mission</h2>
+            <p>Gifts and resources circulate through the body so churches and families are strengthened.</p>
+          </article>
+        </div>
+        <div class="about-actions">
+          <a class="button-link" href="/about/">Read more about the Alliance</a>
+        </div>
+      </section>
+
+      <section id="about-view" class="panel about-panel" aria-labelledby="about-title" hidden>
+        <img class="header-image" src="/assets/alliance-header.png" alt="Alliance" />
+        <nav class="branch-nav" aria-label="Alliance sections">
+          <a href="/">Home</a>
+          <a href="/about/" aria-current="page">About</a>
+          <a id="about-profile-link" href="/profile">Profile</a>
+        </nav>
+        <div class="mast">
+          <p class="eyebrow">Alliance Hub</p>
+          <h1 id="about-title">The Alliance is a living body moving in shared rhythm</h1>
+          <p class="copy">Alliance Hub turns the vision, relationships, responsibilities, gifts, meetings, outreach, and seasonal calendar of the Alliance into a simple path people can follow from their phone.</p>
+        </div>
+        <div class="about-list">
+          <article>
+            <h2>A guided relational experience</h2>
+            <p>The Hub is not only administration. It gives visiting churches, fellowship churches, branch churches, pastors, workers, members, and leadership a clear way to participate according to their role and journey.</p>
+          </article>
+          <article>
+            <h2>Churches grow through fellowship clusters</h2>
+            <p>Branch Churches nurture connected churches in their region while the full Alliance gathers through the shared calendar, conferences, doctrine, and mission rhythm.</p>
+          </article>
+          <article>
+            <h2>The calendar keeps the body moving together</h2>
+            <p>Each season carries an outreach focus, fellowship effort, conference gathering, assimilation period, review, and relaunch into the next season.</p>
+          </article>
+          <article>
+            <h2>Members become ambassadors</h2>
+            <p>The Alliance gives members room to serve beyond one local assembly while remaining rooted in familiar relationships and spiritual covering.</p>
+          </article>
+          <article>
+            <h2>Leaders are strengthened together</h2>
+            <p>Pastors and leaders are not meant to carry ministry in isolation. The Alliance creates a brotherhood of counsel, support, accountability, and shared labor.</p>
+          </article>
+          <article>
+            <h2>Gifts circulate through the body</h2>
+            <p>Ministry gifts, practical skills, business resources, training, mentorship, and support can move where they are needed so churches and families are strengthened.</p>
+          </article>
+          <article>
+            <h2>SMS is the app window</h2>
+            <p>The site grows one page and one message at a time. SMS brings people to the right personal link, and each interaction becomes part of the Alliance journey record.</p>
+          </article>
+        </div>
+        <div class="about-actions">
+          <a id="about-primary-action" class="button-link" href="/profile">Go to profile</a>
+        </div>
+      </section>
+
+      <section id="profile-view" class="panel profile-panel" aria-labelledby="profile-title" hidden>
+        <img class="header-image" src="/assets/alliance-header.png" alt="Alliance" />
+        <nav class="branch-nav" aria-label="Alliance sections">
+          <a href="/">Home</a>
+          <a href="/about/">About</a>
+          <a id="profile-nav-link" href="/profile" aria-current="page">Profile</a>
+        </nav>
+        <div class="mast">
+          <p class="eyebrow">Alliance Hub</p>
+          <h1 id="profile-title">Alliance profile</h1>
+        </div>
+        <div id="profile-card" class="profile-card"></div>
+        <div id="profile-alert" class="alert" role="status" hidden></div>
+        <button id="edit-profile" type="button">Edit Profile</button>
+      </section>
+
+      <section id="invalid-link-view" class="panel message-panel" aria-labelledby="invalid-title" hidden>
+        <img class="header-image" src="/assets/alliance-header.png" alt="Alliance" />
+        <nav class="branch-nav" aria-label="Alliance sections">
+          <a href="/">Home</a>
+          <a href="/about/">About</a>
+          <a id="invalid-profile-link" href="/profile">Profile</a>
+        </nav>
+        <div class="mast">
+          <p class="eyebrow">Alliance Hub</p>
+          <h1 id="invalid-title">This link is no longer valid</h1>
+          <p class="copy">For your security, profile links can expire, be replaced, or be used only once.</p>
+        </div>
+        <div class="reset-instruction">
+          <span>To get a new registration link, reply from your phone chat message with:</span>
+          <strong>Reset</strong>
+        </div>
+      </section>
+
+      <section id="intake-view" class="panel" aria-labelledby="title">
+        <img class="header-image" src="/assets/alliance-header.png" alt="Alliance" />
+        <nav class="branch-nav" aria-label="Alliance sections">
+          <a href="/">Home</a>
+          <a href="/about/">About</a>
+          <a id="intake-profile-link" href="/profile" aria-current="page">Profile</a>
+        </nav>
+        <div class="mast">
+          <p class="eyebrow">Alliance Hub</p>
+          <h1 id="title">Complete your profile</h1>
+          <p class="copy">This connects your phone number to your Alliance profile and authorizes us to message you.</p>
+        </div>
+
+        <form id="profile-form" class="form" novalidate>
+          <div id="alert" class="alert" role="status" hidden></div>
+
+          <label>
+            <span>Phone</span>
+            <input id="phone" type="text" readonly value="Loading..." />
+          </label>
+
+          <div class="story-context">
+            <h2>Your profile starts the Alliance journey</h2>
+            <p>This profile helps Alliance recognize you by phone, connect you to the right church or ministry path, and bring you back to the next page by text message.</p>
+            <p>As the Hub grows, your profile can connect to organization setup, the shared calendar, groups, subscriptions, events, service opportunities, and routed questions like "When is the next event?"</p>
+          </div>
+
+          <label>
+            <span>Distinction</span>
+            <select id="distinction" name="distinction" required></select>
+          </label>
+
+          <div class="grid">
+            <label>
+              <span>First name</span>
+              <input id="first_name" name="first_name" autocomplete="given-name" required />
+            </label>
+            <label>
+              <span>Last name</span>
+              <input id="last_name" name="last_name" autocomplete="family-name" required />
+            </label>
+          </div>
+
+          <label>
+            <span>Email <em>optional</em></span>
+            <input id="email" name="email" type="email" autocomplete="email" />
+          </label>
+
+          <div class="image-field">
+            <span class="field-label">Profile image <em>optional</em></span>
+            <div class="image-picker">
+              <div class="image-preview" aria-hidden="true">
+                <img id="image_preview" alt="" hidden />
+                <span id="image_initials">AI</span>
+              </div>
+              <div class="image-controls">
+                <input id="image_file" name="image_file" type="file" accept="image/png,image/jpeg,image/webp" />
+                <input id="image_url" name="image_url" type="url" placeholder="Or paste an image URL" />
+              </div>
+            </div>
+          </div>
+
+          <label class="check">
+            <input id="sms_authorized" name="sms_authorized" type="checkbox" required />
+            <span>I authorize Alliance Hub to message this phone number about my profile and Alliance access.</span>
+          </label>
+
+          <button id="submit" type="submit">Create Profile</button>
+        </form>
+      </section>
+    </main>
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>

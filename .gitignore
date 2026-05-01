@@ -1,5 +1,7 @@
 node_modules/
 dist/
+alliance-hub/.deploy/
+alliance-hub/.wrangler/
 *.vsix
 .DS_Store
 npm-debug.log*
