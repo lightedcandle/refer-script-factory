@@ -1,0 +1,3 @@
+[submodule "alliance-hub"]
+	path = alliance-hub
+	url = https://github.com/lightedcandle/alliance-hub.git
