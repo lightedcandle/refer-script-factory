@@ -396,6 +396,7 @@ async function selftest() {
     advanceSession(secondSession, "START"),
   ];
   const registeredProfileReply = registeredUserReply("Profile", "user-1000-test");
+  const registeredEditReply = registeredUserReply("I would like to update my name", "user-1000-test");
   const registeredAmbiguousReply = registeredUserReply("What can I do?", "user-1000-test");
   const reactionDetection = detectProfileRoute(phone, 'Liked "Profile"');
   const quotedReactionDetection = detectProfileRoute(phone, '"liked Profile"');
@@ -406,6 +407,8 @@ async function selftest() {
       && session.state === "paused"
       && secondSession.state === "profile_link_sent"
       && registeredProfileReply.includes("/member/user-1000-test")
+      && registeredEditReply.includes("/member/user-1000-test")
+      && registeredEditReply.toLowerCase().includes("edit")
       && registeredAmbiguousReply.includes("Available links:")
       && reactionDetection.ignored === true
       && quotedReactionDetection.ignored === true
@@ -415,6 +418,7 @@ async function selftest() {
     profile_created: false,
     form_url_created: Boolean(session.form_url && session.form_url.includes(profileFormBaseUrl)),
     registered_profile_link_reply: registeredProfileReply,
+    registered_profile_edit_reply: registeredEditReply,
     registered_ambiguous_reply: registeredAmbiguousReply,
     reaction_detection: reactionDetection,
     store_path: originalStorePath,
@@ -532,11 +536,20 @@ function currentProfileId(context) {
 }
 
 function registeredUserReply(inboundBody, profileId) {
-  if (/^profile$/i.test(String(inboundBody || "").trim())) {
+  const normalized = String(inboundBody || "").trim().toLowerCase().replace(/[^\w\s']/g, " ").replace(/\s+/g, " ");
+  const profileLink = profileUrl(profileId);
+  if (/^profile$/.test(normalized)) {
     return [
       "Alliance profile link:",
-      profileUrl(profileId),
+      profileLink,
       "Open it to view your profile, edit it, or jump into available Alliance areas.",
+    ].join("\n");
+  }
+  if (/\b(profile|account|info|settings|name)\b/.test(normalized) && /\b(update|edit|change|correct|fix)\b/.test(normalized)) {
+    return [
+      "Closest match: edit your Alliance profile.",
+      profileLink,
+      "Open your profile and tap Edit Profile to request a secure edit link.",
     ].join("\n");
   }
   return [
