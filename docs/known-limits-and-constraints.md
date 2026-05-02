@@ -17,6 +17,17 @@ Update this file whenever a tool, provider, transport path, script, runner, or p
 
 ## Observed Limits
 
+### Local Wrangler Runtime Compatibility Date Lag
+
+- Date: 2026-05-01
+- Domain/provider: Cloudflare Wrangler Pages local dev
+- Operation: starting `alliance-hub` locally with `npx wrangler pages dev public --port 8788`
+- Symptom: Wrangler warned that the installed local Workers Runtime only supports compatibility date `2025-12-02` and fell back from requested date `2026-05-01`
+- Likely cause: installed `wrangler` / local runtime version lags the current calendar compatibility date
+- Mitigation: pin/pass an explicit supported compatibility date for local testing or upgrade Wrangler before relying on features newer than `2025-12-02`
+- Script/doc now encoding mitigation: `docs/known-limits-and-constraints.md`
+- Verification: local server still compiled and listened on `http://127.0.0.1:8788`
+
 ### Windows Command-Line Payload Length
 
 - Date: 2026-04-29
@@ -236,3 +247,190 @@ Update this file whenever a tool, provider, transport path, script, runner, or p
 - Mitigation: run Node-heavy verification sequentially, and set `NODE_OPTIONS=--max-old-space-size=4096` when the chat host has enough memory
 - Script/doc now encoding mitigation: `docs/known-limits-and-constraints.md`
 - Verification: sequential reruns passed with `NODE_OPTIONS=--max-old-space-size=4096`: root `npm run test` and nested `npm --prefix refer-zo-bootstrap run check`
+
+### Parallel PowerShell Reads Can Hit Paging-File Limits
+
+- Date: 2026-04-30
+- Domain/provider: Windows PowerShell / chat surface
+- Operation: reading multiple factory docs in parallel with `Get-Content`
+- Symptom: PowerShell failed to load `System.Management.Automation` and reported `The paging file is too small for this operation to complete`
+- Likely cause: concurrent PowerShell process startup exceeded the available interactive paging/memory budget
+- Mitigation: use lighter single commands such as `cmd /c type` or run file reads sequentially when the chat host is memory-constrained
+- Script/doc now encoding mitigation: `docs/known-limits-and-constraints.md`
+- Verification: subsequent single `cmd /c type` and targeted Node/MCP commands completed successfully
+
+### Zo Read File Can Truncate Long Generated Manifests
+
+- Date: 2026-05-01
+- Domain/provider: Zo MCP / Alliance script artifacts
+- Operation: reading generated Phase 3 modal manifests from Zo Files with `read_file`
+- Symptom: manifest output was returned as head/tail text and JSON parsing failed with `Bad control character in string literal`
+- Likely cause: large generated JSON containing multiline JSX exceeded the Zo file read display budget
+- Mitigation: for deterministic bridge work, generate large scoped manifests in the app scope and feed the local manifest directory to a generic route-manifest bridge; use Zo `read_file` only for small evidence files
+- Script/doc now encoding mitigation: `refer-zo-bootstrap/scripts/factory/route-manifest-bridge.mjs`, `refer-zo-bootstrap/docs/scoped-app-boundary.md`
+- Verification: `npm run route:manifest-bridge -- --instance alliance --dry-run --json --manifest-command "node scopes/alliance/phase3-manifest.mjs" --manifest-dir <scoped manifest dir>` completed after switching away from Zo manifest readback
+
+### Zo Managed Service Entrypoints Are Not Shell Commands
+
+- Date: 2026-05-01
+- Domain/provider: Zo managed services / Alliance Zo Site
+- Operation: restarting the public `alliance` site service
+- Symptom: entrypoint `NODE_ENV=production bun run server.ts` crashed and the public URL returned HTTP 520
+- Likely cause: supervisord executes service entrypoints directly rather than through a shell, so inline environment assignments are not interpreted
+- Mitigation: use a direct command such as `bun run server.ts`, and run `bun run build` from the scoped site sync script before restarting the service
+- Script/doc now encoding mitigation: `refer-zo-bootstrap/scopes/alliance/sync-site-to-zo.mjs`, this ledger
+- Verification: `service_doctor` for `alliance` reported `RUNNING`, `port: 51303`, and `code: up to date`
+
+### Sequential Phase Status/Next Dependencies
+
+- Date: 2026-05-01
+- Domain/provider: REFER scoped Alliance scripts
+- Operation: running `alliance:phase5-status` and `alliance:phase5-next` concurrently
+- Symptom: `phase5-next` reported stale gaps because it read `phase5-status-latest.json` before the status script rewrote it
+- Likely cause: next-action sensors that depend on latest status artifacts are not concurrency-safe
+- Mitigation: run status scripts before next scripts when the next script reads the status artifact
+- Script/doc now encoding mitigation: this ledger
+- Verification: reran `npm run alliance:phase5-next` after `npm run alliance:phase5-status`; packet returned `ready_for_next_phase: true`
+
+### Supabase Secrets Cannot Use SUPABASE_ Prefix
+
+- Date: 2026-05-01
+- Domain/provider: Supabase CLI / Edge Functions
+- Operation: deploying Alliance `alliance-record-write` Edge Function secrets
+- Symptom: `supabase secrets set` skipped `SUPABASE_SERVICE_ROLE_KEY` with `Env name cannot start with SUPABASE_`
+- Likely cause: Supabase reserves the `SUPABASE_` env prefix for platform-provided variables
+- Mitigation: set `SERVICE_ROLE_KEY` as the Edge Function service role secret and keep direct service role credentials out of Zo; Zo calls the function with anon-key authorization
+- Script/doc now encoding mitigation: `refer-zo-bootstrap/scopes/alliance/supabase-edge-deploy.mjs`
+- Verification: `npm run alliance:supabase-edge-deploy -- --deploy`; `npm run alliance:supabase-probe -- --instance alliance`
+
+### Telechurch E2E Git Status Can Fail On Corrupt/Missing Tree
+
+- Date: 2026-05-01
+- Domain/provider: Git / `E:\telechurch-e2e`
+- Operation: checking Telechurch E2E worktree status after staging an Alliance Edge Function copy
+- Symptom: `git status --short` failed with `fatal: unable to read tree (...)`
+- Likely cause: the local Telechurch E2E repository has a missing or corrupt Git object
+- Mitigation: do not rely on that repo's Git status until the object store is repaired or the repo is recloned; keep Alliance authoritative source under `refer-zo-bootstrap/scopes/alliance/`
+- Script/doc now encoding mitigation: this ledger
+- Verification: Alliance Edge Function source is tracked in `refer-zo-bootstrap/scopes/alliance/supabase/functions/alliance-record-write/index.ts` and deploy artifact records the copied Telechurch path
+
+### Android Device Must Be Visible To ADB Before Install
+
+- Date: 2026-05-01
+- Domain/provider: Android Debug Bridge / chat surface
+- Operation: installing `alliance-android-sms-bridge` on a USB-connected phone
+- Symptom: `adb devices -l` returned no connected devices after restarting the ADB daemon
+- Likely cause: USB debugging is not enabled or authorized, the screen is locked before RSA authorization, or the USB cable/connection is charge-only
+- Mitigation: enable Developer Options and USB debugging, accept the phone's RSA authorization prompt, use a data-capable cable, then rerun `adb devices -l` before `adb install -r app\build\outputs\apk\debug\app-debug.apk`
+- Script/doc now encoding mitigation: this ledger
+- Verification: after device authorization, `adb devices -l` saw `SM_G781V`; `adb install -r app\build\outputs\apk\debug\app-debug.apk` passed; `/health` returned `{"ok":true,"service":"alliance-sms-bridge"}` through `adb forward tcp:8787 tcp:8787`
+
+### Wrangler Does Not Expose Cloudflare Tunnel In This Install
+
+- Date: 2026-05-01
+- Domain/provider: Cloudflare CLI / Windows chat surface
+- Operation: exposing the Alliance SMS dispatcher through Cloudflare
+- Symptom: `wrangler tunnel --help` and `npx wrangler tunnel quick-start http://localhost:8788 --help` showed the Workers command list and no tunnel command
+- Likely cause: installed Wrangler version/surface does not include the Tunnel quick-start command in this environment
+- Mitigation: install and use `cloudflared` directly for Cloudflare Tunnel; Cloudflare docs support `cloudflared tunnel --url http://localhost:8788` for development quick tunnels
+- Script/doc now encoding mitigation: `alliance-android-sms-bridge/README.md`, this ledger
+- Verification: `winget install --id Cloudflare.cloudflared -e` installed `cloudflared` version `2025.8.1`; quick tunnel reached the dispatcher and preserved token auth
+
+### Installed Cloudflared May Not Refresh PATH In Existing Shell
+
+- Date: 2026-05-01
+- Domain/provider: Winget / Windows PATH
+- Operation: invoking `cloudflared` immediately after Winget install
+- Symptom: `Get-Command cloudflared` returned no result in the existing PowerShell session
+- Likely cause: PATH changes from MSI/Winget install were not applied to the already-running shell
+- Mitigation: call `C:\Program Files (x86)\cloudflared\cloudflared.exe` directly or open a new shell before using `cloudflared`
+- Script/doc now encoding mitigation: this ledger
+- Verification: direct executable path started a Cloudflare quick tunnel successfully
+
+### Windows SpawnSync Can Reject Npx Cmd From Deploy Script
+
+- Date: 2026-05-01
+- Domain/provider: Windows PowerShell / Node child_process / Supabase CLI
+- Operation: deploying Alliance `alliance-sms-relay` from `sms-relay-deploy.mjs`
+- Symptom: direct `spawnSync("npx.cmd", ...)` returned `spawnSync npx.cmd EINVAL` even though `npx supabase --version` worked from the shell
+- Likely cause: Windows child process invocation/path handling around `npx.cmd` in this environment
+- Mitigation: invoke `npx` with `shell: true` from the deploy helper and sanitize inherited environment values before spawning
+- Script/doc now encoding mitigation: `refer-zo-bootstrap/scopes/alliance/sms-relay-deploy.mjs`, this ledger
+- Verification: `npm run alliance:sms-relay-deploy -- --deploy` successfully set secrets and deployed `alliance-sms-relay`
+
+### Supabase Edge Relay Needs No JWT Verification When Phone Is The Client
+
+- Date: 2026-05-01
+- Domain/provider: Supabase Edge Functions / Android phone relay
+- Operation: calling `alliance-sms-relay` directly from HTTP clients without an anon-key Authorization header
+- Symptom: initial function calls returned `401 Unauthorized` before route code executed
+- Likely cause: Supabase Edge Function JWT verification was enabled by default
+- Mitigation: deploy `alliance-sms-relay` with `--no-verify-jwt` and enforce the function's own `X-Dispatcher-Token` gate
+- Script/doc now encoding mitigation: `refer-zo-bootstrap/scopes/alliance/sms-relay-deploy.mjs`
+- Verification: `/health` and `/sms/send` worked without Supabase JWT headers while unauthorized relay calls still require `X-Dispatcher-Token`
+
+### Zo Alliance Site Publish Tool May Be Unavailable
+
+- Date: 2026-05-01
+- Domain/provider: Zo MCP / Alliance site publish
+- Operation: publishing the synced Alliance site after adding `/a/{token}` profile intake form
+- Symptom: `npm run alliance:site-sync -- --publish` built and synced the site but returned `Tool 'publish_site' not found`
+- Likely cause: this Zo instance MCP surface does not expose the publish tool even though file write and build tools are available
+- Mitigation: treat `alliance:site-sync` build success as source/build verification, but use the currently configured hosting/publish path outside this tool surface before relying on public profile links
+- Script/doc now encoding mitigation: this ledger, `refer-zo-bootstrap/scopes/alliance/sync-site-to-zo.mjs`
+- Verification: `bun run build` passed on the Zo site root during sync; publish step returned missing tool
+
+### Cloudflare Wildcard Worker Routes Can Capture Pages Custom Domains
+
+- Date: 2026-05-01
+- Domain/provider: Cloudflare Workers / Pages custom domains
+- Operation: routing `alliance.telechurchlive.com` to a new Cloudflare Pages project
+- Symptom: DNS CNAME and Pages custom domain were created, but requests still returned a `302` to `https://telechurchlive.com/...`
+- Likely cause: an existing Worker route for `*.telechurchlive.com/*` matched the new subdomain before the Pages custom domain could serve it
+- Mitigation: create a more specific Worker route with `script: null` for `alliance.telechurchlive.com/*` to bypass the wildcard Worker and let Pages own the hostname
+- Script/doc now encoding mitigation: `alliance-hub/tools/deploy.mjs`, this ledger
+- Verification: after the bypass route, `https://alliance.telechurchlive.com/api/profile-intake/session/{signed-token}` returned `200` from the Alliance Pages Function
+
+### Android Debug Build Needs Explicit JBR In This Shell
+
+- Date: 2026-05-01
+- Domain/provider: Windows PowerShell / Android Gradle build
+- Operation: rebuilding `alliance-android-sms-bridge` from the chat shell
+- Symptom: `.\gradlew.bat assembleDebug` failed with `JAVA_HOME is not set and no 'java' command could be found in your PATH`
+- Likely cause: Android Studio's bundled JBR is installed but not exported into this PowerShell session
+- Mitigation: set `JAVA_HOME=C:\Program Files\Android\Android Studio\jbr` and prepend `%JAVA_HOME%\bin` for the build command
+- Script/doc now encoding mitigation: this ledger
+- Verification: the debug APK rebuilt and installed after setting the local command environment; `/health` returned `{"ok":true,"service":"alliance-sms-bridge"}` through `adb forward tcp:8787 tcp:8787`
+
+### Older PowerShell Lacks SkipHttpErrorCheck
+
+- Date: 2026-05-01
+- Domain/provider: Windows PowerShell / HTTP verification
+- Operation: checking deployed Cloudflare Pages API error responses
+- Symptom: `Invoke-WebRequest -SkipHttpErrorCheck` failed because the parameter was unavailable
+- Likely cause: this shell is running a Windows PowerShell version before that parameter was added
+- Mitigation: use `try/catch`, read `Exception.Response`, and inspect the status/body from the caught response
+- Script/doc now encoding mitigation: this ledger
+- Verification: caught-response checks returned HTTP `400` for an invalid profile token, HTTP `404` for a missing profile edit-link request, and HTTP `401` for the protected Alliance SMS factory gaps endpoint without an admin token
+
+### Windows PowerShell Does Not Support Bash-Style Command Chaining
+
+- Date: 2026-05-01
+- Domain/provider: Windows PowerShell / shell verification
+- Operation: running two `node --check` commands in one line
+- Symptom: `&&` failed with `The token '&&' is not a valid statement separator in this version`
+- Likely cause: this shell is Windows PowerShell rather than a newer PowerShell/core or bash shell
+- Mitigation: run checks as separate shell commands or use PowerShell-native sequencing
+- Script/doc now encoding mitigation: this ledger
+- Verification: rerunning `node --check alliance-hub/public/app.js` and `node --check alliance-hub/functions/api/profile-intake/start.js` as separate commands passed
+
+### Local Wrangler Runtime Can Lag Requested Compatibility Date
+
+- Date: 2026-05-01
+- Domain/provider: Cloudflare Wrangler / Pages local preview
+- Operation: starting `alliance-hub` with `npx wrangler pages dev public --port 8788`
+- Symptom: Wrangler 4.53.0 started successfully but warned that the installed local Workers Runtime supports compatibility date `2025-12-02` while the preview requested `2026-05-01`
+- Likely cause: the local Wrangler/runtime package is older than the current date used by the preview command
+- Mitigation: treat local preview as UI/API smoke verification, and upgrade Wrangler before relying on compatibility-date-specific runtime behavior
+- Script/doc now encoding mitigation: this ledger
+- Verification: local Pages preview still compiled and reported ready on `http://127.0.0.1:8788`

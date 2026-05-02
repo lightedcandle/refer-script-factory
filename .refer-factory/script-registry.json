@@ -1,6 +1,6 @@
 {
   "schema": "refer.domain-script-registry.v1",
-  "updated_at": "2026-04-30T22:20:49.641Z",
+  "updated_at": "2026-05-01T15:31:18.478Z",
   "rule": "Before direct work, identify the domain and check that domain's registry/check_first surfaces for an existing script.",
   "domains": [
     {
@@ -190,6 +190,14 @@
         {
           "name": "hive:ratify-routes",
           "command": "node scripts/hive/hive-route-ratifier.mjs"
+        },
+        {
+          "name": "alliance:forms-check",
+          "command": "npm --prefix alliance-cloudflare-forms run check"
+        },
+        {
+          "name": "alliance:forms-deploy",
+          "command": "npm --prefix alliance-cloudflare-forms run deploy"
         }
       ]
     },
@@ -377,7 +385,7 @@
       "discovered_package_scripts": [
         {
           "name": "check",
-          "command": "node --check tools/vipc-bootstrap.mjs && node --check tools/zo-mcp.mjs && node --check scripts/factory.mjs && node --check scripts/bootstrap.mjs && node --check scripts/hive/api.mjs && node --check scripts/hive/dispatcher.mjs && node --check scripts/hive/receive.mjs && node --check scripts/hive/talkback.mjs && node --check scripts/factory/factory.mjs && node --check scripts/factory/bootstrap.mjs && node --check scripts/factory/compression-codec.mjs && node --check scripts/factory/bilateral-sim.mjs && node --check scripts/factory/token-log-bridge.mjs && node --check scripts/factory/dataset-store.mjs && node --check scripts/factory/heartbeat.mjs && node --check scripts/factory/train-cars/01-dashboard.mjs && node --check scripts/factory/train-cars/02-spawn-worker.mjs && node --check scripts/factory/train-cars/03-scan-workspace.mjs && node --check scripts/factory/train-cars/04-hive-sync.mjs && node --check scripts/factory/contract-inbox-runner.mjs && node --check scripts/factory/backfill-zo-local-usage.mjs && node --check scripts/factory/ship-contract-to-zo.mjs && node --check scripts/factory/fetch-zo-talkback.mjs && node --check scripts/factory/dispatch-contract.mjs && node --check scripts/factory/sync-tandem-runtime-to-zo.mjs && node --check scripts/factory/node-scope.mjs && node --check scripts/factory/local-script-registry.mjs && node --check scripts/factory/draft-promotion-runner.mjs && node --check scripts/factory/local-intake-runner.mjs && node --check scripts/factory/inbox-automation.mjs && node --check scripts/factory/registry-doctor.mjs && node --check scripts/factory/evolution-loop.mjs && node --check scripts/factory/script-dictionary.mjs && node --check scripts/factory/hive/api.mjs && node --check scripts/factory/hive/dispatcher.mjs && node --check scripts/factory/hive/receive.mjs && node --check scripts/factory/hive/talkback.mjs && node -e \"JSON.parse(require('fs').readFileSync('scripts/factory/scriptionary.json','utf8'));\" && node --check scripts/factory/artifacts/atomic-common.mjs && node --check scripts/factory/artifacts/page-add.mjs && node --check scripts/factory/artifacts/section-add.mjs && node --check scripts/factory/artifacts/card-add.mjs && node --check scripts/factory/artifacts/button-add.mjs && node --check scripts/factory/artifacts/field-add.mjs && node --check scripts/factory/artifacts/text-add.mjs && node --check scripts/factory/artifacts/form-add.mjs && node --check scripts/factory/artifacts/scan-workspace.mjs"
+          "command": "node --check tools/vipc-bootstrap.mjs && node --check tools/zo-mcp.mjs && node --check scripts/factory.mjs && node --check scripts/bootstrap.mjs && node --check scripts/hive/api.mjs && node --check scripts/hive/dispatcher.mjs && node --check scripts/hive/receive.mjs && node --check scripts/hive/talkback.mjs && node --check scripts/factory/factory.mjs && node --check scripts/factory/bootstrap.mjs && node --check scripts/factory/compression-codec.mjs && node --check scripts/factory/bilateral-sim.mjs && node --check scripts/factory/token-log-bridge.mjs && node --check scripts/factory/dataset-store.mjs && node --check scripts/factory/heartbeat.mjs && node --check scripts/factory/train-cars/01-dashboard.mjs && node --check scripts/factory/train-cars/02-spawn-worker.mjs && node --check scripts/factory/train-cars/03-scan-workspace.mjs && node --check scripts/factory/train-cars/04-hive-sync.mjs && node --check scripts/factory/contract-inbox-runner.mjs && node --check scripts/factory/backfill-zo-local-usage.mjs && node --check scripts/factory/ship-contract-to-zo.mjs && node --check scripts/factory/fetch-zo-talkback.mjs && node --check scripts/factory/dispatch-contract.mjs && node --check scripts/factory/sync-tandem-runtime-to-zo.mjs && node --check scripts/factory/node-scope.mjs && node --check scripts/factory/local-script-registry.mjs && node --check scripts/factory/draft-promotion-runner.mjs && node --check scripts/factory/local-intake-runner.mjs && node --check scripts/factory/inbox-automation.mjs && node --check scripts/factory/registry-doctor.mjs && node --check scripts/factory/evolution-loop.mjs && node --check scripts/factory/route-manifest-bridge.mjs && node --check scripts/factory/script-dictionary.mjs && node --check scripts/factory/hive/api.mjs && node --check scripts/factory/hive/dispatcher.mjs && node --check scripts/factory/hive/receive.mjs && node --check scripts/factory/hive/talkback.mjs && node -e \"JSON.parse(require('fs').readFileSync('scripts/factory/scriptionary.json','utf8')); JSON.parse(require('fs').readFileSync('scopes/alliance/site-manifest.json','utf8')); JSON.parse(require('fs').readFileSync('scopes/alliance/phase2-data-contract.json','utf8'));\" && node --check scripts/factory/artifacts/atomic-common.mjs && node --check scripts/factory/artifacts/page-add.mjs && node --check scripts/factory/artifacts/section-add.mjs && node --check scripts/factory/artifacts/card-add.mjs && node --check scripts/factory/artifacts/button-add.mjs && node --check scripts/factory/artifacts/field-add.mjs && node --check scripts/factory/artifacts/text-add.mjs && node --check scripts/factory/artifacts/form-add.mjs && node --check scripts/factory/artifacts/scan-workspace.mjs && node --check scopes/alliance/site/server.ts && node --check scopes/alliance/supabase-apply.mjs && node --check scopes/alliance/supabase-edge-deploy.mjs && node --check scopes/alliance/sms-relay-deploy.mjs && node --check scopes/alliance/supabase-probe.mjs && node --check scopes/alliance/sync-supabase-env-to-zo.mjs && node --check scopes/alliance/story-scope.mjs && node --check scopes/alliance/alliance-vocabulary.mjs && node --check scopes/alliance/sync-story-to-zo.mjs && node --check scopes/alliance/phase3-manifest.mjs && node --check scopes/alliance/build-site-from-manifest.mjs && node --check scopes/alliance/phase1-status.mjs && node --check scopes/alliance/phase1-next.mjs && node --check scopes/alliance/phase2-status.mjs && node --check scopes/alliance/phase2-next.mjs && node --check scopes/alliance/phase3-status.mjs && node --check scopes/alliance/phase3-next.mjs && node --check scopes/alliance/phase4-status.mjs && node --check scopes/alliance/phase4-next.mjs && node --check scopes/alliance/phase5-status.mjs && node --check scopes/alliance/phase5-next.mjs && node --check scopes/alliance/phase5-persistence-probe.mjs && node --check scopes/alliance/sync-site-to-zo.mjs && node --check scopes/alliance/sync-phase2-to-zo.mjs"
         },
         {
           "name": "bootstrap",
@@ -454,6 +462,106 @@
         {
           "name": "factory:evolve",
           "command": "node scripts/factory/evolution-loop.mjs"
+        },
+        {
+          "name": "route:manifest-bridge",
+          "command": "node scripts/factory/route-manifest-bridge.mjs"
+        },
+        {
+          "name": "alliance:site-build",
+          "command": "node scopes/alliance/build-site-from-manifest.mjs"
+        },
+        {
+          "name": "alliance:phase1-status",
+          "command": "node scopes/alliance/phase1-status.mjs"
+        },
+        {
+          "name": "alliance:phase1-next",
+          "command": "node scopes/alliance/phase1-next.mjs"
+        },
+        {
+          "name": "alliance:phase2-status",
+          "command": "node scopes/alliance/phase2-status.mjs"
+        },
+        {
+          "name": "alliance:phase2-next",
+          "command": "node scopes/alliance/phase2-next.mjs"
+        },
+        {
+          "name": "alliance:phase3-status",
+          "command": "node scopes/alliance/phase3-status.mjs"
+        },
+        {
+          "name": "alliance:phase3-next",
+          "command": "node scopes/alliance/phase3-next.mjs"
+        },
+        {
+          "name": "alliance:phase4-status",
+          "command": "node scopes/alliance/phase4-status.mjs"
+        },
+        {
+          "name": "alliance:phase4-next",
+          "command": "node scopes/alliance/phase4-next.mjs"
+        },
+        {
+          "name": "alliance:phase5-status",
+          "command": "node scopes/alliance/phase5-status.mjs"
+        },
+        {
+          "name": "alliance:phase5-next",
+          "command": "node scopes/alliance/phase5-next.mjs"
+        },
+        {
+          "name": "alliance:phase5-probe",
+          "command": "node scopes/alliance/phase5-persistence-probe.mjs"
+        },
+        {
+          "name": "alliance:supabase-apply",
+          "command": "node scopes/alliance/supabase-apply.mjs"
+        },
+        {
+          "name": "alliance:supabase-edge-deploy",
+          "command": "node scopes/alliance/supabase-edge-deploy.mjs"
+        },
+        {
+          "name": "alliance:sms-relay-deploy",
+          "command": "node scopes/alliance/sms-relay-deploy.mjs"
+        },
+        {
+          "name": "alliance:sms-relay-maintenance",
+          "command": "node scopes/alliance/sms-relay-maintenance.mjs"
+        },
+        {
+          "name": "alliance:supabase-env-sync",
+          "command": "node scopes/alliance/sync-supabase-env-to-zo.mjs"
+        },
+        {
+          "name": "alliance:supabase-probe",
+          "command": "node scopes/alliance/supabase-probe.mjs"
+        },
+        {
+          "name": "alliance:story-scope",
+          "command": "node scopes/alliance/story-scope.mjs"
+        },
+        {
+          "name": "alliance:vocabulary",
+          "command": "node scopes/alliance/alliance-vocabulary.mjs"
+        },
+        {
+          "name": "alliance:story-sync",
+          "command": "node scopes/alliance/sync-story-to-zo.mjs"
+        },
+        {
+          "name": "alliance:phase3-manifest",
+          "command": "node scopes/alliance/phase3-manifest.mjs"
+        },
+        {
+          "name": "alliance:phase2-sync",
+          "command": "node scopes/alliance/sync-phase2-to-zo.mjs"
+        },
+        {
+          "name": "alliance:site-sync",
+          "command": "node scopes/alliance/sync-site-to-zo.mjs"
         }
       ]
     }

@@ -257,7 +257,11 @@
     "hive:record": "node scripts/hive/hive-director.mjs record",
     "hive:build-intake": "node scripts/hive/hive-build-intake.mjs",
     "hive:deployment-pack": "node scripts/hive/hive-node-deployment-pack.mjs build",
-    "hive:ratify-routes": "node scripts/hive/hive-route-ratifier.mjs"
+    "hive:ratify-routes": "node scripts/hive/hive-route-ratifier.mjs",
+    "alliance:hub-check": "npm --prefix alliance-hub run check",
+    "alliance:hub-deploy": "npm --prefix alliance-hub run deploy",
+    "alliance:forms-check": "npm --prefix alliance-hub run check",
+    "alliance:forms-deploy": "npm --prefix alliance-hub run deploy"
   },
   "devDependencies": {
     "@types/node": "^20.19.21",

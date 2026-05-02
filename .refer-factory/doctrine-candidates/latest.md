@@ -1,7 +1,7 @@
 # Doctrine Candidate
 
-Generated: 2026-04-30T22:27:15.518Z
-Candidate: doctrine.ui-ui-buttons-should-use-compact-labels-and-avoid-bulky-layouts.20260430222715
+Generated: 2026-05-01T15:31:51.027Z
+Candidate: doctrine.ui-ui-buttons-should-use-compact-labels-and-avoid-bulky-layouts.20260501153151
 Classification: user_method_rule
 Domain: ui
 Status: candidate

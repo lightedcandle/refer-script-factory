@@ -1,6 +1,6 @@
 {
   "schema": "refer.hive.node-registry.v1",
-  "updated_at": "2026-04-30T20:30:49.859Z",
+  "updated_at": "2026-05-01T13:57:27.865Z",
   "purpose": "Track hive-capable factory and Zo computer nodes, their roles, deployment state, and ratification evidence.",
   "nodes": [
     {
@@ -130,6 +130,26 @@
         {
           "ts": "2026-04-30T12:15:54.631Z",
           "value": "Alliance local intake compression verified in place: scripts import encode/decode, codec self-test passed, sx1 round-trip ok ratio about 0.50, empty inbox automation reported compression=sx1"
+        },
+        {
+          "ts": "2026-04-30T23:51:46.995Z",
+          "value": "2026-04-30 readiness check: MCP tool list succeeded; remote npm run check returncode=0; inbox automation status clean with inbox=0 processed=1 errors=0; bootstrap verify failed because missing [REFER VIPC RULE: living-factory]."
+        },
+        {
+          "ts": "2026-05-01T02:36:48.345Z",
+          "value": "2026-05-01 Alliance bootstrap verify passed after installing missing [REFER VIPC RULE: living-factory]; ready for local factory gap discovery."
+        },
+        {
+          "ts": "2026-05-01T02:51:07.264Z",
+          "value": "2026-05-01 Phase 3 route bridge added, synced, dry-run validated, and applied to 8 Alliance dashboard routes through factory script."
+        },
+        {
+          "ts": "2026-05-01T02:53:58.201Z",
+          "value": "2026-05-01 verification after Phase 3 bridge apply: all 8 target routes have PHASE3_MODAL markers and no remaining f.name references; get_space_errors returned errors=[] with stale server_log only."
+        },
+        {
+          "ts": "2026-05-01T03:27:13.092Z",
+          "value": "2026-05-01 Alliance moved to Zo Sites: created public site/service label alliance at https://alliance-alliance.zocomputer.io; service_doctor healthy; source under /home/workspace/Projects/Alliance-Hub/alliance."
         }
       ],
       "notes": [
@@ -212,6 +232,94 @@
         {
           "ts": "2026-04-30T12:15:54.631Z",
           "value": "Alliance was ahead of repo for local-intake compression; source was ported from verified behavior"
+        },
+        {
+          "ts": "2026-05-01T04:49:02.962Z",
+          "value": "2026-05-01 Phase 1 content minimums met; Alliance site regenerated, synced, service restarted, service_doctor code up to date, bundle contains Kingdom Life Assembly."
+        },
+        {
+          "ts": "2026-05-01T05:09:42.674Z",
+          "value": "2026-05-01 Phase 2 local-dataset-first data contract added, status/next scripts registered, packets synced to Alliance Zo, remote readback ready_for_next_phase=true."
+        },
+        {
+          "ts": "2026-05-01T05:17:45.680Z",
+          "value": "2026-05-01 Phase 3 browser-local draft forms generated from Phase 2 data contract, synced to Alliance Zo Site, remote build passed, service_doctor code up to date, bundle contains Save local draft."
+        },
+        {
+          "ts": "2026-05-01T05:23:01.386Z",
+          "value": "2026-05-01 Phase 4 client-side routed views added; Alliance no longer renders as one long page; remote build passed, service_doctor code up to date, PHASE4_ROUTED_VIEWS markers read back."
+        },
+        {
+          "ts": "2026-05-01T05:31:42.195Z",
+          "value": "2026-05-01 Phase 5 persistence gate: Zo Site Hono endpoint wrote sandbox draft to local proof file; first-class Zo Dataset API not visible; Supabase not required for sandbox, still needed/alternative for private multi-user records."
+        },
+        {
+          "ts": "2026-05-01T05:50:14.931Z",
+          "value": "Alliance writes now route Zo endpoint to Supabase Edge Function alliance-record-write; probe verified inserted row; service role kept out of Zo."
+        },
+        {
+          "ts": "2026-05-01T05:59:20.780Z",
+          "value": "Alliance Story docs scanned into Scoping plan; About page generated and synced; remote markers present and service healthy."
+        },
+        {
+          "ts": "2026-05-01T06:05:10.713Z",
+          "value": "Pastor's Alliance logo and favicon assets resized, synced, referenced in About/header/favicon; remote asset readback passed."
+        },
+        {
+          "ts": "2026-05-01T06:11:07.059Z",
+          "value": "About page rewritten into coherent story-first narrative; live markers verified and service healthy."
+        },
+        {
+          "ts": "2026-05-01T12:30:32.867Z",
+          "value": "Raw Alliance Story docs and Scoping plan synced to /factory/story; Phase 2 contract points to story authority; remote readback verified."
+        },
+        {
+          "ts": "2026-05-01T12:39:48.590Z",
+          "value": "Invisible app architecture promoted to Alliance authority; scoped vocabulary generated and synced; remote vocabulary readback verified."
+        },
+        {
+          "ts": "2026-05-01T12:57:48.549Z",
+          "value": "Created alliance-android-sms-bridge local Android project for authenticated phone SMS transport adapter"
+        },
+        {
+          "ts": "2026-05-01T13:04:44.292Z",
+          "value": "Built and installed Android SMS bridge on SM_G781V; health endpoint verified through adb forward"
+        },
+        {
+          "ts": "2026-05-01T13:17:38.545Z",
+          "value": "Inbound SMS from 9379854448 read through Android bridge latest endpoint after outbound test"
+        },
+        {
+          "ts": "2026-05-01T13:19:28.598Z",
+          "value": "Bridge health endpoint stayed available while Galaxy FE screen was off"
+        },
+        {
+          "ts": "2026-05-01T13:21:38.688Z",
+          "value": "Alliance launcher icon installed; bridge health verified after UI was backgrounded"
+        },
+        {
+          "ts": "2026-05-01T13:23:19.007Z",
+          "value": "Alliance bridge UI now shows logo and Close button; service remains foreground/healthy after Close"
+        },
+        {
+          "ts": "2026-05-01T13:28:18.003Z",
+          "value": "Local dispatcher API writes SMS bridge events to Supabase through alliance-record-write Edge Function"
+        },
+        {
+          "ts": "2026-05-01T13:35:33.667Z",
+          "value": "Cloudflare quick tunnel exposes local dispatcher; public health OK, SMS endpoints token-gated and persisted to Supabase"
+        },
+        {
+          "ts": "2026-05-01T13:39:31.038Z",
+          "value": "Cloudflare dispatcher received newer inbound reply and persisted it to Supabase after outbound SMS test"
+        },
+        {
+          "ts": "2026-05-01T13:46:52.569Z",
+          "value": "Phone now pulls SMS jobs from Cloudflare dispatcher over outbound HTTPS; no adb forward required for outbound relay"
+        },
+        {
+          "ts": "2026-05-01T13:57:27.813Z",
+          "value": "Phone polls Supabase Edge Function directly; cloud-only SMS outbox cleared without computer dispatcher or Cloudflare tunnel"
         }
       ],
       "datasets": [
@@ -259,17 +367,17 @@
       "transport": "file_api_tandem",
       "persona": "unknown",
       "rules": "unknown",
-      "last_seen_at": "2026-04-30T12:15:54.631Z",
-      "updated_at": "2026-04-30T12:15:54.631Z",
+      "last_seen_at": "2026-05-01T13:57:27.813Z",
+      "updated_at": "2026-05-01T13:57:27.813Z",
       "heartbeat": {
         "policy": "adaptive",
-        "mode": "ratifying",
-        "activity": "ratifying",
-        "interval_ms": 900000,
-        "interval_label": "15m",
+        "mode": "watch",
+        "activity": "sms_supabase_edge_relay_verified",
+        "interval_ms": 3600000,
+        "interval_label": "1h",
         "max_interval_ms": 86400000,
         "max_interval_label": "24h",
-        "next_due_at": "2026-04-30T12:30:54.632Z"
+        "next_due_at": "2026-05-01T14:57:27.814Z"
       }
     },
     {

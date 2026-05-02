@@ -1,6 +1,6 @@
 # Script Class Registry
 
-Generated: 2026-04-30T22:27:13.676Z
+Generated: 2026-05-01T15:31:49.654Z
 
 | Script | Class | Sequence | Forge | Status |
 | --- | --- | --- | --- | --- |

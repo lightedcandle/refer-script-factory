@@ -1,0 +1,12 @@
+.gradle/
+.idea/
+build/
+local.properties
+captures/
+*.iml
+app/build/
+.env
+.env.*
+!.env.example
+cloudflared.*.log
+.alliance-sms/

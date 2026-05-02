@@ -1,6 +1,6 @@
 # Authority Reference Packet
 
-Generated: 2026-04-30T22:27:14.686Z
+Generated: 2026-05-01T15:31:50.467Z
 Intent: Build a made up local ritual engine
 Domain: local-ritual-engine
 State: created

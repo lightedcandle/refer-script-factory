@@ -1,0 +1,18 @@
+{
+  "name": "alliance-android-sms-bridge",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "bridge:status": "node tools/alliance-sms-dispatcher.mjs status",
+    "bridge:latest": "node tools/alliance-sms-dispatcher.mjs latest",
+    "bridge:send": "node tools/alliance-sms-dispatcher.mjs send",
+    "bridge:server": "node tools/alliance-sms-dispatcher.mjs server",
+    "bridge:tunnel": "cloudflared tunnel --url http://localhost:8788",
+    "profile:script": "node tools/alliance-profile-intake.mjs script",
+    "profile:detect": "node tools/alliance-profile-intake.mjs detect",
+    "profile:start": "node tools/alliance-profile-intake.mjs start",
+    "profile:reply": "node tools/alliance-profile-intake.mjs reply",
+    "profile:context": "node tools/alliance-profile-intake.mjs context",
+    "test": "node tools/alliance-profile-intake.mjs selftest"
+  }
+}

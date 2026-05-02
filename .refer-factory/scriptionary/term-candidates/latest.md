@@ -1,7 +1,7 @@
 # Scriptionary Term Candidate
 
-Generated: 2026-04-30T22:27:16.019Z
-Candidate: scriptionary.fixture-effect.20260430222716
+Generated: 2026-05-01T15:31:51.588Z
+Candidate: scriptionary.fixture-effect.20260501153151
 Status: candidate
 Kind: Term
 
