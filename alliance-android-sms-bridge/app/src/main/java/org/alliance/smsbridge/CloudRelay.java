@@ -14,6 +14,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 final class CloudRelay {
@@ -47,18 +48,20 @@ final class CloudRelay {
         }
     }
 
-    private final List<ScheduledTask> registry = new ArrayList<>();
+    private final List<ScheduledTask> registry = Collections.synchronizedList(new ArrayList<>());
 
     CloudRelay(Context context) {
         this.context = context.getApplicationContext();
-        registry.add(new ScheduledTask("minute", 60000, () -> sendPulse("minute")));
-        registry.add(new ScheduledTask("hourly", 3600000, () -> sendPulse("hourly")));
+        registry.add(new ScheduledTask("system_minute_pulse", 60000, () -> sendPulse("minute")));
+        registry.add(new ScheduledTask("system_hourly_pulse", 3600000, () -> sendPulse("hourly")));
     }
 
     void start() {
         if (running) return;
         running = true;
-        for (ScheduledTask task : registry) task.lastEpoch = 0;
+        synchronized(registry) {
+            for (ScheduledTask task : registry) task.lastEpoch = 0;
+        }
         worker = new Thread(this::loop, "alliance-cloud-relay");
         worker.start();
     }
@@ -73,8 +76,10 @@ final class CloudRelay {
             try {
                 if (BridgeConfig.cloudEnabled(context)) {
                     long now = System.currentTimeMillis();
-                    for (ScheduledTask task : registry) {
-                        task.runIfDue(now);
+                    synchronized(registry) {
+                        for (ScheduledTask task : registry) {
+                            task.runIfDue(now);
+                        }
                     }
 
                     pullOutbound();
@@ -93,7 +98,6 @@ final class CloudRelay {
         try {
             String payload = "{\"type\":\"" + type + "\",\"timestamp\":" + System.currentTimeMillis() + "}";
             if ("hourly".equals(type)) {
-                // Add battery telemetry for hourly sync
                 android.content.Intent batteryStatus = context.registerReceiver(null, new android.content.IntentFilter(android.content.Intent.ACTION_BATTERY_CHANGED));
                 int level = batteryStatus != null ? batteryStatus.getIntExtra(android.os.BatteryManager.EXTRA_LEVEL, -1) : -1;
                 payload = "{\"type\":\"hourly\",\"battery\":" + level + ",\"timestamp\":" + System.currentTimeMillis() + "}";
@@ -113,22 +117,49 @@ final class CloudRelay {
         String type = jsonString(body, "type");
         if (id == null) return;
         if (type == null) type = "sms";
+
+        long repeatInterval = jsonLong(body, "repeat_interval");
+        if (repeatInterval > 0) {
+            registerRhythmicTask(id, type, repeatInterval, body);
+        }
         
         try {
-            if ("sms".equals(type)) {
-                String to = jsonString(body, "to");
-                String message = jsonString(body, "message");
-                if (to != null && message != null) {
-                    sendSms(to, message);
-                    BridgeConfig.setLastOutbound(context, to, message, System.currentTimeMillis());
-                }
-            } else if ("pulse".equals(type)) {
-                sendPulse("requested");
-            }
-            
+            executeJob(type, body);
             request("POST", "/phone/report", "{\"id\":\"" + escapeJson(id) + "\",\"status\":\"sent\"}");
         } catch (Exception error) {
             request("POST", "/phone/report", "{\"id\":\"" + escapeJson(id) + "\",\"status\":\"failed\",\"error\":\"" + escapeJson(error.getMessage()) + "\"}");
+        }
+    }
+
+    private void registerRhythmicTask(String id, String type, long intervalMs, String body) {
+        synchronized(registry) {
+            for (int i = 0; i < registry.size(); i++) {
+                if (registry.get(i).name.equals(id)) {
+                    registry.remove(i);
+                    break;
+                }
+            }
+            registry.add(new ScheduledTask(id, intervalMs, () -> {
+                try {
+                    executeJob(type, body);
+                } catch (Exception e) {
+                    Log.e(TAG, "Rhythmic task " + id + " failed", e);
+                }
+            }));
+            Log.i(TAG, "Registered rhythmic task: " + id + " every " + intervalMs + "ms");
+        }
+    }
+
+    private void executeJob(String type, String body) throws Exception {
+        if ("sms".equals(type)) {
+            String to = jsonString(body, "to");
+            String message = jsonString(body, "message");
+            if (to != null && message != null) {
+                sendSms(to, message);
+                BridgeConfig.setLastOutbound(context, to, message, System.currentTimeMillis());
+            }
+        } else if ("pulse".equals(type)) {
+            sendPulse("requested");
         }
     }
 
@@ -242,6 +273,35 @@ final class CloudRelay {
             }
         }
         return null;
+    }
+
+    private long jsonLong(String json, String key) {
+        String needle = "\"" + key + "\"";
+        int keyIndex = json.indexOf(needle);
+        if (keyIndex < 0) return 0;
+        int colon = json.indexOf(':', keyIndex + needle.length());
+        if (colon < 0) return 0;
+        int start = -1;
+        for (int i = colon + 1; i < json.length(); i++) {
+            char c = json.charAt(i);
+            if (Character.isDigit(c)) {
+                start = i;
+                break;
+            }
+            if (c == ',' || c == '}' || c == ']') break;
+        }
+        if (start < 0) return 0;
+        StringBuilder value = new StringBuilder();
+        for (int i = start; i < json.length(); i++) {
+            char c = json.charAt(i);
+            if (Character.isDigit(c)) value.append(c);
+            else break;
+        }
+        try {
+            return Long.parseLong(value.toString());
+        } catch (Exception e) {
+            return 0;
+        }
     }
 
     private char unescapeJsonChar(char current) {

@@ -341,8 +341,9 @@ async function queueRelayJob(type, payload) {
   const record = await writeSmsRecord({
     direction: "rhythmic_job",
     phone: payload.to || "bridge",
-    body: `Job: ${type}`,
+    body: `Job: ${type}${payload.repeat_interval ? " (rhythmic)" : ""}`,
     job_type: type,
+    repeat_interval: payload.repeat_interval || null,
     transport: "cloud_relay",
     job_id: job.id,
   });
