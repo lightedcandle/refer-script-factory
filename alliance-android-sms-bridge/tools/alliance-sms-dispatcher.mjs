@@ -222,6 +222,27 @@ function startServer(host, port) {
         return json(res, 200, { ok: record.ok && profile.ok, message, supabase: record, profile });
       }
 
+      if (url.pathname === "/phone/pulse" && req.method === "POST") {
+        const body = await readJson(req);
+        const type = body.type || "minute";
+        const pulse = {
+          type,
+          battery: body.battery,
+          timestamp: body.timestamp || Date.now(),
+          bridge: url.searchParams.get("bridge") || "unknown",
+        };
+        console.log(`[PULSE] Received ${type} pulse from ${pulse.bridge}`);
+        const record = await writeSmsRecord({
+          direction: "telemetry",
+          phone: pulse.bridge,
+          body: `Pulse: ${type}`,
+          pulse_type: type,
+          battery: body.battery,
+          transport: "cloud_relay",
+        });
+        return json(res, 200, { ok: record.ok, pulse, supabase: record });
+      }
+
       return json(res, 404, { ok: false, error: "not_found" });
     } catch (error) {
       return json(res, 500, { ok: false, error: error.message });

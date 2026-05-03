@@ -19,7 +19,8 @@ final class CloudRelay {
     private static final String TAG = "AllianceCloudRelay";
     private final Context context;
     private Thread worker;
-    private volatile boolean running;
+    private long lastMinutePulse;
+    private long lastHourlyPulse;
 
     CloudRelay(Context context) {
         this.context = context.getApplicationContext();
@@ -28,6 +29,8 @@ final class CloudRelay {
     void start() {
         if (running) return;
         running = true;
+        lastMinutePulse = 0;
+        lastHourlyPulse = 0;
         worker = new Thread(this::loop, "alliance-cloud-relay");
         worker.start();
     }
@@ -41,6 +44,20 @@ final class CloudRelay {
         while (running) {
             try {
                 if (BridgeConfig.cloudEnabled(context)) {
+                    long now = System.currentTimeMillis();
+                    
+                    // Minute Pulse (Online Status)
+                    if (now - lastMinutePulse >= 60000) {
+                        sendPulse("minute");
+                        lastMinutePulse = now;
+                    }
+                    
+                    // Hourly Pulse (Full Telemetry)
+                    if (now - lastHourlyPulse >= 3600000) {
+                        sendPulse("hourly");
+                        lastHourlyPulse = now;
+                    }
+
                     pullOutbound();
                     pushInbound();
                 }
@@ -50,6 +67,22 @@ final class CloudRelay {
             } catch (Exception error) {
                 Log.e(TAG, "Cloud relay cycle failed", error);
             }
+        }
+    }
+
+    private void sendPulse(String type) {
+        try {
+            String payload = "{\"type\":\"" + type + "\",\"timestamp\":" + System.currentTimeMillis() + "}";
+            if ("hourly".equals(type)) {
+                // Add battery telemetry for hourly sync
+                android.content.Intent batteryStatus = context.registerReceiver(null, new android.content.IntentFilter(android.content.Intent.ACTION_BATTERY_CHANGED));
+                int level = batteryStatus != null ? batteryStatus.getIntExtra(android.os.BatteryManager.EXTRA_LEVEL, -1) : -1;
+                payload = "{\"type\":\"hourly\",\"battery\":" + level + ",\"timestamp\":" + System.currentTimeMillis() + "}";
+            }
+            request("POST", "/phone/pulse", payload);
+            Log.i(TAG, "Sent " + type + " pulse to cloud");
+        } catch (Exception error) {
+            Log.w(TAG, "Failed to send " + type + " pulse", error);
         }
     }
 
