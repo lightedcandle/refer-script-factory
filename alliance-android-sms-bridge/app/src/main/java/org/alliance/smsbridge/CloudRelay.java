@@ -130,7 +130,9 @@ final class CloudRelay {
         String token = BridgeConfig.cloudToken(context);
         if (base == null || base.isEmpty() || token == null || token.isEmpty()) return "";
 
-        URL url = new URL(base.replaceAll("/$", "") + path);
+        String self = BridgeConfig.selfPhone(context);
+        String query = (self != null && !self.isEmpty()) ? "?bridge=" + Uri.encode(self) : "";
+        URL url = new URL(base.replaceAll("/$", "") + path + query);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setRequestMethod(method);
         connection.setRequestProperty("X-Dispatcher-Token", token);
