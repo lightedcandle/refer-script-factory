@@ -14,23 +14,51 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.List;
 
 final class CloudRelay {
     private static final String TAG = "AllianceCloudRelay";
     private final Context context;
     private Thread worker;
-    private long lastMinutePulse;
-    private long lastHourlyPulse;
+    private volatile boolean running;
+
+    private static class ScheduledTask {
+        String name;
+        long intervalMs;
+        long lastEpoch;
+        Runnable action;
+
+        ScheduledTask(String name, long intervalMs, Runnable action) {
+            this.name = name;
+            this.intervalMs = intervalMs;
+            this.lastEpoch = 0;
+            this.action = action;
+        }
+
+        void runIfDue(long now) {
+            if (now - lastEpoch >= intervalMs) {
+                try {
+                    action.run();
+                } catch (Exception e) {
+                    Log.e("ScheduledTask", "Task " + name + " failed", e);
+                }
+                lastEpoch = now;
+            }
+        }
+    }
+
+    private final List<ScheduledTask> registry = new ArrayList<>();
 
     CloudRelay(Context context) {
         this.context = context.getApplicationContext();
+        registry.add(new ScheduledTask("minute", 60000, () -> sendPulse("minute")));
+        registry.add(new ScheduledTask("hourly", 3600000, () -> sendPulse("hourly")));
     }
 
     void start() {
         if (running) return;
         running = true;
-        lastMinutePulse = 0;
-        lastHourlyPulse = 0;
+        for (ScheduledTask task : registry) task.lastEpoch = 0;
         worker = new Thread(this::loop, "alliance-cloud-relay");
         worker.start();
     }
@@ -45,17 +73,8 @@ final class CloudRelay {
             try {
                 if (BridgeConfig.cloudEnabled(context)) {
                     long now = System.currentTimeMillis();
-                    
-                    // Minute Pulse (Online Status)
-                    if (now - lastMinutePulse >= 60000) {
-                        sendPulse("minute");
-                        lastMinutePulse = now;
-                    }
-                    
-                    // Hourly Pulse (Full Telemetry)
-                    if (now - lastHourlyPulse >= 3600000) {
-                        sendPulse("hourly");
-                        lastHourlyPulse = now;
+                    for (ScheduledTask task : registry) {
+                        task.runIfDue(now);
                     }
 
                     pullOutbound();
@@ -89,14 +108,24 @@ final class CloudRelay {
     private void pullOutbound() throws Exception {
         String body = request("GET", "/phone/next", null);
         if (!body.contains("\"job\"")) return;
+        
         String id = jsonString(body, "id");
-        String to = jsonString(body, "to");
-        String message = jsonString(body, "message");
-        if (id == null || to == null || message == null) return;
-
+        String type = jsonString(body, "type");
+        if (id == null) return;
+        if (type == null) type = "sms";
+        
         try {
-            sendSms(to, message);
-            BridgeConfig.setLastOutbound(context, to, message, System.currentTimeMillis());
+            if ("sms".equals(type)) {
+                String to = jsonString(body, "to");
+                String message = jsonString(body, "message");
+                if (to != null && message != null) {
+                    sendSms(to, message);
+                    BridgeConfig.setLastOutbound(context, to, message, System.currentTimeMillis());
+                }
+            } else if ("pulse".equals(type)) {
+                sendPulse("requested");
+            }
+            
             request("POST", "/phone/report", "{\"id\":\"" + escapeJson(id) + "\",\"status\":\"sent\"}");
         } catch (Exception error) {
             request("POST", "/phone/report", "{\"id\":\"" + escapeJson(id) + "\",\"status\":\"failed\",\"error\":\"" + escapeJson(error.getMessage()) + "\"}");

@@ -176,7 +176,8 @@ function startServer(host, port) {
       if (url.pathname === "/sms/send" && req.method === "POST") {
         const body = await readJson(req);
         if (body.relay === true || url.searchParams.get("relay") === "true") {
-          return json(res, 200, await queueRelaySms(required(body.to, "to"), required(body.message, "message")));
+          const type = body.type || "sms";
+          return json(res, 200, await queueRelayJob(type, body));
         }
         return json(res, 200, await sendSms(required(body.to, "to"), required(body.message, "message"), true));
       }
@@ -328,20 +329,20 @@ function latestRelayInbound(from) {
   return null;
 }
 
-async function queueRelaySms(to, message) {
+async function queueRelayJob(type, payload) {
   const job = {
-    id: `sms-job-${Date.now()}-${Math.random().toString(16).slice(2)}`,
-    to,
-    message,
+    id: `job-${type}-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+    type,
+    ...payload,
     status: "queued",
     queued_at: new Date().toISOString(),
   };
   relayJobs.push(job);
   const record = await writeSmsRecord({
-    direction: "outbound",
-    phone: to,
-    body: message,
-    bridge_status: "queued_for_cloud_relay",
+    direction: "rhythmic_job",
+    phone: payload.to || "bridge",
+    body: `Job: ${type}`,
+    job_type: type,
     transport: "cloud_relay",
     job_id: job.id,
   });
