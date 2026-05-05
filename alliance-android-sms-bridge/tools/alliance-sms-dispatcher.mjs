@@ -15,6 +15,7 @@ loadEnv("E:\\telechurch-e2e\\.env.master");
 const bridgeUrl = trimSlash(process.env.ALLIANCE_SMS_BRIDGE_URL || "http://127.0.0.1:8787");
 const bridgeToken = process.env.ALLIANCE_SMS_BRIDGE_TOKEN || "";
 const dispatcherToken = process.env.ALLIANCE_DISPATCHER_TOKEN || "";
+const allianceHubUrl = trimSlash(process.env.ALLIANCE_HUB_URL || process.env.ALLIANCE_SITE_URL || "https://alliance.telechurchlive.com");
 const edgeFunction = process.env.ALLIANCE_SUPABASE_FUNCTION || "alliance-record-write";
 const inboundMessages = [];
 const relayJobs = [];
@@ -241,7 +242,8 @@ function startServer(host, port) {
           battery: body.battery,
           transport: "cloud_relay",
         });
-        return json(res, 200, { ok: record.ok, pulse, supabase: record });
+        const hub = await forwardPulseToHub(pulse);
+        return json(res, 200, { ok: record.ok && hub.ok, pulse, supabase: record, hub });
       }
 
       return json(res, 404, { ok: false, error: "not_found" });
@@ -261,6 +263,38 @@ function startServer(host, port) {
       auth_required: true,
     }, null, 2));
   });
+}
+
+async function forwardPulseToHub(pulse) {
+  if (!dispatcherToken) {
+    return { ok: false, skipped: true, error: "dispatcher_token_not_configured" };
+  }
+
+  try {
+    const response = await fetch(`${allianceHubUrl}/phone/pulse?bridge=${encodeURIComponent(pulse.bridge || "dispatcher")}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Dispatcher-Token": dispatcherToken,
+      },
+      body: JSON.stringify({
+        type: pulse.type,
+        battery: pulse.battery,
+        timestamp: pulse.timestamp,
+        forwarded_by: "alliance_sms_dispatcher",
+      }),
+    });
+    const body = await response.json().catch(() => null);
+    return {
+      ok: response.ok && body?.ok !== false,
+      status: response.status,
+      action: body?.action,
+      tasks: body?.tasks,
+      error: response.ok ? undefined : body?.error || "hub_pulse_forward_failed",
+    };
+  } catch (error) {
+    return { ok: false, error: error.message };
+  }
 }
 
 async function routeProfileIntake(from, message) {

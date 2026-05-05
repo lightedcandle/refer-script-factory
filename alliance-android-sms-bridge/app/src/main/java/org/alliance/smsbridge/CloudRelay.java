@@ -57,13 +57,17 @@ final class CloudRelay {
     }
 
     void start() {
-        if (running) return;
+        if (running && worker != null && worker.isAlive()) return;
         running = true;
         synchronized(registry) {
             for (ScheduledTask task : registry) task.lastEpoch = 0;
         }
         worker = new Thread(this::loop, "alliance-cloud-relay");
         worker.start();
+    }
+
+    boolean isAlive() {
+        return running && worker != null && worker.isAlive();
     }
 
     void stop() {

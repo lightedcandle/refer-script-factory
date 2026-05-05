@@ -51,18 +51,27 @@ public class SmsBridgeService extends Service {
         BridgeConfig.setRunning(this, true);
         acquireWakeLock();
         if (server != null) {
+            ensureCloudRelay();
             return;
         }
 
         try {
             server = new BridgeHttpServer(this, BridgeConfig.token(this));
             server.start();
-            cloudRelay = new CloudRelay(this);
-            cloudRelay.start();
+            ensureCloudRelay();
             Log.i(TAG, "Bridge started on port " + BridgeConfig.PORT);
         } catch (Exception error) {
             Log.e(TAG, "Bridge failed to start", error);
             stopSelf();
+        }
+    }
+
+    private void ensureCloudRelay() {
+        if (cloudRelay == null) {
+            cloudRelay = new CloudRelay(this);
+        }
+        if (!cloudRelay.isAlive()) {
+            cloudRelay.start();
         }
     }
 
