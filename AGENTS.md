@@ -118,6 +118,7 @@ Default target interpretation:
 - `refer-zo-bootstrap/` is reference-only for this product surface unless the user explicitly requests Zo/bootstrap work.
 - If the IDE shows a folder such as `alliance-cloudflare-forms` but that folder is missing from this workspace, do not silently switch product targets. State the mismatch and continue against `alliance-hub/`, or ask for the missing path when the distinction matters.
 - Do not mutate, sync, or deploy the live `telechurchlive` subdomain without explicit user approval. Local source edits and local verification are allowed when requested.
+- For Alliance Hub production changes, a Git push is not deployment approval. Only push to Cloudflare when the user explicitly says "push to Cloudflare" or "push all". Only run Supabase migrations, deploy Supabase Edge Functions, commit everything, push Git branches, and push production when the user explicitly says "push all".
 
 ## Nested Repo Safety Rule
 
