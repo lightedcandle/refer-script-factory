@@ -100,6 +100,8 @@ Do not run profile intake for the bridge number. The app also suppresses recent 
 
 On Samsung devices, disable battery sleeping/optimization for **Alliance SMS Bridge** if Android later pauses the service in the background.
 
+In the app, use **Keep Bridge Always On** to open Android's battery optimization exemption prompt.
+
 CLI build, once `JAVA_HOME` and the Android SDK are available:
 
 ```powershell

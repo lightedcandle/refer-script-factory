@@ -10,6 +10,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.net.Uri;
 import android.text.InputType;
 import android.text.method.ScrollingMovementMethod;
 import android.view.View;
@@ -20,6 +21,8 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import android.provider.Settings;
+import android.os.PowerManager;
 
 import java.net.Inet4Address;
 import java.net.InetAddress;
@@ -31,6 +34,7 @@ public class MainActivity extends Activity {
     private Button removeSelfPhoneButton;
     private Button startButton;
     private Button stopButton;
+    private Button batteryOptimizationButton;
     private TextView bridgeStateView;
     private TextView statusView;
     private TextView savedBridgeNumberView;
@@ -122,6 +126,7 @@ public class MainActivity extends Activity {
         startButton = new Button(this);
         startButton.setText("Start Bridge");
         startButton.setOnClickListener(view -> {
+            requestBatteryOptimizationExemption();
             sendServiceAction(BridgeConfig.ACTION_START);
             BridgeConfig.setEnabled(this, true);
             updateUiState();
@@ -136,6 +141,11 @@ public class MainActivity extends Activity {
             updateUiState();
         });
         root.addView(stopButton, fullWidth());
+
+        batteryOptimizationButton = new Button(this);
+        batteryOptimizationButton.setText("Keep Bridge Always On");
+        batteryOptimizationButton.setOnClickListener(view -> requestBatteryOptimizationExemption());
+        root.addView(batteryOptimizationButton, fullWidth());
 
         Button close = new Button(this);
         close.setText("Close");
@@ -223,6 +233,7 @@ public class MainActivity extends Activity {
                 "Local API: http://" + localIp() + ":" + BridgeConfig.PORT,
                 "Cloud relay: " + (cloud ? "on" : "off"),
                 "Loop filter: " + (hasBridgeNumber ? "bridge number " + maskPhone(bridgeNumber) : "set bridge number"),
+                "Battery: " + (ignoringBatteryOptimizations() ? "unrestricted" : "restricted"),
                 "Last inbound: " + formatTime(BridgeConfig.lastInboundAt(this)),
                 "Last outbound: " + formatTime(BridgeConfig.lastOutboundAt(this))
         }));
@@ -231,6 +242,8 @@ public class MainActivity extends Activity {
         removeSelfPhoneButton.setVisibility(hasBridgeNumber ? View.VISIBLE : View.GONE);
         startButton.setVisibility(running ? View.GONE : View.VISIBLE);
         stopButton.setVisibility(running ? View.VISIBLE : View.GONE);
+        batteryOptimizationButton.setText(ignoringBatteryOptimizations() ? "Battery Restriction Already Disabled" : "Keep Bridge Always On");
+        batteryOptimizationButton.setEnabled(!ignoringBatteryOptimizations());
     }
 
     private boolean recentActivity() {
@@ -260,6 +273,26 @@ public class MainActivity extends Activity {
         String digits = BridgeConfig.onlyDigits(value);
         if (digits.length() <= 4) return digits;
         return "***" + digits.substring(digits.length() - 4);
+    }
+
+    private boolean ignoringBatteryOptimizations() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+            return true;
+        }
+        PowerManager powerManager = getSystemService(PowerManager.class);
+        return powerManager != null && powerManager.isIgnoringBatteryOptimizations(getPackageName());
+    }
+
+    private void requestBatteryOptimizationExemption() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+            return;
+        }
+        if (ignoringBatteryOptimizations()) {
+            return;
+        }
+        Intent intent = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+        intent.setData(Uri.parse("package:" + getPackageName()));
+        startActivity(intent);
     }
 
     private String localIp() {
