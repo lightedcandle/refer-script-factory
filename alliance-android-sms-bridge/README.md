@@ -100,6 +100,8 @@ Do not run profile intake for the bridge number. The app also suppresses recent 
 
 Hub is the authority for active profile status. The bridge may cache local profile setup state for its own session bookkeeping, but it must not override Hub registration truth with local context when Hub says a profile is active or inactive.
 
+Regex lane messages are test-only. For the configured pilot phone, the bridge now checks the regex lane before event/profile menu routing so the Hub test path can win first without becoming the primary lane for everyone else.
+
 On Samsung devices, disable battery sleeping/optimization for **Alliance SMS Bridge** if Android later pauses the service in the background.
 
 In the app, use **Keep Bridge Always On** to open Android's battery optimization exemption prompt.

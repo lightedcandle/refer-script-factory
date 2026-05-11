@@ -22,6 +22,11 @@ const profileUploadBaseUrl = trimSlash(process.env.ALLIANCE_PROFILE_UPLOAD_BASE_
 const profileFormBaseUrl = trimSlash(process.env.ALLIANCE_PROFILE_FORM_BASE_URL || "https://alliance.telechurchlive.com/profile");
 const eventsApiUrl = trimSlash(process.env.ALLIANCE_EVENTS_API_URL || `${allianceHomeUrl}/api/events?canonical=true`);
 const profileFormSecret = process.env.ALLIANCE_PROFILE_FORM_SECRET || dispatcherToken || process.env.ALLIANCE_SMS_RELAY_TOKEN || "alliance-local-profile-form-secret";
+const regexPilotPhones = parsePilotPhones(
+  process.env.ALLIANCE_REGEX_TEST_PHONES
+    || process.env.ALLIANCE_REGEX_TEST_PHONE
+    || "9379854448",
+);
 const storePath = resolve(cwd, ".alliance-sms", "profile-contexts.json");
 const command = process.argv[2] || "help";
 const args = parseArgs(process.argv.slice(3));
@@ -106,6 +111,15 @@ export async function detectProfileRoute(phone, inboundBody) {
   const active = Boolean(freshSession && freshSession.script_id === SCRIPT.id && !["completed", "cancelled", "paused"].includes(freshSession.state));
   const registeredIntent = registered && !reset;
   const starts = !registered;
+  if (isRegexPilotPhone(phone)) {
+    return {
+      ok: true,
+      should_route: true,
+      reason: "regex_test_phone",
+      state: freshSession?.state || null,
+      script_id: "regex.test.redirect.v1",
+    };
+  }
   if (isEventIntent(inboundBody)) {
     return {
       ok: true,
@@ -185,6 +199,12 @@ async function handleReply(phone, inboundBody, send) {
   const context = ensureContext(store, phone);
   let session = activeSession(context);
   const reset = isResetCommand(inboundBody);
+  if (isRegexPilotPhone(phone)) {
+    const result = await routeHubFormulaIntent(phone, inboundBody, context, send);
+    if (result) {
+      return result;
+    }
+  }
   if (isEventIntent(inboundBody)) {
     const eventResponse = await fetchUpcomingEvents();
     const outbound = formatEventReply(eventResponse.events);
@@ -490,6 +510,7 @@ async function selftest() {
   const registeredProfileReply = registeredUserReply("Profile", "user-1000-test");
   const registeredEditReply = registeredUserReply("I would like to update my name", "user-1000-test");
   const registeredAmbiguousReply = registeredUserReply("What can I do?", "user-1000-test");
+  const regexPilotRoute = await detectProfileRoute("9379854448", "I would like to add an event");
   const reactionDetection = await detectProfileRoute(phone, 'Liked "Profile"');
   const quotedReactionDetection = await detectProfileRoute(phone, '"liked Profile"');
   const emojiReactionDetection = await detectProfileRoute(phone, "👍");
@@ -502,6 +523,8 @@ async function selftest() {
       && registeredEditReply.includes("/member/user-1000-test")
       && registeredEditReply.toLowerCase().includes("edit")
       && registeredAmbiguousReply.includes("Available links:")
+      && regexPilotRoute.reason === "regex_test_phone"
+      && regexPilotRoute.script_id === "regex.test.redirect.v1"
       && reactionDetection.ignored === true
       && quotedReactionDetection.ignored === true
       && emojiReactionDetection.ignored === true,
@@ -512,6 +535,7 @@ async function selftest() {
     registered_profile_link_reply: registeredProfileReply,
     registered_profile_edit_reply: registeredEditReply,
     registered_ambiguous_reply: registeredAmbiguousReply,
+    regex_pilot_route: regexPilotRoute,
     reaction_detection: reactionDetection,
     store_path: originalStorePath,
   };
@@ -985,10 +1009,30 @@ function parseArgs(argv) {
   return parsed;
 }
 
+function parsePilotPhones(value) {
+  return new Set(
+    String(value || "")
+      .split(/[,\s]+/)
+      .map((item) => normalizePhoneLoose(item))
+      .filter(Boolean),
+  );
+}
+
 function normalizePhone(value) {
   const digits = String(value || "").replace(/\D/g, "");
   if (digits.length < 10 || digits.length > 15) throw new Error("Phone must contain 10 to 15 digits.");
   return digits;
+}
+
+function normalizePhoneLoose(value) {
+  const digits = String(value || "").replace(/\D/g, "");
+  if (digits.length < 10 || digits.length > 15) return "";
+  return digits;
+}
+
+function isRegexPilotPhone(phone) {
+  const normalized = normalizePhoneLoose(phone);
+  return normalized ? regexPilotPhones.has(normalized) : false;
 }
 
 function required(value, name) {
