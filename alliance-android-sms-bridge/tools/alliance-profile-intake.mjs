@@ -658,18 +658,6 @@ async function resolveRegisteredProfile(phone, context) {
     };
   }
 
-  const localProfileId = currentProfileId(context);
-  const localRegistered = Boolean(localProfileId || context?.profiles?.length);
-  if (!hubProfile.ok && localRegistered) {
-    return {
-      registered: true,
-      profileId: localProfileId,
-      profile: context?.profiles?.at(-1) || null,
-      source: "local_profile_context",
-      lookup: hubProfile,
-    };
-  }
-
   return {
     registered: false,
     profileId: "",

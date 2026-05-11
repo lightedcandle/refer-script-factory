@@ -98,6 +98,8 @@ If Google Voice is linked to the same Android phone, keep three identities separ
 
 Do not run profile intake for the bridge number. The app also suppresses recent outbound echoes by matching the last sent body, destination, and timestamp, which helps when Google Voice or carrier sync mirrors sent messages back into the SMS inbox.
 
+Hub is the authority for active profile status. The bridge may cache local profile setup state for its own session bookkeeping, but it must not override Hub registration truth with local context when Hub says a profile is active or inactive.
+
 On Samsung devices, disable battery sleeping/optimization for **Alliance SMS Bridge** if Android later pauses the service in the background.
 
 In the app, use **Keep Bridge Always On** to open Android's battery optimization exemption prompt.
