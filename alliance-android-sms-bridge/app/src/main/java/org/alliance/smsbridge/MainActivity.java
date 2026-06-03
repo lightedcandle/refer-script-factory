@@ -29,6 +29,9 @@ import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.util.Collections;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 public class MainActivity extends Activity {
     private final Handler handler = new Handler(Looper.getMainLooper());
     private Button removeSelfPhoneButton;
@@ -37,6 +40,7 @@ public class MainActivity extends Activity {
     private Button batteryOptimizationButton;
     private TextView bridgeStateView;
     private TextView statusView;
+    private TextView recentInboundView;
     private TextView savedBridgeNumberView;
     private final Runnable refreshUi = new Runnable() {
         @Override
@@ -81,6 +85,16 @@ public class MainActivity extends Activity {
         statusView.setTextSize(15);
         statusView.setMovementMethod(new ScrollingMovementMethod());
         root.addView(statusView, fullWidth());
+
+        TextView recentInboundLabel = new TextView(this);
+        recentInboundLabel.setText("Recent inbound");
+        recentInboundLabel.setPadding(0, 18, 0, 8);
+        root.addView(recentInboundLabel, fullWidth());
+
+        recentInboundView = new TextView(this);
+        recentInboundView.setTextSize(14);
+        recentInboundView.setMovementMethod(new ScrollingMovementMethod());
+        root.addView(recentInboundView, fullWidth());
 
         TextView selfPhoneLabel = new TextView(this);
         selfPhoneLabel.setText("Bridge phone number");
@@ -235,8 +249,9 @@ public class MainActivity extends Activity {
                 "Loop filter: " + (hasBridgeNumber ? "bridge number " + maskPhone(bridgeNumber) : "set bridge number"),
                 "Battery: " + (ignoringBatteryOptimizations() ? "unrestricted" : "restricted"),
                 "Last inbound: " + formatTime(BridgeConfig.lastInboundAt(this)),
-                "Last outbound: " + formatTime(BridgeConfig.lastOutboundAt(this))
+                "Last outbound: " + formatTime(BridgeConfig.lastOutboundAt(this)) + " (" + BridgeConfig.lastOutboundStatus(this) + ")"
         }));
+        recentInboundView.setText(formatRecentInboundHistory());
 
         updateSavedBridgeNumberView();
         removeSelfPhoneButton.setVisibility(hasBridgeNumber ? View.VISIBLE : View.GONE);
@@ -267,6 +282,36 @@ public class MainActivity extends Activity {
             builder.append(values[index]);
         }
         return builder.toString();
+    }
+
+    private String formatRecentInboundHistory() {
+        try {
+            JSONArray history = new JSONArray(BridgeConfig.inboundHistory(this));
+            if (history.length() == 0) {
+                return "No inbound messages cached yet.";
+            }
+            StringBuilder builder = new StringBuilder();
+            for (int index = Math.max(0, history.length() - 10); index < history.length(); index++) {
+                if (builder.length() > 0) {
+                    builder.append("\n\n");
+                }
+                JSONObject item = history.getJSONObject(index);
+                String status = item.optString("status", "unknown");
+                String from = maskPhone(item.optString("from", ""));
+                String body = item.optString("body", "");
+                if (body.length() > 120) {
+                    body = body.substring(0, 120) + "…";
+                }
+                builder.append("[").append(status).append("] ");
+                builder.append(from.isEmpty() ? "unknown" : from);
+                builder.append(" @ ").append(formatTime(item.optLong("date", 0L)));
+                builder.append("\n");
+                builder.append(body.isEmpty() ? "(empty message)" : body);
+            }
+            return builder.toString();
+        } catch (Exception error) {
+            return "Unable to read inbound history.";
+        }
     }
 
     private String maskPhone(String value) {
