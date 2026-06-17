@@ -7,6 +7,13 @@ adapter contract, and repo bootstrap dry-run/apply.
 
 Telechurch is the pilot consumer, not a product dependency.
 
+## Repository Identity
+
+This is the canonical repository for the Refer Script Factory extension and its
+local factory tooling. It is intentionally opinionated, script-driven, and
+governed by the repo-local `AGENTS.md` and the REFER.OS law set under
+`unscripted-laws/REFER.OS`.
+
 ## First Slice
 
 - REFER activity container

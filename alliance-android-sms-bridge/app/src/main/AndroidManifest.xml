@@ -40,6 +40,11 @@
         </receiver>
 
         <receiver
+            android:name=".BridgeWatchdogReceiver"
+            android:enabled="true"
+            android:exported="false" />
+
+        <receiver
             android:name=".OutboundStatusReceiver"
             android:enabled="true"
             android:exported="false" />

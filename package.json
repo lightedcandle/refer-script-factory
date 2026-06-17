@@ -5,6 +5,14 @@
   "version": "0.0.1",
   "publisher": "refer-factory",
   "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lightedcandle/refer-script-factory.git"
+  },
+  "bugs": {
+    "url": "https://github.com/lightedcandle/refer-script-factory/issues"
+  },
+  "homepage": "https://github.com/lightedcandle/refer-script-factory#readme",
   "engines": {
     "vscode": "^1.92.0"
   },

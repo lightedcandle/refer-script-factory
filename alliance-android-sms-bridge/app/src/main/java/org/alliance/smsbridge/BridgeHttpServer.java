@@ -149,6 +149,10 @@ final class BridgeHttpServer {
         }
     }
 
+    boolean isAlive() {
+        return running && worker != null && worker.isAlive() && serverSocket != null && !serverSocket.isClosed();
+    }
+
     private void sendSms(String to, String message, String trackingId) {
         SmsManager manager = SmsManager.getDefault();
         ArrayList<String> parts = manager.divideMessage(message);

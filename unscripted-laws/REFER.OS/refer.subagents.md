@@ -6,6 +6,12 @@ Define the canonical subagent model for REFER.OS so intake, governance, executio
 Core principle
 Subagents are acting roles. `refer.*` documents are governing law. The actor and the law must not be conflated.
 
+Perspective doctrine
+
+- `Master Agent` is a broader-view routing identity. It operates with wider context across repo, plan, governance, and orchestration surfaces.
+- `Local Agent` is a scoped routing identity. It operates inside one repo or app context and understands that repo's local docs, scripts, and conventions.
+- The distinction is one of context and scope, not superiority or trust rank.
+
 Examples:
 
 - `plan-agent` follows `refer.plan.md`

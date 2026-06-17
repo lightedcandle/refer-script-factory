@@ -1,7 +1,11 @@
 package org.alliance.smsbridge;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.Build;
 
 import java.util.UUID;
 
@@ -12,6 +16,8 @@ final class BridgeConfig {
     static final int PORT = 8787;
     static final String ACTION_START = "org.alliance.smsbridge.START";
     static final String ACTION_STOP = "org.alliance.smsbridge.STOP";
+    static final String ACTION_WATCHDOG = "org.alliance.smsbridge.WATCHDOG";
+    static final long WATCHDOG_INTERVAL_MS = 5 * 60 * 1000L;
 
     private static final String PREFS = "alliance_sms_bridge";
     private static final String KEY_CLOUD_ENABLED = "cloud_enabled";
@@ -61,6 +67,36 @@ final class BridgeConfig {
 
     static void setRunning(Context context, boolean running) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean(KEY_RUNNING, running).apply();
+    }
+
+    static void scheduleWatchdog(Context context) {
+        AlarmManager alarmManager = context.getSystemService(AlarmManager.class);
+        if (alarmManager == null) {
+            return;
+        }
+
+        PendingIntent intent = watchdogIntent(context);
+        long triggerAt = System.currentTimeMillis() + WATCHDOG_INTERVAL_MS;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, intent);
+        } else {
+            alarmManager.set(AlarmManager.RTC_WAKEUP, triggerAt, intent);
+        }
+    }
+
+    static void cancelWatchdog(Context context) {
+        AlarmManager alarmManager = context.getSystemService(AlarmManager.class);
+        if (alarmManager == null) {
+            return;
+        }
+        alarmManager.cancel(watchdogIntent(context));
+    }
+
+    private static PendingIntent watchdogIntent(Context context) {
+        Intent intent = new Intent(context, BridgeWatchdogReceiver.class);
+        intent.setAction(ACTION_WATCHDOG);
+        int flags = PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE;
+        return PendingIntent.getBroadcast(context, 8787, intent, flags);
     }
 
     static boolean cloudEnabled(Context context) {

@@ -111,6 +111,12 @@ Build and install the app on the phone, grant SMS permission, then press **Start
 
 When **Start Bridge** is pressed, the app runs as a foreground service with a persistent notification. The screen does not need to stay on, and the app interface does not need to remain open. It keeps the SMS API available while the screen is off and remembers that the bridge was enabled so it can restart after phone reboot.
 
+The bridge now also arms a watchdog alarm and an internal health check:
+
+- if Android kills the foreground service, the watchdog relaunches it while bridge mode is enabled;
+- if the cloud relay or local HTTP server thread dies while the service is still running, the service restarts itself;
+- when you press **Stop Bridge**, the watchdog is canceled so it does not keep waking the device.
+
 Set **Bridge phone number** in the app before enabling cloud relay. The cloud relay ignores inbound inbox rows from that number so the bridge does not process its own messages and accidentally create an SMS loop.
 The bridge also keeps the last 10 inbound inbox rows in local history, including forwarded and filtered rows, so you can inspect recent activity on the device or through `/sms/history`.
 

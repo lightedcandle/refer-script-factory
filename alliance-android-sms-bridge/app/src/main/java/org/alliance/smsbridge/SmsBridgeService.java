@@ -6,7 +6,9 @@ import android.app.NotificationManager;
 import android.app.Service;
 import android.content.Intent;
 import android.os.Build;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.os.PowerManager;
 import android.util.Log;
 
@@ -14,10 +16,31 @@ public class SmsBridgeService extends Service {
     private static final String TAG = "AllianceSmsBridge";
     private static final String CHANNEL_ID = "alliance_sms_bridge";
     private static final int NOTIFICATION_ID = 8787;
+    private static final long HEALTH_CHECK_INTERVAL_MS = 60_000L;
 
     private BridgeHttpServer server;
     private CloudRelay cloudRelay;
     private PowerManager.WakeLock wakeLock;
+    private final Handler healthHandler = new Handler(Looper.getMainLooper());
+    private final Runnable healthCheck = new Runnable() {
+        @Override
+        public void run() {
+            if (!BridgeConfig.enabled(SmsBridgeService.this)) {
+                return;
+            }
+
+            boolean serverAlive = server != null && server.isAlive();
+            boolean relayAlive = cloudRelay != null && cloudRelay.isAlive();
+            if (!serverAlive || !relayAlive) {
+                Log.w(TAG, "Bridge watchdog detected a dead component; restarting service");
+                restartBridge();
+                return;
+            }
+
+            BridgeConfig.scheduleWatchdog(SmsBridgeService.this);
+            healthHandler.postDelayed(this, HEALTH_CHECK_INTERVAL_MS);
+        }
+    };
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -52,6 +75,8 @@ public class SmsBridgeService extends Service {
         acquireWakeLock();
         if (server != null) {
             ensureCloudRelay();
+            BridgeConfig.scheduleWatchdog(this);
+            startHealthChecks();
             return;
         }
 
@@ -59,6 +84,8 @@ public class SmsBridgeService extends Service {
             server = new BridgeHttpServer(this, BridgeConfig.token(this));
             server.start();
             ensureCloudRelay();
+            BridgeConfig.scheduleWatchdog(this);
+            startHealthChecks();
             Log.i(TAG, "Bridge started on port " + BridgeConfig.PORT);
         } catch (Exception error) {
             Log.e(TAG, "Bridge failed to start", error);
@@ -75,7 +102,23 @@ public class SmsBridgeService extends Service {
         }
     }
 
+    private void startHealthChecks() {
+        healthHandler.removeCallbacks(healthCheck);
+        healthHandler.postDelayed(healthCheck, HEALTH_CHECK_INTERVAL_MS);
+    }
+
+    private void restartBridge() {
+        healthHandler.removeCallbacks(healthCheck);
+        BridgeConfig.cancelWatchdog(this);
+        stopBridge();
+        if (BridgeConfig.enabled(this)) {
+            startBridge();
+        }
+    }
+
     private void stopBridge() {
+        healthHandler.removeCallbacks(healthCheck);
+        BridgeConfig.cancelWatchdog(this);
         if (server != null) {
             server.stop();
             server = null;

@@ -55,6 +55,8 @@ Script factory binding rule
 Authority
 `refer.plan.md` is the highest order law for user intent and intake. All other refer.\* documents (including `refer.flow.md`) are subordinate to Plan for any conversational or planning behavior.
 
+In agent terms, the Master Agent is the broader-view routing context that can see across repo and plan boundaries, while Local Agents are scoped repo/app contexts that execute inside their own boundaries.
+
 REFER.OS operates with optimistic interaction and intent-driven mutation.
 
 - Read-only analysis, inspection, and reporting may execute optimistically and immediately.
