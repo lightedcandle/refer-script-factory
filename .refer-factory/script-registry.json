@@ -1,6 +1,6 @@
 {
   "schema": "refer.domain-script-registry.v1",
-  "updated_at": "2026-05-01T15:31:18.478Z",
+  "updated_at": "2026-06-18T01:47:47.851Z",
   "rule": "Before direct work, identify the domain and check that domain's registry/check_first surfaces for an existing script.",
   "domains": [
     {
@@ -192,12 +192,20 @@
           "command": "node scripts/hive/hive-route-ratifier.mjs"
         },
         {
+          "name": "alliance:hub-check",
+          "command": "npm --prefix alliance-hub run check"
+        },
+        {
+          "name": "alliance:hub-deploy",
+          "command": "npm --prefix alliance-hub run deploy"
+        },
+        {
           "name": "alliance:forms-check",
-          "command": "npm --prefix alliance-cloudflare-forms run check"
+          "command": "npm --prefix alliance-hub run check"
         },
         {
           "name": "alliance:forms-deploy",
-          "command": "npm --prefix alliance-cloudflare-forms run deploy"
+          "command": "npm --prefix alliance-hub run deploy"
         }
       ]
     },
@@ -333,6 +341,118 @@
         }
       ],
       "discovered_package_scripts": []
+    },
+    {
+      "id": "alliance-hub",
+      "label": "Alliance Hub",
+      "scope": "Telechurchlive Alliance app source, Cloudflare Pages/Functions, Supabase migrations, SMS routing, formula/retrieval flows.",
+      "authority": "alliance-hub/AGENTS.md",
+      "check_first": [
+        "alliance-hub/AGENTS.md",
+        "alliance-hub/package.json",
+        "alliance-hub/tools/",
+        "alliance-hub/scripts/sms/",
+        "alliance-hub/supabase/migrations/",
+        "alliance-hub/docs/records-split-sequence.md"
+      ],
+      "scripts": [
+        {
+          "id": "alliance.hub.check",
+          "command": "npm --prefix alliance-hub run check",
+          "entrypoint": "alliance-hub/tools/check.mjs",
+          "purpose": "Verify required app files, SMS registry, inbound route behavior, form intake, and conversation routing.",
+          "status": "active"
+        },
+        {
+          "id": "alliance.hub.sms.validate",
+          "command": "npm --prefix alliance-hub run sms:validate",
+          "entrypoint": "alliance-hub/tools/sms-script-factory.mjs",
+          "purpose": "Validate the Alliance SMS script registry before changing SMS routing behavior.",
+          "status": "active"
+        },
+        {
+          "id": "alliance.hub.sms.route",
+          "command": "npm --prefix alliance-hub run sms:route -- --registered --text \"profile\"",
+          "entrypoint": "alliance-hub/tools/sms-script-factory.mjs",
+          "purpose": "Run focused SMS router probes against scripts/sms/router.mjs and registry.json.",
+          "status": "active"
+        },
+        {
+          "id": "alliance.hub.deploy.dry",
+          "command": "npm --prefix alliance-hub run deploy:dry",
+          "entrypoint": "alliance-hub/tools/deploy.mjs",
+          "purpose": "Build the Cloudflare Pages deploy packet from .env.alliance without deploying production.",
+          "status": "active"
+        },
+        {
+          "id": "alliance.hub.deploy.cloudflare",
+          "command": "npm --prefix alliance-hub run deploy",
+          "entrypoint": "alliance-hub/tools/deploy.mjs",
+          "purpose": "Deploy Alliance Hub to Cloudflare Pages only after explicit 'push to Cloudflare' or 'push all' approval.",
+          "status": "guarded"
+        },
+        {
+          "id": "alliance.hub.records.split",
+          "command": "source migrations",
+          "entrypoint": "alliance-hub/supabase/migrations/20260528164951_wave1_records_split.sql",
+          "purpose": "Record the verified alliance_records split method: keyed table first, legacy STI fallback during verification, mirror/backfill where needed.",
+          "status": "active"
+        }
+      ],
+      "discovered_package_scripts": [
+        {
+          "name": "check",
+          "command": "node tools/check.mjs"
+        },
+        {
+          "name": "start:local",
+          "command": "wrangler pages dev public --port 8788"
+        },
+        {
+          "name": "deploy",
+          "command": "node tools/deploy.mjs --deploy"
+        },
+        {
+          "name": "deploy:dry",
+          "command": "node tools/deploy.mjs"
+        },
+        {
+          "name": "supabase:push",
+          "command": "node tools/supabase-push.mjs"
+        },
+        {
+          "name": "supabase:push:dry",
+          "command": "node tools/supabase-push.mjs --dry-run"
+        },
+        {
+          "name": "formula:benchmark",
+          "command": "node tools/formula-contract-benchmark.mjs"
+        },
+        {
+          "name": "retrieval:sync",
+          "command": "node tools/retrieval-sync.mjs"
+        },
+        {
+          "name": "seed:smoke",
+          "command": "node tools/seed-pack-smoke.mjs"
+        },
+        {
+          "name": "sms:factory",
+          "command": "node tools/sms-script-factory.mjs"
+        },
+        {
+          "name": "sms:route",
+          "command": "node tools/sms-script-factory.mjs route"
+        },
+        {
+          "name": "sms:validate",
+          "command": "node tools/sms-script-factory.mjs validate"
+        },
+        {
+          "name": "sms:regex",
+          "command": "node tools/sms-script-factory.mjs regex"
+        }
+      ]
     },
     {
       "id": "refer-zo-bootstrap",

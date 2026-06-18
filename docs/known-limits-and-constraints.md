@@ -434,3 +434,25 @@ Update this file whenever a tool, provider, transport path, script, runner, or p
 - Mitigation: treat local preview as UI/API smoke verification, and upgrade Wrangler before relying on compatibility-date-specific runtime behavior
 - Script/doc now encoding mitigation: this ledger
 - Verification: local Pages preview still compiled and reported ready on `http://127.0.0.1:8788`
+
+### OpenAI Quota Blocks Alliance Formula And Seed Smoke Checks
+
+- Date: 2026-06-18
+- Domain/provider: OpenAI API / Alliance Hub verification scripts
+- Operation: running `npm run formula:benchmark` and `npm run seed:smoke` in `alliance-hub`
+- Symptom: both scripts failed with an OpenAI quota-exceeded API error before returning a verification packet
+- Likely cause: the configured OpenAI account or project has no available quota for these requests
+- Mitigation: do not mint formula benchmark, retrieval sync, or seed smoke methods as verified until a successful run is captured; retry after billing/quota is repaired
+- Script/doc now encoding mitigation: this ledger, `alliance-hub/tools/formula-contract-benchmark.mjs`, `alliance-hub/tools/seed-pack-smoke.mjs`
+- Verification: `npm run check`, `npm run sms:validate`, `npm run sms:route -- --registered --text "profile"`, and `npm run deploy:dry` still passed without exposing secrets
+
+### Alliance Supabase Dry Run Can Be Blocked By Remote Migration Drift
+
+- Date: 2026-06-18
+- Domain/provider: Supabase CLI / Alliance Hub migrations
+- Operation: running `npm run supabase:push:dry` in `alliance-hub`
+- Symptom: the dry run listed migrations, then failed because remote migration version `202606161330` was not found in the local migrations directory
+- Likely cause: the remote Supabase migration history contains a migration that has not been preserved in the local repo
+- Mitigation: do not mint the Supabase push path as verified until the missing migration is recovered, pulled, or the migration history is repaired with an approved successor
+- Script/doc now encoding mitigation: this ledger, `alliance-hub/tools/supabase-push.mjs`
+- Verification: the command failed before applying changes and printed Supabase's repair/pull guidance; no production migration was run

@@ -1,6 +1,6 @@
 # Domain Script Registry
 
-Updated: 2026-05-01T15:31:18.478Z
+Updated: 2026-06-18T01:47:47.851Z
 
 Before direct work, identify the domain and check that domain's registry/check_first surfaces for an existing script.
 
@@ -11,6 +11,7 @@ Before direct work, identify the domain and check that domain's registry/check_f
 | REFER Script Factory | Codex/VS Code source, provider-neutral doctrine, extension scripts. | `src/contracts/scriptFactory.ts` | `src/contracts/scriptFactory.ts`<br>`docs/script-legend.md`<br>`package.json` |
 | Current Chat Surface | Token tracking, script-use logging, current-context reset, and chat-surface self-observation. | `.refer-factory/script-registry.json` | `docs/chat-surface-scripts.md`<br>`scripts/chat-surface/`<br>`package.json` |
 | Hive Director | Cross-node identity, hive build plan, node heartbeat, and ratification status. | `.refer-factory/hive-node-registry.json` | `docs/hive-build-plan.md`<br>`.refer-factory/hive-node-registry.md`<br>`scripts/hive/` |
+| Alliance Hub | Telechurchlive Alliance app source, Cloudflare Pages/Functions, Supabase migrations, SMS routing, formula/retrieval flows. | `alliance-hub/AGENTS.md` | `alliance-hub/AGENTS.md`<br>`alliance-hub/package.json`<br>`alliance-hub/tools/`<br>`alliance-hub/scripts/sms/`<br>`alliance-hub/supabase/migrations/`<br>`alliance-hub/docs/records-split-sequence.md` |
 | REFER Zo Bootstrap | Zo computer bootstrap, file/API tandem, compression, dispatch, talkback, datasets, and live ratification. | `refer-zo-bootstrap/scripts/factory/script-registry.json` | `refer-zo-bootstrap/AGENTS.md`<br>`refer-zo-bootstrap/docs/file-transport-tandem.md`<br>`refer-zo-bootstrap/scripts/factory/script-registry.json`<br>`refer-zo-bootstrap/package.json` |
 
 ## Scripts
@@ -65,8 +66,10 @@ Package scripts discovered in this domain:
 - `hive:build-intake`: `node scripts/hive/hive-build-intake.mjs`
 - `hive:deployment-pack`: `node scripts/hive/hive-node-deployment-pack.mjs build`
 - `hive:ratify-routes`: `node scripts/hive/hive-route-ratifier.mjs`
-- `alliance:forms-check`: `npm --prefix alliance-cloudflare-forms run check`
-- `alliance:forms-deploy`: `npm --prefix alliance-cloudflare-forms run deploy`
+- `alliance:hub-check`: `npm --prefix alliance-hub run check`
+- `alliance:hub-deploy`: `npm --prefix alliance-hub run deploy`
+- `alliance:forms-check`: `npm --prefix alliance-hub run check`
+- `alliance:forms-deploy`: `npm --prefix alliance-hub run deploy`
 
 ### Current Chat Surface
 
@@ -92,6 +95,33 @@ Package scripts discovered in this domain:
 | `hive.build-intake` | `npm run hive:build-intake` | `scripts/hive/hive-build-intake.mjs` | Emit and dispatch governed build-intake contracts so Zo route changes originate from typed intake. | active |
 | `hive.deployment-pack` | `npm run hive:deployment-pack` | `scripts/hive/hive-node-deployment-pack.mjs` | Build a non-mutating deployment checklist for staging and ratifying a hive node. | active |
 | `hive.ratify-routes` | `npm run hive:ratify-routes` | `scripts/hive/hive-route-ratifier.mjs` | Capture live zo.space route state for a hive node and record upstream ratification evidence. | active |
+
+### Alliance Hub
+
+| Script | Command | Entrypoint | Purpose | Status |
+|---|---|---|---|---|
+| `alliance.hub.check` | `npm --prefix alliance-hub run check` | `alliance-hub/tools/check.mjs` | Verify required app files, SMS registry, inbound route behavior, form intake, and conversation routing. | active |
+| `alliance.hub.sms.validate` | `npm --prefix alliance-hub run sms:validate` | `alliance-hub/tools/sms-script-factory.mjs` | Validate the Alliance SMS script registry before changing SMS routing behavior. | active |
+| `alliance.hub.sms.route` | `npm --prefix alliance-hub run sms:route -- --registered --text "profile"` | `alliance-hub/tools/sms-script-factory.mjs` | Run focused SMS router probes against scripts/sms/router.mjs and registry.json. | active |
+| `alliance.hub.deploy.dry` | `npm --prefix alliance-hub run deploy:dry` | `alliance-hub/tools/deploy.mjs` | Build the Cloudflare Pages deploy packet from .env.alliance without deploying production. | active |
+| `alliance.hub.deploy.cloudflare` | `npm --prefix alliance-hub run deploy` | `alliance-hub/tools/deploy.mjs` | Deploy Alliance Hub to Cloudflare Pages only after explicit 'push to Cloudflare' or 'push all' approval. | guarded |
+| `alliance.hub.records.split` | `source migrations` | `alliance-hub/supabase/migrations/20260528164951_wave1_records_split.sql` | Record the verified alliance_records split method: keyed table first, legacy STI fallback during verification, mirror/backfill where needed. | active |
+
+Package scripts discovered in this domain:
+
+- `check`: `node tools/check.mjs`
+- `start:local`: `wrangler pages dev public --port 8788`
+- `deploy`: `node tools/deploy.mjs --deploy`
+- `deploy:dry`: `node tools/deploy.mjs`
+- `supabase:push`: `node tools/supabase-push.mjs`
+- `supabase:push:dry`: `node tools/supabase-push.mjs --dry-run`
+- `formula:benchmark`: `node tools/formula-contract-benchmark.mjs`
+- `retrieval:sync`: `node tools/retrieval-sync.mjs`
+- `seed:smoke`: `node tools/seed-pack-smoke.mjs`
+- `sms:factory`: `node tools/sms-script-factory.mjs`
+- `sms:route`: `node tools/sms-script-factory.mjs route`
+- `sms:validate`: `node tools/sms-script-factory.mjs validate`
+- `sms:regex`: `node tools/sms-script-factory.mjs regex`
 
 ### REFER Zo Bootstrap
 
