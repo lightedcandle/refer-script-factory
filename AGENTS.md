@@ -18,6 +18,10 @@ The factory should mature toward local-first operation:
 
 The factory doctrine is documented in `docs/factory-system-doctrine.md`: a forge is the conversion unit, the Script Factory is the governance layer that manages script forges, and the Factory System is the complete network of coordinated factories.
 
+Publish rule:
+
+- When a repo defines `publish`, treat it as commit plus the repo's governed deploy or release path, not as a deploy-only action.
+
 ## Sibling Zo Factory
 
 `refer-zo-bootstrap` is the Zo-scoped sibling factory. It owns Zo computer bootstrapping, Zo Files transfer, Zo personas/rules, hive node deployment, dispatch, talkback, heartbeat, datasets, and the Telechurch Zo proving instance.
