@@ -247,3 +247,7 @@ For narrow compile checks, use:
 ```powershell
 npm run compile
 ```
+## Universal Model Routing
+
+- This workspace binds model selection and escalation to E:/refer.os/REFER.OS/refer.model-routing.md.
+- Local rules may narrow task handling but may not duplicate or override the universal routing policy, role authority, or contract scope.
