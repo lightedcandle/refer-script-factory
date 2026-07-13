@@ -6,6 +6,73 @@ const root = process.cwd();
 
 const knownAuthorities = [
   {
+    domain: "chat-branch",
+    match: ["remote chat", "repo chat fork", "chat branch"],
+    references: [
+      {
+        id: "refer.method.chat-branch",
+        label: "Chat Branch Method",
+        authority_class: "local",
+        url: null,
+        source_path: "E:/refer.os/REFER.OS/refer.lingo.md",
+        scope: "Explicit remote-chat selector for moving a conversation into a repo-specific thread.",
+      },
+      {
+        id: "refer.chat.branch-classification",
+        label: "Chat Branch Classification",
+        authority_class: "local",
+        url: null,
+        source_path: "E:/refer.os/REFER.OS/refer.chat.md",
+        scope: "Keeps explicit chat branching separate from Git and general methodology requests.",
+      },
+    ],
+  },
+  {
+    domain: "branching-methodology",
+    match: [
+      "branching methodology",
+      "general branching",
+      "git branching",
+      "git branch method",
+      "how do you branch",
+      "branching workflow",
+    ],
+    references: [
+      {
+        id: "refer.method.branching",
+        label: "Branching Method",
+        authority_class: "local",
+        url: null,
+        source_path: "E:/refer.os/REFER.OS/refer.branch.md",
+        scope: "Universal owner for general branching methodology and branch-local Git work.",
+      },
+      {
+        id: "refer.method.branch-assimilation",
+        label: "Branch Assimilation Method",
+        authority_class: "local",
+        url: null,
+        source_path: "E:/refer.os/REFER.OS/refer.assimilation.md",
+        scope: "Universal owner for coordinator-led integration of concurrent or multiple branches.",
+      },
+      {
+        id: "refer.method.chat-branch-boundary",
+        label: "Chat Branch Method Boundary",
+        authority_class: "local",
+        url: null,
+        source_path: "E:/refer.os/REFER.OS/refer.chat.md",
+        scope: "Reserves Chat Branch Method for explicit remote-chat requests instead of selecting it for general methodology.",
+      },
+      {
+        id: "refer.method-bank.branching",
+        label: "Branching Method Registry",
+        authority_class: "local",
+        url: null,
+        source_path: "E:/SovereignNode/docs/method-bank.md",
+        scope: "Canonical method-bank pointer for the current Branching, Chat Branch, and Assimilation relationships.",
+      },
+    ],
+  },
+  {
     domain: "stripe",
     match: ["stripe", "checkout", "payment", "subscription", "billing"],
     references: [

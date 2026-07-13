@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "binding": "refer.universal",
+  "refreshed_at": "2026-07-13T05:21:06.951Z",
+  "sources": [
+    {
+      "source_path": "E:/refer.os/AGENTS.md",
+      "mtime_ms": 1783918341308
+    },
+    {
+      "source_path": "E:/refer.os/REFER.OS/refer.agent.md",
+      "mtime_ms": 1783918341311
+    }
+  ]
+}
