@@ -344,6 +344,15 @@ const baseScriptFactoryEntries: ScriptFactoryEntry[] = [
       "Use this before generating or modifying domain scripts. It maps known domains such as Stripe, OpenAI, Cloudflare, and Script Factory work to official or local authority references, and creates a scoped experimental authority packet when no known authority exists.",
   },
   {
+    script_id: "refer.universal.source-sync",
+    label: "Universal Source Sync",
+    surface: "npm",
+    entrypoint: "npm run universal:source-sync -- <check|sync>",
+    does: "Compares or refreshes this repo's universal REFER source stamps.",
+    detail:
+      "Use check before substantive work to compare recorded source mtimes with the live universal files. Use sync only through this governed route to refresh .refer/source.json without copying universal law into the repo.",
+  },
+  {
     script_id: "refer.doctrine.compile",
     label: "Doctrine Compiler",
     surface: "npm",

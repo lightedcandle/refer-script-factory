@@ -34,6 +34,68 @@ execFileSync(
     "scripts/reference/authority-resolver.mjs",
     "resolve",
     "--intent",
+    "What is the standard branching workflow?",
+  ],
+  { cwd: process.cwd(), stdio: "pipe" },
+);
+const branchingPacket = readLatestPacket();
+validate(branchingPacket);
+assert.equal(branchingPacket.domain, "branching-methodology");
+assert.ok(
+  branchingPacket.references.some(
+    (reference: { id?: string }) => reference.id === "refer.method.branching",
+  ),
+);
+assert.ok(
+  branchingPacket.references.some(
+    (reference: { id?: string }) => reference.id === "refer.method.branch-assimilation",
+  ),
+);
+assert.ok(
+  branchingPacket.references.some(
+    (reference: { id?: string }) => reference.id === "refer.method.chat-branch-boundary",
+  ),
+);
+
+execFileSync(
+  "node",
+  [
+    "scripts/reference/authority-resolver.mjs",
+    "resolve",
+    "--intent",
+    "Start a remote chat for the release follow-up.",
+  ],
+  { cwd: process.cwd(), stdio: "pipe" },
+);
+const chatBranchPacket = readLatestPacket();
+validate(chatBranchPacket);
+assert.equal(chatBranchPacket.domain, "chat-branch");
+assert.ok(
+  chatBranchPacket.references.some(
+    (reference: { id?: string }) => reference.id === "refer.method.chat-branch",
+  ),
+);
+
+execFileSync(
+  "node",
+  [
+    "scripts/reference/authority-resolver.mjs",
+    "resolve",
+    "--intent",
+    "Rename the branch label in the diagram.",
+  ],
+  { cwd: process.cwd(), stdio: "pipe" },
+);
+const unrelatedBranchPacket = readLatestPacket();
+validate(unrelatedBranchPacket);
+assert.equal(unrelatedBranchPacket.authority_state, "created");
+
+execFileSync(
+  "node",
+  [
+    "scripts/reference/authority-resolver.mjs",
+    "resolve",
+    "--intent",
     "Build a made up local ritual engine",
     "--domain",
     "local-ritual-engine",
