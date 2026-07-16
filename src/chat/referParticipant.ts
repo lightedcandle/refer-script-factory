@@ -58,7 +58,7 @@ export function registerReferChatParticipant(
           contractId: record.contract.contract_id,
           phase: "intake",
           startedAt,
-          message: "REFER chat intake stored raw prompt and compact contract.",
+          message: "REFER chat intake stored the raw prompt and intake envelope.",
           outputTarget: record.contract.raw_input_ref,
         }),
         workspaceRoot,
@@ -66,20 +66,20 @@ export function registerReferChatParticipant(
 
       response.progress("REFER stored the raw prompt and started the bounded resolution loop.");
       response.markdown(
-        `REFER intake contract: \`${record.contract.contract_id}\`\n\nRaw prompt stored at \`${record.contract.raw_input_ref}\`.`,
+        `REFER intake envelope: \`${record.contract.contract_id}\`\n\nRaw prompt stored at \`${record.contract.raw_input_ref}\`.`,
       );
 
       try {
         const referModel = createConfiguredReferPromptModel(request.model);
-        response.progress(`REFER model provider: ${referModel.label}.`);
-        response.markdown(`\n\nREFER model provider: \`${referModel.label}\`.`);
+        response.progress(`REFER host-provided model: ${referModel.label}.`);
+        response.markdown(`\n\nREFER host-provided model: \`${referModel.label}\`.`);
         response.progress("Thinking...");
         appendProcessEvent(
           createReferChatEvent({
             contractId: record.contract.contract_id,
             phase: "provider",
             startedAt: new Date(),
-            message: "REFER selected model provider.",
+            message: "REFER selected the host-provided model.",
             providerLabel: referModel.label,
           }),
           workspaceRoot,
@@ -139,7 +139,7 @@ export function registerReferChatParticipant(
           workspaceRoot,
         );
         response.markdown(
-          `\n\nREFER created the compact contract, but the bounded loop failed. Raw intake record: \`${absoluteRecordPath}\`.\n\n${error instanceof Error ? error.message : String(error)}`,
+          `\n\nREFER created the intake envelope, but the bounded loop failed. Raw intake record: \`${absoluteRecordPath}\`.\n\n${error instanceof Error ? error.message : String(error)}`,
         );
       } finally {
         markContractTurnComplete(workspaceRoot);
@@ -165,20 +165,20 @@ function handleContractModePrompt(
   const normalized = prompt.trim().toLowerCase();
   if (normalized === "on") {
     setPersistentContractMode(workspaceRoot, true);
-    response.markdown("REFER persistent contract mode is on.");
+    response.markdown("REFER legacy intake-session tracking is on. This is not execution authority.");
     return true;
   }
 
   if (normalized === "off") {
     setPersistentContractMode(workspaceRoot, false);
-    response.markdown("REFER persistent contract mode is off.");
+    response.markdown("REFER legacy intake-session tracking is off.");
     return true;
   }
 
   if (normalized === "status") {
     const state = readReferChatModeState(workspaceRoot);
     response.markdown(
-      `REFER contract mode is ${state.persistent_contract_mode ? "on" : "off"}. Active state: \`${state.active_contract_mode}\`.`,
+      `REFER legacy intake-session tracking is ${state.persistent_contract_mode ? "on" : "off"}. Active runtime state: \`${state.active_contract_mode}\`. This is not execution authority.`,
     );
     return true;
   }

@@ -107,10 +107,11 @@ const scriptActionLabels = [
   "View Scriptographer Report",
 ];
 
-const cockpitViewLabels = [
+const operatorInterfaceLabels = [
   "REFER",
   "Refer Library",
   "Refer Factory System",
+  "Script Factory",
   "Factory System",
   "Dashboard",
   "@Refer Chat History",
@@ -207,9 +208,9 @@ export function createScriptLegend(): ScriptLegend {
         term: "Intended Effect",
         plain_name: "Expected Result",
         meaning:
-          "The contract-declared output, side effect, or state change a script is supposed to produce.",
+          "The output, side effect, or state change a ratified Execution Contract says a script should produce.",
         deterministic_use:
-          "Use it as the comparison target for script runs. A script is evaluated by whether its observed effect matches this contract.",
+          "Use it as the comparison target for authorized script runs. A script is evaluated by whether its observed effect matches that Execution Contract.",
       },
       {
         term: "Observed Effect",
@@ -231,7 +232,7 @@ export function createScriptLegend(): ScriptLegend {
         term: "Modification Loop",
         plain_name: "Repair And Rerun Loop",
         meaning:
-          "The repeated process where the failure detector classifies an effect mismatch, a repair executor applies the smallest named repair, and the same contract reruns through the detector until functional, blocked, or superseded.",
+          "The repeated process where the failure detector classifies an effect mismatch, a repair executor applies the smallest named repair, and the same Execution Contract reruns through the detector until functional, blocked, or superseded.",
         deterministic_use:
           "Use it whenever a script has not achieved its intended effect. The detector is the loop gate; repair executors consume detector flags and must return reruns to the detector before promotion.",
       },
@@ -239,9 +240,9 @@ export function createScriptLegend(): ScriptLegend {
         term: "Functional Script",
         plain_name: "Effect Achieved",
         meaning:
-          "A script that achieved the intended effect for the declared contract and passed the required checks.",
+          "A script that achieved the intended effect for the ratified Execution Contract and passed the required checks.",
         deterministic_use:
-          "Use it as an effect-state label after evidence proves the script achieved the contract; do not use it as a permanent guarantee for all future contracts.",
+          "Use it as an effect-state label after evidence proves the script achieved that Execution Contract; do not use it as a permanent guarantee for all future Execution Contracts.",
       },
       {
         term: "Kernel Law",
@@ -449,6 +450,106 @@ export function createScriptLegend(): ScriptLegend {
           "Use it only for request-type entries such as chat, HTTP, or command requests.",
       },
       {
+        term: "Interactive Host",
+        plain_name: "Operator Entry Environment",
+        meaning:
+          "The chat, terminal, editor, or other environment where an operator begins work.",
+        deterministic_use:
+          "Use it in provider-neutral descriptions. Name VS Code, CLI, HTTP, MCP, or another product only when describing its host adapter.",
+      },
+      {
+        term: "Host Command",
+        plain_name: "Explicit Host Action",
+        meaning: "An explicit action exposed by an interactive host.",
+        deterministic_use:
+          "Use it for core command descriptions; use Command Palette only for the current VS Code adapter surface.",
+      },
+      {
+        term: "Operator Interface",
+        plain_name: "Human-Facing Factory Controls",
+        meaning: "The human-facing view of factory state, evidence, and controls.",
+        deterministic_use:
+          "Use it in core doctrine instead of cockpit or webview. Name a webview only when documenting the current VS Code adapter implementation.",
+      },
+      {
+        term: "Target Workspace",
+        plain_name: "Authorized Repository Boundary",
+        meaning:
+          "The repository or filesystem boundary named by the active authority and selected for work.",
+        deterministic_use:
+          "Use it in core descriptions instead of workspace folder; adapters translate their local workspace concept into this boundary.",
+      },
+      {
+        term: "Host-Provided Model",
+        plain_name: "Model Supplied By The Host",
+        meaning: "A language model selected or supplied by the current interactive host.",
+        deterministic_use:
+          "Use it in provider-neutral orchestration descriptions instead of VS Code selected model or another provider-specific selector.",
+      },
+      {
+        term: "Event/Output Sink",
+        plain_name: "Result Destination",
+        meaning:
+          "The destination for process events, verification evidence, artifacts, or user-visible output.",
+        deterministic_use:
+          "Use it when the core emits output without assuming a chat pane, terminal, file, server response, or provider API.",
+      },
+      {
+        term: "Host Adapter",
+        plain_name: "Host Translation Boundary",
+        meaning:
+          "The boundary that translates host input, model access, workspace access, events, and output rendering into provider-neutral core packets.",
+        deterministic_use:
+          "Use it for VS Code, CLI, HTTP, MCP, and future hosts. Adapters depend on the provider-neutral core; the core does not depend on adapters.",
+      },
+      {
+        term: "Intake Record",
+        plain_name: "Preserved Raw Request",
+        meaning: "Raw user intent and intake metadata preserved before normalization.",
+        deterministic_use:
+          "Use it for provenance and audit. It never grants execution authority.",
+      },
+      {
+        term: "Intake Envelope",
+        plain_name: "Normalized Request Packet",
+        meaning:
+          "Compact normalized intake data used for routing, clarification, or model input.",
+        deterministic_use:
+          "Use it for pre-execution request processing. It never grants execution authority.",
+      },
+      {
+        term: "Planning Artifact",
+        plain_name: "Description Of Possible Work",
+        meaning:
+          "A plan, Send Contract draft, Script Blueprint, or similar artifact that describes possible work.",
+        deterministic_use:
+          "Use it for planning output. It never grants execution authority.",
+      },
+      {
+        term: "Execution Contract",
+        plain_name: "Ratified REFER Execution Authority",
+        meaning:
+          "A ratified REFER instruction packet naming scope, governing references, constraints, acceptance criteria, and verification.",
+        deterministic_use:
+          "Reserve this exact term for ratified REFER authority. Do not use it for intake data, planning artifacts, runtime sessions, or UI modes.",
+      },
+      {
+        term: "Execution Authorization",
+        plain_name: "Permission To Execute",
+        meaning:
+          "The authority conferred only by a ratified Execution Contract and limited by its independent permission gates.",
+        deterministic_use:
+          "Use it only after ratification. A route, model, host command, runtime session, or approval-looking UI state does not create it.",
+      },
+      {
+        term: "Runtime Session",
+        plain_name: "One Host Interaction",
+        meaning:
+          "One interactive-host run and its transient or persisted intake, progress, and output state.",
+        deterministic_use:
+          "Use it for chat/session tracking. Temporary or persistent legacy session state never grants execution authority.",
+      },
+      {
         term: "Runtime Entrypoints",
         plain_name: "Runnable Entry Paths",
         meaning: "The governed layer for ways work starts running through REFER.",
@@ -457,10 +558,10 @@ export function createScriptLegend(): ScriptLegend {
       },
       {
         term: "Command Surface",
-        plain_name: "VS Code Command Layer",
-        meaning: "The governed layer for actions exposed through the VS Code Command Palette.",
+        plain_name: "Host Command Layer",
+        meaning: "The governed layer for actions exposed through explicit host commands.",
         deterministic_use:
-          "Use it for vscode-command entries and do not use Command Prompts as a competing label.",
+          "Use it for host-command entries. The current vscode-command entries are adapter-specific implementations of this surface.",
       },
       {
         term: "HTTP Endpoint Surface",
@@ -481,7 +582,7 @@ export function createScriptLegend(): ScriptLegend {
         plain_name: "Quality Gate",
         meaning: "Checks that factory changes compile, pass tests, and satisfy acceptance criteria.",
         deterministic_use:
-          "Use it for compile, test, verify, and contract acceptance checks.",
+          "Use it for compile, test, verify, and Execution Contract acceptance checks.",
       },
       {
         term: "Process Events",
@@ -509,7 +610,7 @@ export function createScriptLegend(): ScriptLegend {
         plain_name: "Human Request Text",
         meaning: "The text submitted by the user through chat, HTTP, or a command-triggered flow.",
         deterministic_use:
-          "Use it only for human-authored request input before it is converted into a contract or script packet.",
+          "Use it only for human-authored request input before it is preserved as an intake record and normalized into an intake envelope.",
       },
       {
         term: "Model",
@@ -673,10 +774,10 @@ export function createScriptLegend(): ScriptLegend {
           "Script action buttons must use these labels or a label from Registered Script Label. Add a new action label here before showing it in UI.",
       },
       {
-        name: "Cockpit View Label",
-        allowed_values: cockpitViewLabels,
+        name: "Operator Interface Label",
+        allowed_values: operatorInterfaceLabels,
         rule:
-          "VS Code activity-bar and webview names must use these governed labels or be added here before package.json exposes them.",
+          "Human-facing factory view names must use these governed labels or be added here before a host adapter exposes them.",
       },
     ],
     fields: [
@@ -762,7 +863,7 @@ export function createScriptLegend(): ScriptLegend {
         name: "vscode-command",
         allowed_values: ["Single Script"],
         rule:
-          "Use for command palette actions. They may call orchestration scripts but should be represented as command surfaces.",
+          "Use for current VS Code adapter Command Palette actions. They may call orchestration scripts but should be represented as adapter-specific command surfaces.",
       },
       {
         name: "npm",
@@ -887,9 +988,9 @@ export function createScriptLegend(): ScriptLegend {
         rank: "SEQ-B",
         name: "Request Intake",
         meaning:
-          "The user prompt, document, command, or API request is converted into a compact contract.",
+          "The user prompt, document, host command, or API request is preserved as an intake record and normalized into an intake envelope.",
         rule:
-          "No downstream script should run until the request has a contract or a documented block.",
+          "Intake may route or clarify, but no mutating script may run until a ratified Execution Contract authorizes it or a documented block stops it.",
       },
       {
         rank: "SEQ-C",
@@ -919,7 +1020,7 @@ export function createScriptLegend(): ScriptLegend {
             rank: "SEQ-E.1",
             name: "Condition Read",
             meaning:
-              "Read the contract, registry, active rule packs, locks, and evidence needed to choose a route.",
+              "Read the ratified Execution Contract, registry, active rule packs, locks, and evidence needed to choose a route.",
             rule:
               "Conditions must come from measured input or durable artifacts, not speculation.",
           },
@@ -953,7 +1054,7 @@ export function createScriptLegend(): ScriptLegend {
         rank: "SEQ-G",
         name: "Script Execution",
         meaning:
-          "The selected registered script or candidate script runs against the contract.",
+          "The selected registered script or candidate script runs against the ratified Execution Contract.",
         rule:
           "Script execution must record process status and declared intended effect.",
       },
@@ -977,7 +1078,7 @@ export function createScriptLegend(): ScriptLegend {
         rank: "SEQ-J",
         name: "Modification Loop",
         meaning:
-          "The failure detector flags the responsible layer; repair executors apply that repair and rerun the same contract back through the detector.",
+          "The failure detector flags the responsible layer; repair executors apply that repair and rerun the same Execution Contract back through the detector.",
         rule:
           "The detector is the automatic loop gate: functional may continue, mismatched repairs and reruns, blocked waits for missing inputs, and superseded points to the new owner.",
         sub_sequence: [
@@ -985,7 +1086,7 @@ export function createScriptLegend(): ScriptLegend {
             rank: "SEQ-J.1",
             name: "Mismatch Classifier",
             meaning:
-              "Classify the mismatch as contract, resolver, script, forge, schema, fixture, authority, environment, boundary, or user-method mismatch.",
+              "Classify the mismatch as Execution Contract, resolver, script, forge, schema, fixture, authority, environment, boundary, or user-method mismatch.",
             rule:
               "The classifier chooses the smallest responsible repair layer.",
           },
@@ -1001,7 +1102,7 @@ export function createScriptLegend(): ScriptLegend {
             rank: "SEQ-J.3",
             name: "Replay Gate",
             meaning:
-              "Rerun the same contract after repair through the failure detector and compare the observed effect again.",
+              "Rerun the same Execution Contract after repair through the failure detector and compare the observed effect again.",
             rule:
               "Do not promote until replay or fixtures prove the intended effect.",
           },
@@ -1085,7 +1186,7 @@ export function createScriptLegend(): ScriptLegend {
       {
         term: "User",
         plain_name: "Human Operator",
-        meaning: "A person using VS Code, command palette, chat, or a local tool.",
+        meaning: "A person using an interactive host, host command, operator interface, or local tool.",
         deterministic_use:
           "Use User only for human-originated input or human-visible output.",
       },
@@ -1123,8 +1224,10 @@ export function createScriptLegend(): ScriptLegend {
       "The Script Legend is authoritative when terms conflict in UI text, registry text, or agent prompts.",
       "Generated agent context should cite this legend instead of redefining terminology ad hoc.",
       "A script-gap draft is a launch point for authorized exploratory build, build trace, script distillation, replay, and ratification; it is not a terminal state.",
-      "AI may build the first working solution inside an approved intent contract; deterministic guarantees apply to the distilled script replay.",
-      "A script is not good or bad; it is compared against its intended effect and classified as functional, mismatched, blocked, or superseded for that contract.",
+      "AI may build the first working solution only inside a ratified Execution Contract; deterministic guarantees apply to the distilled script replay.",
+      "A script is not good or bad; it is compared against its intended effect and classified as functional, mismatched, blocked, or superseded for that Execution Contract.",
+      "An intake record, intake envelope, planning artifact, runtime session, host command, or UI state never grants execution authority.",
+      "The provider-neutral core imports no VS Code APIs; host adapters depend on the core, and the core does not depend on adapters.",
       "The failure detector is the modification-loop gate: it classifies the gap, flags the repair layer, and every repair rerun returns through the detector until functional, blocked, or superseded.",
       "Every resolved turn should ask what was missing, ambiguous, or manually inferred and repair the right factory layer.",
       "Execution Sequence ranks are canonical; use SEQ-A through SEQ-L to decide hierarchy before choosing a script route.",
@@ -1225,7 +1328,7 @@ ${legend.deterministic_rules.map((rule) => `- ${rule}`).join("\n")}
 export function writeScriptLegend(workspaceRoot: string): string {
   const target = scriptLegendPath(workspaceRoot);
   fs.mkdirSync(path.dirname(target), { recursive: true });
-  fs.writeFileSync(target, `${renderScriptLegendMarkdown()}\n`, "utf8");
+  fs.writeFileSync(target, `${renderScriptLegendMarkdown().trimEnd()}\n`, "utf8");
   return target;
 }
 

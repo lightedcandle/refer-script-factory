@@ -39,7 +39,7 @@ export function createOrchestratorPrompt(input: {
   previousEnvelope?: ReferResolutionEnvelope;
 }): string {
   const rawSection = input.rawInput
-    ? `\nRaw input fallback is now authorized for this pass. Use it only to fill missing fields from the prior compact contract.\n\nRAW_INPUT:\n${input.rawInput}`
+    ? `\nRaw input fallback is now authorized for this pass. Use it only to fill missing fields from the prior intake envelope.\n\nRAW_INPUT:\n${input.rawInput}`
     : "";
   const previousSection = input.previousEnvelope
     ? `\nPrevious resolution envelope:\n${JSON.stringify(input.previousEnvelope, null, 2)}`
@@ -48,11 +48,11 @@ export function createOrchestratorPrompt(input: {
   return `You are the REFER bounded orchestrator. Resolve the request only through the programmed states.
 
 Rules:
-- Prefer the compact contract over raw input.
-- If a script route is selected, the AI watcher executes and inspects it; submit expected/observed results to compact_contract.routing.execution_gate.
+- Prefer the intake envelope over raw input.
+- If a script route is selected, the AI watcher executes and inspects it; submit expected/observed results to the legacy envelope's routing.execution_gate.
 - Do not create selector/resolver scripts for script selection. Use existing registry, readiness records, lineage, and flags.
 - A functional gate verdict means the script is ready for future script-first use; mismatches are AI repair work, not another routing script.
-- If the compact contract is enough, answer with resolution_state "resolved_as_is".
+- If the intake envelope is enough, answer with resolution_state "resolved_as_is".
 - If required fields are missing and raw_input_ref may clarify them, answer "needs_more_info" with missing_fields.
 - If no existing route/script can do the work, answer "needs_script" with script_gap.
 - If the request is unsafe or outside scope, answer "blocked_by_policy_or_scope" with blocked_reason.
@@ -68,7 +68,7 @@ Rules:
 }
 
 Pass: ${input.pass}
-Compact contract:
+Intake envelope (legacy compatibility fields; not execution authority):
 ${JSON.stringify(input.contract, null, 2)}${previousSection}${rawSection}`;
 }
 
@@ -103,7 +103,7 @@ export function decideReferNextAction(input: {
       return {
         next_action: "return_final",
         terminal: true,
-        reason: "The compact contract resolved the request.",
+        reason: "The intake envelope resolved the request.",
       };
     case "needs_more_info":
       if (

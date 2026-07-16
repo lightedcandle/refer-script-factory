@@ -3,7 +3,7 @@
  * Domain Script Registry
  *
  * Builds a domain-scoped index of scripts that agents should check before
- * improvising. This complements the TypeScript extension registry in
+ * improvising. This complements the provider-neutral TypeScript source registry in
  * src/contracts/scriptFactory.ts; it tracks operational scripts for the active
  * chat surface, hive, and Zo bootstrap sibling.
  */
@@ -17,7 +17,7 @@ const DOMAINS = [
   {
     id: "refer-script-factory",
     label: "REFER Script Factory",
-    scope: "Codex/VS Code source, provider-neutral doctrine, extension scripts.",
+    scope: "Provider-neutral TypeScript source and doctrine, plus current host-adapter registrations.",
     authority: "src/contracts/scriptFactory.ts",
     check_first: ["src/contracts/scriptFactory.ts", "docs/script-legend.md", "package.json"],
     scripts: [
@@ -25,7 +25,7 @@ const DOMAINS = [
         id: "refer.extension.script-registry",
         command: "source registry",
         entrypoint: "src/contracts/scriptFactory.ts",
-        purpose: "Authoritative VS Code extension and provider-neutral script contract registry.",
+        purpose: "Authoritative provider-neutral script contract registry with accurately labeled current host-adapter entries.",
         status: "active",
       },
     ],
@@ -134,7 +134,7 @@ const DOMAINS = [
         id: "hive.build-intake",
         command: "npm run hive:build-intake",
         entrypoint: "scripts/hive/hive-build-intake.mjs",
-        purpose: "Emit and dispatch governed build-intake contracts so Zo route changes originate from typed intake.",
+        purpose: "Emit and dispatch governed build-intake envelopes so Zo route changes originate from typed intake evidence.",
         status: "active",
       },
       {

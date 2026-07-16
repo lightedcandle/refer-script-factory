@@ -38,13 +38,13 @@ export class ContractChatPanel implements vscode.WebviewViewProvider {
       const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
       const session = workspaceRoot ? readLatestReferChatSession(workspaceRoot) : null;
       if (!workspaceRoot || !session) {
-        await vscode.window.showWarningMessage("No REFER contract chat session exists yet.");
+        await vscode.window.showWarningMessage("No REFER legacy intake session exists yet.");
         return;
       }
 
       const filePath = referChatSessionPath(workspaceRoot, session.session_id);
       if (!fs.existsSync(filePath)) {
-        await vscode.window.showWarningMessage("REFER contract chat session file is missing.");
+        await vscode.window.showWarningMessage("REFER legacy intake-session file is missing.");
         return;
       }
 
@@ -95,7 +95,7 @@ function renderReader(
       </div>
     </details>
     <div class="reader-separator" aria-hidden="true"></div>
-    <section class="process-list" aria-label="Contract chat turns">
+    <section class="process-list" aria-label="Legacy intake-session turns">
       ${renderThinkingState(mode)}
       ${session ? renderTurns(session) : renderEmptyState()}
     </section>
@@ -122,10 +122,10 @@ function renderModeLights(mode: ReferChatModeState): string {
   const idleActive = mode.active_contract_mode === "idle";
   const tempActive = mode.active_contract_mode === "temporary";
   const persistentActive = mode.active_contract_mode === "persistent";
-  return `<section class="mode-lights" aria-label="Contract mode">
+  return `<section class="mode-lights" aria-label="Legacy intake-session tracking">
   ${modeLight("Idle", idleActive, "idle")}
-  ${modeLight("Temp", tempActive, "temporary")}
-  ${modeLight("On", persistentActive, "persistent")}
+  ${modeLight("Turn", tempActive, "temporary")}
+  ${modeLight("Persist", persistentActive, "persistent")}
 </section>`;
 }
 
@@ -149,7 +149,7 @@ function renderThinkingState(mode: ReferChatModeState): string {
   </div>
   <div>
     <div class="process-name">Thinking</div>
-    <div class="summary">REFER is resolving the active contract turn.</div>
+    <div class="summary">REFER is resolving the active intake-session turn.</div>
   </div>
 </article>`;
 }
@@ -185,10 +185,10 @@ function renderTurns(session: ReferChatSession): string {
       <span class="chat-speaker">💻 Details</span>
       <span class="chat-preview">${escapeHtml(turn.turn_id)}</span>
     </summary>
-    <div class="process-meta contract-meta" aria-label="Contract turn metadata">
+    <div class="process-meta contract-meta" aria-label="Intake-session turn metadata">
       <div><span>Turn</span><code>${escapeHtml(turn.turn_id)}</code></div>
       <div><span>Time</span><code>${escapeHtml(turn.created_at)}</code></div>
-      <div><span>Contract</span><code>${escapeHtml(turn.contract_id)}</code></div>
+      <div><span>Intake envelope</span><code>${escapeHtml(turn.contract_id)}</code></div>
       <div><span>Raw</span><code>${escapeHtml(turn.raw_input_ref)}</code></div>
     </div>
     ${turn.progress.length > 0 ? `<pre>${escapeHtml(turn.progress.join("\n"))}</pre>` : ""}
@@ -227,10 +227,10 @@ function formatTurnTimestamp(value: string): string {
 function renderEmptyState(): string {
   return `<article class="process-row">
   <div class="process-head">
-    <div class="process-name">No contract turns yet</div>
+    <div class="process-name">No legacy intake-session turns yet</div>
     <span class="badge">reader</span>
   </div>
-  <div class="process-message">Use native VS Code chat with @refer. This panel reads the saved contract-track transcript.</div>
+  <div class="process-message">Use the Script Factory VS Code Chat adapter with @refer. This compatibility panel reads the saved legacy intake-session transcript; it does not show execution authority.</div>
 </article>`;
 }
 

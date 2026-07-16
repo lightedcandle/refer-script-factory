@@ -77,13 +77,13 @@ export async function runReferOrchestratorPrompt(
       contractId: record.contract.contract_id,
       phase: "intake",
       startedAt,
-      message: "REFER chat intake stored raw prompt and compact contract.",
+      message: "REFER chat intake stored the raw prompt and intake envelope.",
       outputTarget: record.contract.raw_input_ref,
     }),
     input.workspaceRoot,
   );
   reportProgress("REFER stored the raw prompt and started the bounded resolution loop.");
-  reportProgress(`REFER model provider: ${input.model.label}.`);
+  reportProgress(`REFER host-provided model: ${input.model.label}.`);
 
   try {
     appendProcessEvent(
@@ -91,7 +91,7 @@ export async function runReferOrchestratorPrompt(
         contractId: record.contract.contract_id,
         phase: "provider",
         startedAt: new Date(),
-        message: "REFER selected model provider.",
+        message: "REFER selected the host-provided model.",
         providerLabel: input.model.label,
       }),
       input.workspaceRoot,
@@ -201,17 +201,17 @@ function handleControlPrompt(prompt: string, workspaceRoot: string): string | nu
   const normalized = prompt.trim().toLowerCase();
   if (normalized === "on") {
     setPersistentContractMode(workspaceRoot, true);
-    return "REFER persistent contract mode is on.";
+    return "REFER legacy intake-session tracking is on. This is not execution authority.";
   }
 
   if (normalized === "off") {
     setPersistentContractMode(workspaceRoot, false);
-    return "REFER persistent contract mode is off.";
+    return "REFER legacy intake-session tracking is off.";
   }
 
   if (normalized === "status") {
     const state = readReferChatModeState(workspaceRoot);
-    return `REFER contract mode is ${state.persistent_contract_mode ? "on" : "off"}. Active state: ${state.active_contract_mode}.`;
+    return `REFER legacy intake-session tracking is ${state.persistent_contract_mode ? "on" : "off"}. Active runtime state: ${state.active_contract_mode}. This is not execution authority.`;
   }
 
   return null;

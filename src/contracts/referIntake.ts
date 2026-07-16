@@ -2,6 +2,11 @@ import * as crypto from "node:crypto";
 import * as fs from "node:fs";
 import * as path from "node:path";
 
+/**
+ * Legacy compatibility name for the serialized intake envelope.
+ * This type and its contract-shaped field names do not represent or authorize a
+ * ratified REFER Execution Contract. Renaming the API is deferred.
+ */
 export interface ReferIntakeContract {
   contract_id: string;
   created_at: string;
@@ -30,6 +35,7 @@ export interface ReferIntakeContract {
 }
 
 export interface ReferIntakeRecord {
+  /** Legacy compatibility field containing the non-authorizing intake envelope. */
   contract: ReferIntakeContract;
   raw_input: string;
 }
@@ -63,12 +69,12 @@ export function createReferIntakeRecord(
         station_route: [
           "REFER Intake",
           "Prompt Wash",
-          "Compact Contract",
-          "Selected Language Model",
+          "Intake Envelope",
+          "Host-Provided Model",
         ],
         model_prompt_policy: "send_compact_contract_only",
         fallback_rule:
-          "Use raw_input_ref only when the compact contract is ambiguous or insufficient.",
+          "Use raw_input_ref only when the intake envelope is ambiguous or insufficient.",
         execution_gate: {
           gate_id: "failure_detector",
           command: "npm run failure:detect",
@@ -99,7 +105,7 @@ export function writeReferIntakeRecord(
 }
 
 export function createModelPrompt(contract: ReferIntakeContract): string {
-  return `You are executing a REFER compact contract. Do not ask for or infer from the raw human prompt unless the compact contract is insufficient. Use the raw_input_ref only as an audit/fallback pointer.
+  return `You are processing a REFER intake envelope stored under legacy compatibility field names. This envelope is not execution authority. Do not ask for or infer from the raw human prompt unless the intake envelope is insufficient. Use the raw_input_ref only as an audit/fallback pointer.
 
 ${JSON.stringify(contract, null, 2)}`;
 }

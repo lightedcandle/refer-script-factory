@@ -212,7 +212,7 @@ function scanCockpitViewLabelGaps(workspaceRoot: string): FactoryGap[] {
   };
   const legend = createScriptLegend();
   const governedViewLabels = new Set(
-    legend.taxonomy.find((category) => category.name === "Cockpit View Label")?.allowed_values ?? [],
+    legend.taxonomy.find((category) => category.name === "Operator Interface Label")?.allowed_values ?? [],
   );
   const viewLabels = Object.values(packageJson.contributes?.views ?? {})
     .flat()
@@ -225,8 +225,8 @@ function scanCockpitViewLabelGaps(workspaceRoot: string): FactoryGap[] {
       id: `terminology.unlisted-cockpit-view-label.${slug(label)}`,
       severity: "error",
       category: "terminology",
-      title: `Cockpit view label is not in legend: ${label}`,
-      detail: `${label} appears in package.json contributes.views but is not listed in the Script Legend Cockpit View Label taxonomy.`,
+      title: `Operator interface label is not in legend: ${label}`,
+      detail: `${label} appears in package.json contributes.views but is not listed in the Script Legend Operator Interface Label taxonomy.`,
       repair_hint: "Add the view label to src/contracts/scriptLegend.ts or rename package.json to an existing governed label.",
     }));
 }

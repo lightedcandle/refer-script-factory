@@ -6,7 +6,7 @@ Script lookup is domain-scoped.
 
 Before a chat instance or agent performs direct work, it should identify the domain and check that domain's registry/check-first surfaces:
 
-- `refer-script-factory`: Codex/VS Code source and provider-neutral doctrine.
+- `refer-script-factory`: provider-neutral TypeScript source and doctrine, plus current host-adapter registrations.
 - `chat-surface`: current Codex chat, token useage, context reset, and script activity logging.
 - `hive`: node identity, heartbeat, build plan, and ratification state.
 - `refer-zo-bootstrap`: Zo computer bootstrap, file/API tandem, compression, dispatch, talkback, datasets, and live Zo ratification.
@@ -36,7 +36,7 @@ npm run scripts:registry
 
 ## Authority Split
 
-The TypeScript source registry remains authoritative for the VS Code extension and provider-neutral script contracts:
+The TypeScript source registry remains authoritative for provider-neutral script contracts and accurately labeled current host-adapter entries:
 
 ```text
 src/contracts/scriptFactory.ts

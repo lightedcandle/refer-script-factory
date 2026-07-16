@@ -6,6 +6,35 @@ In REFER language, the terms must stay separate:
 - The `Script Factory` is the organized system that creates, manages, and runs script forges.
 - The `Factory System` is the complete network of coordinated factories across domains.
 
+## Primary Identity
+
+The Script Factory is the provider-neutral system that converts ratified REFER
+Execution Contracts and verified methods into bounded script plans, artifacts,
+verification evidence, and reusable registrations.
+
+Execution authority always comes from a ratified REFER Execution Contract. An
+intake record preserves raw intent, an intake envelope normalizes that intent, a
+planning artifact describes possible work, and a runtime session records one
+host interaction. None of those artifacts or the runtime session grants
+execution authority.
+
+## Host And Adapter Boundary
+
+Core doctrine uses these host-neutral terms:
+
+- `interactive host`: the chat, terminal, editor, or other environment where an operator begins work;
+- `host command`: an explicit action exposed by an interactive host;
+- `operator interface`: the human-facing view of factory state and controls;
+- `target workspace`: the repository or filesystem boundary named by the active authority;
+- `host-provided model`: a model selected or supplied by the current host;
+- `event/output sink`: the destination for process events, evidence, artifacts, or user-visible output;
+- `host adapter`: the boundary that translates a host's inputs and outputs into provider-neutral core packets.
+
+VS Code, CLI, HTTP, MCP, and future hosts are adapters or surfaces. The intended
+dependency law is one-way: the provider-neutral core imports no VS Code APIs,
+and host adapters depend on the core. The current repository has not completed
+that extraction; this doctrine defines the boundary without claiming otherwise.
+
 At the fundamental level, a forge is the conversion layer. It takes what the system already has access to and turns it into the power, structure, or action the rest of the system can use.
 
 A forge is not the identity of the system. It is the productive conversion unit inside the system.
@@ -23,15 +52,15 @@ Input
 In REFER:
 
 ```text
-user intent + repo context
+ratified Execution Contract + target workspace context
 -> script forges and orchestration
 -> working artifacts/actions
--> status and history
+-> verification evidence + reusable registrations
 ```
 
 ## Local-First Maturity
 
-The job of REFER is to become increasingly alive locally. In practical terms, that means each chat turn should feed the Script Factory enough information to make the next similar turn less dependent on a remote LLM.
+The job of REFER is to become increasingly alive locally. In practical terms, that means each interactive-host turn should feed the Script Factory enough information to make the next similar turn less dependent on a remote LLM.
 
 Every response should leave behind at least one answer to this question:
 
@@ -44,7 +73,7 @@ The answer can become a script, registry entry, scan artifact, context rule, pro
 The maturity loop:
 
 ```text
-chat response
+interactive-host response
 -> identify repeatable local resolution path
 -> encode as forge/script/context/artifact
 -> update registry or doctrine
@@ -74,7 +103,7 @@ The factory should treat these as healable gaps:
 The self-healing loop:
 
 ```text
-chat/request happens
+request happens
 -> REFER resolves what it can
 -> REFER detects gaps
 -> REFER classifies each gap
@@ -87,33 +116,33 @@ chat/request happens
 ## Script Effect Determinism
 
 In the Script Factory, a script is not judged as good or bad. It is compared
-against the intended effect declared by the contract.
+against the intended effect declared by the ratified Execution Contract.
 
 The effect loop:
 
 ```text
-intent contract
+ratified Execution Contract
 -> script attempt
 -> observed effect
 -> compare observed effect to intended effect
 ```
 
 If the observed effect matches the intended effect inside the allowed boundary,
-the script is functional for that contract.
+the script is functional for that Execution Contract.
 
 If the observed effect does not match, the script enters a modification loop:
 
 ```text
 effect mismatch
 -> classify mismatch
-   contract unclear
+   Execution Contract unclear
    input missing
    script logic mismatch
    boundary conflict
    environment missing
    verification missing
 -> apply smallest repair
--> rerun the same contract
+-> rerun the same Execution Contract
 -> compare effect again
 ```
 
@@ -121,7 +150,7 @@ The loop continues until one of these states is reached:
 
 - `functional`: the intended effect is achieved and verified.
 - `blocked`: the loop cannot continue without missing authority, input, environment, or permission.
-- `superseded`: a different script or contract now owns the intended effect.
+- `superseded`: a different script or Execution Contract now owns the intended effect.
 
 This principle replaces moral or stylistic judgment of scripts. Failure is not a
 terminal identity. It is an unfinished loop.
@@ -138,7 +167,7 @@ blocked, or superseded.
 A clean Script Factory should not ship every REFER, provider, domain, or user
 preference law as always-active force. The shipped kernel is limited to rules
 required for Smart Intake and the Script Factory to operate deterministically:
-contract intake, bounded clarification, registry lookup, effect comparison,
+intake-record handling, bounded clarification, registry lookup, effect comparison,
 modification loops, evidence, lineage, and safe execution.
 
 Users do not label laws as unscripted, dormant, domain, project, or user method.
@@ -158,7 +187,7 @@ Activation path:
 
 ```text
 rule document, correction, preference, or prompt
--> Smart Intake contract
+-> Smart Intake envelope
 -> doctrine compiler
 -> candidate script/validator/resolver
 -> fixture and modification loop
@@ -222,7 +251,7 @@ allow an authorized AI build lane to explore and produce the first working
 artifact, then capture the working path as factory knowledge:
 
 ```text
-intent contract
+ratified Execution Contract
 -> script registry miss
 -> script-gap draft
 -> AI exploratory build
@@ -235,8 +264,8 @@ intent contract
 ```
 
 The draft is a birth record for a future forge, not a stop sign. The AI build
-lane may use judgment, iteration, and tool calls within the approved intent
-contract. The deterministic requirement applies to the canonicalized replay:
+lane may use judgment, iteration, and tool calls within the ratified Execution
+Contract. The deterministic requirement applies to the canonicalized replay:
 inputs, outputs, side effects, verification, and status must become explicit
 before the script is marked active or ratified.
 
@@ -247,7 +276,7 @@ substitute for satisfying the current user request.
 
 The factory should preserve the AI's successful path in durable evidence:
 
-- intent contract;
+- ratified Execution Contract;
 - files, routes, datasets, or artifacts changed;
 - errors and fixes encountered;
 - verification commands or live checks;
@@ -269,7 +298,7 @@ If the answer reveals a gap, the preferred repair order is:
 1. Update terminology or doctrine when the gap is conceptual.
 2. Update the script registry when the gap is about available capabilities.
 3. For missing repeatable capability, let the authorized AI build the first
-   working solution from the intent contract and record a build trace.
+   working solution from the ratified Execution Contract and record a build trace.
 4. Distill the working trace into a forge/script and replay it.
 5. Add or refresh scan/context artifacts when the gap is missing knowledge.
 6. Add tests when the gap could regress.
@@ -282,7 +311,7 @@ Use these names consistently:
 
 - `Forge`: a bounded conversion unit with inputs, transformation, outputs, status, and feedback.
 - `Script Forge`: a forge that performs one script-specific conversion.
-- `Script Factory`: the workspace and governance layer for script forges, orchestration, registry, scan tools, status, and history.
+- `Script Factory`: the provider-neutral system and governance layer for script forges, orchestration, registry, scan tools, status, and history.
 - `Factory System`: the larger body of factories across domains, such as Script Factory, Context Factory, Model Factory, Artifact Factory, and future factories.
 
 Do not use `factory` when the thing being described is only one conversion unit. Use `forge`.
@@ -300,7 +329,7 @@ The factory layer:
 - learns from feedback;
 - improves future runs.
 
-For REFER, the Script Factory is the governance body for script forges. It converts prompts, context, codebase structure, and script definitions into durable work by routing them through inspectable conversion units.
+For REFER, the Script Factory is the governance body for script forges. It converts ratified Execution Contracts, verified methods, target-workspace context, and script definitions into bounded artifacts, verification evidence, and reusable registrations through inspectable conversion units.
 
 The maturity goal is local-first production: the factory should increasingly convert local codebase knowledge, local artifacts, and local model capability into useful output without depending on remote AI for every step.
 

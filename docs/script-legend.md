@@ -55,8 +55,8 @@ Give humans, agents, and local LLMs one deterministic language for scripts, scri
 
 ### Intended Effect
 - Plain English: Expected Result
-- Meaning: The contract-declared output, side effect, or state change a script is supposed to produce.
-- Deterministic use: Use it as the comparison target for script runs. A script is evaluated by whether its observed effect matches this contract.
+- Meaning: The output, side effect, or state change a ratified Execution Contract says a script should produce.
+- Deterministic use: Use it as the comparison target for authorized script runs. A script is evaluated by whether its observed effect matches that Execution Contract.
 
 ### Observed Effect
 - Plain English: Actual Result
@@ -70,13 +70,13 @@ Give humans, agents, and local LLMs one deterministic language for scripts, scri
 
 ### Modification Loop
 - Plain English: Repair And Rerun Loop
-- Meaning: The repeated process of classifying an effect mismatch, applying the smallest repair, rerunning the same contract, and comparing effects again.
-- Deterministic use: Use it whenever a script has not yet achieved its intended effect and is not blocked or superseded.
+- Meaning: The repeated process where the failure detector classifies an effect mismatch, a repair executor applies the smallest named repair, and the same Execution Contract reruns through the detector until functional, blocked, or superseded.
+- Deterministic use: Use it whenever a script has not achieved its intended effect. The detector is the loop gate; repair executors consume detector flags and must return reruns to the detector before promotion.
 
 ### Functional Script
 - Plain English: Effect Achieved
-- Meaning: A script that achieved the intended effect for the declared contract and passed the required checks.
-- Deterministic use: Use it as an effect-state label after evidence proves the script achieved the contract; do not use it as a permanent guarantee for all future contracts.
+- Meaning: A script that achieved the intended effect for the ratified Execution Contract and passed the required checks.
+- Deterministic use: Use it as an effect-state label after evidence proves the script achieved that Execution Contract; do not use it as a permanent guarantee for all future Execution Contracts.
 
 ### Kernel Law
 - Plain English: Always-On Factory Rule
@@ -213,15 +213,80 @@ Give humans, agents, and local LLMs one deterministic language for scripts, scri
 - Meaning: The governed layer that classifies how work enters REFER.
 - Deterministic use: Use it only for request-type entries such as chat, HTTP, or command requests.
 
+### Interactive Host
+- Plain English: Operator Entry Environment
+- Meaning: The chat, terminal, editor, or other environment where an operator begins work.
+- Deterministic use: Use it in provider-neutral descriptions. Name VS Code, CLI, HTTP, MCP, or another product only when describing its host adapter.
+
+### Host Command
+- Plain English: Explicit Host Action
+- Meaning: An explicit action exposed by an interactive host.
+- Deterministic use: Use it for core command descriptions; use Command Palette only for the current VS Code adapter surface.
+
+### Operator Interface
+- Plain English: Human-Facing Factory Controls
+- Meaning: The human-facing view of factory state, evidence, and controls.
+- Deterministic use: Use it in core doctrine instead of cockpit or webview. Name a webview only when documenting the current VS Code adapter implementation.
+
+### Target Workspace
+- Plain English: Authorized Repository Boundary
+- Meaning: The repository or filesystem boundary named by the active authority and selected for work.
+- Deterministic use: Use it in core descriptions instead of workspace folder; adapters translate their local workspace concept into this boundary.
+
+### Host-Provided Model
+- Plain English: Model Supplied By The Host
+- Meaning: A language model selected or supplied by the current interactive host.
+- Deterministic use: Use it in provider-neutral orchestration descriptions instead of VS Code selected model or another provider-specific selector.
+
+### Event/Output Sink
+- Plain English: Result Destination
+- Meaning: The destination for process events, verification evidence, artifacts, or user-visible output.
+- Deterministic use: Use it when the core emits output without assuming a chat pane, terminal, file, server response, or provider API.
+
+### Host Adapter
+- Plain English: Host Translation Boundary
+- Meaning: The boundary that translates host input, model access, workspace access, events, and output rendering into provider-neutral core packets.
+- Deterministic use: Use it for VS Code, CLI, HTTP, MCP, and future hosts. Adapters depend on the provider-neutral core; the core does not depend on adapters.
+
+### Intake Record
+- Plain English: Preserved Raw Request
+- Meaning: Raw user intent and intake metadata preserved before normalization.
+- Deterministic use: Use it for provenance and audit. It never grants execution authority.
+
+### Intake Envelope
+- Plain English: Normalized Request Packet
+- Meaning: Compact normalized intake data used for routing, clarification, or model input.
+- Deterministic use: Use it for pre-execution request processing. It never grants execution authority.
+
+### Planning Artifact
+- Plain English: Description Of Possible Work
+- Meaning: A plan, Send Contract draft, Script Blueprint, or similar artifact that describes possible work.
+- Deterministic use: Use it for planning output. It never grants execution authority.
+
+### Execution Contract
+- Plain English: Ratified REFER Execution Authority
+- Meaning: A ratified REFER instruction packet naming scope, governing references, constraints, acceptance criteria, and verification.
+- Deterministic use: Reserve this exact term for ratified REFER authority. Do not use it for intake data, planning artifacts, runtime sessions, or UI modes.
+
+### Execution Authorization
+- Plain English: Permission To Execute
+- Meaning: The authority conferred only by a ratified Execution Contract and limited by its independent permission gates.
+- Deterministic use: Use it only after ratification. A route, model, host command, runtime session, or approval-looking UI state does not create it.
+
+### Runtime Session
+- Plain English: One Host Interaction
+- Meaning: One interactive-host run and its transient or persisted intake, progress, and output state.
+- Deterministic use: Use it for chat/session tracking. Temporary or persistent legacy session state never grants execution authority.
+
 ### Runtime Entrypoints
 - Plain English: Runnable Entry Paths
 - Meaning: The governed layer for ways work starts running through REFER.
 - Deterministic use: Use it for @refer chat, local HTTP, and explicit command starts that route into scripts.
 
 ### Command Surface
-- Plain English: VS Code Command Layer
-- Meaning: The governed layer for actions exposed through the VS Code Command Palette.
-- Deterministic use: Use it for vscode-command entries and do not use Command Prompts as a competing label.
+- Plain English: Host Command Layer
+- Meaning: The governed layer for actions exposed through explicit host commands.
+- Deterministic use: Use it for host-command entries. The current vscode-command entries are adapter-specific implementations of this surface.
 
 ### HTTP Endpoint Surface
 - Plain English: Local Server Route Layer
@@ -236,7 +301,7 @@ Give humans, agents, and local LLMs one deterministic language for scripts, scri
 ### Verification
 - Plain English: Quality Gate
 - Meaning: Checks that factory changes compile, pass tests, and satisfy acceptance criteria.
-- Deterministic use: Use it for compile, test, verify, and contract acceptance checks.
+- Deterministic use: Use it for compile, test, verify, and Execution Contract acceptance checks.
 
 ### Process Events
 - Plain English: Script Run Records
@@ -256,7 +321,7 @@ Give humans, agents, and local LLMs one deterministic language for scripts, scri
 ### User Prompt
 - Plain English: Human Request Text
 - Meaning: The text submitted by the user through chat, HTTP, or a command-triggered flow.
-- Deterministic use: Use it only for human-authored request input before it is converted into a contract or script packet.
+- Deterministic use: Use it only for human-authored request input before it is preserved as an intake record and normalized into an intake envelope.
 
 ### Model
 - Plain English: LLM Runtime
@@ -341,16 +406,16 @@ Give humans, agents, and local LLMs one deterministic language for scripts, scri
 - Rule: Conceptual UI layer labels must come from this list. If a new layer label appears in a panel, add it here or rename it to an existing governed label.
 
 ### Registered Script Label
-- Allowed values: @refer Chat Request, HTTP Request, Command Request, @refer Chat Pipeline, @refer Participant, REFER Orchestrator, Resolution Loop, Context Picker, Scan Codebase, Script Legend, Scriptographer, Scan Factory Gaps, Server Chat Route, Server Health Route, Server Targets Route, Initialize Repo, Emit Send Contract, Emit Script Blueprint, Emit Script DNA Seed, Refresh Codebases, Scan Codebase, View Codebase Tree, Scan Factory Gaps, View Factory Gaps, Run Scriptographer, View Scriptographer Report, Check For Updates, Apply Update, Contract Mode On, Contract Mode Off, Toggle Contract Mode, Compile, Test, Verify, REFER Server
+- Allowed values: @refer Chat Request, HTTP Request, Command Request, @refer Chat Pipeline, Script Factory VS Code Chat Adapter, REFER Orchestrator, Resolution Loop, Context Picker, Scan Codebase, Script Legend, Scriptographer, Scan Factory Gaps, Server Chat Route, Server Health Route, Server Targets Route, Initialize Repo, Emit Send Contract Planning Draft, Emit Script Blueprint, Emit Script DNA Seed, Refresh Codebases, Scan Codebase, View Codebase Tree, Scan Factory Gaps, View Factory Gaps, Run Scriptographer, View Scriptographer Report, Check For Updates, Apply Update, Legacy Intake Session On, Legacy Intake Session Off, Toggle Legacy Intake Session, Compile, Test, Verify, Authority Resolver, Doctrine Compiler, Scriptionary Term, REFER Server
 - Rule: Script card labels must come from the Script Factory registry. Do not invent parallel names in UI panels, status messages, or generated context.
 
 ### Script Action Label
 - Allowed values: Run Scan, View Treefile, Run Gap Scan, View Gap Report, Run Scriptographer, View Scriptographer Report
 - Rule: Script action buttons must use these labels or a label from Registered Script Label. Add a new action label here before showing it in UI.
 
-### Cockpit View Label
-- Allowed values: REFER, Refer Library, Refer Factory System, Factory System, Dashboard, @Refer Chat History, Process, Bootstrap Library
-- Rule: VS Code activity-bar and webview names must use these governed labels or be added here before package.json exposes them.
+### Operator Interface Label
+- Allowed values: REFER, Refer Library, Refer Factory System, Script Factory, Factory System, Dashboard, @Refer Chat History, Process, Bootstrap Library
+- Rule: Human-facing factory view names must use these governed labels or be added here before a host adapter exposes them.
 
 ## Field Definitions
 ### script_id
@@ -410,7 +475,7 @@ Give humans, agents, and local LLMs one deterministic language for scripts, scri
 
 ### vscode-command
 - Allowed kinds: Single Script
-- Rule: Use for command palette actions. They may call orchestration scripts but should be represented as command surfaces.
+- Rule: Use for current VS Code adapter Command Palette actions. They may call orchestration scripts but should be represented as adapter-specific command surfaces.
 
 ### npm
 - Allowed kinds: Single Script, Multi Script
@@ -496,8 +561,8 @@ Give humans, agents, and local LLMs one deterministic language for scripts, scri
 - Rule: Kernel rules execute before user, project, provider, or domain rules.
 
 ### SEQ-B Request Intake
-- Meaning: The user prompt, document, command, or API request is converted into a compact contract.
-- Rule: No downstream script should run until the request has a contract or a documented block.
+- Meaning: The user prompt, document, host command, or API request is preserved as an intake record and normalized into an intake envelope.
+- Rule: Intake may route or clarify, but no mutating script may run until a ratified Execution Contract authorizes it or a documented block stops it.
 
 ### SEQ-C Clarification Resolver
 - Meaning: Ambiguity is reduced with bounded choices or a deterministic route.
@@ -512,7 +577,7 @@ Give humans, agents, and local LLMs one deterministic language for scripts, scri
 - Rule: Strategies must state their activation trigger, sequence ranks, and success evidence.
 
 #### SEQ-E.1 Condition Read
-- Meaning: Read the contract, registry, active rule packs, locks, and evidence needed to choose a route.
+- Meaning: Read the ratified Execution Contract, registry, active rule packs, locks, and evidence needed to choose a route.
 - Rule: Conditions must come from measured input or durable artifacts, not speculation.
 
 #### SEQ-E.2 Chain Decision
@@ -528,7 +593,7 @@ Give humans, agents, and local LLMs one deterministic language for scripts, scri
 - Rule: Generated candidates remain inactive until fixtures and effect checks pass.
 
 ### SEQ-G Script Execution
-- Meaning: The selected registered script or candidate script runs against the contract.
+- Meaning: The selected registered script or candidate script runs against the ratified Execution Contract.
 - Rule: Script execution must record process status and declared intended effect.
 
 ### SEQ-H Evidence Capture
@@ -540,11 +605,11 @@ Give humans, agents, and local LLMs one deterministic language for scripts, scri
 - Rule: Classify as functional, mismatched, blocked, superseded, or unverified.
 
 ### SEQ-J Modification Loop
-- Meaning: Mismatches repair the smallest responsible layer and rerun the same contract.
-- Rule: Loop until functional, blocked, or superseded; repeated pattern mismatches flag the forge.
+- Meaning: The failure detector flags the responsible layer; repair executors apply that repair and rerun the same Execution Contract back through the detector.
+- Rule: The detector is the automatic loop gate: functional may continue, mismatched repairs and reruns, blocked waits for missing inputs, and superseded points to the new owner.
 
 #### SEQ-J.1 Mismatch Classifier
-- Meaning: Classify the mismatch as contract, resolver, script, forge, schema, fixture, authority, environment, boundary, or user-method mismatch.
+- Meaning: Classify the mismatch as Execution Contract, resolver, script, forge, schema, fixture, authority, environment, boundary, or user-method mismatch.
 - Rule: The classifier chooses the smallest responsible repair layer.
 
 #### SEQ-J.2 Repair Action
@@ -552,7 +617,7 @@ Give humans, agents, and local LLMs one deterministic language for scripts, scri
 - Rule: Repair actions must preserve rollback or archive evidence for destructive changes.
 
 #### SEQ-J.3 Replay Gate
-- Meaning: Rerun the same contract after repair and compare the observed effect again.
+- Meaning: Rerun the same Execution Contract after repair through the failure detector and compare the observed effect again.
 - Rule: Do not promote until replay or fixtures prove the intended effect.
 
 ### SEQ-K Promotion And Registration
@@ -604,7 +669,7 @@ SEQ-J.2 action = delete when a candidate script is superseded; archive the candi
 
 ### User
 - Plain English: Human Operator
-- Meaning: A person using VS Code, command palette, chat, or a local tool.
+- Meaning: A person using an interactive host, host command, operator interface, or local tool.
 - Deterministic use: Use User only for human-originated input or human-visible output.
 
 ### Agent
@@ -634,9 +699,11 @@ SEQ-J.2 action = delete when a candidate script is superseded; archive the candi
 - The Script Legend is authoritative when terms conflict in UI text, registry text, or agent prompts.
 - Generated agent context should cite this legend instead of redefining terminology ad hoc.
 - A script-gap draft is a launch point for authorized exploratory build, build trace, script distillation, replay, and ratification; it is not a terminal state.
-- AI may build the first working solution inside an approved intent contract; deterministic guarantees apply to the distilled script replay.
-- A script is not good or bad; it is compared against its intended effect and classified as functional, mismatched, blocked, or superseded for that contract.
-- An effect mismatch enters a modification loop: classify the mismatch, apply the smallest repair, rerun the same contract, and compare effects again.
+- AI may build the first working solution only inside a ratified Execution Contract; deterministic guarantees apply to the distilled script replay.
+- A script is not good or bad; it is compared against its intended effect and classified as functional, mismatched, blocked, or superseded for that Execution Contract.
+- An intake record, intake envelope, planning artifact, runtime session, host command, or UI state never grants execution authority.
+- The provider-neutral core imports no VS Code APIs; host adapters depend on the core, and the core does not depend on adapters.
+- The failure detector is the modification-loop gate: it classifies the gap, flags the repair layer, and every repair rerun returns through the detector until functional, blocked, or superseded.
 - Every resolved turn should ask what was missing, ambiguous, or manually inferred and repair the right factory layer.
 - Execution Sequence ranks are canonical; use SEQ-A through SEQ-L to decide hierarchy before choosing a script route.
 - Sub-sequences use dotted ranks such as SEQ-E.1 and must stay inside their parent sequence layer.

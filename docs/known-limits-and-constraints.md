@@ -456,3 +456,14 @@ Update this file whenever a tool, provider, transport path, script, runner, or p
 - Mitigation: do not mint the Supabase push path as verified until the missing migration is recovered, pulled, or the migration history is repaired with an approved successor
 - Script/doc now encoding mitigation: this ledger, `alliance-hub/tools/supabase-push.mjs`
 - Verification: the command failed before applying changes and printed Supabase's repair/pull guidance; no production migration was run
+
+### Windows PowerShell Execution Policy Can Block npm.ps1 And npx.ps1
+
+- Date: 2026-07-15
+- Domain/provider: Windows PowerShell / local Node.js verification
+- Operation: running `npx tsc -p . --noEmit`
+- Symptom: PowerShell rejected `E:\Program Files\nodejs\npx.ps1` and later `npm.ps1` because script execution is disabled
+- Likely cause: command resolution selected the PowerShell shim while the machine execution policy blocks `.ps1` scripts
+- Mitigation: invoke the same installed executables through `npx.cmd` or `npm.cmd`, for example `npx.cmd tsc -p . --noEmit` and `npm.cmd run compile`
+- Script/doc now encoding mitigation: this ledger
+- Verification: `npx.cmd tsc -p . --noEmit` completed with exit code `0`

@@ -1,35 +1,43 @@
 # Refer Script Factory
 
-`Refer Script Factory` is a VS Code extension and local cockpit for governed
-REFER work. The first slice proves the product container: a REFER activity bar,
-dashboard Miles/MPG metrics, live process panel, Send Contract draft output,
-adapter contract, and repo bootstrap dry-run/apply.
+The Script Factory is the provider-neutral system that converts ratified
+REFER Execution Contracts and verified methods into bounded script plans,
+artifacts, verification evidence, and reusable registrations.
+
+VS Code, CLI, HTTP, MCP, and future hosts are adapters and operator surfaces.
+The current implementation includes a Script Factory VS Code adapter, but VS
+Code is not the product identity or canonical runtime.
 
 Telechurch is the pilot consumer, not a product dependency.
 
 ## Repository Identity
 
-This is the canonical repository for the Refer Script Factory extension and its
-local factory tooling. It is intentionally opinionated, script-driven, and
-governed by the repo-local `AGENTS.md` and the REFER.OS law set under
-`unscripted-laws/REFER.OS`.
+This is the canonical repository for the provider-neutral Script Factory
+language, contracts, doctrine, registries, and current host-adapter
+implementation. It is intentionally opinionated, script-driven, and governed by
+the repo-local `AGENTS.md` and the live REFER.OS authority recorded in
+`.refer/source.json`.
 
-## First Slice
+The intended dependency law is one-way: the future provider-neutral core imports
+no VS Code APIs, and host adapters depend on the core. This language phase does
+not perform that extraction.
+
+## Current VS Code Adapter Slice
 
 - REFER activity container
 - Dashboard webview for Live/Average token MPG, Miles, road quality, and repo health
 - Process panel that renders local process events
 - Bootstrap Library panel that inventories REFER bootstrap source references
 - Refer Library panel that browses readable REFER.OS document aliases
-- Contract Reader panel that displays contract-track turns separately from normal chat
+- Contract Reader compatibility panel that displays legacy intake-session turns separately from normal chat
 - `REFER: Initialize Repo` dry-run command with explicit apply confirmation
-- `REFER: Emit Send Contract Draft` command
-- `REFER: Emit Script Blueprint` command for chat-to-contract-to-script routing
+- `REFER: Emit Send Contract Planning Draft` command
+- `REFER: Emit Script Blueprint` command for intake-to-plan-to-script routing
 - `REFER: Emit Script DNA Seed` command for normalized custom script specs
 - `REFER: Refresh Codebases` command for derived monorepo/subspace discovery
 - `REFER: Check for Updates` and `REFER: Apply Update` commands
 - Agent governance bootstrap through `AGENTS.md` and `.refer-factory/agent-profile.json`
-- JSON schemas for contracts, metrics, process events, adapters, and bootstrap
+- JSON schemas for packets, metrics, process events, adapters, and bootstrap
 - Portable JSON script packets with Angular, React, Node, and generic adapters
 - Dormant REFER.OS reference library under `unscripted-laws/REFER.OS`
 - TypeScript tests for metrics, process events, and bootstrap dry-run
@@ -41,7 +49,7 @@ npm install
 npm run verify
 ```
 
-## Run Locally
+## Run The Current VS Code Adapter Locally
 
 Open this repo in VS Code and start the `Run REFER Extension` launch
 configuration. In the Extension Development Host, open the REFER activity bar
@@ -79,8 +87,9 @@ Bootstrap installs/updates these REFER-owned files:
 - `.refer-factory/metrics.json`
 - `.refer-factory/plan/refer.plan.json`
 
-These define contract-first prompt handling, safe script rules, secret-file
-exclusions, local tracking paths, and the machine-readable discovery contract
+These define intake-first prompt handling with Execution Contract gating, safe
+script rules, secret-file exclusions, local tracking paths, and the
+machine-readable discovery schema
 other agents can follow before searching. Installed `REFER.OS/*.md` documents are
 reference material until a doctrine compiler or authorized user action converts
 them into registered scripts, validators, or rule packs.
@@ -105,7 +114,8 @@ Bootstrap writes `.refer-factory/codebases.json` as a derived subspace registry.
 It records internal codebases such as `apps/*`, `packages/*`, `services/*`, and
 `workers/*` so plans can target the right paths without creating separate REFER
 installs. Operators can run `REFER: Refresh Codebases`, and
-`refer.autoRefreshCodebases` keeps the registry current on extension activation.
+`refer.autoRefreshCodebases` keeps the registry current when the current VS Code
+adapter activates.
 New folders are added as `discovered`; removed folders are marked `missing` so
 manual aliases and overrides are not lost.
 
@@ -114,8 +124,9 @@ manual aliases and overrides are not lost.
 The removed first-slice chat panel only displayed a Send Contract draft. The
 current factory model keeps chat in the prevailing assistant and emits a script
 blueprint instead. `REFER: Emit Script Blueprint` opens a JSON graph showing how
-user chat intent becomes a contract, how the factory selects existing scripts or
-interpreter routes, how missing routes emit correction contracts, and how
+user chat intent becomes an intake envelope and planning artifact, how the
+factory selects existing scripts or interpreter routes, how missing routes emit
+correction records, and how
 artifacts flow through verification and registration.
 
 ## Script DNA
@@ -125,11 +136,16 @@ scripts. It gives every script common ports, guards, stations, assembly-like
 opcodes, verification, and registry metadata so specialized factories can grow
 without each AI session inventing a different script shape.
 
-Script DNA is intentionally framework-neutral at the center. Scripts consume a
-Send Contract, target paths, and `workspace_context` JSON, then emit portable
-JSON packets such as `framework_operations` and `artifact_manifest`. Adapters
-translate those packets into the local repo shape for Angular, React, Node, or a
-generic codebase.
+Script DNA is intentionally framework-neutral at the center. Planning forges may
+consume a non-executing planning packet; any script that executes or mutates
+requires a ratified Execution Contract. The bounded input also names target
+paths and `workspace_context` JSON, and the factory emits portable JSON packets
+such as `framework_operations` and `artifact_manifest`. Adapters translate those
+packets into the local repo shape for Angular, React, Node, or a generic codebase.
+
+A Send Contract draft is a planning artifact. It records work intent for review
+but does not authorize execution. Only a ratified REFER Execution Contract is
+execution authorization.
 
 ## Classification And Lineage
 
@@ -177,12 +193,13 @@ term candidates capture new words, methods, strategies, sequence ranks, chain
 actions, artifacts, statuses, rules, or reusable system effects; promotion can
 insert a vetted term into the Script Legend source.
 
-## REFER Chat Intake
+## Current VS Code Adapter Intake
 
-The extension contributes the `@refer` chat participant. Prompts sent to
-`@refer` enter REFER before the selected model sees them: raw input is stored
-under `.refer-factory/intake/`, a compact contract is sent to the model, and the
-response is driven through a bounded resolution loop. Every loop terminates as
+The Script Factory VS Code adapter contributes the `@refer` chat participant.
+Prompts sent to `@refer` enter REFER before the host-provided model sees them:
+raw input is stored as an intake record under `.refer-factory/intake/`, a compact
+intake envelope is sent to the model, and the response is driven through a
+bounded resolution loop. Neither record is execution authority. Every loop terminates as
 `resolved_as_is`, `needs_more_info`, `needs_script`,
 `blocked_by_policy_or_scope`, or `failed_with_reason`.
 
@@ -190,22 +207,26 @@ The orchestrator backlog is tracked in `docs/refer-orchestrator-roadmap.md` and
 mirrored by `createOrchestratorRoadmap()` so new capabilities can be marked
 available and integrated without losing the intended sequence.
 
-The REFER sidebar also contributes Contract Reader below Refer Library. It is a
-read-only transcript surface for contract-track work sent through `@refer`: each
-turn stores raw intake, compact contract, resolution state, assistant output, and
-progress under `.refer-factory/chat/sessions/`.
+The current VS Code adapter also contributes Contract Reader below Refer Library.
+It is a read-only operator-interface surface for legacy intake-session tracking
+sent through `@refer`: each runtime session stores raw intake, compact intake
+envelope, resolution state, assistant output, and progress under
+`.refer-factory/chat/sessions/`.
 
-Contract Reader shows three mode lights: Idle, Temp, and On. Temp is automatic
-for a single `@refer` turn and returns to Idle when complete. On is persistent
-contract mode, controlled by `REFER: Contract Mode On`, `REFER: Contract Mode
-Off`, or `REFER: Toggle Contract Mode`.
+Contract Reader shows three compatibility lights: Idle, Turn, and Persist. Turn
+is legacy intake-session state for one `@refer` runtime session and returns to
+Idle when complete. Persist is persistent legacy intake-session state, controlled by
+`REFER: Legacy Intake Session On`, `REFER: Legacy Intake Session Off`, or
+`REFER: Toggle Legacy Intake Session`. These UI states do not create, ratify, or
+authorize a REFER Execution Contract. Their command IDs retain `contractMode`
+only for runtime compatibility; behavioral/API migration is deferred.
 
 REFER Coach is scaffolded as a future `@refer coach` mode for helping users set
 up local LLMs, provider routing, workspace readiness, and efficient REFER usage.
 
 ## REFER Orchestrator Endpoint
 
-The local endpoint is a developer/simulation surface for pushing prompts into
+The HTTP adapter is a developer/simulation surface for pushing prompts into
 the same REFER intake and bounded orchestrator used by `@refer`, without typing
 through the VS Code Chat composer.
 
@@ -265,16 +286,16 @@ Invoke-RestMethod `
 
 `POST /refer/chat` accepts `target` as the preferred workspace selector.
 `workspaceRoot` is still accepted as a development fallback, but target ids are
-the stable contract for simulations. Successful calls write the same
+the stable selector for simulations. Successful calls write the same
 `.refer-factory/intake/`, `.refer-factory/chat/sessions/`, and
 `.refer-factory/process-state.json` artifacts used by Contract Reader.
 
 ## Unscripted Law Library
 
-The extension keeps the historical REFER.OS markdown library in
+The current VS Code adapter keeps the historical REFER.OS markdown library in
 `unscripted-laws/REFER.OS`. These documents are dormant references, not active
 shipped governance. The always-on shipped rules should be limited to how Smart
-Intake and the Script Factory work: contract-first intake, deterministic
+Intake and the Script Factory work: intake records, Execution Contract gating, deterministic
 resolution, registry use, effect checks, and safe script execution.
 
 Users can add rules by prompt or document. The intended path is natural to the
@@ -291,7 +312,7 @@ The expansion model is documented in `docs/user-law-expansion.md`.
 
 ## Updates
 
-REFER checks for reference/script updates on activation when `refer.autoCheckUpdates`
+The current VS Code adapter checks for reference/script updates on activation when `refer.autoCheckUpdates`
 is enabled. Operators can also run `REFER: Check for Updates` manually. Updates
 are driven by a manifest, filtered by `refer.updateChannel`, previewed in a VS
 Code notification, and applied only after explicit confirmation.
@@ -311,4 +332,5 @@ npx @vscode/vsce package
 ## Scope Guard
 
 This repo must not import Telechurch app code. Use Telechurch only as a pilot
-workspace after the extension can run independently.
+target workspace through an adapter; app-specific implementation remains outside
+the provider-neutral core.

@@ -109,7 +109,7 @@ function packageJsonCandidates(
       viewsContainers?: { activitybar?: { name?: string; title?: string }[] };
     };
   };
-  const cockpitLabels = taxonomy.get("Cockpit View Label") ?? new Set<string>();
+  const cockpitLabels = taxonomy.get("Operator Interface Label") ?? new Set<string>();
   const viewNames = Object.values(packageJson.contributes?.views ?? {})
     .flat()
     .map((view) => view.name)

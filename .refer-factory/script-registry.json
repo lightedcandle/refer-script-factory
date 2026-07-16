@@ -6,7 +6,7 @@
     {
       "id": "refer-script-factory",
       "label": "REFER Script Factory",
-      "scope": "Codex/VS Code source, provider-neutral doctrine, extension scripts.",
+      "scope": "Provider-neutral TypeScript source and doctrine, plus current host-adapter registrations.",
       "authority": "src/contracts/scriptFactory.ts",
       "check_first": [
         "src/contracts/scriptFactory.ts",
@@ -18,7 +18,7 @@
           "id": "refer.extension.script-registry",
           "command": "source registry",
           "entrypoint": "src/contracts/scriptFactory.ts",
-          "purpose": "Authoritative VS Code extension and provider-neutral script contract registry.",
+          "purpose": "Authoritative provider-neutral script contract registry with accurately labeled current host-adapter entries.",
           "status": "active"
         }
       ],
@@ -29,7 +29,7 @@
         },
         {
           "name": "test",
-          "command": "npm run compile && node dist/test/metrics.test.js && node dist/test/processEvents.test.js && node dist/test/bootstrapDryRun.test.js && node dist/test/bootstrapApply.test.js && node dist/test/bootstrapProcessEvents.test.js && node dist/test/bootstrapHealth.test.js && node dist/test/codebaseMiles.test.js && node dist/test/codebases.test.js && node dist/test/scriptBlueprint.test.js && node dist/test/scriptDna.test.js && node dist/test/scriptographer.test.js && node dist/test/referIntake.test.js && node dist/test/referOrchestrator.test.js && node dist/test/referProcessEvents.test.js && node dist/test/referChatSession.test.js && node dist/test/referChatMode.test.js && node dist/test/referOrchestratorRunner.test.js && node dist/test/referTargetRegistry.test.js && node dist/test/referCoach.test.js && node dist/test/orchestratorRoadmap.test.js && node dist/test/factoryGaps.test.js && node dist/test/schemaValidation.test.js && node dist/test/lawToc.test.js && node dist/test/updateSync.test.js && node dist/test/factoryRegistries.test.js && node dist/test/authorityResolver.test.js && node dist/test/doctrineCompiler.test.js && node dist/test/scriptionaryTerm.test.js && node dist/test/modificationLoop.test.js"
+          "command": "npm run compile && node dist/test/metrics.test.js && node dist/test/processEvents.test.js && node dist/test/bootstrapDryRun.test.js && node dist/test/bootstrapApply.test.js && node dist/test/bootstrapProcessEvents.test.js && node dist/test/bootstrapHealth.test.js && node dist/test/codebaseMiles.test.js && node dist/test/codebases.test.js && node dist/test/scriptBlueprint.test.js && node dist/test/scriptDna.test.js && node dist/test/scriptographer.test.js && node dist/test/referIntake.test.js && node dist/test/referOrchestrator.test.js && node dist/test/referProcessEvents.test.js && node dist/test/referChatSession.test.js && node dist/test/referChatMode.test.js && node dist/test/referOrchestratorRunner.test.js && node dist/test/referTargetRegistry.test.js && node dist/test/referCoach.test.js && node dist/test/orchestratorRoadmap.test.js && node dist/test/factoryGaps.test.js && node dist/test/schemaValidation.test.js && node dist/test/lawToc.test.js && node dist/test/updateSync.test.js && node dist/test/factoryRegistries.test.js && node dist/test/standaloneLanguage.test.js && node dist/test/authorityResolver.test.js && node dist/test/doctrineCompiler.test.js && node dist/test/scriptionaryTerm.test.js && node dist/test/modificationLoop.test.js"
         },
         {
           "name": "verify",
@@ -322,7 +322,7 @@
           "id": "hive.build-intake",
           "command": "npm run hive:build-intake",
           "entrypoint": "scripts/hive/hive-build-intake.mjs",
-          "purpose": "Emit and dispatch governed build-intake contracts so Zo route changes originate from typed intake.",
+          "purpose": "Emit and dispatch governed build-intake envelopes so Zo route changes originate from typed intake evidence.",
           "status": "active"
         },
         {

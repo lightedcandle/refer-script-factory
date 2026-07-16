@@ -8,7 +8,7 @@ Before direct work, identify the domain and check that domain's registry/check_f
 
 | Domain | Scope | Authority | Check First |
 |---|---|---|---|
-| REFER Script Factory | Codex/VS Code source, provider-neutral doctrine, extension scripts. | `src/contracts/scriptFactory.ts` | `src/contracts/scriptFactory.ts`<br>`docs/script-legend.md`<br>`package.json` |
+| REFER Script Factory | Provider-neutral TypeScript source and doctrine, plus current host-adapter registrations. | `src/contracts/scriptFactory.ts` | `src/contracts/scriptFactory.ts`<br>`docs/script-legend.md`<br>`package.json` |
 | Current Chat Surface | Token tracking, script-use logging, current-context reset, and chat-surface self-observation. | `.refer-factory/script-registry.json` | `docs/chat-surface-scripts.md`<br>`scripts/chat-surface/`<br>`package.json` |
 | Hive Director | Cross-node identity, hive build plan, node heartbeat, and ratification status. | `.refer-factory/hive-node-registry.json` | `docs/hive-build-plan.md`<br>`.refer-factory/hive-node-registry.md`<br>`scripts/hive/` |
 | Alliance Hub | Telechurchlive Alliance app source, Cloudflare Pages/Functions, Supabase migrations, SMS routing, formula/retrieval flows. | `alliance-hub/AGENTS.md` | `alliance-hub/AGENTS.md`<br>`alliance-hub/package.json`<br>`alliance-hub/tools/`<br>`alliance-hub/scripts/sms/`<br>`alliance-hub/supabase/migrations/`<br>`alliance-hub/docs/records-split-sequence.md` |
@@ -20,12 +20,12 @@ Before direct work, identify the domain and check that domain's registry/check_f
 
 | Script | Command | Entrypoint | Purpose | Status |
 |---|---|---|---|---|
-| `refer.extension.script-registry` | `source registry` | `src/contracts/scriptFactory.ts` | Authoritative VS Code extension and provider-neutral script contract registry. | active |
+| `refer.extension.script-registry` | `source registry` | `src/contracts/scriptFactory.ts` | Authoritative provider-neutral script contract registry with accurately labeled current host-adapter entries. | active |
 
 Package scripts discovered in this domain:
 
 - `compile`: `tsc -p ./`
-- `test`: `npm run compile && node dist/test/metrics.test.js && node dist/test/processEvents.test.js && node dist/test/bootstrapDryRun.test.js && node dist/test/bootstrapApply.test.js && node dist/test/bootstrapProcessEvents.test.js && node dist/test/bootstrapHealth.test.js && node dist/test/codebaseMiles.test.js && node dist/test/codebases.test.js && node dist/test/scriptBlueprint.test.js && node dist/test/scriptDna.test.js && node dist/test/scriptographer.test.js && node dist/test/referIntake.test.js && node dist/test/referOrchestrator.test.js && node dist/test/referProcessEvents.test.js && node dist/test/referChatSession.test.js && node dist/test/referChatMode.test.js && node dist/test/referOrchestratorRunner.test.js && node dist/test/referTargetRegistry.test.js && node dist/test/referCoach.test.js && node dist/test/orchestratorRoadmap.test.js && node dist/test/factoryGaps.test.js && node dist/test/schemaValidation.test.js && node dist/test/lawToc.test.js && node dist/test/updateSync.test.js && node dist/test/factoryRegistries.test.js && node dist/test/authorityResolver.test.js && node dist/test/doctrineCompiler.test.js && node dist/test/scriptionaryTerm.test.js && node dist/test/modificationLoop.test.js`
+- `test`: `npm run compile && node dist/test/metrics.test.js && node dist/test/processEvents.test.js && node dist/test/bootstrapDryRun.test.js && node dist/test/bootstrapApply.test.js && node dist/test/bootstrapProcessEvents.test.js && node dist/test/bootstrapHealth.test.js && node dist/test/codebaseMiles.test.js && node dist/test/codebases.test.js && node dist/test/scriptBlueprint.test.js && node dist/test/scriptDna.test.js && node dist/test/scriptographer.test.js && node dist/test/referIntake.test.js && node dist/test/referOrchestrator.test.js && node dist/test/referProcessEvents.test.js && node dist/test/referChatSession.test.js && node dist/test/referChatMode.test.js && node dist/test/referOrchestratorRunner.test.js && node dist/test/referTargetRegistry.test.js && node dist/test/referCoach.test.js && node dist/test/orchestratorRoadmap.test.js && node dist/test/factoryGaps.test.js && node dist/test/schemaValidation.test.js && node dist/test/lawToc.test.js && node dist/test/updateSync.test.js && node dist/test/factoryRegistries.test.js && node dist/test/standaloneLanguage.test.js && node dist/test/authorityResolver.test.js && node dist/test/doctrineCompiler.test.js && node dist/test/scriptionaryTerm.test.js && node dist/test/modificationLoop.test.js`
 - `verify`: `npm run test`
 - `refer:server`: `npm run compile && node dist/src/server/referOrchestratorServer.js`
 - `tokens:log`: `node scripts/chat-surface/token-useage.mjs log`
@@ -92,7 +92,7 @@ Package scripts discovered in this domain:
 | `hive.contract` | `npm run hive:contract` | `scripts/hive/hive-director.mjs` | Emit a root-authoritative hive contract from a backlog item. | active |
 | `hive.dispatch` | `npm run hive:dispatch` | `scripts/hive/hive-director.mjs` | Dispatch a typed hive contract through the appropriate node lane and record evidence. | active |
 | `hive.validate-talkback` | `npm run hive:validate-talkback` | `scripts/hive/hive-director.mjs` | Validate decoded talkback against the typed hive contract before ratification. | active |
-| `hive.build-intake` | `npm run hive:build-intake` | `scripts/hive/hive-build-intake.mjs` | Emit and dispatch governed build-intake contracts so Zo route changes originate from typed intake. | active |
+| `hive.build-intake` | `npm run hive:build-intake` | `scripts/hive/hive-build-intake.mjs` | Emit and dispatch governed build-intake envelopes so Zo route changes originate from typed intake evidence. | active |
 | `hive.deployment-pack` | `npm run hive:deployment-pack` | `scripts/hive/hive-node-deployment-pack.mjs` | Build a non-mutating deployment checklist for staging and ratifying a hive node. | active |
 | `hive.ratify-routes` | `npm run hive:ratify-routes` | `scripts/hive/hive-route-ratifier.mjs` | Capture live zo.space route state for a hive node and record upstream ratification evidence. | active |
 
@@ -185,4 +185,3 @@ Package scripts discovered in this domain:
 
 - JSON: `.refer-factory\script-registry.json`
 - Markdown: `.refer-factory\script-registry.md`
-

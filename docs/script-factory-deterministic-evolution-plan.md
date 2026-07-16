@@ -1,8 +1,32 @@
 # Script Factory Deterministic Evolution Plan
 
-Status: Draft for review  
+Status: Historical evidence; partially superseded
 Date: 2026-04-30  
 Scope: Provider-neutral Script Factory doctrine, Zo/Alliance Smart Intake lessons, script classification, lineage, authority references, and modification loops.
+
+## Reconciliation With The Standalone Plan
+
+Reconciled on 2026-07-15. This document preserves the evidence, deterministic
+sequence, classification, lineage, and modification-loop work developed in the
+original plan. `PLAN-REFER-FACTORY-STANDALONE-001` is now the canonical owner for
+Script Factory identity, host/adapter language, and the boundary between the
+provider-neutral core and host-specific runtimes.
+
+The standalone plan supersedes these older assumptions wherever they appear
+below:
+
+- no provider, editor, chat product, or VS Code surface is the canonical runtime;
+- an `intent contract`, `effect contract`, Send Contract, intake packet, or UI mode is not execution authority unless it is explicitly a ratified REFER Execution Contract;
+- host input, model selection, workspace access, and output rendering belong behind host-adapter boundaries;
+- future core extraction and CLI work must route through the standalone successor contracts rather than extending prototype host coupling.
+
+Legacy packet and field names remain below to preserve provenance. Read them as
+historical intake, planning, or effect data unless the text explicitly names a
+ratified Execution Contract. Future architecture work routes through
+`PLAN-REFER-FACTORY-CORE-EXTRACTION-001`,
+`PLAN-REFER-FACTORY-CLI-001`,
+`PLAN-REFER-FACTORY-NODE-INTEGRATION-001`, and
+`PLAN-REFER-FACTORY-RELEASE-001`.
 
 ## Purpose
 

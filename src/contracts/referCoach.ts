@@ -45,9 +45,10 @@ export function createReferCoachPlan(): ReferCoachPlan {
       {
         id: "coach.usage",
         title: "REFER usage pattern",
-        purpose: "Teach temporary versus persistent contract mode.",
-        evidence: ["chat mode state", "contract reader sessions"],
-        next_action: "Use @refer for on-demand turns and persistent mode for focused work.",
+        purpose: "Explain transient versus persistent legacy intake-session tracking.",
+        evidence: ["legacy intake-session state", "runtime session records"],
+        next_action:
+          "Use @refer for on-demand runtime sessions and persistent tracking for focused intake; neither state grants execution authority.",
       },
     ],
   };

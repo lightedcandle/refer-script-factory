@@ -23,28 +23,28 @@ const baseScriptFactoryEntries: ScriptFactoryEntry[] = [
     script_id: "request.type.chat",
     label: "@refer Chat Request",
     surface: "request-type",
-    entrypoint: "Native VS Code Chat",
-    does: "A user asks REFER for help from the VS Code Chat box.",
+    entrypoint: "Interactive Host",
+    does: "A user asks REFER for help from an interactive host.",
     detail:
-      "This is the normal human-facing request type. You type @refer in VS Code Chat, REFER receives the message, and the request is handed to the REFER Orchestrator script.",
+      "This is the host-neutral human-facing request type. A host adapter receives the message and hands the intake record to the REFER Orchestrator script.",
   },
   {
     script_id: "request.type.http",
     label: "HTTP Request",
     surface: "request-type",
     entrypoint: "POST /refer/chat",
-    does: "Another app sends REFER a prompt through the local server.",
+    does: "An HTTP host adapter sends REFER a prompt through the local server.",
     detail:
-      "This request type is for tools outside VS Code. A local app or script sends a prompt to the REFER server, and the server forwards it to the REFER Orchestrator script.",
+      "A local app or script sends a prompt to the REFER server, and the HTTP host adapter forwards an intake record to the REFER Orchestrator script.",
   },
   {
     script_id: "request.type.command",
     label: "Command Request",
     surface: "request-type",
-    entrypoint: "VS Code Command Palette",
-    does: "A user starts a REFER action from the command palette.",
+    entrypoint: "Host Command",
+    does: "A user starts a REFER action through an explicit host command.",
     detail:
-      "This request type covers actions like Initialize Repo, Check for Updates, or Refresh Codebases. These do not start from chat; they start from explicit VS Code commands.",
+      "This host-neutral request type covers explicit actions such as Initialize Repo, Check for Updates, or Refresh Codebases. A host adapter maps its command surface to the registered action.",
   },
   {
     script_id: "refer.chat.pipeline",
@@ -53,7 +53,7 @@ const baseScriptFactoryEntries: ScriptFactoryEntry[] = [
     entrypoint: "@refer Participant -> REFER Orchestrator -> Resolution Loop",
     does: "Receives your @refer message, runs the work pipeline, and saves the result.",
     detail:
-      "This is the normal @refer workflow bundled as one multi script. It starts at the VS Code Chat participant, hands the request to the orchestrator, uses the resolution loop for model work, and writes the final turn into chat history.",
+      "This is the host-neutral interactive workflow bundled as one multi script. A host adapter hands an intake envelope to the orchestrator, the resolution loop uses a host-provided model, and an event/output sink receives the final result.",
     script_kind: "Multi Script",
     input_points: ["User", "Agent", "Scripts"],
     exit_points: ["User", "Agent", "Repo", "Scripts"],
@@ -66,21 +66,21 @@ const baseScriptFactoryEntries: ScriptFactoryEntry[] = [
   },
   {
     script_id: "refer.chat.participant",
-    label: "@refer Participant",
+    label: "Script Factory VS Code Chat Adapter",
     surface: "orchestration",
     entrypoint: "src/chat/referParticipant.ts#registerReferChatParticipant",
-    does: "Makes @refer appear as a native VS Code Chat participant.",
+    does: "Adapts native VS Code Chat messages to the Script Factory.",
     detail:
-      "This connects the VS Code Chat box to REFER. When you type @refer, this script receives your message, handles simple controls like on, off, and status, shows progress, and sends real work through the REFER orchestration flow.",
+      "This adapter-specific entry connects the VS Code Chat box to REFER. It receives @refer messages, maintains legacy intake-session controls, shows progress, and hands intake records to the provider-neutral orchestration flow.",
   },
   {
     script_id: "refer.orchestrate.chat",
     label: "REFER Orchestrator",
     surface: "orchestration",
     entrypoint: "src/chat/referOrchestratorRunner.ts#runReferOrchestratorPrompt",
-    does: "Turns your @refer message into a tracked work request and saves the answer.",
+    does: "Turns an interactive-host message into a tracked intake and saves the answer.",
     detail:
-      "Use this when you send a message to @refer in VS Code Chat or through the local server. It saves what you asked, makes a smaller work order from it, sends that work order to the selected model, tracks the steps, and adds the result to @Refer Chat History.",
+      "Use this when a host adapter sends a message to REFER. It saves an intake record, makes a compact intake envelope, sends bounded input to the host-provided model, tracks the steps, and sends the result to the configured event/output sink.",
   },
   {
     script_id: "refer.resolution.loop",
@@ -105,9 +105,9 @@ const baseScriptFactoryEntries: ScriptFactoryEntry[] = [
     label: "Scan Codebase",
     surface: "orchestration",
     entrypoint: "src/commands/scanCodebase.ts#scanCodebaseCommand",
-    does: "Builds a local map of this repo and opens the treefile.",
+    does: "Builds a local map of the target workspace and emits the treefile.",
     detail:
-      "Use this when REFER needs a fresh map of the project. It scans useful source, test, config, docs, and resource files, writes .refer-factory/codebase-tree.json, writes .refer-factory/agent-context.md, and opens the treefile in VS Code.",
+      "Use this when REFER needs a fresh map of the target workspace. It scans useful source, test, config, docs, and resource files, writes .refer-factory/codebase-tree.json and .refer-factory/agent-context.md, then gives the treefile to the current event/output sink. The current VS Code adapter opens it in the editor.",
   },
   {
     script_id: "refer.script.legend",
@@ -143,7 +143,7 @@ const baseScriptFactoryEntries: ScriptFactoryEntry[] = [
     entrypoint: "POST /refer/chat",
     does: "Lets another app send a prompt to REFER over HTTP.",
     detail:
-      "Use this when something outside VS Code needs to ask REFER to do work. It receives a prompt, chooses the target workspace, runs the same flow as @refer, and sends back a structured result.",
+      "Use this HTTP host adapter when another tool needs to ask REFER for work. It receives a prompt, chooses the target workspace, runs the same provider-neutral orchestration flow, and sends back a structured result.",
   },
   {
     script_id: "refer.server.health",
@@ -174,12 +174,12 @@ const baseScriptFactoryEntries: ScriptFactoryEntry[] = [
   },
   {
     script_id: "refer.emitSendContract",
-    label: "Emit Send Contract",
+    label: "Emit Send Contract Planning Draft",
     surface: "vscode-command",
-    entrypoint: "REFER: Emit Send Contract Draft",
-    does: "Opens a starter work contract you can review or edit.",
+    entrypoint: "REFER: Emit Send Contract Planning Draft",
+    does: "Opens a non-authorizing planning draft you can review or edit.",
     detail:
-      "This creates a draft that describes what work should happen, what area it should affect, and how the result should be checked. It is useful when you want a clearer work request before execution.",
+      "This creates a planning artifact that describes possible work, target scope, and verification. It does not authorize execution; only a separately ratified REFER Execution Contract does that.",
   },
   {
     script_id: "refer.emitScriptBlueprint",
@@ -282,39 +282,39 @@ const baseScriptFactoryEntries: ScriptFactoryEntry[] = [
   },
   {
     script_id: "refer.contractModeOn",
-    label: "Contract Mode On",
+    label: "Legacy Intake Session On",
     surface: "vscode-command",
-    entrypoint: "REFER: Contract Mode On",
-    does: "Keeps REFER contract mode on for future chat turns.",
+    entrypoint: "REFER: Legacy Intake Session On",
+    does: "Keeps legacy intake-session tracking on for future host turns.",
     detail:
-      "Use this when you want every future @refer turn in this workspace to be treated as governed contract work until you turn it off.",
+      "This compatibility command persists intake-session tracking for future @refer runtime sessions. It does not create, ratify, or authorize a REFER Execution Contract; the contractMode command ID remains only for compatibility.",
   },
   {
     script_id: "refer.contractModeOff",
-    label: "Contract Mode Off",
+    label: "Legacy Intake Session Off",
     surface: "vscode-command",
-    entrypoint: "REFER: Contract Mode Off",
-    does: "Turns off always-on contract mode.",
+    entrypoint: "REFER: Legacy Intake Session Off",
+    does: "Turns off persistent legacy intake-session tracking.",
     detail:
-      "Use this when you no longer want every @refer turn to stay in persistent contract mode. Individual @refer messages can still use temporary contract tracking.",
+      "This compatibility command stops persistent legacy intake-session tracking. Individual runtime sessions may still use transient tracking, but neither state grants or ratifies a REFER Execution Contract.",
   },
   {
     script_id: "refer.contractModeToggle",
-    label: "Toggle Contract Mode",
+    label: "Toggle Legacy Intake Session",
     surface: "vscode-command",
-    entrypoint: "REFER: Toggle Contract Mode",
-    does: "Switches always-on contract mode to the opposite state.",
+    entrypoint: "REFER: Toggle Legacy Intake Session",
+    does: "Switches persistent legacy intake-session tracking to the opposite state.",
     detail:
-      "Use this when you do not want to remember whether contract mode is currently on or off. It checks the current setting and flips it.",
+      "This compatibility command checks the current legacy intake-session setting and flips it. The UI state is runtime tracking, not a ratified REFER Execution Contract.",
   },
   {
     script_id: "npm.compile",
     label: "Compile",
     surface: "npm",
     entrypoint: "npm run compile",
-    does: "Builds the extension code.",
+    does: "Builds the current TypeScript project.",
     detail:
-      "Use this after editing TypeScript. It checks the code for compile errors and writes the JavaScript files VS Code runs into the dist folder.",
+      "Use this after editing TypeScript. It checks the code for compile errors and writes the JavaScript output used by the current adapters into the dist folder.",
   },
   {
     script_id: "npm.test",
@@ -323,7 +323,7 @@ const baseScriptFactoryEntries: ScriptFactoryEntry[] = [
     entrypoint: "npm run test",
     does: "Checks that the project still works after changes.",
     detail:
-      "Use this before trusting a change. It builds the extension and runs the full set of tests for metrics, process tracking, bootstrap, contracts, chat orchestration, schemas, law documents, and updates.",
+      "Use this before trusting a change. It builds the project and runs the full set of tests for metrics, process tracking, bootstrap, packets, orchestration, schemas, law documents, and updates.",
   },
   {
     script_id: "npm.verify",
@@ -366,7 +366,7 @@ const baseScriptFactoryEntries: ScriptFactoryEntry[] = [
     label: "REFER Server",
     surface: "npm",
     entrypoint: "npm run refer:server",
-    does: "Runs REFER as a local server instead of only inside VS Code.",
+    does: "Runs the Script Factory through its current local HTTP adapter.",
     detail:
       "Use this when another tool or app needs to call REFER through HTTP. It builds the project and starts the local server so routes like /refer/chat can receive prompts.",
     child_scripts: [

@@ -6,7 +6,7 @@ export function createVsCodeReferPromptModel(
   model: vscode.LanguageModelChat,
 ): ReferPromptModel {
   return {
-    label: "VS Code selected model",
+    label: "VS Code host-provided model",
     async sendPrompt(prompt, token) {
       const modelResponse = await model.sendRequest(
         [vscode.LanguageModelChatMessage.User(prompt)],

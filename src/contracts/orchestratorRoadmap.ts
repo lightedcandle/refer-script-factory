@@ -31,18 +31,18 @@ export function createOrchestratorRoadmap(): OrchestratorRoadmap {
       },
       {
         id: "ORCH-002",
-        capability: "Contract preview and approval UI",
+        capability: "Intake preview and execution-ratification boundary",
         status: "scaffolded",
         integrate_when_available:
-          "A webview or chat button can show the compact contract and capture explicit user approval before model/script execution.",
-        target_hook: "@refer chat participant",
+          "An operator interface can show the intake envelope and planning artifact, then separately capture or hand off a ratified Execution Contract before execution.",
+        target_hook: "interactive host and runtime session viewer",
       },
       {
         id: "ORCH-003",
         capability: "Script registry lookup",
         status: "scaffolded",
         integrate_when_available:
-          "A registry file or service can map contract intents to existing Script DNA routes.",
+          "A registry file or service can map ratified Execution Contract intents to existing Script DNA routes.",
         target_hook: "needs_script and resolved_as_is paths",
       },
       {
@@ -74,7 +74,7 @@ export function createOrchestratorRoadmap(): OrchestratorRoadmap {
         capability: "Drill-down form mechanics",
         status: "scaffolded",
         integrate_when_available:
-          "Missing fields can be rendered as VS Code Quick Pick/InputBox or webview form controls.",
+          "A host adapter can render missing fields through its operator interface; the current VS Code adapter may use Quick Pick, InputBox, or view controls.",
         target_hook: "needs_more_info terminal",
       },
       {
@@ -106,7 +106,7 @@ export function createOrchestratorRoadmap(): OrchestratorRoadmap {
         capability: "Token savings telemetry",
         status: "scaffolded",
         integrate_when_available:
-          "The extension can estimate raw prompt tokens versus compact contract tokens and record savings.",
+          "The factory can estimate raw prompt tokens versus compact intake-envelope tokens and record savings.",
         target_hook: "intake and dashboard metrics",
       },
       {
