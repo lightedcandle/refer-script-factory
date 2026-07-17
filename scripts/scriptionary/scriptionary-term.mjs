@@ -3,7 +3,7 @@ import path from "node:path";
 
 const root = process.cwd();
 const candidateDir = path.join(root, ".refer-factory", "scriptionary", "term-candidates");
-const legendSource = path.join(root, "src", "contracts", "scriptLegend.ts");
+const legendSource = path.join(root, "src", "core", "contracts", "scriptLegend.ts");
 
 function idStamp() {
   return new Date().toISOString().replace(/[-:.TZ]/g, "").slice(0, 14);

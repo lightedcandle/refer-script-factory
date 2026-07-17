@@ -1,15 +1,15 @@
 {
   "schema": "refer.domain-script-registry.v1",
-  "updated_at": "2026-06-18T01:47:47.851Z",
+  "updated_at": "2026-07-16T13:01:05.702Z",
   "rule": "Before direct work, identify the domain and check that domain's registry/check_first surfaces for an existing script.",
   "domains": [
     {
       "id": "refer-script-factory",
       "label": "REFER Script Factory",
       "scope": "Provider-neutral TypeScript source and doctrine, plus current host-adapter registrations.",
-      "authority": "src/contracts/scriptFactory.ts",
+      "authority": "src/core/contracts/scriptFactory.ts",
       "check_first": [
-        "src/contracts/scriptFactory.ts",
+        "src/core/contracts/scriptFactory.ts",
         "docs/script-legend.md",
         "package.json"
       ],
@@ -17,7 +17,7 @@
         {
           "id": "refer.extension.script-registry",
           "command": "source registry",
-          "entrypoint": "src/contracts/scriptFactory.ts",
+          "entrypoint": "src/core/contracts/scriptFactory.ts",
           "purpose": "Authoritative provider-neutral script contract registry with accurately labeled current host-adapter entries.",
           "status": "active"
         }
@@ -28,8 +28,20 @@
           "command": "tsc -p ./"
         },
         {
+          "name": "compile:core",
+          "command": "tsc -p tsconfig.core.json --noEmit"
+        },
+        {
+          "name": "verify:core-boundary",
+          "command": "node scripts/verify/core-boundary.mjs"
+        },
+        {
+          "name": "verify:core",
+          "command": "npm run compile:core && npm run verify:core-boundary"
+        },
+        {
           "name": "test",
-          "command": "npm run compile && node dist/test/metrics.test.js && node dist/test/processEvents.test.js && node dist/test/bootstrapDryRun.test.js && node dist/test/bootstrapApply.test.js && node dist/test/bootstrapProcessEvents.test.js && node dist/test/bootstrapHealth.test.js && node dist/test/codebaseMiles.test.js && node dist/test/codebases.test.js && node dist/test/scriptBlueprint.test.js && node dist/test/scriptDna.test.js && node dist/test/scriptographer.test.js && node dist/test/referIntake.test.js && node dist/test/referOrchestrator.test.js && node dist/test/referProcessEvents.test.js && node dist/test/referChatSession.test.js && node dist/test/referChatMode.test.js && node dist/test/referOrchestratorRunner.test.js && node dist/test/referTargetRegistry.test.js && node dist/test/referCoach.test.js && node dist/test/orchestratorRoadmap.test.js && node dist/test/factoryGaps.test.js && node dist/test/schemaValidation.test.js && node dist/test/lawToc.test.js && node dist/test/updateSync.test.js && node dist/test/factoryRegistries.test.js && node dist/test/standaloneLanguage.test.js && node dist/test/authorityResolver.test.js && node dist/test/doctrineCompiler.test.js && node dist/test/scriptionaryTerm.test.js && node dist/test/modificationLoop.test.js"
+          "command": "npm run compile && node dist/test/metrics.test.js && node dist/test/processEvents.test.js && node dist/test/bootstrapDryRun.test.js && node dist/test/bootstrapApply.test.js && node dist/test/bootstrapProcessEvents.test.js && node dist/test/bootstrapHealth.test.js && node dist/test/codebaseMiles.test.js && node dist/test/codebases.test.js && node dist/test/scriptBlueprint.test.js && node dist/test/scriptDna.test.js && node dist/test/scriptographer.test.js && node dist/test/referIntake.test.js && node dist/test/referOrchestrator.test.js && node dist/test/referProcessEvents.test.js && node dist/test/referChatSession.test.js && node dist/test/referChatMode.test.js && node dist/test/referOrchestratorRunner.test.js && node dist/test/referTargetRegistry.test.js && node dist/test/referCoach.test.js && node dist/test/orchestratorRoadmap.test.js && node dist/test/factoryGaps.test.js && node dist/test/schemaValidation.test.js && node dist/test/lawToc.test.js && node dist/test/updateSync.test.js && node dist/test/factoryRegistries.test.js && node dist/test/standaloneLanguage.test.js && node dist/test/authorityResolver.test.js && node dist/test/doctrineCompiler.test.js && node dist/test/scriptionaryTerm.test.js && node dist/test/modificationLoop.test.js && node dist/test/coreApi.test.js && node dist/test/coreBoundary.test.js && node dist/test/vscodeAdapterCompatibility.test.js"
         },
         {
           "name": "verify",
@@ -78,6 +90,14 @@
         {
           "name": "tokens:audit-chat",
           "command": "node scripts/chat-surface/token-useage.mjs audit-chat"
+        },
+        {
+          "name": "scripts:legend",
+          "command": "npm run compile && node scripts/registry/script-legend.mjs"
+        },
+        {
+          "name": "scripts:codebase",
+          "command": "npm run compile && node scripts/registry/codebase-context.mjs"
         },
         {
           "name": "scripts:registry",
@@ -399,60 +419,7 @@
           "status": "active"
         }
       ],
-      "discovered_package_scripts": [
-        {
-          "name": "check",
-          "command": "node tools/check.mjs"
-        },
-        {
-          "name": "start:local",
-          "command": "wrangler pages dev public --port 8788"
-        },
-        {
-          "name": "deploy",
-          "command": "node tools/deploy.mjs --deploy"
-        },
-        {
-          "name": "deploy:dry",
-          "command": "node tools/deploy.mjs"
-        },
-        {
-          "name": "supabase:push",
-          "command": "node tools/supabase-push.mjs"
-        },
-        {
-          "name": "supabase:push:dry",
-          "command": "node tools/supabase-push.mjs --dry-run"
-        },
-        {
-          "name": "formula:benchmark",
-          "command": "node tools/formula-contract-benchmark.mjs"
-        },
-        {
-          "name": "retrieval:sync",
-          "command": "node tools/retrieval-sync.mjs"
-        },
-        {
-          "name": "seed:smoke",
-          "command": "node tools/seed-pack-smoke.mjs"
-        },
-        {
-          "name": "sms:factory",
-          "command": "node tools/sms-script-factory.mjs"
-        },
-        {
-          "name": "sms:route",
-          "command": "node tools/sms-script-factory.mjs route"
-        },
-        {
-          "name": "sms:validate",
-          "command": "node tools/sms-script-factory.mjs validate"
-        },
-        {
-          "name": "sms:regex",
-          "command": "node tools/sms-script-factory.mjs regex"
-        }
-      ]
+      "discovered_package_scripts": []
     },
     {
       "id": "refer-zo-bootstrap",
@@ -502,188 +469,7 @@
           "status": "active"
         }
       ],
-      "discovered_package_scripts": [
-        {
-          "name": "check",
-          "command": "node --check tools/vipc-bootstrap.mjs && node --check tools/zo-mcp.mjs && node --check scripts/factory.mjs && node --check scripts/bootstrap.mjs && node --check scripts/hive/api.mjs && node --check scripts/hive/dispatcher.mjs && node --check scripts/hive/receive.mjs && node --check scripts/hive/talkback.mjs && node --check scripts/factory/factory.mjs && node --check scripts/factory/bootstrap.mjs && node --check scripts/factory/compression-codec.mjs && node --check scripts/factory/bilateral-sim.mjs && node --check scripts/factory/token-log-bridge.mjs && node --check scripts/factory/dataset-store.mjs && node --check scripts/factory/heartbeat.mjs && node --check scripts/factory/train-cars/01-dashboard.mjs && node --check scripts/factory/train-cars/02-spawn-worker.mjs && node --check scripts/factory/train-cars/03-scan-workspace.mjs && node --check scripts/factory/train-cars/04-hive-sync.mjs && node --check scripts/factory/contract-inbox-runner.mjs && node --check scripts/factory/backfill-zo-local-usage.mjs && node --check scripts/factory/ship-contract-to-zo.mjs && node --check scripts/factory/fetch-zo-talkback.mjs && node --check scripts/factory/dispatch-contract.mjs && node --check scripts/factory/sync-tandem-runtime-to-zo.mjs && node --check scripts/factory/node-scope.mjs && node --check scripts/factory/local-script-registry.mjs && node --check scripts/factory/draft-promotion-runner.mjs && node --check scripts/factory/local-intake-runner.mjs && node --check scripts/factory/inbox-automation.mjs && node --check scripts/factory/registry-doctor.mjs && node --check scripts/factory/evolution-loop.mjs && node --check scripts/factory/route-manifest-bridge.mjs && node --check scripts/factory/script-dictionary.mjs && node --check scripts/factory/hive/api.mjs && node --check scripts/factory/hive/dispatcher.mjs && node --check scripts/factory/hive/receive.mjs && node --check scripts/factory/hive/talkback.mjs && node -e \"JSON.parse(require('fs').readFileSync('scripts/factory/scriptionary.json','utf8')); JSON.parse(require('fs').readFileSync('scopes/alliance/site-manifest.json','utf8')); JSON.parse(require('fs').readFileSync('scopes/alliance/phase2-data-contract.json','utf8'));\" && node --check scripts/factory/artifacts/atomic-common.mjs && node --check scripts/factory/artifacts/page-add.mjs && node --check scripts/factory/artifacts/section-add.mjs && node --check scripts/factory/artifacts/card-add.mjs && node --check scripts/factory/artifacts/button-add.mjs && node --check scripts/factory/artifacts/field-add.mjs && node --check scripts/factory/artifacts/text-add.mjs && node --check scripts/factory/artifacts/form-add.mjs && node --check scripts/factory/artifacts/scan-workspace.mjs && node --check scopes/alliance/site/server.ts && node --check scopes/alliance/supabase-apply.mjs && node --check scopes/alliance/supabase-edge-deploy.mjs && node --check scopes/alliance/sms-relay-deploy.mjs && node --check scopes/alliance/supabase-probe.mjs && node --check scopes/alliance/sync-supabase-env-to-zo.mjs && node --check scopes/alliance/story-scope.mjs && node --check scopes/alliance/alliance-vocabulary.mjs && node --check scopes/alliance/sync-story-to-zo.mjs && node --check scopes/alliance/phase3-manifest.mjs && node --check scopes/alliance/build-site-from-manifest.mjs && node --check scopes/alliance/phase1-status.mjs && node --check scopes/alliance/phase1-next.mjs && node --check scopes/alliance/phase2-status.mjs && node --check scopes/alliance/phase2-next.mjs && node --check scopes/alliance/phase3-status.mjs && node --check scopes/alliance/phase3-next.mjs && node --check scopes/alliance/phase4-status.mjs && node --check scopes/alliance/phase4-next.mjs && node --check scopes/alliance/phase5-status.mjs && node --check scopes/alliance/phase5-next.mjs && node --check scopes/alliance/phase5-persistence-probe.mjs && node --check scopes/alliance/sync-site-to-zo.mjs && node --check scopes/alliance/sync-phase2-to-zo.mjs"
-        },
-        {
-          "name": "bootstrap",
-          "command": "node tools/vipc-bootstrap.mjs"
-        },
-        {
-          "name": "verify",
-          "command": "node tools/vipc-bootstrap.mjs --mode verify"
-        },
-        {
-          "name": "simulate",
-          "command": "node scripts/factory/bilateral-sim.mjs"
-        },
-        {
-          "name": "codec:self-test",
-          "command": "node scripts/factory/compression-codec.mjs self-test"
-        },
-        {
-          "name": "contract:run-once",
-          "command": "node scripts/factory/contract-inbox-runner.mjs --once"
-        },
-        {
-          "name": "tandem:ship",
-          "command": "node scripts/factory/ship-contract-to-zo.mjs"
-        },
-        {
-          "name": "tandem:fetch",
-          "command": "node scripts/factory/fetch-zo-talkback.mjs"
-        },
-        {
-          "name": "dispatch:contract",
-          "command": "node scripts/factory/dispatch-contract.mjs"
-        },
-        {
-          "name": "tandem:sync-runtime",
-          "command": "node scripts/factory/sync-tandem-runtime-to-zo.mjs"
-        },
-        {
-          "name": "tandem:backfill-usage",
-          "command": "node scripts/factory/backfill-zo-local-usage.mjs"
-        },
-        {
-          "name": "scope:record",
-          "command": "node scripts/factory/node-scope.mjs record"
-        },
-        {
-          "name": "scope:report",
-          "command": "node scripts/factory/node-scope.mjs report"
-        },
-        {
-          "name": "factory:registry",
-          "command": "node scripts/factory/local-script-registry.mjs"
-        },
-        {
-          "name": "factory:promote-drafts",
-          "command": "node scripts/factory/draft-promotion-runner.mjs --all"
-        },
-        {
-          "name": "factory:intake",
-          "command": "node scripts/factory/local-intake-runner.mjs"
-        },
-        {
-          "name": "factory:automation-once",
-          "command": "node scripts/factory/inbox-automation.mjs --once"
-        },
-        {
-          "name": "factory:automation-status",
-          "command": "node scripts/factory/inbox-automation.mjs --status"
-        },
-        {
-          "name": "factory:registry-doctor",
-          "command": "node scripts/factory/registry-doctor.mjs"
-        },
-        {
-          "name": "factory:evolve",
-          "command": "node scripts/factory/evolution-loop.mjs"
-        },
-        {
-          "name": "route:manifest-bridge",
-          "command": "node scripts/factory/route-manifest-bridge.mjs"
-        },
-        {
-          "name": "alliance:site-build",
-          "command": "node scopes/alliance/build-site-from-manifest.mjs"
-        },
-        {
-          "name": "alliance:phase1-status",
-          "command": "node scopes/alliance/phase1-status.mjs"
-        },
-        {
-          "name": "alliance:phase1-next",
-          "command": "node scopes/alliance/phase1-next.mjs"
-        },
-        {
-          "name": "alliance:phase2-status",
-          "command": "node scopes/alliance/phase2-status.mjs"
-        },
-        {
-          "name": "alliance:phase2-next",
-          "command": "node scopes/alliance/phase2-next.mjs"
-        },
-        {
-          "name": "alliance:phase3-status",
-          "command": "node scopes/alliance/phase3-status.mjs"
-        },
-        {
-          "name": "alliance:phase3-next",
-          "command": "node scopes/alliance/phase3-next.mjs"
-        },
-        {
-          "name": "alliance:phase4-status",
-          "command": "node scopes/alliance/phase4-status.mjs"
-        },
-        {
-          "name": "alliance:phase4-next",
-          "command": "node scopes/alliance/phase4-next.mjs"
-        },
-        {
-          "name": "alliance:phase5-status",
-          "command": "node scopes/alliance/phase5-status.mjs"
-        },
-        {
-          "name": "alliance:phase5-next",
-          "command": "node scopes/alliance/phase5-next.mjs"
-        },
-        {
-          "name": "alliance:phase5-probe",
-          "command": "node scopes/alliance/phase5-persistence-probe.mjs"
-        },
-        {
-          "name": "alliance:supabase-apply",
-          "command": "node scopes/alliance/supabase-apply.mjs"
-        },
-        {
-          "name": "alliance:supabase-edge-deploy",
-          "command": "node scopes/alliance/supabase-edge-deploy.mjs"
-        },
-        {
-          "name": "alliance:sms-relay-deploy",
-          "command": "node scopes/alliance/sms-relay-deploy.mjs"
-        },
-        {
-          "name": "alliance:sms-relay-maintenance",
-          "command": "node scopes/alliance/sms-relay-maintenance.mjs"
-        },
-        {
-          "name": "alliance:supabase-env-sync",
-          "command": "node scopes/alliance/sync-supabase-env-to-zo.mjs"
-        },
-        {
-          "name": "alliance:supabase-probe",
-          "command": "node scopes/alliance/supabase-probe.mjs"
-        },
-        {
-          "name": "alliance:story-scope",
-          "command": "node scopes/alliance/story-scope.mjs"
-        },
-        {
-          "name": "alliance:vocabulary",
-          "command": "node scopes/alliance/alliance-vocabulary.mjs"
-        },
-        {
-          "name": "alliance:story-sync",
-          "command": "node scopes/alliance/sync-story-to-zo.mjs"
-        },
-        {
-          "name": "alliance:phase3-manifest",
-          "command": "node scopes/alliance/phase3-manifest.mjs"
-        },
-        {
-          "name": "alliance:phase2-sync",
-          "command": "node scopes/alliance/sync-phase2-to-zo.mjs"
-        },
-        {
-          "name": "alliance:site-sync",
-          "command": "node scopes/alliance/sync-site-to-zo.mjs"
-        }
-      ]
+      "discovered_package_scripts": []
     }
   ]
 }

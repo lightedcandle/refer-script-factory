@@ -201,7 +201,7 @@ Give humans, agents, and local LLMs one deterministic language for scripts, scri
 ### Script Registry
 - Plain English: Registered Script List
 - Meaning: The source list of governed script entries and request categories.
-- Deterministic use: Use it for registered entries from src/contracts/scriptFactory.ts, not for arbitrary UI group names.
+- Deterministic use: Use it for registered entries from src/core/contracts/scriptFactory.ts, not for arbitrary UI group names.
 
 ### Script Registry Entries
 - Plain English: Visible Registered Script List
@@ -406,7 +406,7 @@ Give humans, agents, and local LLMs one deterministic language for scripts, scri
 - Rule: Conceptual UI layer labels must come from this list. If a new layer label appears in a panel, add it here or rename it to an existing governed label.
 
 ### Registered Script Label
-- Allowed values: @refer Chat Request, HTTP Request, Command Request, @refer Chat Pipeline, Script Factory VS Code Chat Adapter, REFER Orchestrator, Resolution Loop, Context Picker, Scan Codebase, Script Legend, Scriptographer, Scan Factory Gaps, Server Chat Route, Server Health Route, Server Targets Route, Initialize Repo, Emit Send Contract Planning Draft, Emit Script Blueprint, Emit Script DNA Seed, Refresh Codebases, Scan Codebase, View Codebase Tree, Scan Factory Gaps, View Factory Gaps, Run Scriptographer, View Scriptographer Report, Check For Updates, Apply Update, Legacy Intake Session On, Legacy Intake Session Off, Toggle Legacy Intake Session, Compile, Test, Verify, Authority Resolver, Doctrine Compiler, Scriptionary Term, REFER Server
+- Allowed values: @refer Chat Request, HTTP Request, Command Request, @refer Chat Pipeline, Script Factory VS Code Chat Adapter, REFER Orchestrator, Resolution Loop, Context Picker, Scan Codebase, Script Legend, Scriptographer, Scan Factory Gaps, Server Chat Route, Server Health Route, Server Targets Route, Initialize Repo, Emit Send Contract Planning Draft, Emit Script Blueprint, Emit Script DNA Seed, Refresh Codebases, Scan Codebase, View Codebase Tree, Scan Factory Gaps, View Factory Gaps, Run Scriptographer, View Scriptographer Report, Check For Updates, Apply Update, Legacy Intake Session On, Legacy Intake Session Off, Toggle Legacy Intake Session, Compile, Compile Core, Verify Core Boundary, Verify Core, Test, Verify, Authority Resolver, Doctrine Compiler, Scriptionary Term, REFER Server
 - Rule: Script card labels must come from the Script Factory registry. Do not invent parallel names in UI panels, status messages, or generated context.
 
 ### Script Action Label

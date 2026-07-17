@@ -6,7 +6,7 @@ This repo is governed by REFER.
 
 `refer-script-factory` is the seed implementation and doctrine source for the REFER Script Factory. The Script Factory is the provider-neutral system that converts ratified REFER Execution Contracts and verified methods into bounded script plans, artifacts, verification evidence, and reusable registrations.
 
-VS Code, CLI, HTTP, MCP, and future hosts are adapters and operator surfaces around that system. The current VS Code implementation is the `Script Factory VS Code adapter`; it is not the product identity or canonical runtime. The intended dependency direction is one-way: the future provider-neutral core imports no VS Code APIs, and host adapters depend on the core. Core extraction and CLI implementation require later ratified Execution Contracts.
+VS Code, CLI, HTTP, MCP, and future hosts are adapters and operator surfaces around that system. The current VS Code implementation is the `Script Factory VS Code adapter`; it is not the product identity or canonical runtime. The provider-neutral core lives under `src/core/**`, exposes its intentional API through `src/core/index.ts`, and imports no VS Code APIs or host adapters. Host adapters depend on the core. CLI implementation requires a later ratified Execution Contract.
 
 The factory should mature toward local-first operation:
 
@@ -80,7 +80,7 @@ Do not let the sibling repos evolve out of sync. When a change teaches a provide
 
 Hive node identity is tracked by the Hive Node Registry. Use `docs/hive-build-plan.md`, `scripts/hive/hive-node-registry.mjs`, `.refer-factory/hive-node-registry.json`, and `.refer-factory/hive-node-registry.md` when adding, verifying, or discussing Zo computers and factory nodes. A new Zo computer is not fully staged until the registry records its account scope, role, transport, persona/rules state, datasets, scripts, and ratification evidence.
 
-Script registry lookup is domain-scoped. Before direct work, classify the request domain and check `docs/domain-script-registry.md` plus `.refer-factory/script-registry.json` / `.refer-factory/script-registry.md`. Use the root `src/contracts/scriptFactory.ts` registry for provider-neutral scripts and accurately labeled current host-adapter entries, `scripts/chat-surface/` for current-chat/token scripts, `scripts/hive/` for hive director scripts, and `refer-zo-bootstrap/scripts/factory/script-registry.json` for Zo bootstrap scripts. Regenerate the operational registry with `npm run scripts:registry` after adding or changing operational scripts.
+Script registry lookup is domain-scoped. Before direct work, classify the request domain and check `docs/domain-script-registry.md` plus `.refer-factory/script-registry.json` / `.refer-factory/script-registry.md`. Use the root `src/core/contracts/scriptFactory.ts` registry for provider-neutral scripts and accurately labeled current host-adapter entries, `scripts/chat-surface/` for current-chat/token scripts, `scripts/hive/` for hive director scripts, and `refer-zo-bootstrap/scripts/factory/script-registry.json` for Zo bootstrap scripts. Regenerate the operational registry with `npm run scripts:registry` after adding or changing operational scripts.
 
 ## Zo Connection Awareness
 
@@ -183,13 +183,13 @@ Use the factory vocabulary precisely:
 - `Script Factory`: the system that creates, manages, and runs script forges.
 - `Factory System`: the complete network of coordinated factories across domains.
 
-- The source registry lives in `src/contracts/scriptFactory.ts`.
-- The script terminology authority lives in `src/contracts/scriptLegend.ts` and `docs/script-legend.md`.
-- The codebase scanner lives in `src/contracts/codebaseTree.ts` and `src/commands/scanCodebase.ts`.
-- The current VS Code adapter operator interface lives in `src/cockpit/scriptFactoryPanel.ts`.
-- The native `@refer` entrypoint lives in `src/chat/referParticipant.ts`.
-- The orchestration runner lives in `src/chat/referOrchestratorRunner.ts`.
-- The resolution loop lives in `src/chat/referResolutionLoop.ts`.
+- The source registry lives in `src/core/contracts/scriptFactory.ts`.
+- The script terminology authority lives in `src/core/contracts/scriptLegend.ts` and `docs/script-legend.md`.
+- The codebase scanner lives in `src/contracts/codebaseTree.ts`, with its current host command in `src/adapters/vscode/commands/scanCodebase.ts`.
+- The current VS Code adapter operator interface lives in `src/adapters/vscode/cockpit/scriptFactoryPanel.ts`.
+- The native `@refer` entrypoint lives in `src/adapters/vscode/referParticipant.ts`.
+- The provider-neutral orchestration runner lives in `src/core/orchestration/referOrchestratorRunner.ts`; the filesystem compatibility runner remains at `src/chat/referOrchestratorRunner.ts`.
+- The resolution loop lives in `src/core/orchestration/referResolutionLoop.ts`.
 
 When adding factory capability, keep the loop deterministic:
 

@@ -30,10 +30,11 @@ Core doctrine uses these host-neutral terms:
 - `event/output sink`: the destination for process events, evidence, artifacts, or user-visible output;
 - `host adapter`: the boundary that translates a host's inputs and outputs into provider-neutral core packets.
 
-VS Code, CLI, HTTP, MCP, and future hosts are adapters or surfaces. The intended
-dependency law is one-way: the provider-neutral core imports no VS Code APIs,
-and host adapters depend on the core. The current repository has not completed
-that extraction; this doctrine defines the boundary without claiming otherwise.
+VS Code, CLI, HTTP, MCP, and future hosts are adapters or surfaces. The
+dependency law is one-way: the provider-neutral core under `src/core/**`
+imports no VS Code APIs or host adapters, and host adapters depend on the core.
+The intentional public API is `src/core/index.ts`; the current VS Code adapter
+is isolated under `src/adapters/vscode/**`.
 
 At the fundamental level, a forge is the conversion layer. It takes what the system already has access to and turns it into the power, structure, or action the rest of the system can use.
 

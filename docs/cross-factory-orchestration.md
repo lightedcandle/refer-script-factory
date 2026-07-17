@@ -125,10 +125,10 @@ Root repo authority:
 - `docs/factory-system-doctrine.md`
 - `docs/script-legend.md`
 - `src/contracts/referIntake.ts`
-- `src/contracts/scriptFactory.ts`
-- `src/contracts/scriptLegend.ts`
-- `src/chat/referOrchestratorRunner.ts`
-- `src/chat/referResolutionLoop.ts`
+- `src/core/contracts/scriptFactory.ts`
+- `src/core/contracts/scriptLegend.ts`
+- `src/core/orchestration/referOrchestratorRunner.ts`
+- `src/core/orchestration/referResolutionLoop.ts`
 - `.refer-factory/`
 
 Zo repo authority:

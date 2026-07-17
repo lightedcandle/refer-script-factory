@@ -1,6 +1,6 @@
 # Forge Registry
 
-Generated: 2026-05-01T15:31:49.739Z
+Generated: 2026-07-16T13:01:16.353Z
 
 | Forge | Family | Status | Modification | Scripts |
 | --- | --- | --- | --- | --- |
@@ -15,4 +15,4 @@ Generated: 2026-05-01T15:31:49.739Z
 | `scriptionary-term-forge` | Script Factory Kernel | stable | none | 1 |
 | `server-endpoint-forge` | Server | stable | none | 4 |
 | `update-forge` | Installer | stable | none | 2 |
-| `verification-forge` | Verification | stable | none | 3 |
+| `verification-forge` | Verification | stable | none | 6 |

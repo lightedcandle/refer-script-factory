@@ -467,3 +467,14 @@ Update this file whenever a tool, provider, transport path, script, runner, or p
 - Mitigation: invoke the same installed executables through `npx.cmd` or `npm.cmd`, for example `npx.cmd tsc -p . --noEmit` and `npm.cmd run compile`
 - Script/doc now encoding mitigation: this ledger
 - Verification: `npx.cmd tsc -p . --noEmit` completed with exit code `0`
+
+### Fresh Worktrees Need Local Dependencies Before npx TypeScript Checks
+
+- Date: 2026-07-15
+- Domain/provider: npm/npx / local TypeScript verification
+- Operation: running `npx.cmd tsc -p . --noEmit` in a fresh isolated worktree
+- Symptom: npx resolved the unrelated registry package named `tsc` and printed `This is not the tsc command you are looking for`
+- Likely cause: the fresh worktree had no local `node_modules`, so npx could not resolve the lockfile-pinned TypeScript compiler from the project
+- Mitigation: run `npm.cmd ci` first, then use `npx.cmd tsc -p . --noEmit`; do not install or upgrade TypeScript ad hoc
+- Script/doc now encoding mitigation: this ledger and the lockfile-pinned project toolchain
+- Verification: `npm.cmd ci` restored the lockfile-pinned toolchain, after which `npx.cmd tsc -p . --noEmit`, the core-only compile, the extension compile, and the full regression suite passed

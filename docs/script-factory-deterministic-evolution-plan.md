@@ -1008,7 +1008,7 @@ npm run scriptionary:report
 Rules:
 
 - candidate mode records vocabulary without mutating source;
-- promote mode inserts a vetted term into `src/contracts/scriptLegend.ts`;
+- promote mode inserts a vetted term into `src/core/contracts/scriptLegend.ts`;
 - promoted terms still require compile, legend regeneration, and tests;
 - duplicate terms are blocked and recorded as duplicate candidates.
 

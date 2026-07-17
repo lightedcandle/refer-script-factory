@@ -4,7 +4,7 @@
  *
  * Builds a domain-scoped index of scripts that agents should check before
  * improvising. This complements the provider-neutral TypeScript source registry in
- * src/contracts/scriptFactory.ts; it tracks operational scripts for the active
+ * src/core/contracts/scriptFactory.ts; it tracks operational scripts for the active
  * chat surface, hive, and Zo bootstrap sibling.
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -18,13 +18,13 @@ const DOMAINS = [
     id: "refer-script-factory",
     label: "REFER Script Factory",
     scope: "Provider-neutral TypeScript source and doctrine, plus current host-adapter registrations.",
-    authority: "src/contracts/scriptFactory.ts",
-    check_first: ["src/contracts/scriptFactory.ts", "docs/script-legend.md", "package.json"],
+    authority: "src/core/contracts/scriptFactory.ts",
+    check_first: ["src/core/contracts/scriptFactory.ts", "docs/script-legend.md", "package.json"],
     scripts: [
       {
         id: "refer.extension.script-registry",
         command: "source registry",
-        entrypoint: "src/contracts/scriptFactory.ts",
+        entrypoint: "src/core/contracts/scriptFactory.ts",
         purpose: "Authoritative provider-neutral script contract registry with accurately labeled current host-adapter entries.",
         status: "active",
       },
@@ -338,7 +338,7 @@ function renderMarkdown(registry) {
     lines.push("");
   }
   lines.push("## Files", "", `- JSON: \`${relative(process.cwd(), JSON_FILE) || JSON_FILE}\``, `- Markdown: \`${relative(process.cwd(), MD_FILE) || MD_FILE}\``, "");
-  return `${lines.join("\n")}\n`;
+  return `${lines.join("\n").trimEnd()}\n`;
 }
 
 function cell(value) {

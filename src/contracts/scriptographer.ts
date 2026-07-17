@@ -47,13 +47,13 @@ export function runScriptographer(
   const entrypoints = new Set(scriptFactoryEntries.map((entry) => entry.entrypoint));
   const candidates = dedupeCandidates([
     ...legend.terms.map((term) =>
-      candidate(term.term, "term", "src/contracts/scriptLegend.ts terms", terms.has(term.term)),
+      candidate(term.term, "term", "src/core/contracts/scriptLegend.ts terms", terms.has(term.term)),
     ),
     ...scriptFactoryEntries.map((entry) =>
       candidate(
         entry.label,
         "registered-script-label",
-        `src/contracts/scriptFactory.ts ${entry.script_id}`,
+        `src/core/contracts/scriptFactory.ts ${entry.script_id}`,
         taxonomy.get("Registered Script Label")?.has(entry.label) ?? false,
       ),
     ),

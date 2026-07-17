@@ -80,9 +80,9 @@ function metadataFor(entry) {
       script_class: "Governing Script",
       sequence_rank: "SEQ-L",
       forge_id: "scriptionary-term-forge",
-      reads: ["src/contracts/scriptLegend.ts", ".refer-factory/scriptionary/**"],
-      writes: ["src/contracts/scriptLegend.ts", ".refer-factory/scriptionary/**", ".refer-factory/script-legend.md"],
-      locks: ["src/contracts/scriptLegend.ts", ".refer-factory/script-legend.md"],
+      reads: ["src/core/contracts/scriptLegend.ts", ".refer-factory/scriptionary/**"],
+      writes: ["src/core/contracts/scriptLegend.ts", ".refer-factory/scriptionary/**", ".refer-factory/script-legend.md"],
+      locks: ["src/core/contracts/scriptLegend.ts", ".refer-factory/script-legend.md"],
     };
   }
   if (id.includes("legend")) {
@@ -90,7 +90,7 @@ function metadataFor(entry) {
       script_class: "Governing Script",
       sequence_rank: "SEQ-A",
       forge_id: "script-legend-forge",
-      reads: ["src/contracts/scriptLegend.ts", "src/contracts/scriptFactory.ts"],
+      reads: ["src/core/contracts/scriptLegend.ts", "src/core/contracts/scriptFactory.ts"],
       writes: [".refer-factory/script-legend.md"],
       locks: [".refer-factory/script-legend.md"],
     };
@@ -137,7 +137,7 @@ export function buildScriptClassRegistry(now = new Date()) {
       reads: meta.reads,
       writes: meta.writes,
       locks: meta.locks,
-      source_authority: ["src/contracts/scriptFactory.ts", "docs/script-legend.md"],
+      source_authority: ["src/core/contracts/scriptFactory.ts", "docs/script-legend.md"],
       effect_contract: {
         intended_effect: entry.does,
         allowed_boundary: entry.detail,

@@ -39,8 +39,8 @@ npm run scripts:registry
 The TypeScript source registry remains authoritative for provider-neutral script contracts and accurately labeled current host-adapter entries:
 
 ```text
-src/contracts/scriptFactory.ts
-src/contracts/scriptLegend.ts
+src/core/contracts/scriptFactory.ts
+src/core/contracts/scriptLegend.ts
 docs/script-legend.md
 ```
 

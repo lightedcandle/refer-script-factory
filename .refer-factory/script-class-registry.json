@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-05-01T15:31:49.654Z",
+  "generated_at": "2026-07-16T13:01:10.370Z",
   "entries": [
     {
       "script_id": "request.type.chat",
@@ -16,12 +16,12 @@
       ],
       "locks": [],
       "source_authority": [
-        "src/contracts/scriptFactory.ts",
+        "src/core/contracts/scriptFactory.ts",
         "docs/script-legend.md"
       ],
       "effect_contract": {
-        "intended_effect": "A user asks REFER for help from the VS Code Chat box.",
-        "allowed_boundary": "This is the normal human-facing request type. You type @refer in VS Code Chat, REFER receives the message, and the request is handed to the REFER Orchestrator script."
+        "intended_effect": "A user asks REFER for help from an interactive host.",
+        "allowed_boundary": "This is the host-neutral human-facing request type. A host adapter receives the message and hands the intake record to the REFER Orchestrator script."
       },
       "status": "ready"
     },
@@ -39,12 +39,12 @@
       ],
       "locks": [],
       "source_authority": [
-        "src/contracts/scriptFactory.ts",
+        "src/core/contracts/scriptFactory.ts",
         "docs/script-legend.md"
       ],
       "effect_contract": {
-        "intended_effect": "Another app sends REFER a prompt through the local server.",
-        "allowed_boundary": "This request type is for tools outside VS Code. A local app or script sends a prompt to the REFER server, and the server forwards it to the REFER Orchestrator script."
+        "intended_effect": "An HTTP host adapter sends REFER a prompt through the local server.",
+        "allowed_boundary": "A local app or script sends a prompt to the REFER server, and the HTTP host adapter forwards an intake record to the REFER Orchestrator script."
       },
       "status": "ready"
     },
@@ -62,12 +62,12 @@
       ],
       "locks": [],
       "source_authority": [
-        "src/contracts/scriptFactory.ts",
+        "src/core/contracts/scriptFactory.ts",
         "docs/script-legend.md"
       ],
       "effect_contract": {
-        "intended_effect": "A user starts a REFER action from the command palette.",
-        "allowed_boundary": "This request type covers actions like Initialize Repo, Check for Updates, or Refresh Codebases. These do not start from chat; they start from explicit VS Code commands."
+        "intended_effect": "A user starts a REFER action through an explicit host command.",
+        "allowed_boundary": "This host-neutral request type covers explicit actions such as Initialize Repo, Check for Updates, or Refresh Codebases. A host adapter maps its command surface to the registered action."
       },
       "status": "ready"
     },
@@ -89,18 +89,18 @@
         ".refer-factory/chat"
       ],
       "source_authority": [
-        "src/contracts/scriptFactory.ts",
+        "src/core/contracts/scriptFactory.ts",
         "docs/script-legend.md"
       ],
       "effect_contract": {
         "intended_effect": "Receives your @refer message, runs the work pipeline, and saves the result.",
-        "allowed_boundary": "This is the normal @refer workflow bundled as one multi script. It starts at the VS Code Chat participant, hands the request to the orchestrator, uses the resolution loop for model work, and writes the final turn into chat history."
+        "allowed_boundary": "This is the host-neutral interactive workflow bundled as one multi script. A host adapter hands an intake envelope to the orchestrator, the resolution loop uses a host-provided model, and an event/output sink receives the final result."
       },
       "status": "ready"
     },
     {
       "script_id": "refer.chat.participant",
-      "label": "@refer Participant",
+      "label": "Script Factory VS Code Chat Adapter",
       "script_class": "Function Script",
       "sequence_rank": "SEQ-G",
       "forge_id": "script-factory-kernel-forge",
@@ -112,12 +112,12 @@
       ],
       "locks": [],
       "source_authority": [
-        "src/contracts/scriptFactory.ts",
+        "src/core/contracts/scriptFactory.ts",
         "docs/script-legend.md"
       ],
       "effect_contract": {
-        "intended_effect": "Makes @refer appear as a native VS Code Chat participant.",
-        "allowed_boundary": "This connects the VS Code Chat box to REFER. When you type @refer, this script receives your message, handles simple controls like on, off, and status, shows progress, and sends real work through the REFER orchestration flow."
+        "intended_effect": "Adapts native VS Code Chat messages to the Script Factory.",
+        "allowed_boundary": "This adapter-specific entry connects the VS Code Chat box to REFER. It receives @refer messages, maintains legacy intake-session controls, shows progress, and hands intake records to the provider-neutral orchestration flow."
       },
       "status": "ready"
     },
@@ -139,12 +139,12 @@
         ".refer-factory/chat"
       ],
       "source_authority": [
-        "src/contracts/scriptFactory.ts",
+        "src/core/contracts/scriptFactory.ts",
         "docs/script-legend.md"
       ],
       "effect_contract": {
-        "intended_effect": "Turns your @refer message into a tracked work request and saves the answer.",
-        "allowed_boundary": "Use this when you send a message to @refer in VS Code Chat or through the local server. It saves what you asked, makes a smaller work order from it, sends that work order to the selected model, tracks the steps, and adds the result to @Refer Chat History."
+        "intended_effect": "Turns an interactive-host message into a tracked intake and saves the answer.",
+        "allowed_boundary": "Use this when a host adapter sends a message to REFER. It saves an intake record, makes a compact intake envelope, sends bounded input to the host-provided model, tracks the steps, and sends the result to the configured event/output sink."
       },
       "status": "ready"
     },
@@ -163,7 +163,7 @@
       ],
       "locks": [],
       "source_authority": [
-        "src/contracts/scriptFactory.ts",
+        "src/core/contracts/scriptFactory.ts",
         "docs/script-legend.md"
       ],
       "effect_contract": {
@@ -187,7 +187,7 @@
       ],
       "locks": [],
       "source_authority": [
-        "src/contracts/scriptFactory.ts",
+        "src/core/contracts/scriptFactory.ts",
         "docs/script-legend.md"
       ],
       "effect_contract": {
@@ -215,12 +215,12 @@
         ".refer-factory/context"
       ],
       "source_authority": [
-        "src/contracts/scriptFactory.ts",
+        "src/core/contracts/scriptFactory.ts",
         "docs/script-legend.md"
       ],
       "effect_contract": {
-        "intended_effect": "Builds a local map of this repo and opens the treefile.",
-        "allowed_boundary": "Use this when REFER needs a fresh map of the project. It scans useful source, test, config, docs, and resource files, writes .refer-factory/codebase-tree.json, writes .refer-factory/agent-context.md, and opens the treefile in VS Code."
+        "intended_effect": "Builds a local map of the target workspace and emits the treefile.",
+        "allowed_boundary": "Use this when REFER needs a fresh map of the target workspace. It scans useful source, test, config, docs, and resource files, writes .refer-factory/codebase-tree.json and .refer-factory/agent-context.md, then gives the treefile to the current event/output sink. The current VS Code adapter opens it in the editor."
       },
       "status": "ready"
     },
@@ -231,8 +231,8 @@
       "sequence_rank": "SEQ-A",
       "forge_id": "script-legend-forge",
       "reads": [
-        "src/contracts/scriptLegend.ts",
-        "src/contracts/scriptFactory.ts"
+        "src/core/contracts/scriptLegend.ts",
+        "src/core/contracts/scriptFactory.ts"
       ],
       "writes": [
         ".refer-factory/script-legend.md"
@@ -241,7 +241,7 @@
         ".refer-factory/script-legend.md"
       ],
       "source_authority": [
-        "src/contracts/scriptFactory.ts",
+        "src/core/contracts/scriptFactory.ts",
         "docs/script-legend.md"
       ],
       "effect_contract": {
@@ -269,7 +269,7 @@
         ".refer-factory/context"
       ],
       "source_authority": [
-        "src/contracts/scriptFactory.ts",
+        "src/core/contracts/scriptFactory.ts",
         "docs/script-legend.md"
       ],
       "effect_contract": {
@@ -297,7 +297,7 @@
         ".refer-factory/context"
       ],
       "source_authority": [
-        "src/contracts/scriptFactory.ts",
+        "src/core/contracts/scriptFactory.ts",
         "docs/script-legend.md"
       ],
       "effect_contract": {
@@ -324,12 +324,12 @@
         ".refer-factory/chat"
       ],
       "source_authority": [
-        "src/contracts/scriptFactory.ts",
+        "src/core/contracts/scriptFactory.ts",
         "docs/script-legend.md"
       ],
       "effect_contract": {
         "intended_effect": "Lets another app send a prompt to REFER over HTTP.",
-        "allowed_boundary": "Use this when something outside VS Code needs to ask REFER to do work. It receives a prompt, chooses the target workspace, runs the same flow as @refer, and sends back a structured result."
+        "allowed_boundary": "Use this HTTP host adapter when another tool needs to ask REFER for work. It receives a prompt, chooses the target workspace, runs the same provider-neutral orchestration flow, and sends back a structured result."
       },
       "status": "ready"
     },
@@ -351,7 +351,7 @@
         ".refer-factory/chat"
       ],
       "source_authority": [
-        "src/contracts/scriptFactory.ts",
+        "src/core/contracts/scriptFactory.ts",
         "docs/script-legend.md"
       ],
       "effect_contract": {
@@ -378,7 +378,7 @@
         ".refer-factory/chat"
       ],
       "source_authority": [
-        "src/contracts/scriptFactory.ts",
+        "src/core/contracts/scriptFactory.ts",
         "docs/script-legend.md"
       ],
       "effect_contract": {
@@ -406,7 +406,7 @@
         "workspace-bootstrap"
       ],
       "source_authority": [
-        "src/contracts/scriptFactory.ts",
+        "src/core/contracts/scriptFactory.ts",
         "docs/script-legend.md"
       ],
       "effect_contract": {
@@ -417,7 +417,7 @@
     },
     {
       "script_id": "refer.emitSendContract",
-      "label": "Emit Send Contract",
+      "label": "Emit Send Contract Planning Draft",
       "script_class": "Function Script",
       "sequence_rank": "SEQ-G",
       "forge_id": "script-factory-kernel-forge",
@@ -429,12 +429,12 @@
       ],
       "locks": [],
       "source_authority": [
-        "src/contracts/scriptFactory.ts",
+        "src/core/contracts/scriptFactory.ts",
         "docs/script-legend.md"
       ],
       "effect_contract": {
-        "intended_effect": "Opens a starter work contract you can review or edit.",
-        "allowed_boundary": "This creates a draft that describes what work should happen, what area it should affect, and how the result should be checked. It is useful when you want a clearer work request before execution."
+        "intended_effect": "Opens a non-authorizing planning draft you can review or edit.",
+        "allowed_boundary": "This creates a planning artifact that describes possible work, target scope, and verification. It does not authorize execution; only a separately ratified REFER Execution Contract does that."
       },
       "status": "ready"
     },
@@ -452,7 +452,7 @@
       ],
       "locks": [],
       "source_authority": [
-        "src/contracts/scriptFactory.ts",
+        "src/core/contracts/scriptFactory.ts",
         "docs/script-legend.md"
       ],
       "effect_contract": {
@@ -475,7 +475,7 @@
       ],
       "locks": [],
       "source_authority": [
-        "src/contracts/scriptFactory.ts",
+        "src/core/contracts/scriptFactory.ts",
         "docs/script-legend.md"
       ],
       "effect_contract": {
@@ -498,7 +498,7 @@
       ],
       "locks": [],
       "source_authority": [
-        "src/contracts/scriptFactory.ts",
+        "src/core/contracts/scriptFactory.ts",
         "docs/script-legend.md"
       ],
       "effect_contract": {
@@ -526,7 +526,7 @@
         ".refer-factory/context"
       ],
       "source_authority": [
-        "src/contracts/scriptFactory.ts",
+        "src/core/contracts/scriptFactory.ts",
         "docs/script-legend.md"
       ],
       "effect_contract": {
@@ -554,7 +554,7 @@
         ".refer-factory/context"
       ],
       "source_authority": [
-        "src/contracts/scriptFactory.ts",
+        "src/core/contracts/scriptFactory.ts",
         "docs/script-legend.md"
       ],
       "effect_contract": {
@@ -582,7 +582,7 @@
         ".refer-factory/context"
       ],
       "source_authority": [
-        "src/contracts/scriptFactory.ts",
+        "src/core/contracts/scriptFactory.ts",
         "docs/script-legend.md"
       ],
       "effect_contract": {
@@ -610,7 +610,7 @@
         ".refer-factory/context"
       ],
       "source_authority": [
-        "src/contracts/scriptFactory.ts",
+        "src/core/contracts/scriptFactory.ts",
         "docs/script-legend.md"
       ],
       "effect_contract": {
@@ -633,7 +633,7 @@
       ],
       "locks": [],
       "source_authority": [
-        "src/contracts/scriptFactory.ts",
+        "src/core/contracts/scriptFactory.ts",
         "docs/script-legend.md"
       ],
       "effect_contract": {
@@ -661,7 +661,7 @@
         ".refer-factory/context"
       ],
       "source_authority": [
-        "src/contracts/scriptFactory.ts",
+        "src/core/contracts/scriptFactory.ts",
         "docs/script-legend.md"
       ],
       "effect_contract": {
@@ -689,7 +689,7 @@
         "workspace-bootstrap"
       ],
       "source_authority": [
-        "src/contracts/scriptFactory.ts",
+        "src/core/contracts/scriptFactory.ts",
         "docs/script-legend.md"
       ],
       "effect_contract": {
@@ -717,7 +717,7 @@
         "workspace-bootstrap"
       ],
       "source_authority": [
-        "src/contracts/scriptFactory.ts",
+        "src/core/contracts/scriptFactory.ts",
         "docs/script-legend.md"
       ],
       "effect_contract": {
@@ -728,7 +728,7 @@
     },
     {
       "script_id": "refer.contractModeOn",
-      "label": "Contract Mode On",
+      "label": "Legacy Intake Session On",
       "script_class": "Function Script",
       "sequence_rank": "SEQ-G",
       "forge_id": "script-factory-kernel-forge",
@@ -740,18 +740,18 @@
       ],
       "locks": [],
       "source_authority": [
-        "src/contracts/scriptFactory.ts",
+        "src/core/contracts/scriptFactory.ts",
         "docs/script-legend.md"
       ],
       "effect_contract": {
-        "intended_effect": "Keeps REFER contract mode on for future chat turns.",
-        "allowed_boundary": "Use this when you want every future @refer turn in this workspace to be treated as governed contract work until you turn it off."
+        "intended_effect": "Keeps legacy intake-session tracking on for future host turns.",
+        "allowed_boundary": "This compatibility command persists intake-session tracking for future @refer runtime sessions. It does not create, ratify, or authorize a REFER Execution Contract; the contractMode command ID remains only for compatibility."
       },
       "status": "ready"
     },
     {
       "script_id": "refer.contractModeOff",
-      "label": "Contract Mode Off",
+      "label": "Legacy Intake Session Off",
       "script_class": "Function Script",
       "sequence_rank": "SEQ-G",
       "forge_id": "script-factory-kernel-forge",
@@ -763,18 +763,18 @@
       ],
       "locks": [],
       "source_authority": [
-        "src/contracts/scriptFactory.ts",
+        "src/core/contracts/scriptFactory.ts",
         "docs/script-legend.md"
       ],
       "effect_contract": {
-        "intended_effect": "Turns off always-on contract mode.",
-        "allowed_boundary": "Use this when you no longer want every @refer turn to stay in persistent contract mode. Individual @refer messages can still use temporary contract tracking."
+        "intended_effect": "Turns off persistent legacy intake-session tracking.",
+        "allowed_boundary": "This compatibility command stops persistent legacy intake-session tracking. Individual runtime sessions may still use transient tracking, but neither state grants or ratifies a REFER Execution Contract."
       },
       "status": "ready"
     },
     {
       "script_id": "refer.contractModeToggle",
-      "label": "Toggle Contract Mode",
+      "label": "Toggle Legacy Intake Session",
       "script_class": "Function Script",
       "sequence_rank": "SEQ-G",
       "forge_id": "script-factory-kernel-forge",
@@ -786,12 +786,12 @@
       ],
       "locks": [],
       "source_authority": [
-        "src/contracts/scriptFactory.ts",
+        "src/core/contracts/scriptFactory.ts",
         "docs/script-legend.md"
       ],
       "effect_contract": {
-        "intended_effect": "Switches always-on contract mode to the opposite state.",
-        "allowed_boundary": "Use this when you do not want to remember whether contract mode is currently on or off. It checks the current setting and flips it."
+        "intended_effect": "Switches persistent legacy intake-session tracking to the opposite state.",
+        "allowed_boundary": "This compatibility command checks the current legacy intake-session setting and flips it. The UI state is runtime tracking, not a ratified REFER Execution Contract."
       },
       "status": "ready"
     },
@@ -814,12 +814,96 @@
         "dist"
       ],
       "source_authority": [
-        "src/contracts/scriptFactory.ts",
+        "src/core/contracts/scriptFactory.ts",
         "docs/script-legend.md"
       ],
       "effect_contract": {
-        "intended_effect": "Builds the extension code.",
-        "allowed_boundary": "Use this after editing TypeScript. It checks the code for compile errors and writes the JavaScript files VS Code runs into the dist folder."
+        "intended_effect": "Builds the current TypeScript project.",
+        "allowed_boundary": "Use this after editing TypeScript. It checks the code for compile errors and writes the JavaScript output used by the current adapters into the dist folder."
+      },
+      "status": "ready"
+    },
+    {
+      "script_id": "npm.compile.core",
+      "label": "Compile Core",
+      "script_class": "Validator Script",
+      "sequence_rank": "SEQ-I",
+      "forge_id": "verification-forge",
+      "reads": [
+        "src/**",
+        "test/**",
+        "schemas/**",
+        "package.json"
+      ],
+      "writes": [
+        "dist/**"
+      ],
+      "locks": [
+        "dist"
+      ],
+      "source_authority": [
+        "src/core/contracts/scriptFactory.ts",
+        "docs/script-legend.md"
+      ],
+      "effect_contract": {
+        "intended_effect": "Compiles the provider-neutral core without editor-host ambient types.",
+        "allowed_boundary": "Use this after changing src/core. It compiles only src/core through tsconfig.core.json with explicit Node types and no editor-host type loading."
+      },
+      "status": "ready"
+    },
+    {
+      "script_id": "npm.verify.core-boundary",
+      "label": "Verify Core Boundary",
+      "script_class": "Validator Script",
+      "sequence_rank": "SEQ-I",
+      "forge_id": "verification-forge",
+      "reads": [
+        "src/**",
+        "test/**",
+        "schemas/**",
+        "package.json"
+      ],
+      "writes": [
+        "dist/**"
+      ],
+      "locks": [
+        "dist"
+      ],
+      "source_authority": [
+        "src/core/contracts/scriptFactory.ts",
+        "docs/script-legend.md"
+      ],
+      "effect_contract": {
+        "intended_effect": "Rejects core imports that cross into host adapters or legacy host modules.",
+        "allowed_boundary": "Use this whenever core or adapter imports change. It parses every TypeScript import under src/core and fails if a relative dependency escapes the core or loads vscode."
+      },
+      "status": "ready"
+    },
+    {
+      "script_id": "npm.verify.core",
+      "label": "Verify Core",
+      "script_class": "Validator Script",
+      "sequence_rank": "SEQ-I",
+      "forge_id": "verification-forge",
+      "reads": [
+        "src/**",
+        "test/**",
+        "schemas/**",
+        "package.json"
+      ],
+      "writes": [
+        "dist/**"
+      ],
+      "locks": [
+        "dist"
+      ],
+      "source_authority": [
+        "src/core/contracts/scriptFactory.ts",
+        "docs/script-legend.md"
+      ],
+      "effect_contract": {
+        "intended_effect": "Runs the core-only compile and deterministic boundary check together.",
+        "allowed_boundary": "Use this as the focused provider-neutral core gate before the full extension regression suite."
       },
       "status": "ready"
     },
@@ -842,12 +926,12 @@
         "dist"
       ],
       "source_authority": [
-        "src/contracts/scriptFactory.ts",
+        "src/core/contracts/scriptFactory.ts",
         "docs/script-legend.md"
       ],
       "effect_contract": {
         "intended_effect": "Checks that the project still works after changes.",
-        "allowed_boundary": "Use this before trusting a change. It builds the extension and runs the full set of tests for metrics, process tracking, bootstrap, contracts, chat orchestration, schemas, law documents, and updates."
+        "allowed_boundary": "Use this before trusting a change. It builds the project and runs the full set of tests for metrics, process tracking, bootstrap, packets, orchestration, schemas, law documents, and updates."
       },
       "status": "ready"
     },
@@ -870,7 +954,7 @@
         "dist"
       ],
       "source_authority": [
-        "src/contracts/scriptFactory.ts",
+        "src/core/contracts/scriptFactory.ts",
         "docs/script-legend.md"
       ],
       "effect_contract": {
@@ -897,7 +981,7 @@
         ".refer-factory/authority"
       ],
       "source_authority": [
-        "src/contracts/scriptFactory.ts",
+        "src/core/contracts/scriptFactory.ts",
         "docs/script-legend.md"
       ],
       "effect_contract": {
@@ -925,7 +1009,7 @@
         ".refer-factory/doctrine-candidates"
       ],
       "source_authority": [
-        "src/contracts/scriptFactory.ts",
+        "src/core/contracts/scriptFactory.ts",
         "docs/script-legend.md"
       ],
       "effect_contract": {
@@ -941,20 +1025,20 @@
       "sequence_rank": "SEQ-L",
       "forge_id": "scriptionary-term-forge",
       "reads": [
-        "src/contracts/scriptLegend.ts",
+        "src/core/contracts/scriptLegend.ts",
         ".refer-factory/scriptionary/**"
       ],
       "writes": [
-        "src/contracts/scriptLegend.ts",
+        "src/core/contracts/scriptLegend.ts",
         ".refer-factory/scriptionary/**",
         ".refer-factory/script-legend.md"
       ],
       "locks": [
-        "src/contracts/scriptLegend.ts",
+        "src/core/contracts/scriptLegend.ts",
         ".refer-factory/script-legend.md"
       ],
       "source_authority": [
-        "src/contracts/scriptFactory.ts",
+        "src/core/contracts/scriptFactory.ts",
         "docs/script-legend.md"
       ],
       "effect_contract": {
@@ -981,11 +1065,11 @@
         ".refer-factory/chat"
       ],
       "source_authority": [
-        "src/contracts/scriptFactory.ts",
+        "src/core/contracts/scriptFactory.ts",
         "docs/script-legend.md"
       ],
       "effect_contract": {
-        "intended_effect": "Runs REFER as a local server instead of only inside VS Code.",
+        "intended_effect": "Runs the Script Factory through its current local HTTP adapter.",
         "allowed_boundary": "Use this when another tool or app needs to call REFER through HTTP. It builds the project and starts the local server so routes like /refer/chat can receive prompts."
       },
       "status": "ready"

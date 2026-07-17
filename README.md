@@ -18,9 +18,17 @@ implementation. It is intentionally opinionated, script-driven, and governed by
 the repo-local `AGENTS.md` and the live REFER.OS authority recorded in
 `.refer/source.json`.
 
-The intended dependency law is one-way: the future provider-neutral core imports
-no VS Code APIs, and host adapters depend on the core. This language phase does
-not perform that extraction.
+The dependency law is one-way: the provider-neutral core under `src/core/**`
+imports no VS Code APIs or host adapters, and host adapters depend on the core.
+`src/core/index.ts` is the intentional public API. The current VS Code adapter
+lives under `src/adapters/vscode/**`; legacy source paths remain thin forwarding
+modules where compatibility requires them.
+
+Focused boundary verification is available through:
+
+```powershell
+npm run verify:core
+```
 
 ## Current VS Code Adapter Slice
 

@@ -1,6 +1,6 @@
 # Script Class Registry
 
-Generated: 2026-05-01T15:31:49.654Z
+Generated: 2026-07-16T13:01:10.370Z
 
 | Script | Class | Sequence | Forge | Status |
 | --- | --- | --- | --- | --- |
@@ -36,6 +36,9 @@ Generated: 2026-05-01T15:31:49.654Z
 | `refer.contractModeOff` | Function Script | SEQ-G | `script-factory-kernel-forge` | ready |
 | `refer.contractModeToggle` | Function Script | SEQ-G | `script-factory-kernel-forge` | ready |
 | `npm.compile` | Validator Script | SEQ-I | `verification-forge` | ready |
+| `npm.compile.core` | Validator Script | SEQ-I | `verification-forge` | ready |
+| `npm.verify.core-boundary` | Validator Script | SEQ-I | `verification-forge` | ready |
+| `npm.verify.core` | Validator Script | SEQ-I | `verification-forge` | ready |
 | `npm.test` | Validator Script | SEQ-I | `verification-forge` | ready |
 | `npm.verify` | Validator Script | SEQ-I | `verification-forge` | ready |
 | `refer.authority.resolve` | Reference Script | SEQ-D | `authority-resolver-forge` | ready |
