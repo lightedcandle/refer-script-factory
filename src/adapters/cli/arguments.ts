@@ -12,10 +12,26 @@ export interface ResolveCliOptions {
   timeoutMs: number;
 }
 
+export type NodeCliAction =
+  | "discover"
+  | "validate"
+  | "workflows"
+  | "workflow"
+  | "methods"
+  | "method";
+
+export interface NodeCliOptions {
+  action: NodeCliAction;
+  nodeRoot: string;
+  lookup?: string;
+  json: boolean;
+}
+
 export type CliCommand =
   | { kind: "help" }
   | { kind: "version" }
-  | { kind: "resolve"; options: ResolveCliOptions };
+  | { kind: "resolve"; options: ResolveCliOptions }
+  | { kind: "node"; options: NodeCliOptions };
 
 export class CliUsageError extends Error {
   constructor(message: string) {
@@ -41,6 +57,13 @@ export function parseCliArguments(argv: string[]): CliCommand {
       throw new CliUsageError("--version does not accept additional arguments.");
     }
     return { kind: "version" };
+  }
+
+  if (argv[0] === "node") {
+    if (argv.slice(1).some((argument) => argument === "--help" || argument === "-h")) {
+      return { kind: "help" };
+    }
+    return { kind: "node", options: parseNodeArguments(argv.slice(1)) };
   }
 
   if (argv[0] !== "resolve") {
@@ -142,6 +165,82 @@ export function parseCliArguments(argv: string[]): CliCommand {
       baseUrl,
       timeoutMs,
     },
+  };
+}
+
+function parseNodeArguments(argv: string[]): NodeCliOptions {
+  const subcommand = argv[0];
+  const actions: Record<string, NodeCliAction> = {
+    discover: "discover",
+    validate: "validate",
+    workflows: "workflows",
+    workflow: "workflow",
+    methods: "methods",
+    method: "method",
+  };
+  const action = actions[subcommand];
+  if (!action) {
+    throw new CliUsageError(
+      "node requires discover, validate, workflows, workflow, methods, or method.",
+    );
+  }
+
+  let nodeRoot: string | undefined;
+  let json = false;
+  const positional: string[] = [];
+  const seen = new Set<string>();
+  const requireOnce = (name: string): void => {
+    if (seen.has(name)) {
+      throw new CliUsageError(`${name} may be supplied only once.`);
+    }
+    seen.add(name);
+  };
+
+  for (let index = 1; index < argv.length; index += 1) {
+    const argument = argv[index];
+    switch (argument) {
+      case "--node-root":
+        requireOnce(argument);
+        nodeRoot = argv[index + 1];
+        if (nodeRoot === undefined || nodeRoot.startsWith("--")) {
+          throw new CliUsageError("--node-root requires a value.");
+        }
+        index += 1;
+        break;
+      case "--json":
+        requireOnce(argument);
+        json = true;
+        break;
+      default:
+        if (argument.startsWith("-")) {
+          throw new CliUsageError(`Unknown node option: ${argument}`);
+        }
+        positional.push(argument);
+    }
+  }
+
+  if (!nodeRoot?.trim()) {
+    throw new CliUsageError("node commands require --node-root <path>.");
+  }
+  const needsLookup = action === "workflow" || action === "method";
+  if (needsLookup && positional.length !== 1) {
+    throw new CliUsageError(`node ${action} requires exactly one lookup value.`);
+  }
+  if (!needsLookup && positional.length !== 0) {
+    throw new CliUsageError(`node ${action} does not accept positional values.`);
+  }
+  const lookup = positional[0]?.trim();
+  if (needsLookup && (!lookup || lookup.length > 300 || /[\r\n]/.test(lookup))) {
+    throw new CliUsageError(
+      `node ${action} requires a single-line lookup no longer than 300 characters.`,
+    );
+  }
+
+  return {
+    action,
+    nodeRoot: nodeRoot.trim(),
+    lookup,
+    json,
   };
 }
 

@@ -13,6 +13,11 @@ import {
   type ResolveCliOptions,
 } from "./arguments";
 import {
+  runNodeCliCommand,
+  writeNodeUsageFailure,
+  type NodeCliDependencies,
+} from "./node";
+import {
   CliCancellationToken,
   CliCancelledError,
   readPromptFromStdin,
@@ -55,6 +60,7 @@ export interface RunCliDependencies {
   signal?: AbortSignal;
   now?: () => Date;
   createModel?: (configuration: CliModelConfiguration) => ReferPromptModel;
+  createNodeClient?: NodeCliDependencies["createClient"];
 }
 
 export async function runCli(
@@ -77,6 +83,14 @@ export async function runCli(
     if (command.kind === "version") {
       stdout.write(`${readPackageVersion()}\n`);
       return cliExitCodes.resolved;
+    }
+    if (command.kind === "node") {
+      return runNodeCliCommand(command.options, {
+        stdout,
+        stderr,
+        cwd: dependencies.cwd ?? process.cwd(),
+        createClient: dependencies.createNodeClient,
+      });
     }
 
     if (signal.aborted) {
@@ -137,14 +151,18 @@ export async function runCli(
   } catch (error) {
     const failure = classifyFailure(error);
     if (jsonRequested) {
-      writeMachineResult(stdout, {
-        ok: false,
-        exitCode: failure.exitCode,
-        workspace,
-        provider,
-        result: null,
-        error: { code: failure.code, message: failure.message },
-      });
+      if (argv[0] === "node") {
+        writeNodeUsageFailure(stdout, argv, failure.message);
+      } else {
+        writeMachineResult(stdout, {
+          ok: false,
+          exitCode: failure.exitCode,
+          workspace,
+          provider,
+          result: null,
+          error: { code: failure.code, message: failure.message },
+        });
+      }
     } else if (failure.exitCode === cliExitCodes.interrupted) {
       stderr.write("REFER interrupted.\n");
     } else {
@@ -286,6 +304,12 @@ Usage:
   refer-script-factory --help
   refer-script-factory --version
   refer-script-factory resolve --workspace <path> (--prompt <text> | --stdin) --model <name> [options]
+  refer-script-factory node discover --node-root <path> [--json]
+  refer-script-factory node validate --node-root <path> [--json]
+  refer-script-factory node workflows --node-root <path> [--json]
+  refer-script-factory node workflow <id> --node-root <path> [--json]
+  refer-script-factory node methods --node-root <path> [--json]
+  refer-script-factory node method <id-or-alias> --node-root <path> [--json]
 
 Resolve options:
   --workspace <path>   Existing target workspace; relative paths resolve from cwd.
@@ -295,6 +319,12 @@ Resolve options:
   --base-url <url>     Loopback Ollama URL (default: http://127.0.0.1:11434).
   --timeout-ms <ms>    Bounded provider timeout from 1000 to 300000 (default: 120000).
   --json               Emit one machine-readable JSON object on stdout.
+
+Node commands:
+  Read current discovery, workflow-ledger, and method-bank truth from an explicit
+  local Sovereign Node root. Only the six documented read tools are reachable.
+  Node reads use exit 0 for success, 2 for usage/config mistakes, and 1 for
+  typed operational failures or missing lookups.
 
 Artifacts:
   .refer-factory/intake/*.json

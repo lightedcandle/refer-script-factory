@@ -1,6 +1,6 @@
 {
   "schema": "refer.domain-script-registry.v1",
-  "updated_at": "2026-07-17T01:31:06.424Z",
+  "updated_at": "2026-07-17T11:38:21.906Z",
   "rule": "Before direct work, identify the domain and check that domain's registry/check_first surfaces for an existing script.",
   "domains": [
     {
@@ -41,11 +41,15 @@
         },
         {
           "name": "test",
-          "command": "npm run compile && node dist/test/metrics.test.js && node dist/test/processEvents.test.js && node dist/test/bootstrapDryRun.test.js && node dist/test/bootstrapApply.test.js && node dist/test/bootstrapProcessEvents.test.js && node dist/test/bootstrapHealth.test.js && node dist/test/codebaseMiles.test.js && node dist/test/codebases.test.js && node dist/test/scriptBlueprint.test.js && node dist/test/scriptDna.test.js && node dist/test/scriptographer.test.js && node dist/test/referIntake.test.js && node dist/test/referOrchestrator.test.js && node dist/test/referProcessEvents.test.js && node dist/test/referChatSession.test.js && node dist/test/referChatMode.test.js && node dist/test/referOrchestratorRunner.test.js && node dist/test/referTargetRegistry.test.js && node dist/test/referCoach.test.js && node dist/test/orchestratorRoadmap.test.js && node dist/test/factoryGaps.test.js && node dist/test/schemaValidation.test.js && node dist/test/lawToc.test.js && node dist/test/updateSync.test.js && node dist/test/factoryRegistries.test.js && node dist/test/standaloneLanguage.test.js && node dist/test/authorityResolver.test.js && node dist/test/doctrineCompiler.test.js && node dist/test/scriptionaryTerm.test.js && node dist/test/modificationLoop.test.js && node dist/test/coreApi.test.js && node dist/test/coreBoundary.test.js && node dist/test/vscodeAdapterCompatibility.test.js && node dist/test/cliAdapter.test.js"
+          "command": "npm run compile && node dist/test/metrics.test.js && node dist/test/processEvents.test.js && node dist/test/bootstrapDryRun.test.js && node dist/test/bootstrapApply.test.js && node dist/test/bootstrapProcessEvents.test.js && node dist/test/bootstrapHealth.test.js && node dist/test/codebaseMiles.test.js && node dist/test/codebases.test.js && node dist/test/scriptBlueprint.test.js && node dist/test/scriptDna.test.js && node dist/test/scriptographer.test.js && node dist/test/referIntake.test.js && node dist/test/referOrchestrator.test.js && node dist/test/referProcessEvents.test.js && node dist/test/referChatSession.test.js && node dist/test/referChatMode.test.js && node dist/test/referOrchestratorRunner.test.js && node dist/test/referTargetRegistry.test.js && node dist/test/referCoach.test.js && node dist/test/orchestratorRoadmap.test.js && node dist/test/factoryGaps.test.js && node dist/test/schemaValidation.test.js && node dist/test/lawToc.test.js && node dist/test/updateSync.test.js && node dist/test/factoryRegistries.test.js && node dist/test/standaloneLanguage.test.js && node dist/test/authorityResolver.test.js && node dist/test/doctrineCompiler.test.js && node dist/test/scriptionaryTerm.test.js && node dist/test/modificationLoop.test.js && node dist/test/coreApi.test.js && node dist/test/coreBoundary.test.js && node dist/test/vscodeAdapterCompatibility.test.js && node dist/test/cliAdapter.test.js && node dist/test/sovereignNodeMcpClient.test.js && node dist/test/sovereignNodeCli.test.js"
         },
         {
           "name": "test:cli",
           "command": "npm run compile && node dist/test/cliAdapter.test.js"
+        },
+        {
+          "name": "test:node",
+          "command": "npm run compile && node dist/test/sovereignNodeMcpClient.test.js && node dist/test/sovereignNodeCli.test.js"
         },
         {
           "name": "verify",

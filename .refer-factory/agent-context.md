@@ -1,11 +1,11 @@
 # REFER Agent Context
 
-Generated: 2026-07-17T01:39:47.701Z
+Generated: 2026-07-17T11:46:34.954Z
 Workspace: E:\refer-script-factory
 
 ## Summary
-- Files indexed: 268
-- Directories indexed: 26
+- Files indexed: 278
+- Directories indexed: 28
 
 ## Important Entrypoints
 - src/adapters/vscode/cockpit/scriptFactoryPanel.ts

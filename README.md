@@ -50,6 +50,27 @@ npm run verify:core
 - Dormant REFER.OS reference library under `unscripted-laws/REFER.OS`
 - TypeScript tests for metrics, process events, and bootstrap dry-run
 
+## Standalone CLI And Sovereign Node Reads
+
+The `refer-script-factory` executable preserves the standalone `resolve`
+command and adds a read-only local Sovereign Node consumer:
+
+```powershell
+refer-script-factory node discover --node-root E:\SovereignNode
+refer-script-factory node validate --node-root E:\SovereignNode
+refer-script-factory node workflows --node-root E:\SovereignNode
+refer-script-factory node workflow node.discover --node-root E:\SovereignNode
+refer-script-factory node methods --node-root E:\SovereignNode
+refer-script-factory node method "branching methodology" --node-root E:\SovereignNode
+```
+
+Add `--json` to emit one machine-readable packet on stdout. Diagnostics remain
+on stderr. Node commands require an explicit local root, use bounded MCP stdio,
+and expose only `discover_node`, `validate_workflow_ledger`, `list_workflows`,
+`get_workflow`, `list_methods`, and `get_method`. They do not expose Node
+mutation, credentials, providers, remote transport, or orchestration. Node-local
+absolute source paths are removed from CLI output.
+
 ## Verify
 
 ```powershell

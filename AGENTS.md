@@ -6,7 +6,7 @@ This repo is governed by REFER.
 
 `refer-script-factory` is the seed implementation and doctrine source for the REFER Script Factory. The Script Factory is the provider-neutral system that converts ratified REFER Execution Contracts and verified methods into bounded script plans, artifacts, verification evidence, and reusable registrations.
 
-VS Code, CLI, HTTP, MCP, and future hosts are adapters and operator surfaces around that system. The current VS Code implementation is the `Script Factory VS Code adapter`; it is not the product identity or canonical runtime. The provider-neutral core lives under `src/core/**`, exposes its intentional API through `src/core/index.ts`, and imports no VS Code APIs or host adapters. Host adapters depend on the core. CLI implementation requires a later ratified Execution Contract.
+VS Code, CLI, HTTP, MCP, and future hosts are adapters and operator surfaces around that system. The current VS Code implementation is the `Script Factory VS Code adapter`; it is not the product identity or canonical runtime. The provider-neutral core lives under `src/core/**`, exposes its intentional API through `src/core/index.ts`, and imports no VS Code APIs or host adapters. Host adapters depend on the core. The standalone CLI owns its terminal behavior under `src/adapters/cli/**`. Its read-only Sovereign Node consumer lives under `src/integrations/sovereign-node/**`, uses only the Node-owned `refer-script-factory-node-read-v1` six-tool local-stdio contract, and must never move Node authority or mutation capability into the provider-neutral core.
 
 The factory should mature toward local-first operation:
 
