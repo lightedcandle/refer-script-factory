@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { createOllamaReferPromptModel } from "../../chat/referOllamaPromptModel";
+import { createOllamaReferPromptModel } from "../ollama/referOllamaPromptModel";
 import type { ReferPromptModel } from "../../core/orchestration/referPromptModel";
 
 export function createVsCodeReferPromptModel(
