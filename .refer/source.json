@@ -1,15 +1,16 @@
 {
-  "schema_version": 1,
-  "binding": "refer.universal",
-  "refreshed_at": "2026-07-13T05:21:06.951Z",
-  "sources": [
-    {
-      "source_path": "E:/refer.os/AGENTS.md",
-      "mtime_ms": 1783918341308
-    },
-    {
-      "source_path": "E:/refer.os/REFER.OS/refer.agent.md",
-      "mtime_ms": 1783918341311
-    }
-  ]
+  "schema_version": "1.0.0",
+  "consumer_binding_version": "1.0.0",
+  "universal_content_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+  "last_verified_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+  "universalAgentSurface": {
+    "path": "E:/refer.os/AGENTS.md",
+    "mtime": "2000-01-01T00:00:00.0000000Z",
+    "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "universalAgentBootstrap": {
+    "path": "E:/refer.os/REFER.OS/refer.agent.md",
+    "mtime": "2000-01-01T00:00:00.0000000Z",
+    "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+  }
 }

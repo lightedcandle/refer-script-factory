@@ -1,0 +1,31 @@
+{
+  "$schema": "https://refer.os/schemas/consumer-binding-maintenance-1.0.0.json",
+  "schema_version": "1.0.0",
+  "binding_version": "1.0.0",
+  "consumer_id": "refer-script-factory",
+  "standing_authority": {
+    "authority_id": "REFER-AUTOMATIC-INHERITANCE-001",
+    "mode": "deterministic-safe-binding-maintenance",
+    "targets": [
+      ".refer/generated/universal-agent.md",
+      ".refer/source.json"
+    ],
+    "commit_on_change": true,
+    "assimilate_to_local_main": true,
+    "archive_local": true,
+    "push": false,
+    "publish": false,
+    "deploy": false,
+    "delete_remote_branch": false
+  },
+  "generated_adapters": [
+    {
+      "adapter_id": "refer-universal-agent-v1",
+      "target": ".refer/generated/universal-agent.md",
+      "sources": [
+        "AGENTS.md",
+        "REFER.OS/refer.agent.md"
+      ]
+    }
+  ]
+}
