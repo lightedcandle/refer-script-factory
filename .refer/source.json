@@ -1,16 +1,16 @@
 {
-  "schema_version": "1.0.0",
   "consumer_binding_version": "1.0.0",
-  "universal_content_hash": "0000000000000000000000000000000000000000000000000000000000000000",
-  "last_verified_hash": "0000000000000000000000000000000000000000000000000000000000000000",
-  "universalAgentSurface": {
-    "path": "E:/refer.os/AGENTS.md",
-    "mtime": "2000-01-01T00:00:00.0000000Z",
-    "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
-  },
+  "last_verified_hash": "8af47632261348d58082e2ee588480c80b69136582dfc9c8cf913fc2796066a1",
+  "schema_version": "1.0.0",
   "universalAgentBootstrap": {
+    "mtime": "2026-07-17T01:19:47.1252678Z",
     "path": "E:/refer.os/REFER.OS/refer.agent.md",
-    "mtime": "2000-01-01T00:00:00.0000000Z",
-    "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
-  }
+    "sha256": "72fc9c7c3d86e5c4ae33bf5c5d25a7979522382b02a6d44e79757f52ee3bad53"
+  },
+  "universalAgentSurface": {
+    "mtime": "2026-07-17T01:19:47.1222696Z",
+    "path": "E:/refer.os/AGENTS.md",
+    "sha256": "4c883ad4fc9032729344067ee707ce8d40de9dcdafa26792eadb6c667c6dd424"
+  },
+  "universal_content_hash": "922b963e221aaf619dd43ff732f6b82a670dab91a1088e5042694dbbaa55a4c4"
 }
