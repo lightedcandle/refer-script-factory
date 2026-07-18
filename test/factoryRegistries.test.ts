@@ -11,6 +11,7 @@ withIsolatedScriptWorkspace(
     "scripts/registry/forge-registry.mjs",
     "scripts/lineage/lineage-packet.mjs",
     "dist/src/contracts/scriptFactory.js",
+    "dist/src/core/contracts/scriptFactory.js",
     "schemas/script-class-registry.schema.json",
     "schemas/forge-registry.schema.json",
     "schemas/lineage-packet.schema.json",
