@@ -2,6 +2,9 @@
 
 `refer.zo` governs REFER-aligned use of Zo Computer as a provider, workspace, hosted surface, AI chat surface, and possible operator node.
 
+Current status: Zo is on hold pending a needs-based analysis.
+Codex-native workflows currently cover the practical operator use case with less token overhead, so Zo should remain a back-burner option unless a concrete need reappears.
+
 Zo bootstrap and portable knowledge live in:
 
 - `https://github.com/lightedcandle/refer-zo-bootstrap`

@@ -10,7 +10,7 @@ Use this document after context compaction, in a fresh chat, or whenever work me
 
 1. `refer-script-factory`
    - Path: `e:\refer-script-factory`
-   - Scope: Codex/VS Code Script Factory, typed intake, provider-neutral doctrine, registry, scan/context assets, local process events.
+   - Scope: provider-neutral Script Factory, current Codex/VS Code adapter, typed intake, registry, scan/context assets, and local process events.
    - Authority for: general Script Factory concepts that are not Zo-specific.
 
 2. `refer-zo-bootstrap`
@@ -21,8 +21,8 @@ Use this document after context compaction, in a fresh chat, or whenever work me
 3. Telechurch Zo
    - Runtime: live Zo computer.
    - Scope: proving-ground behavior for Zo-native personas, rules, files, automation, datasets, and chat readback.
-   - Authority for: live evidence only. Source is not ratified until captured, verified, committed, and deployable from the repos.
-   - Preferred lane: Zo Files/MCP API for contract and talkback transfer, with Zo chat minimized to tiny activation or persona/rule judgment only when needed.
+   - Authority for: live evidence only. Source implementation is not accepted until captured, verified, committed, and deployable from the repos.
+   - Preferred lane: Zo Files/MCP API for ratified Execution Contract and talkback transfer, with Zo chat minimized to tiny activation or persona/rule judgment only when needed.
 
 ## Recovery Rule
 
@@ -57,7 +57,7 @@ The build director should use parallel lanes for substantial work:
 
 ```text
 user request
--> intake contract
+-> intake envelope or ratified Execution Contract
 -> Codex Script Factory lane
 -> Zo Bootstrap lane
 -> Telechurch Zo lane when live behavior matters
@@ -125,10 +125,10 @@ Root repo authority:
 - `docs/factory-system-doctrine.md`
 - `docs/script-legend.md`
 - `src/contracts/referIntake.ts`
-- `src/contracts/scriptFactory.ts`
-- `src/contracts/scriptLegend.ts`
-- `src/chat/referOrchestratorRunner.ts`
-- `src/chat/referResolutionLoop.ts`
+- `src/core/contracts/scriptFactory.ts`
+- `src/core/contracts/scriptLegend.ts`
+- `src/core/orchestration/referOrchestratorRunner.ts`
+- `src/core/orchestration/referResolutionLoop.ts`
 - `.refer-factory/`
 
 Zo repo authority:

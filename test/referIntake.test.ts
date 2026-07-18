@@ -32,6 +32,8 @@ assert.ok(record.raw_input.includes("execute"));
 
 const modelPrompt = createModelPrompt(record.contract);
 assert.ok(modelPrompt.includes(record.contract.contract_id));
+assert.ok(modelPrompt.includes("intake envelope"));
+assert.ok(modelPrompt.includes("not execution authority"));
 assert.ok(!modelPrompt.includes(record.raw_input));
 
 const root = fs.mkdtempSync(path.join(os.tmpdir(), "refer-intake-"));

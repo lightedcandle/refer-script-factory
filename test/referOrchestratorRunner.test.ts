@@ -34,7 +34,10 @@ async function main(): Promise<void> {
     token: createNeverCancelledToken(),
   });
   assert.equal(control.ok, true);
-  assert.equal(control.output, "REFER persistent contract mode is on.");
+  assert.equal(
+    control.output,
+    "REFER legacy intake-session tracking is on. This is not execution authority.",
+  );
   assert.equal(readReferChatModeState(root).persistent_contract_mode, true);
 
   const result = await runReferOrchestratorPrompt({

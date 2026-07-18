@@ -17,7 +17,7 @@ Smart Intake converts natural user requests into bounded, typed factory input be
 
 ## Authority
 
-- Registry source: `src/contracts/scriptFactory.ts`
+- Registry source: `src/core/contracts/scriptFactory.ts`
 - Terminology source: `docs/script-legend.md`
 - Operational registry: `.refer-factory/script-class-registry.json`
 - Forge registry: `.refer-factory/forge-registry.json`

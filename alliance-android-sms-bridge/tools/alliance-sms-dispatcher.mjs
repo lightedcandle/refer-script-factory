@@ -15,6 +15,7 @@ loadEnv("E:\\telechurch-e2e\\.env.master");
 const bridgeUrl = trimSlash(process.env.ALLIANCE_SMS_BRIDGE_URL || "http://127.0.0.1:8787");
 const bridgeToken = process.env.ALLIANCE_SMS_BRIDGE_TOKEN || "";
 const dispatcherToken = process.env.ALLIANCE_DISPATCHER_TOKEN || "";
+const allianceHubUrl = trimSlash(process.env.ALLIANCE_HUB_URL || process.env.ALLIANCE_SITE_URL || "https://alliance.telechurchlive.com");
 const edgeFunction = process.env.ALLIANCE_SUPABASE_FUNCTION || "alliance-record-write";
 const inboundMessages = [];
 const relayJobs = [];
@@ -176,7 +177,8 @@ function startServer(host, port) {
       if (url.pathname === "/sms/send" && req.method === "POST") {
         const body = await readJson(req);
         if (body.relay === true || url.searchParams.get("relay") === "true") {
-          return json(res, 200, await queueRelaySms(required(body.to, "to"), required(body.message, "message")));
+          const type = body.type || "sms";
+          return json(res, 200, await queueRelayJob(type, body));
         }
         return json(res, 200, await sendSms(required(body.to, "to"), required(body.message, "message"), true));
       }
@@ -222,6 +224,28 @@ function startServer(host, port) {
         return json(res, 200, { ok: record.ok && profile.ok, message, supabase: record, profile });
       }
 
+      if (url.pathname === "/phone/pulse" && req.method === "POST") {
+        const body = await readJson(req);
+        const type = body.type || "minute";
+        const pulse = {
+          type,
+          battery: body.battery,
+          timestamp: body.timestamp || Date.now(),
+          bridge: url.searchParams.get("bridge") || "unknown",
+        };
+        console.log(`[PULSE] Received ${type} pulse from ${pulse.bridge}`);
+        const record = await writeSmsRecord({
+          direction: "telemetry",
+          phone: pulse.bridge,
+          body: `Pulse: ${type}`,
+          pulse_type: type,
+          battery: body.battery,
+          transport: "cloud_relay",
+        });
+        const hub = await forwardPulseToHub(pulse);
+        return json(res, 200, { ok: record.ok && hub.ok, pulse, supabase: record, hub });
+      }
+
       return json(res, 404, { ok: false, error: "not_found" });
     } catch (error) {
       return json(res, 500, { ok: false, error: error.message });
@@ -239,6 +263,38 @@ function startServer(host, port) {
       auth_required: true,
     }, null, 2));
   });
+}
+
+async function forwardPulseToHub(pulse) {
+  if (!dispatcherToken) {
+    return { ok: false, skipped: true, error: "dispatcher_token_not_configured" };
+  }
+
+  try {
+    const response = await fetch(`${allianceHubUrl}/phone/pulse?bridge=${encodeURIComponent(pulse.bridge || "dispatcher")}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Dispatcher-Token": dispatcherToken,
+      },
+      body: JSON.stringify({
+        type: pulse.type,
+        battery: pulse.battery,
+        timestamp: pulse.timestamp,
+        forwarded_by: "alliance_sms_dispatcher",
+      }),
+    });
+    const body = await response.json().catch(() => null);
+    return {
+      ok: response.ok && body?.ok !== false,
+      status: response.status,
+      action: body?.action,
+      tasks: body?.tasks,
+      error: response.ok ? undefined : body?.error || "hub_pulse_forward_failed",
+    };
+  } catch (error) {
+    return { ok: false, error: error.message };
+  }
 }
 
 async function routeProfileIntake(from, message) {
@@ -307,20 +363,21 @@ function latestRelayInbound(from) {
   return null;
 }
 
-async function queueRelaySms(to, message) {
+async function queueRelayJob(type, payload) {
   const job = {
-    id: `sms-job-${Date.now()}-${Math.random().toString(16).slice(2)}`,
-    to,
-    message,
+    id: `job-${type}-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+    type,
+    ...payload,
     status: "queued",
     queued_at: new Date().toISOString(),
   };
   relayJobs.push(job);
   const record = await writeSmsRecord({
-    direction: "outbound",
-    phone: to,
-    body: message,
-    bridge_status: "queued_for_cloud_relay",
+    direction: "rhythmic_job",
+    phone: payload.to || "bridge",
+    body: `Job: ${type}${payload.repeat_interval ? " (rhythmic)" : ""}`,
+    job_type: type,
+    repeat_interval: payload.repeat_interval || null,
     transport: "cloud_relay",
     job_id: job.id,
   });

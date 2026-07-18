@@ -434,3 +434,47 @@ Update this file whenever a tool, provider, transport path, script, runner, or p
 - Mitigation: treat local preview as UI/API smoke verification, and upgrade Wrangler before relying on compatibility-date-specific runtime behavior
 - Script/doc now encoding mitigation: this ledger
 - Verification: local Pages preview still compiled and reported ready on `http://127.0.0.1:8788`
+
+### OpenAI Quota Blocks Alliance Formula And Seed Smoke Checks
+
+- Date: 2026-06-18
+- Domain/provider: OpenAI API / Alliance Hub verification scripts
+- Operation: running `npm run formula:benchmark` and `npm run seed:smoke` in `alliance-hub`
+- Symptom: both scripts failed with an OpenAI quota-exceeded API error before returning a verification packet
+- Likely cause: the configured OpenAI account or project has no available quota for these requests
+- Mitigation: do not mint formula benchmark, retrieval sync, or seed smoke methods as verified until a successful run is captured; retry after billing/quota is repaired
+- Script/doc now encoding mitigation: this ledger, `alliance-hub/tools/formula-contract-benchmark.mjs`, `alliance-hub/tools/seed-pack-smoke.mjs`
+- Verification: `npm run check`, `npm run sms:validate`, `npm run sms:route -- --registered --text "profile"`, and `npm run deploy:dry` still passed without exposing secrets
+
+### Alliance Supabase Dry Run Can Be Blocked By Remote Migration Drift
+
+- Date: 2026-06-18
+- Domain/provider: Supabase CLI / Alliance Hub migrations
+- Operation: running `npm run supabase:push:dry` in `alliance-hub`
+- Symptom: the dry run listed migrations, then failed because remote migration version `202606161330` was not found in the local migrations directory
+- Likely cause: the remote Supabase migration history contains a migration that has not been preserved in the local repo
+- Mitigation: do not mint the Supabase push path as verified until the missing migration is recovered, pulled, or the migration history is repaired with an approved successor
+- Script/doc now encoding mitigation: this ledger, `alliance-hub/tools/supabase-push.mjs`
+- Verification: the command failed before applying changes and printed Supabase's repair/pull guidance; no production migration was run
+
+### Windows PowerShell Execution Policy Can Block npm.ps1 And npx.ps1
+
+- Date: 2026-07-15
+- Domain/provider: Windows PowerShell / local Node.js verification
+- Operation: running `npx tsc -p . --noEmit`
+- Symptom: PowerShell rejected `E:\Program Files\nodejs\npx.ps1` and later `npm.ps1` because script execution is disabled
+- Likely cause: command resolution selected the PowerShell shim while the machine execution policy blocks `.ps1` scripts
+- Mitigation: invoke the same installed executables through `npx.cmd` or `npm.cmd`, for example `npx.cmd tsc -p . --noEmit` and `npm.cmd run compile`
+- Script/doc now encoding mitigation: this ledger
+- Verification: `npx.cmd tsc -p . --noEmit` completed with exit code `0`
+
+### Fresh Worktrees Need Local Dependencies Before npx TypeScript Checks
+
+- Date: 2026-07-15
+- Domain/provider: npm/npx / local TypeScript verification
+- Operation: running `npx.cmd tsc -p . --noEmit` in a fresh isolated worktree
+- Symptom: npx resolved the unrelated registry package named `tsc` and printed `This is not the tsc command you are looking for`
+- Likely cause: the fresh worktree had no local `node_modules`, so npx could not resolve the lockfile-pinned TypeScript compiler from the project
+- Mitigation: run `npm.cmd ci` first, then use `npx.cmd tsc -p . --noEmit`; do not install or upgrade TypeScript ad hoc
+- Script/doc now encoding mitigation: this ledger and the lockfile-pinned project toolchain
+- Verification: `npm.cmd ci` restored the lockfile-pinned toolchain, after which `npx.cmd tsc -p . --noEmit`, the core-only compile, the extension compile, and the full regression suite passed

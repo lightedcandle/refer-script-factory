@@ -47,13 +47,13 @@ export function runScriptographer(
   const entrypoints = new Set(scriptFactoryEntries.map((entry) => entry.entrypoint));
   const candidates = dedupeCandidates([
     ...legend.terms.map((term) =>
-      candidate(term.term, "term", "src/contracts/scriptLegend.ts terms", terms.has(term.term)),
+      candidate(term.term, "term", "src/core/contracts/scriptLegend.ts terms", terms.has(term.term)),
     ),
     ...scriptFactoryEntries.map((entry) =>
       candidate(
         entry.label,
         "registered-script-label",
-        `src/contracts/scriptFactory.ts ${entry.script_id}`,
+        `src/core/contracts/scriptFactory.ts ${entry.script_id}`,
         taxonomy.get("Registered Script Label")?.has(entry.label) ?? false,
       ),
     ),
@@ -109,7 +109,7 @@ function packageJsonCandidates(
       viewsContainers?: { activitybar?: { name?: string; title?: string }[] };
     };
   };
-  const cockpitLabels = taxonomy.get("Cockpit View Label") ?? new Set<string>();
+  const cockpitLabels = taxonomy.get("Operator Interface Label") ?? new Set<string>();
   const viewNames = Object.values(packageJson.contributes?.views ?? {})
     .flat()
     .map((view) => view.name)

@@ -88,7 +88,7 @@ function scanTerminologyGaps(): FactoryGap[] {
       category: "terminology",
       title: `Missing terminology: ${term}`,
       detail: `${term} is part of the factory doctrine but is not present in the Script Legend.`,
-      repair_hint: "Add the term to src/contracts/scriptLegend.ts so generated legends stay aligned with doctrine.",
+      repair_hint: "Add the term to src/core/contracts/scriptLegend.ts so generated legends stay aligned with doctrine.",
     }));
 }
 
@@ -108,7 +108,7 @@ function scanRegistryGaps(): FactoryGap[] {
         category: "registry",
         title: `Script label is not in legend: ${entry.label}`,
         detail: `${entry.script_id} uses the label ${entry.label}, but that label is not listed in the Script Legend Registered Script Label taxonomy.`,
-        repair_hint: "Add the label to src/contracts/scriptLegend.ts or rename the registry entry to an existing governed label.",
+        repair_hint: "Add the label to src/core/contracts/scriptLegend.ts or rename the registry entry to an existing governed label.",
       });
     }
 
@@ -212,7 +212,7 @@ function scanCockpitViewLabelGaps(workspaceRoot: string): FactoryGap[] {
   };
   const legend = createScriptLegend();
   const governedViewLabels = new Set(
-    legend.taxonomy.find((category) => category.name === "Cockpit View Label")?.allowed_values ?? [],
+    legend.taxonomy.find((category) => category.name === "Operator Interface Label")?.allowed_values ?? [],
   );
   const viewLabels = Object.values(packageJson.contributes?.views ?? {})
     .flat()
@@ -225,9 +225,9 @@ function scanCockpitViewLabelGaps(workspaceRoot: string): FactoryGap[] {
       id: `terminology.unlisted-cockpit-view-label.${slug(label)}`,
       severity: "error",
       category: "terminology",
-      title: `Cockpit view label is not in legend: ${label}`,
-      detail: `${label} appears in package.json contributes.views but is not listed in the Script Legend Cockpit View Label taxonomy.`,
-      repair_hint: "Add the view label to src/contracts/scriptLegend.ts or rename package.json to an existing governed label.",
+      title: `Operator interface label is not in legend: ${label}`,
+      detail: `${label} appears in package.json contributes.views but is not listed in the Script Legend Operator Interface Label taxonomy.`,
+      repair_hint: "Add the view label to src/core/contracts/scriptLegend.ts or rename package.json to an existing governed label.",
     }));
 }
 

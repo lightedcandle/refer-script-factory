@@ -1,6 +1,10 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 
+/**
+ * Legacy compatibility API for intake-session tracking. These names and stored
+ * states never create or authorize a ratified REFER Execution Contract.
+ */
 export type ReferActiveContractMode = "idle" | "temporary" | "persistent";
 export type ReferLastTurnMode = "none" | "temporary" | "persistent";
 

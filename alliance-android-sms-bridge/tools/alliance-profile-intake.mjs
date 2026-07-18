@@ -6,6 +6,7 @@ import { createHmac } from "node:crypto";
 const cwd = process.cwd();
 loadEnv(resolve(cwd, ".env.local"));
 loadEnv(resolve(cwd, ".env"));
+loadEnv(resolve(cwd, "..", "alliance-hub", ".dev.vars"));
 loadEnv(resolve(cwd, "..", ".env.master"));
 loadEnv(resolve(cwd, "..", "refer-zo-bootstrap", ".env.local"));
 if (process.env.ALLIANCE_SUPABASE_ENV) loadEnv(process.env.ALLIANCE_SUPABASE_ENV);
@@ -19,7 +20,13 @@ const allianceAboutUrl = trimSlash(process.env.ALLIANCE_ABOUT_URL || `${alliance
 const profileBaseUrl = trimSlash(process.env.ALLIANCE_PROFILE_BASE_URL || `${allianceHomeUrl}/member`);
 const profileUploadBaseUrl = trimSlash(process.env.ALLIANCE_PROFILE_UPLOAD_BASE_URL || `${profileBaseUrl}/upload`);
 const profileFormBaseUrl = trimSlash(process.env.ALLIANCE_PROFILE_FORM_BASE_URL || "https://alliance.telechurchlive.com/profile");
+const eventsApiUrl = trimSlash(process.env.ALLIANCE_EVENTS_API_URL || `${allianceHomeUrl}/api/events?canonical=true`);
 const profileFormSecret = process.env.ALLIANCE_PROFILE_FORM_SECRET || dispatcherToken || process.env.ALLIANCE_SMS_RELAY_TOKEN || "alliance-local-profile-form-secret";
+const regexPilotPhones = parsePilotPhones(
+  process.env.ALLIANCE_REGEX_TEST_PHONES
+    || process.env.ALLIANCE_REGEX_TEST_PHONE
+    || "9379854448",
+);
 const storePath = resolve(cwd, ".alliance-sms", "profile-contexts.json");
 const command = process.argv[2] || "help";
 const args = parseArgs(process.argv.slice(3));
@@ -43,9 +50,9 @@ try {
   if (command === "script") {
     console.log(JSON.stringify({ ok: true, script: SCRIPT }, null, 2));
   } else if (command === "detect") {
-    const phone = normalizePhone(required(args.from || args.phone, "--from"));
-    const message = required(args.message || args.body, "--message");
-    console.log(JSON.stringify(detectProfileRoute(phone, message), null, 2));
+      const phone = normalizePhone(required(args.from || args.phone, "--from"));
+      const message = required(args.message || args.body, "--message");
+      console.log(JSON.stringify(await detectProfileRoute(phone, message), null, 2));
   } else if (command === "context") {
     const phone = normalizePhone(required(args.phone || args.to || args.from, "--phone"));
     const store = readStore();
@@ -79,7 +86,7 @@ try {
   process.exit(1);
 }
 
-export function detectProfileRoute(phone, inboundBody) {
+export async function detectProfileRoute(phone, inboundBody) {
   if (isSmsReactionMessage(inboundBody)) {
     return {
       ok: true,
@@ -95,16 +102,50 @@ export function detectProfileRoute(phone, inboundBody) {
   const reset = isResetCommand(inboundBody);
   const context = store.contexts[normalizePhone(phone)] || null;
   const session = context ? activeSession(context) : null;
-  const active = Boolean(session && session.script_id === SCRIPT.id && !["completed", "cancelled", "paused"].includes(session.state));
-  const registered = Boolean(context?.current_profile_id || context?.profiles?.length);
+  const registration = await resolveRegisteredProfile(phone, context);
+  const registered = Boolean(registration.registered);
+  if (registered && isActiveProfileSetupSession(session)) {
+    closeStaleProfileSetupSession(store, context, session, "hub_registered_profile");
+  }
+  const freshSession = context ? activeSession(context) : null;
+  const active = Boolean(freshSession && freshSession.script_id === SCRIPT.id && !["completed", "cancelled", "paused"].includes(freshSession.state));
   const registeredIntent = registered && !reset;
   const starts = !registered;
+  if (isRegexPilotPhone(phone)) {
+    return {
+      ok: true,
+      should_route: true,
+      reason: "regex_test_phone",
+      state: freshSession?.state || null,
+      script_id: "regex.test.redirect.v1",
+    };
+  }
+  if (isEventIntent(inboundBody)) {
+    return {
+      ok: true,
+      should_route: true,
+      reason: "events_intent",
+      state: session?.state || null,
+      script_id: "alliance.events.section.v1",
+    };
+  }
+  if (isFormulaIntent(inboundBody)) {
+    return {
+      ok: true,
+      should_route: true,
+      reason: "formula_intent",
+      state: freshSession?.state || null,
+      script_id: "alliance.formula.intake.v1",
+    };
+  }
   return {
     ok: true,
     should_route: reset || active || starts || registeredIntent,
     reason: reset ? "profile_setup_reset" : active ? "active_profile_session" : starts ? "unregistered_phone" : "registered_phone_action_menu",
-    state: session?.state || null,
+    state: freshSession?.state || null,
     script_id: SCRIPT.id,
+    profile_id: registration.profileId || null,
+    profile_source: registration.source || null,
   };
 }
 
@@ -158,7 +199,78 @@ async function handleReply(phone, inboundBody, send) {
   const context = ensureContext(store, phone);
   let session = activeSession(context);
   const reset = isResetCommand(inboundBody);
-  const registeredProfileId = currentProfileId(context);
+  if (isRegexPilotPhone(phone)) {
+    const result = await routeHubFormulaIntent(phone, inboundBody, context, send);
+    if (result) {
+      return result;
+    }
+  }
+  if (isEventIntent(inboundBody)) {
+    const eventResponse = await fetchUpcomingEvents();
+    const outbound = formatEventReply(eventResponse.events);
+    addEvent(context, "inbound", "sms", inboundBody, session?.id || null);
+    addEvent(context, "outbound", "sms", outbound, session?.id || null);
+    context.summary = "events_reply";
+    writeStore(store);
+    const record = !send ? { ok: true, skipped: true } : await writeAllianceRecord("sms_route_decision", `Alliance events ${phone}`, {
+      phone,
+      script_id: "alliance.events.section.v1",
+      state: "events_reply",
+      status: "active",
+      inbound_body: inboundBody,
+      event_count: eventResponse.events.length,
+      event_source: eventResponse.source,
+      event_error: eventResponse.error || null,
+      event: "events_reply",
+    });
+    const delivery = send ? await queueSms(phone, outbound) : { ok: true, skipped: true };
+    return {
+      ok: delivery.ok,
+      phone,
+      script_id: "alliance.events.section.v1",
+      state: "events_reply",
+      outbound,
+      delivery,
+      record,
+      events: eventResponse.events,
+    };
+  }
+  const registration = await resolveRegisteredProfile(phone, context);
+  const registeredProfileId = registration.profileId || "";
+  if (registeredProfileId) {
+    context.current_profile_id = registeredProfileId;
+    if (!Array.isArray(context.profiles)) context.profiles = [];
+    if (!context.profiles.some((profile) => profileRecordId(profile) === registeredProfileId)) {
+      context.profiles.push({
+        id: registeredProfileId,
+        values: registration.profile?.values || {},
+        source: registration.source || "hub_active_profile",
+      });
+    }
+    if (isActiveProfileSetupSession(session)) {
+      closeStaleProfileSetupSession(store, context, session, "hub_registered_profile");
+      session = activeSession(context);
+    }
+  }
+  if (isFormulaIntent(inboundBody)) {
+    const formulaResponse = await routeHubFormulaIntent(phone, inboundBody, registration, send);
+    if (formulaResponse) {
+      addEvent(context, "inbound", "sms", inboundBody, null);
+      addEvent(context, "outbound", "sms", formulaResponse.outbound, null);
+      context.summary = formulaResponse.reason || "formula_response";
+      writeStore(store);
+      return {
+        ok: formulaResponse.ok,
+        phone,
+        script_id: formulaResponse.script_id,
+        state: formulaResponse.reason,
+        outbound: formulaResponse.outbound,
+        delivery: formulaResponse.delivery,
+        record: formulaResponse.record,
+        hub: formulaResponse.hub,
+      };
+    }
+  }
   if (reset) {
     context.current_profile_id = null;
     context.active_flow = SCRIPT.id;
@@ -396,17 +508,23 @@ async function selftest() {
     advanceSession(secondSession, "START"),
   ];
   const registeredProfileReply = registeredUserReply("Profile", "user-1000-test");
+  const registeredEditReply = registeredUserReply("I would like to update my name", "user-1000-test");
   const registeredAmbiguousReply = registeredUserReply("What can I do?", "user-1000-test");
-  const reactionDetection = detectProfileRoute(phone, 'Liked "Profile"');
-  const quotedReactionDetection = detectProfileRoute(phone, '"liked Profile"');
-  const emojiReactionDetection = detectProfileRoute(phone, "👍");
+  const regexPilotRoute = await detectProfileRoute("9379854448", "I would like to add an event");
+  const reactionDetection = await detectProfileRoute(phone, 'Liked "Profile"');
+  const quotedReactionDetection = await detectProfileRoute(phone, '"liked Profile"');
+  const emojiReactionDetection = await detectProfileRoute(phone, "👍");
   return {
     ok: steps.every((step) => step.ok)
       && legacySteps.every((step) => step.ok)
       && session.state === "paused"
       && secondSession.state === "profile_link_sent"
       && registeredProfileReply.includes("/member/user-1000-test")
+      && registeredEditReply.includes("/member/user-1000-test")
+      && registeredEditReply.toLowerCase().includes("edit")
       && registeredAmbiguousReply.includes("Available links:")
+      && regexPilotRoute.reason === "regex_test_phone"
+      && regexPilotRoute.script_id === "regex.test.redirect.v1"
       && reactionDetection.ignored === true
       && quotedReactionDetection.ignored === true
       && emojiReactionDetection.ignored === true,
@@ -415,7 +533,9 @@ async function selftest() {
     profile_created: false,
     form_url_created: Boolean(session.form_url && session.form_url.includes(profileFormBaseUrl)),
     registered_profile_link_reply: registeredProfileReply,
+    registered_profile_edit_reply: registeredEditReply,
     registered_ambiguous_reply: registeredAmbiguousReply,
+    regex_pilot_route: regexPilotRoute,
     reaction_detection: reactionDetection,
     store_path: originalStorePath,
   };
@@ -528,21 +648,294 @@ function profileUrl(profileId) {
 }
 
 function currentProfileId(context) {
-  return context.current_profile_id || context.profiles?.at(-1)?.id || "";
+  return context?.current_profile_id || context?.profiles?.at(-1)?.id || "";
+}
+
+function isActiveProfileSetupSession(session) {
+  return Boolean(session && session.script_id === SCRIPT.id && !["completed", "cancelled", "paused"].includes(session.state));
+}
+
+function closeStaleProfileSetupSession(store, context, session, reason) {
+  if (!context || !session) return;
+  session.state = "completed";
+  session.status = "completed";
+  session.completed_at = session.completed_at || now();
+  session.updated_at = now();
+  context.active_script_session_id = null;
+  context.active_flow = null;
+  context.summary = reason || "registered_phone_action_menu";
+  context.updated_at = now();
+  writeStore(store);
+}
+
+async function resolveRegisteredProfile(phone, context) {
+  const cleanPhone = normalizePhone(phone);
+  const hubProfile = await fetchHubActiveProfile(cleanPhone);
+  const hubProfileId = profileRecordId(hubProfile?.profile);
+  if (hubProfileId) {
+    return {
+      registered: true,
+      profileId: hubProfileId,
+      profile: hubProfile.profile,
+      source: hubProfile.source || "hub_active_profile",
+      lookup: hubProfile,
+    };
+  }
+
+  return {
+    registered: false,
+    profileId: "",
+    profile: null,
+    source: hubProfile.source || hubProfile.reason || "hub_profile_not_found",
+    lookup: hubProfile,
+  };
+}
+
+async function fetchHubActiveProfile(phone) {
+  const url = trimSlash(process.env.SUPABASE_URL || "");
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || "";
+  const cleanPhone = normalizePhone(phone);
+  if (!url || !key) {
+    return {
+      ok: false,
+      reason: "supabase_not_configured",
+      profile: null,
+      source: "not_configured",
+    };
+  }
+
+  try {
+    const response = await fetch(
+      `${url}/rest/v1/alliance_records?entity=eq.alliance_profile&status=eq.active&values->>phone=eq.${encodeURIComponent(cleanPhone)}&order=updated_at.desc&limit=5&select=id,status,values,updated_at`,
+      {
+        headers: {
+          apikey: key,
+          Authorization: `Bearer ${key}`,
+          "Content-Type": "application/json",
+        },
+      },
+    );
+    const rows = await response.json().catch(() => []);
+    if (!response.ok) {
+      return {
+        ok: false,
+        reason: `hub_profile_lookup_http_${response.status}`,
+        profile: null,
+        source: "hub_lookup_failed",
+      };
+    }
+    const profile = Array.isArray(rows) && rows.length ? rows[0] : null;
+    return {
+      ok: true,
+      reason: profile ? "hub_active_profile" : "hub_profile_not_found",
+      profile,
+      source: profile ? "hub_active_profile" : "hub_profile_not_found",
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      reason: error.message,
+      profile: null,
+      source: "hub_lookup_failed",
+    };
+  }
+}
+
+function profileRecordId(record) {
+  return String(record?.values?.id || record?.id || "").trim();
 }
 
 function registeredUserReply(inboundBody, profileId) {
-  if (/^profile$/i.test(String(inboundBody || "").trim())) {
+  const normalized = String(inboundBody || "").trim().toLowerCase().replace(/[^\w\s']/g, " ").replace(/\s+/g, " ");
+  const profileLink = profileUrl(profileId);
+  if (/^profile$/.test(normalized)) {
     return [
       "Alliance profile link:",
-      profileUrl(profileId),
+      profileLink,
       "Open it to view your profile, edit it, or jump into available Alliance areas.",
+    ].join("\n");
+  }
+  if (/\b(profile|account|info|settings|name)\b/.test(normalized) && /\b(update|edit|change|correct|fix)\b/.test(normalized)) {
+    return [
+      "Closest match: edit your Alliance profile.",
+      profileLink,
+      "Open your profile and tap Edit Profile to request a secure edit link.",
     ].join("\n");
   }
   return [
     "I can help with these Alliance links right now.",
     availableActionLinks(profileId),
   ].join("\n");
+}
+
+function isFormulaIntent(value) {
+  const normalized = String(value || "").trim().toLowerCase().replace(/[^\w\s']/g, " ").replace(/\s+/g, " ");
+  return /\b(church|churches|organization|organizations|fellowship|fellowships|my church|my organization|my fellowship|the alliance|alliance directory|directory)\b/.test(normalized);
+}
+
+function isEventIntent(value) {
+  const normalized = String(value || "").trim().toLowerCase().replace(/[^\w\s']/g, " ").replace(/\s+/g, " ");
+  return /\b(events?|calendar|service|services|upcoming|next event|next service|what is happening|what's happening|meeting|gathering|schedule)\b/.test(normalized);
+}
+
+async function routeHubFormulaIntent(phone, inboundBody, context, send) {
+  const clean = String(inboundBody || "").trim();
+  const profileId = String(context?.profileId || context?.profile_id || "").trim();
+  const profileName = String(context?.profileName || context?.profile_name || "").trim();
+  const organizationId = String(context?.organizationId || context?.organization_id || context?.church_id || "").trim();
+  const organizationName = String(context?.organizationName || context?.organization_name || context?.church_name || "").trim();
+  try {
+    const response = await fetch(`${allianceHomeUrl}/phone/inbound`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Dispatcher-Token": dispatcherToken,
+      },
+      body: JSON.stringify({
+        from: phone,
+        body: inboundBody,
+        date: Date.now(),
+        registered: Boolean(profileId),
+        phone,
+        transport: "android_bridge_dispatcher",
+        profile_id: profileId || null,
+        profile_name: profileName || null,
+        organization_id: organizationId || null,
+        organization_name: organizationName || null,
+        church_id: organizationId || null,
+        church_name: organizationName || null,
+      }),
+    });
+
+    const body = await response.json().catch(() => null);
+    if (!response.ok || !body?.ok) return null;
+
+    const outbound = String(
+      body.response_text
+        || body.clarification_question
+        || body.error
+        || body.response
+        || "",
+    ).trim();
+    if (!outbound) return null;
+
+    const record = await writeAllianceRecord("sms_route_decision", `Alliance formula ${phone}`, {
+      phone,
+      script_id: "alliance.formula.intake.v1",
+      state: body.execution_mode || body.response_kind || "formula_response",
+      status: "active",
+      inbound_body: clean,
+      response_kind: body.response_kind || null,
+      execution_mode: body.execution_mode || null,
+      clarification_token: body.clarification_token || null,
+      formula_id: body.formula?.formula_id || null,
+      event: body.response_kind === "clarify" ? "formula_clarify" : "formula_response",
+    });
+    const delivery = send ? await queueSms(phone, outbound) : { ok: true, skipped: true };
+    return {
+      ok: delivery.ok,
+      routed: true,
+      reason: body.response_kind === "clarify" ? "formula_clarify" : "formula_response",
+      phone,
+      script_id: "alliance.formula.intake.v1",
+      outbound,
+      delivery,
+      record,
+      hub: body,
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      routed: false,
+      reason: error.message,
+      phone,
+      script_id: "alliance.formula.intake.v1",
+      outbound: null,
+      delivery: { ok: false, skipped: true, error: error.message },
+      record: { ok: false, skipped: true, error: error.message },
+      hub: null,
+    };
+  }
+}
+
+async function fetchUpcomingEvents(limit = 3) {
+  try {
+    const response = await fetch(eventsApiUrl);
+    if (!response.ok) {
+      return { ok: false, events: [], source: "events_api_http_error", error: `http_${response.status}` };
+    }
+
+    const body = await response.json().catch(() => null);
+    const events = Array.isArray(body?.events) ? body.events : [];
+    const filtered = events
+      .filter((event) => String(event?.event_status || "active").toLowerCase() !== "cancelled")
+      .filter((event) => {
+        const start = parseEventTime(event?.event_start_time || event?.date || event?.startDate);
+        return !start || start.getTime() > Date.now();
+      })
+      .sort((left, right) => {
+        const leftTime = parseEventTime(left?.event_start_time || left?.date || left?.startDate)?.getTime() || 0;
+        const rightTime = parseEventTime(right?.event_start_time || right?.date || right?.startDate)?.getTime() || 0;
+        return leftTime - rightTime;
+      })
+      .slice(0, Math.max(1, Math.min(Number(limit) || 3, 5)));
+
+    return {
+      ok: true,
+      events: filtered,
+      source: body?.shape || "canonical",
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      events: [],
+      source: "events_api_failed",
+      error: error.message,
+    };
+  }
+}
+
+function formatEventReply(events) {
+  const safeEvents = Array.isArray(events) ? events.slice(0, 3) : [];
+  if (!safeEvents.length) {
+    return [
+      "I couldn't find upcoming events right now.",
+      `Calendar: ${allianceHomeUrl}/calendar`,
+    ].join("\n");
+  }
+
+  const lines = ["Upcoming events:"];
+  for (const event of safeEvents) {
+    const title = event.event_title || event.title || "Upcoming event";
+    const date = formatEventDate(event.event_start_time || event.date || event.startDate);
+    const location = event.event_location || event.location || "";
+    const link = event.event_public_url || `${allianceHomeUrl}/calendar`;
+    const summary = [date, location].filter(Boolean).join(" · ");
+    lines.push(summary ? `${title}\n${summary}\n${link}` : `${title}\n${link}`);
+  }
+  lines.push(`Calendar: ${allianceHomeUrl}/calendar`);
+  return lines.join("\n");
+}
+
+function formatEventDate(value) {
+  if (!value) return "";
+  const date = parseEventTime(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(date);
+}
+
+function parseEventTime(value) {
+  if (!value) return new Date(NaN);
+  const raw = String(value).trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+    return new Date(`${raw}T00:00:00`);
+  }
+  return new Date(raw);
 }
 
 function availableActionLinks(profileId) {
@@ -616,10 +1009,30 @@ function parseArgs(argv) {
   return parsed;
 }
 
+function parsePilotPhones(value) {
+  return new Set(
+    String(value || "")
+      .split(/[,\s]+/)
+      .map((item) => normalizePhoneLoose(item))
+      .filter(Boolean),
+  );
+}
+
 function normalizePhone(value) {
   const digits = String(value || "").replace(/\D/g, "");
   if (digits.length < 10 || digits.length > 15) throw new Error("Phone must contain 10 to 15 digits.");
   return digits;
+}
+
+function normalizePhoneLoose(value) {
+  const digits = String(value || "").replace(/\D/g, "");
+  if (digits.length < 10 || digits.length > 15) return "";
+  return digits;
+}
+
+function isRegexPilotPhone(phone) {
+  const normalized = normalizePhoneLoose(phone);
+  return normalized ? regexPilotPhones.has(normalized) : false;
 }
 
 function required(value, name) {

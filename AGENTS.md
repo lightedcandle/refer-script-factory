@@ -4,7 +4,9 @@ This repo is governed by REFER.
 
 ## Repo Purpose
 
-`refer-script-factory` is the seed implementation of the REFER Script Factory. Its job is to grow from a hand-authored VS Code extension into a self-indexing, self-describing, script-driven factory that can build and maintain its own script system with minimal dependence on remote AI.
+`refer-script-factory` is the seed implementation and doctrine source for the REFER Script Factory. The Script Factory is the provider-neutral system that converts ratified REFER Execution Contracts and verified methods into bounded script plans, artifacts, verification evidence, and reusable registrations.
+
+VS Code, CLI, HTTP, MCP, and future hosts are adapters and operator surfaces around that system. The current VS Code implementation is the `Script Factory VS Code adapter`; it is not the product identity or canonical runtime. The provider-neutral core lives under `src/core/**`, exposes its intentional API through `src/core/index.ts`, and imports no VS Code APIs or host adapters. Host adapters depend on the core. The standalone CLI owns its terminal behavior under `src/adapters/cli/**`. Its read-only Sovereign Node consumer lives under `src/integrations/sovereign-node/**`, uses only the Node-owned `refer-script-factory-node-read-v1` six-tool local-stdio contract, and must never move Node authority or mutation capability into the provider-neutral core.
 
 The factory should mature toward local-first operation:
 
@@ -18,11 +20,15 @@ The factory should mature toward local-first operation:
 
 The factory doctrine is documented in `docs/factory-system-doctrine.md`: a forge is the conversion unit, the Script Factory is the governance layer that manages script forges, and the Factory System is the complete network of coordinated factories.
 
+Publish rule:
+
+- When a repo defines `publish`, treat it as commit plus the repo's governed deploy or release path, not as a deploy-only action.
+
 ## Sibling Zo Factory
 
 `refer-zo-bootstrap` is the Zo-scoped sibling factory. It owns Zo computer bootstrapping, Zo Files transfer, Zo personas/rules, hive node deployment, dispatch, talkback, heartbeat, datasets, and the Telechurch Zo proving instance.
 
-This repo, `refer-script-factory`, remains the Codex/VS Code-scoped Script Factory and the broader factory doctrine source. Do not merge Zo-specific runtime assumptions into this repo by default.
+This repo, `refer-script-factory`, remains the provider-neutral Script Factory and broader factory doctrine source, while also carrying the current Codex/VS Code adapter implementation. Do not merge Zo-specific runtime assumptions into the core by default.
 
 Current app-source rule: the public `telechurchlive` subdomain source is in `alliance-hub/`. Treat `refer-zo-bootstrap/` as reference material only unless the user explicitly asks for Zo, bootstrap, hive, Zo Files, Zo personas/rules, dispatch/talkback, or live Zo runtime work.
 
@@ -32,7 +38,7 @@ When Zo development reveals a provider-neutral Script Factory pattern, doctrine 
 2. General Script Factory concepts may be abstracted into `refer-script-factory`.
 3. Cross-repo changes should name which repo is authoritative for the behavior being edited.
 
-Do not treat the current repo as inert source. It is also an instantiated Codex-side factory surface. Substantial work should feed the factory through typed intake contracts, process events, docs, scripts, or registry updates rather than remaining only in chat.
+Do not treat the current repo as inert source. It is also an instantiated Codex-side factory surface. Substantial work should feed the factory through typed intake records or envelopes, ratified Execution Contracts, process events, docs, scripts, or registry updates rather than remaining only in chat.
 
 ## Script-First Law
 
@@ -54,11 +60,11 @@ Exact token counts are not always exposed. Mark records as measured, estimated, 
 When working across the Zo sibling, compare the lanes:
 
 - direct chat handling;
-- typed local contract handling;
+- typed local Execution Contract handling;
 - compressed transport/talkback handling in `refer-zo-bootstrap`;
 - live Zo ratification when explicitly needed.
 
-The emerging invariant is: typed contract is authority, compression is transport, talkback is evidence, and source commit is ratification.
+The emerging invariant is: a ratified Execution Contract is authority, compression is transport, talkback is evidence, and the source commit preserves provenance.
 
 For substantial cross-factory work, operate as a build director rather than a direct code writer. Spawn or simulate parallel lanes:
 
@@ -66,7 +72,7 @@ For substantial cross-factory work, operate as a build director rather than a di
 - REFER Zo Bootstrap lane for `e:\refer-script-factory\refer-zo-bootstrap`;
 - Telechurch Zo lane through Zo chat/automation when live runtime context matters.
 
-Each lane should emit a typed contract, dataset row, talkback packet, script registry update, or ratification note. The director compares outputs, updates source, and verifies.
+Each lane should emit a typed intake envelope or ratified Execution Contract, dataset row, talkback packet, script registry update, or ratification note. The director compares outputs, updates source, and verifies.
 
 Fresh or compacted chat instances must recover the full parallel model from `docs/cross-factory-orchestration.md`. Use that document when the conversation mentions hive, Zo, bootstrap, Telechurch, personas/rules, datasets, dispatch, talkback, compression, contracts, tandem work, or factories learning together.
 
@@ -74,7 +80,7 @@ Do not let the sibling repos evolve out of sync. When a change teaches a provide
 
 Hive node identity is tracked by the Hive Node Registry. Use `docs/hive-build-plan.md`, `scripts/hive/hive-node-registry.mjs`, `.refer-factory/hive-node-registry.json`, and `.refer-factory/hive-node-registry.md` when adding, verifying, or discussing Zo computers and factory nodes. A new Zo computer is not fully staged until the registry records its account scope, role, transport, persona/rules state, datasets, scripts, and ratification evidence.
 
-Script registry lookup is domain-scoped. Before direct work, classify the request domain and check `docs/domain-script-registry.md` plus `.refer-factory/script-registry.json` / `.refer-factory/script-registry.md`. Use the root `src/contracts/scriptFactory.ts` registry for VS Code/provider-neutral scripts, `scripts/chat-surface/` for current-chat/token scripts, `scripts/hive/` for hive director scripts, and `refer-zo-bootstrap/scripts/factory/script-registry.json` for Zo bootstrap scripts. Regenerate the operational registry with `npm run scripts:registry` after adding or changing operational scripts.
+Script registry lookup is domain-scoped. Before direct work, classify the request domain and check `docs/domain-script-registry.md` plus `.refer-factory/script-registry.json` / `.refer-factory/script-registry.md`. Use the root `src/core/contracts/scriptFactory.ts` registry for provider-neutral scripts and accurately labeled current host-adapter entries, `scripts/chat-surface/` for current-chat/token scripts, `scripts/hive/` for hive director scripts, and `refer-zo-bootstrap/scripts/factory/script-registry.json` for Zo bootstrap scripts. Regenerate the operational registry with `npm run scripts:registry` after adding or changing operational scripts.
 
 ## Zo Connection Awareness
 
@@ -104,7 +110,7 @@ node refer-zo-bootstrap\tools\vipc-bootstrap.mjs --profile telechurch --instance
 
 When a live Zo instance should ratify source direction, use the Zo `/zo/ask` API with that instance token and a non-mutating prompt. Treat the answer as evidence to capture in source, not as a replacement for local verification or commits.
 
-Minimize Zo chat usage. Zo chat is an expensive lane and should not carry full contracts or long work results. Prefer the Zo file/API tandem in `refer-zo-bootstrap/docs/file-transport-tandem.md`: write the contract to Zo Files through MCP, trigger a short runner command through MCP, then fetch talkback from Zo Files. Use Zo chat only for tiny activation prompts or when the live persona/rule model itself must judge the work.
+Minimize Zo chat usage. Zo chat is an expensive lane and should not carry full Execution Contracts or long work results. Prefer the Zo file/API tandem in `refer-zo-bootstrap/docs/file-transport-tandem.md`: write the ratified Execution Contract to Zo Files through MCP, trigger a short runner command through MCP, then fetch talkback from Zo Files. Use Zo chat only for tiny activation prompts or when the live persona/rule model itself must judge the work.
 
 ## Telechurchlive Subdomain Focus
 
@@ -118,6 +124,7 @@ Default target interpretation:
 - `refer-zo-bootstrap/` is reference-only for this product surface unless the user explicitly requests Zo/bootstrap work.
 - If the IDE shows a folder such as `alliance-cloudflare-forms` but that folder is missing from this workspace, do not silently switch product targets. State the mismatch and continue against `alliance-hub/`, or ask for the missing path when the distinction matters.
 - Do not mutate, sync, or deploy the live `telechurchlive` subdomain without explicit user approval. Local source edits and local verification are allowed when requested.
+- For Alliance Hub production changes, a Git push is not deployment approval. Only push to Cloudflare when the user explicitly says "push to Cloudflare" or "push all". Only run Supabase migrations, deploy Supabase Edge Functions, commit everything, push Git branches, and push production when the user explicitly says "push all".
 
 ## Nested Repo Safety Rule
 
@@ -125,16 +132,16 @@ During local development, `refer-zo-bootstrap` may be checked out inside this wo
 
 Do not confuse the repositories:
 
-- Work in `e:\refer-script-factory` for Codex Script Factory, VS Code extension, and provider-neutral doctrine.
+- Work in `e:\refer-script-factory` for the provider-neutral Script Factory, its current VS Code adapter, and factory doctrine.
 - Work in `e:\refer-script-factory\refer-zo-bootstrap` for Zo bootstrap, hive, Telechurch Zo, dispatch/talkback/heartbeat, and Zo deployment.
 - If there is any ambiguity before editing, run `git rev-parse --show-toplevel` in the target directory and confirm the repository root.
 - Same branch names across the two repos do not imply shared history or shared commits.
 
 ## Default Prompt Flow
 
-Treat user prompts as intake for a contract-first workflow:
+Treat user prompts as intake for an Execution-Contract-gated workflow:
 
-1. Decode the prompt into a compact `refer.intake` contract.
+1. Decode the prompt into a compact `refer.intake` record or intake envelope; this is not execution authority.
 2. Route work through the Script Factory vocabulary in `docs/script-legend.md`.
 3. Use `.refer-factory/codebase-tree.json` and `.refer-factory/agent-context.md` when present before scanning files broadly.
 4. If context assets are stale or missing, prefer the `Scan Codebase` script path.
@@ -176,13 +183,13 @@ Use the factory vocabulary precisely:
 - `Script Factory`: the system that creates, manages, and runs script forges.
 - `Factory System`: the complete network of coordinated factories across domains.
 
-- The source registry lives in `src/contracts/scriptFactory.ts`.
-- The script terminology authority lives in `src/contracts/scriptLegend.ts` and `docs/script-legend.md`.
-- The codebase scanner lives in `src/contracts/codebaseTree.ts` and `src/commands/scanCodebase.ts`.
-- The Script Factory UI lives in `src/cockpit/scriptFactoryPanel.ts`.
-- The native `@refer` entrypoint lives in `src/chat/referParticipant.ts`.
-- The orchestration runner lives in `src/chat/referOrchestratorRunner.ts`.
-- The resolution loop lives in `src/chat/referResolutionLoop.ts`.
+- The source registry lives in `src/core/contracts/scriptFactory.ts`.
+- The script terminology authority lives in `src/core/contracts/scriptLegend.ts` and `docs/script-legend.md`.
+- The codebase scanner lives in `src/contracts/codebaseTree.ts`, with its current host command in `src/adapters/vscode/commands/scanCodebase.ts`.
+- The current VS Code adapter operator interface lives in `src/adapters/vscode/cockpit/scriptFactoryPanel.ts`.
+- The native `@refer` entrypoint lives in `src/adapters/vscode/referParticipant.ts`.
+- The provider-neutral orchestration runner lives in `src/core/orchestration/referOrchestratorRunner.ts`; the filesystem compatibility runner remains at `src/chat/referOrchestratorRunner.ts`.
+- The resolution loop lives in `src/core/orchestration/referResolutionLoop.ts`.
 
 When adding factory capability, keep the loop deterministic:
 
@@ -242,3 +249,7 @@ For narrow compile checks, use:
 ```powershell
 npm run compile
 ```
+## Universal Model Routing
+
+- This workspace binds model selection and escalation to E:/refer.os/REFER.OS/refer.model-routing.md.
+- Local rules may narrow task handling but may not duplicate or override the universal routing policy, role authority, or contract scope.

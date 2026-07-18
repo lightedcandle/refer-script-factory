@@ -52,7 +52,7 @@ confirmation is needed.
 
 ```text
 rule document or prompt
--> Smart Intake contract
+-> Smart Intake envelope
 -> doctrine compiler
 -> classify internally as kernel, domain, project, provider, or user method
 -> generate candidate script, validator, resolver, or rule pack

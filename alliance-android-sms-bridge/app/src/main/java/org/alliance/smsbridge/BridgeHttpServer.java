@@ -1,6 +1,8 @@
 package org.alliance.smsbridge;
 
 import android.content.Context;
+import android.app.PendingIntent;
+import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.telephony.SmsManager;
@@ -18,7 +20,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Locale;
+import java.util.UUID;
 import java.util.Map;
+
+import org.json.JSONArray;
 
 final class BridgeHttpServer {
     private static final String TAG = "AllianceSmsBridge";
@@ -98,6 +103,11 @@ final class BridgeHttpServer {
                 return;
             }
 
+            if (requestLine.startsWith("GET /sms/history") || requestLine.startsWith("GET /sms/recent")) {
+                writeJson(writer, 200, inboundHistoryJson(requestLine));
+                return;
+            }
+
             if (requestLine.startsWith("POST /config/cloud ")) {
                 String url = jsonString(body, "url");
                 String cloudToken = jsonString(body, "token");
@@ -125,22 +135,58 @@ final class BridgeHttpServer {
                 return;
             }
 
-            sendSms(to, message);
-            lastSendAt = now;
-            writeJson(writer, 200, "{\"ok\":true,\"status\":\"queued\"}");
+            String trackingId = "local-" + UUID.randomUUID().toString();
+            try {
+                sendSms(to, message, trackingId);
+                lastSendAt = now;
+                writeJson(writer, 200, "{\"ok\":true,\"status\":\"queued\"}");
+            } catch (Exception sendError) {
+                Log.e(TAG, "Bridge SMS send failed", sendError);
+                writeJson(writer, 500, "{\"ok\":false,\"error\":\"sms_send_failed\"}");
+            }
         } catch (Exception error) {
             Log.e(TAG, "Bridge request failed", error);
         }
     }
 
-    private void sendSms(String to, String message) {
+    boolean isAlive() {
+        return running && worker != null && worker.isAlive() && serverSocket != null && !serverSocket.isClosed();
+    }
+
+    private void sendSms(String to, String message, String trackingId) {
         SmsManager manager = SmsManager.getDefault();
         ArrayList<String> parts = manager.divideMessage(message);
+        long sentAt = System.currentTimeMillis();
         if (parts.size() <= 1) {
-            manager.sendTextMessage(to, null, message, null, null);
+            PendingIntent sentIntent = statusIntent(OutboundStatusReceiver.ACTION_SMS_SENT, trackingId, to, message, 0, 1, false, sentAt);
+            PendingIntent deliveredIntent = statusIntent(OutboundStatusReceiver.ACTION_SMS_DELIVERED, trackingId, to, message, 0, 1, false, sentAt);
+            BridgeConfig.setLastOutbound(context, to, message, sentAt, "queued", trackingId, "");
+            manager.sendTextMessage(to, null, message, sentIntent, deliveredIntent);
             return;
         }
-        manager.sendMultipartTextMessage(to, null, parts, null, null);
+        ArrayList<PendingIntent> sentIntents = new ArrayList<>();
+        ArrayList<PendingIntent> deliveryIntents = new ArrayList<>();
+        for (int index = 0; index < parts.size(); index++) {
+            sentIntents.add(statusIntent(OutboundStatusReceiver.ACTION_SMS_SENT, trackingId, to, message, index, parts.size(), false, sentAt));
+            deliveryIntents.add(statusIntent(OutboundStatusReceiver.ACTION_SMS_DELIVERED, trackingId, to, message, index, parts.size(), false, sentAt));
+        }
+        BridgeConfig.setLastOutbound(context, to, message, sentAt, "queued", trackingId, "");
+        manager.sendMultipartTextMessage(to, null, parts, sentIntents, deliveryIntents);
+    }
+
+    private PendingIntent statusIntent(String action, String trackingId, String to, String body, int partIndex, int partCount, boolean reportToCloud, long sentAt) {
+        Intent intent = new Intent(context, OutboundStatusReceiver.class);
+        intent.setAction(action);
+        intent.putExtra(OutboundStatusReceiver.EXTRA_TRACKING_ID, trackingId);
+        intent.putExtra(OutboundStatusReceiver.EXTRA_TO, to);
+        intent.putExtra(OutboundStatusReceiver.EXTRA_BODY, body);
+        intent.putExtra(OutboundStatusReceiver.EXTRA_SENT_AT, sentAt);
+        intent.putExtra(OutboundStatusReceiver.EXTRA_REPORT_TO_CLOUD, reportToCloud);
+        intent.putExtra("part_index", partIndex);
+        intent.putExtra("part_count", partCount);
+        int requestCode = Math.abs((trackingId + ":" + action + ":" + partIndex).hashCode());
+        int flags = PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE;
+        return PendingIntent.getBroadcast(context, requestCode, intent, flags);
     }
 
     private String latestSmsJson(String requestLine) {
@@ -174,6 +220,29 @@ final class BridgeHttpServer {
         } catch (Exception error) {
             Log.e(TAG, "Inbox query failed", error);
             return "{\"ok\":false,\"error\":\"inbox_query_failed\"}";
+        }
+    }
+
+    private String inboundHistoryJson(String requestLine) {
+        int limit = parseInt(queryValue(requestLine, "limit"));
+        if (limit <= 0) {
+            limit = 10;
+        }
+        if (limit > 10) {
+            limit = 10;
+        }
+
+        try {
+            JSONArray all = new JSONArray(BridgeConfig.inboundHistory(context));
+            JSONArray trimmed = new JSONArray();
+            int start = Math.max(0, all.length() - limit);
+            for (int index = start; index < all.length(); index++) {
+                trimmed.put(all.get(index));
+            }
+            return "{\"ok\":true,\"messages\":" + trimmed.toString() + "}";
+        } catch (Exception error) {
+            Log.e(TAG, "Inbound history query failed", error);
+            return "{\"ok\":false,\"error\":\"inbound_history_failed\"}";
         }
     }
 

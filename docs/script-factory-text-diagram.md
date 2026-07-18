@@ -166,7 +166,7 @@ blocked or failed
 User
   -> Request Intake
   -> @refer Participant
-  -> refer.intake Contract
+  -> refer.intake Envelope
   -> REFER Orchestrator
   -> Context Picker
   -> Resolution Loop
@@ -216,7 +216,7 @@ flowchart TD
   subgraph Core["Core Script Factory Runtime"]
     UP[User Prompt] --> RI[Request Intake]
     RI --> RP[@refer Participant]
-    RP --> IC[refer.intake Contract]
+    RP --> IC[refer.intake Envelope]
     IC --> OR[REFER Orchestrator]
     OR --> CP[Context Picker]
     CP --> RL[Resolution Loop]

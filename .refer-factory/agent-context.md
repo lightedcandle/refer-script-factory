@@ -1,13 +1,16 @@
 # REFER Agent Context
 
-Generated: 2026-04-30T17:20:53.421Z
+Generated: 2026-07-17T11:46:34.954Z
 Workspace: E:\refer-script-factory
 
 ## Summary
-- Files indexed: 203
-- Directories indexed: 16
+- Files indexed: 278
+- Directories indexed: 28
 
 ## Important Entrypoints
+- src/adapters/vscode/cockpit/scriptFactoryPanel.ts
+- src/adapters/vscode/extension.ts
+- src/adapters/vscode/referParticipant.ts
 - src/chat/referOrchestratorRunner.ts
 - src/chat/referParticipant.ts
 - src/chat/referResolutionLoop.ts
@@ -15,17 +18,14 @@ Workspace: E:\refer-script-factory
 - src/contracts/codebaseTree.ts
 - src/contracts/referOrchestrator.ts
 - src/contracts/scriptFactory.ts
+- src/core/contracts/referOrchestrator.ts
+- src/core/contracts/scriptFactory.ts
+- src/core/evidence/processEvent.ts
+- src/core/index.ts
+- src/core/orchestration/referOrchestratorRunner.ts
+- src/core/orchestration/referResolutionLoop.ts
+- src/core/ports/runtime.ts
 - src/extension.ts
-- src/server/referOrchestratorServer.ts
-- src/server/referTargetRegistry.ts
-- test/bootstrapApply.test.ts
-- test/bootstrapDryRun.test.ts
-- test/bootstrapHealth.test.ts
-- test/bootstrapProcessEvents.test.ts
-- test/codebaseMiles.test.ts
-- test/codebases.test.ts
-- test/factoryGaps.test.ts
-- test/lawToc.test.ts
 
 ## Package And Extension Surface
 - package.json: npm scripts

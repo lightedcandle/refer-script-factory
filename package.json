@@ -1,10 +1,18 @@
 {
   "name": "refer-script-factory",
-  "displayName": "Refer Script Factory",
-  "description": "A governed REFER cockpit for plans, Send Contracts, factory telemetry, and repo bootstrap dry-runs.",
+  "displayName": "REFER Script Factory",
+  "description": "A provider-neutral REFER system for turning ratified Execution Contracts and verified methods into bounded script plans, artifacts, evidence, and reusable registrations.",
   "version": "0.0.1",
   "publisher": "refer-factory",
   "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lightedcandle/refer-script-factory.git"
+  },
+  "bugs": {
+    "url": "https://github.com/lightedcandle/refer-script-factory/issues"
+  },
+  "homepage": "https://github.com/lightedcandle/refer-script-factory#readme",
   "engines": {
     "vscode": "^1.92.0"
   },
@@ -39,6 +47,9 @@
     "onStartupFinished"
   ],
   "main": "./dist/src/extension.js",
+  "bin": {
+    "refer-script-factory": "./dist/src/adapters/cli/index.js"
+  },
   "contributes": {
     "commands": [
       {
@@ -47,7 +58,7 @@
       },
       {
         "command": "refer.emitSendContract",
-        "title": "REFER: Emit Send Contract Draft"
+        "title": "REFER: Emit Send Contract Planning Draft"
       },
       {
         "command": "refer.emitScriptBlueprint",
@@ -95,15 +106,15 @@
       },
       {
         "command": "refer.contractModeOn",
-        "title": "REFER: Contract Mode On"
+        "title": "REFER: Legacy Intake Session On"
       },
       {
         "command": "refer.contractModeOff",
-        "title": "REFER: Contract Mode Off"
+        "title": "REFER: Legacy Intake Session Off"
       },
       {
         "command": "refer.contractModeToggle",
-        "title": "REFER: Toggle Contract Mode"
+        "title": "REFER: Toggle Legacy Intake Session"
       }
     ],
     "chatParticipants": [
@@ -111,7 +122,7 @@
         "id": "refer-script-factory.refer",
         "fullName": "REFER",
         "name": "refer",
-        "description": "Ask Refer Script Factory about this workspace.",
+        "description": "Use the Script Factory VS Code adapter with this target workspace.",
         "isSticky": true
       }
     ],
@@ -132,18 +143,18 @@
         "refer.autoCheckUpdates": {
           "type": "boolean",
           "default": true,
-          "description": "Check for REFER reference/script updates when the extension activates."
+          "description": "Check for REFER reference/script updates when the Script Factory VS Code adapter activates."
         },
         "refer.autoRefreshCodebases": {
           "type": "boolean",
           "default": true,
-          "description": "Refresh the REFER codebase/subspace registry when the extension activates."
+          "description": "Refresh the REFER codebase/subspace registry when the Script Factory VS Code adapter activates."
         },
         "refer.modelProvider": {
           "type": "string",
           "enum": ["vscode", "ollama"],
           "default": "vscode",
-          "description": "Model provider used by the @refer bounded resolution loop. Use vscode for the selected VS Code chat model or ollama for a local Ollama server."
+          "description": "Model provider used by the current Script Factory VS Code adapter. Use vscode for its host-provided model or ollama for a local Ollama server."
         },
         "refer.ollamaUrl": {
           "type": "string",
@@ -184,7 +195,7 @@
         {
           "type": "webview",
           "id": "refer.scriptFactory",
-          "name": "Refer Factory System",
+          "name": "Script Factory",
           "visibility": "collapsed"
         },
 
@@ -217,7 +228,12 @@
   },
   "scripts": {
     "compile": "tsc -p ./",
-    "test": "npm run compile && node dist/test/metrics.test.js && node dist/test/processEvents.test.js && node dist/test/bootstrapDryRun.test.js && node dist/test/bootstrapApply.test.js && node dist/test/bootstrapProcessEvents.test.js && node dist/test/bootstrapHealth.test.js && node dist/test/codebaseMiles.test.js && node dist/test/codebases.test.js && node dist/test/scriptBlueprint.test.js && node dist/test/scriptDna.test.js && node dist/test/scriptographer.test.js && node dist/test/referIntake.test.js && node dist/test/referOrchestrator.test.js && node dist/test/referProcessEvents.test.js && node dist/test/referChatSession.test.js && node dist/test/referChatMode.test.js && node dist/test/referOrchestratorRunner.test.js && node dist/test/referTargetRegistry.test.js && node dist/test/referCoach.test.js && node dist/test/orchestratorRoadmap.test.js && node dist/test/factoryGaps.test.js && node dist/test/schemaValidation.test.js && node dist/test/lawToc.test.js && node dist/test/updateSync.test.js && node dist/test/factoryRegistries.test.js && node dist/test/authorityResolver.test.js && node dist/test/universalSourceSync.test.js && node dist/test/doctrineCompiler.test.js && node dist/test/scriptionaryTerm.test.js && node dist/test/modificationLoop.test.js",
+    "compile:core": "tsc -p tsconfig.core.json --noEmit",
+    "verify:core-boundary": "node scripts/verify/core-boundary.mjs",
+    "verify:core": "npm run compile:core && npm run verify:core-boundary",
+    "test": "npm run compile && node dist/test/metrics.test.js && node dist/test/processEvents.test.js && node dist/test/bootstrapDryRun.test.js && node dist/test/bootstrapApply.test.js && node dist/test/bootstrapProcessEvents.test.js && node dist/test/bootstrapHealth.test.js && node dist/test/codebaseMiles.test.js && node dist/test/codebases.test.js && node dist/test/scriptBlueprint.test.js && node dist/test/scriptDna.test.js && node dist/test/scriptographer.test.js && node dist/test/referIntake.test.js && node dist/test/referOrchestrator.test.js && node dist/test/referProcessEvents.test.js && node dist/test/referChatSession.test.js && node dist/test/referChatMode.test.js && node dist/test/referOrchestratorRunner.test.js && node dist/test/referTargetRegistry.test.js && node dist/test/referCoach.test.js && node dist/test/orchestratorRoadmap.test.js && node dist/test/factoryGaps.test.js && node dist/test/schemaValidation.test.js && node dist/test/lawToc.test.js && node dist/test/updateSync.test.js && node dist/test/factoryRegistries.test.js && node dist/test/standaloneLanguage.test.js && node dist/test/authorityResolver.test.js && node dist/test/universalSourceSync.test.js && node dist/test/doctrineCompiler.test.js && node dist/test/scriptionaryTerm.test.js && node dist/test/modificationLoop.test.js && node dist/test/coreApi.test.js && node dist/test/coreBoundary.test.js && node dist/test/vscodeAdapterCompatibility.test.js && node dist/test/cliAdapter.test.js && node dist/test/sovereignNodeMcpClient.test.js && node dist/test/sovereignNodeCli.test.js",
+    "test:cli": "npm run compile && node dist/test/cliAdapter.test.js",
+    "test:node": "npm run compile && node dist/test/sovereignNodeMcpClient.test.js && node dist/test/sovereignNodeCli.test.js",
     "verify": "npm run test",
     "refer:server": "npm run compile && node dist/src/server/referOrchestratorServer.js",
     "tokens:log": "node scripts/chat-surface/token-useage.mjs log",
@@ -230,6 +246,8 @@
     "tokens:summary": "node scripts/chat-surface/token-useage.mjs summary",
     "tokens:lanes": "node scripts/chat-surface/token-useage.mjs lanes",
     "tokens:audit-chat": "node scripts/chat-surface/token-useage.mjs audit-chat",
+    "scripts:legend": "npm run compile && node scripts/registry/script-legend.mjs",
+    "scripts:codebase": "npm run compile && node scripts/registry/codebase-context.mjs",
     "scripts:registry": "node scripts/registry/domain-script-registry.mjs build",
     "scripts:class-registry": "node scripts/registry/script-class-registry.mjs build",
     "scripts:forge-registry": "node scripts/registry/forge-registry.mjs build",
@@ -263,6 +281,9 @@
     "alliance:hub-deploy": "npm --prefix alliance-hub run deploy",
     "alliance:forms-check": "npm --prefix alliance-hub run check",
     "alliance:forms-deploy": "npm --prefix alliance-hub run deploy"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0"
   },
   "devDependencies": {
     "@types/node": "^20.19.21",

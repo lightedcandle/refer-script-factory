@@ -3,8 +3,8 @@
  * Domain Script Registry
  *
  * Builds a domain-scoped index of scripts that agents should check before
- * improvising. This complements the TypeScript extension registry in
- * src/contracts/scriptFactory.ts; it tracks operational scripts for the active
+ * improvising. This complements the provider-neutral TypeScript source registry in
+ * src/core/contracts/scriptFactory.ts; it tracks operational scripts for the active
  * chat surface, hive, and Zo bootstrap sibling.
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -17,15 +17,15 @@ const DOMAINS = [
   {
     id: "refer-script-factory",
     label: "REFER Script Factory",
-    scope: "Codex/VS Code source, provider-neutral doctrine, extension scripts.",
-    authority: "src/contracts/scriptFactory.ts",
-    check_first: ["src/contracts/scriptFactory.ts", "docs/script-legend.md", "package.json"],
+    scope: "Provider-neutral TypeScript source and doctrine, plus current host-adapter registrations.",
+    authority: "src/core/contracts/scriptFactory.ts",
+    check_first: ["src/core/contracts/scriptFactory.ts", "docs/script-legend.md", "package.json"],
     scripts: [
       {
         id: "refer.extension.script-registry",
         command: "source registry",
-        entrypoint: "src/contracts/scriptFactory.ts",
-        purpose: "Authoritative VS Code extension and provider-neutral script contract registry.",
+        entrypoint: "src/core/contracts/scriptFactory.ts",
+        purpose: "Authoritative provider-neutral script contract registry with accurately labeled current host-adapter entries.",
         status: "active",
       },
     ],
@@ -134,7 +134,7 @@ const DOMAINS = [
         id: "hive.build-intake",
         command: "npm run hive:build-intake",
         entrypoint: "scripts/hive/hive-build-intake.mjs",
-        purpose: "Emit and dispatch governed build-intake contracts so Zo route changes originate from typed intake.",
+        purpose: "Emit and dispatch governed build-intake envelopes so Zo route changes originate from typed intake evidence.",
         status: "active",
       },
       {
@@ -149,6 +149,64 @@ const DOMAINS = [
         command: "npm run hive:ratify-routes",
         entrypoint: "scripts/hive/hive-route-ratifier.mjs",
         purpose: "Capture live zo.space route state for a hive node and record upstream ratification evidence.",
+        status: "active",
+      },
+    ],
+  },
+  {
+    id: "alliance-hub",
+    label: "Alliance Hub",
+    scope: "Telechurchlive Alliance app source, Cloudflare Pages/Functions, Supabase migrations, SMS routing, formula/retrieval flows.",
+    authority: "alliance-hub/AGENTS.md",
+    check_first: [
+      "alliance-hub/AGENTS.md",
+      "alliance-hub/package.json",
+      "alliance-hub/tools/",
+      "alliance-hub/scripts/sms/",
+      "alliance-hub/supabase/migrations/",
+      "alliance-hub/docs/records-split-sequence.md",
+    ],
+    scripts: [
+      {
+        id: "alliance.hub.check",
+        command: "npm --prefix alliance-hub run check",
+        entrypoint: "alliance-hub/tools/check.mjs",
+        purpose: "Verify required app files, SMS registry, inbound route behavior, form intake, and conversation routing.",
+        status: "active",
+      },
+      {
+        id: "alliance.hub.sms.validate",
+        command: "npm --prefix alliance-hub run sms:validate",
+        entrypoint: "alliance-hub/tools/sms-script-factory.mjs",
+        purpose: "Validate the Alliance SMS script registry before changing SMS routing behavior.",
+        status: "active",
+      },
+      {
+        id: "alliance.hub.sms.route",
+        command: "npm --prefix alliance-hub run sms:route -- --registered --text \"profile\"",
+        entrypoint: "alliance-hub/tools/sms-script-factory.mjs",
+        purpose: "Run focused SMS router probes against scripts/sms/router.mjs and registry.json.",
+        status: "active",
+      },
+      {
+        id: "alliance.hub.deploy.dry",
+        command: "npm --prefix alliance-hub run deploy:dry",
+        entrypoint: "alliance-hub/tools/deploy.mjs",
+        purpose: "Build the Cloudflare Pages deploy packet from .env.alliance without deploying production.",
+        status: "active",
+      },
+      {
+        id: "alliance.hub.deploy.cloudflare",
+        command: "npm --prefix alliance-hub run deploy",
+        entrypoint: "alliance-hub/tools/deploy.mjs",
+        purpose: "Deploy Alliance Hub to Cloudflare Pages only after explicit 'push to Cloudflare' or 'push all' approval.",
+        status: "guarded",
+      },
+      {
+        id: "alliance.hub.records.split",
+        command: "source migrations",
+        entrypoint: "alliance-hub/supabase/migrations/20260528164951_wave1_records_split.sql",
+        purpose: "Record the verified alliance_records split method: keyed table first, legacy STI fallback during verification, mirror/backfill where needed.",
         status: "active",
       },
     ],
@@ -213,6 +271,7 @@ function parseArgs(argv) {
 
 function buildRegistry() {
   const packageScripts = readPackageScripts("package.json");
+  const alliancePackageScripts = readPackageScripts("alliance-hub/package.json");
   const zoPackageScripts = readPackageScripts("refer-zo-bootstrap/package.json");
   return {
     schema: "refer.domain-script-registry.v1",
@@ -222,7 +281,7 @@ function buildRegistry() {
     domains: DOMAINS.map((domain) => ({
       ...domain,
       discovered_package_scripts:
-        domain.id === "refer-zo-bootstrap" ? zoPackageScripts : domain.id === "refer-script-factory" ? packageScripts : [],
+        domain.id === "refer-zo-bootstrap" ? zoPackageScripts : domain.id === "alliance-hub" ? alliancePackageScripts : domain.id === "refer-script-factory" ? packageScripts : [],
     })),
   };
 }
@@ -279,7 +338,7 @@ function renderMarkdown(registry) {
     lines.push("");
   }
   lines.push("## Files", "", `- JSON: \`${relative(process.cwd(), JSON_FILE) || JSON_FILE}\``, `- Markdown: \`${relative(process.cwd(), MD_FILE) || MD_FILE}\``, "");
-  return `${lines.join("\n")}\n`;
+  return `${lines.join("\n").trimEnd()}\n`;
 }
 
 function cell(value) {

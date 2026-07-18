@@ -66,6 +66,29 @@ Response:
 }
 ```
 
+Read the cached inbound history on the bridge:
+
+```http
+GET /sms/history?limit=10
+X-Bridge-Token: generated-token-shown-in-app
+```
+
+Response:
+
+```json
+{
+  "ok": true,
+  "messages": [
+    {
+      "from": "+19379854448",
+      "body": "Reply text",
+      "date": 1770000000000,
+      "status": "forwarded"
+    }
+  ]
+}
+```
+
 ## Security Rules
 
 - Keep this bridge on a trusted Wi-Fi network or VPN.
@@ -88,7 +111,14 @@ Build and install the app on the phone, grant SMS permission, then press **Start
 
 When **Start Bridge** is pressed, the app runs as a foreground service with a persistent notification. The screen does not need to stay on, and the app interface does not need to remain open. It keeps the SMS API available while the screen is off and remembers that the bridge was enabled so it can restart after phone reboot.
 
+The bridge now also arms a watchdog alarm and an internal health check:
+
+- if Android kills the foreground service, the watchdog relaunches it while bridge mode is enabled;
+- if the cloud relay or local HTTP server thread dies while the service is still running, the service restarts itself;
+- when you press **Stop Bridge**, the watchdog is canceled so it does not keep waking the device.
+
 Set **Bridge phone number** in the app before enabling cloud relay. The cloud relay ignores inbound inbox rows from that number so the bridge does not process its own messages and accidentally create an SMS loop.
+The bridge also keeps the last 10 inbound inbox rows in local history, including forwarded and filtered rows, so you can inspect recent activity on the device or through `/sms/history`.
 
 If Google Voice is linked to the same Android phone, keep three identities separate:
 
@@ -98,7 +128,13 @@ If Google Voice is linked to the same Android phone, keep three identities separ
 
 Do not run profile intake for the bridge number. The app also suppresses recent outbound echoes by matching the last sent body, destination, and timestamp, which helps when Google Voice or carrier sync mirrors sent messages back into the SMS inbox.
 
+Hub is the authority for active profile status. The bridge may cache local profile setup state for its own session bookkeeping, but it must not override Hub registration truth with local context when Hub says a profile is active or inactive.
+
+Regex lane messages are test-only. For the configured pilot phone, the bridge now checks the regex lane before event/profile menu routing so the Hub test path can win first without becoming the primary lane for everyone else.
+
 On Samsung devices, disable battery sleeping/optimization for **Alliance SMS Bridge** if Android later pauses the service in the background.
+
+In the app, use **Keep Bridge Always On** to open Android's battery optimization exemption prompt.
 
 CLI build, once `JAVA_HOME` and the Android SDK are available:
 

@@ -10,6 +10,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.net.Uri;
 import android.text.InputType;
 import android.text.method.ScrollingMovementMethod;
 import android.view.View;
@@ -20,19 +21,26 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import android.provider.Settings;
+import android.os.PowerManager;
 
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.util.Collections;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 public class MainActivity extends Activity {
     private final Handler handler = new Handler(Looper.getMainLooper());
     private Button removeSelfPhoneButton;
     private Button startButton;
     private Button stopButton;
+    private Button batteryOptimizationButton;
     private TextView bridgeStateView;
     private TextView statusView;
+    private TextView recentInboundView;
     private TextView savedBridgeNumberView;
     private final Runnable refreshUi = new Runnable() {
         @Override
@@ -78,6 +86,16 @@ public class MainActivity extends Activity {
         statusView.setMovementMethod(new ScrollingMovementMethod());
         root.addView(statusView, fullWidth());
 
+        TextView recentInboundLabel = new TextView(this);
+        recentInboundLabel.setText("Recent inbound");
+        recentInboundLabel.setPadding(0, 18, 0, 8);
+        root.addView(recentInboundLabel, fullWidth());
+
+        recentInboundView = new TextView(this);
+        recentInboundView.setTextSize(14);
+        recentInboundView.setMovementMethod(new ScrollingMovementMethod());
+        root.addView(recentInboundView, fullWidth());
+
         TextView selfPhoneLabel = new TextView(this);
         selfPhoneLabel.setText("Bridge phone number");
         root.addView(selfPhoneLabel, fullWidth());
@@ -122,6 +140,7 @@ public class MainActivity extends Activity {
         startButton = new Button(this);
         startButton.setText("Start Bridge");
         startButton.setOnClickListener(view -> {
+            requestBatteryOptimizationExemption();
             sendServiceAction(BridgeConfig.ACTION_START);
             BridgeConfig.setEnabled(this, true);
             updateUiState();
@@ -136,6 +155,11 @@ public class MainActivity extends Activity {
             updateUiState();
         });
         root.addView(stopButton, fullWidth());
+
+        batteryOptimizationButton = new Button(this);
+        batteryOptimizationButton.setText("Keep Bridge Always On");
+        batteryOptimizationButton.setOnClickListener(view -> requestBatteryOptimizationExemption());
+        root.addView(batteryOptimizationButton, fullWidth());
 
         Button close = new Button(this);
         close.setText("Close");
@@ -223,14 +247,18 @@ public class MainActivity extends Activity {
                 "Local API: http://" + localIp() + ":" + BridgeConfig.PORT,
                 "Cloud relay: " + (cloud ? "on" : "off"),
                 "Loop filter: " + (hasBridgeNumber ? "bridge number " + maskPhone(bridgeNumber) : "set bridge number"),
+                "Battery: " + (ignoringBatteryOptimizations() ? "unrestricted" : "restricted"),
                 "Last inbound: " + formatTime(BridgeConfig.lastInboundAt(this)),
-                "Last outbound: " + formatTime(BridgeConfig.lastOutboundAt(this))
+                "Last outbound: " + formatTime(BridgeConfig.lastOutboundAt(this)) + " (" + BridgeConfig.lastOutboundStatus(this) + ")"
         }));
+        recentInboundView.setText(formatRecentInboundHistory());
 
         updateSavedBridgeNumberView();
         removeSelfPhoneButton.setVisibility(hasBridgeNumber ? View.VISIBLE : View.GONE);
         startButton.setVisibility(running ? View.GONE : View.VISIBLE);
         stopButton.setVisibility(running ? View.VISIBLE : View.GONE);
+        batteryOptimizationButton.setText(ignoringBatteryOptimizations() ? "Battery Restriction Already Disabled" : "Keep Bridge Always On");
+        batteryOptimizationButton.setEnabled(!ignoringBatteryOptimizations());
     }
 
     private boolean recentActivity() {
@@ -256,10 +284,60 @@ public class MainActivity extends Activity {
         return builder.toString();
     }
 
+    private String formatRecentInboundHistory() {
+        try {
+            JSONArray history = new JSONArray(BridgeConfig.inboundHistory(this));
+            if (history.length() == 0) {
+                return "No inbound messages cached yet.";
+            }
+            StringBuilder builder = new StringBuilder();
+            for (int index = Math.max(0, history.length() - 10); index < history.length(); index++) {
+                if (builder.length() > 0) {
+                    builder.append("\n\n");
+                }
+                JSONObject item = history.getJSONObject(index);
+                String status = item.optString("status", "unknown");
+                String from = maskPhone(item.optString("from", ""));
+                String body = item.optString("body", "");
+                if (body.length() > 120) {
+                    body = body.substring(0, 120) + "…";
+                }
+                builder.append("[").append(status).append("] ");
+                builder.append(from.isEmpty() ? "unknown" : from);
+                builder.append(" @ ").append(formatTime(item.optLong("date", 0L)));
+                builder.append("\n");
+                builder.append(body.isEmpty() ? "(empty message)" : body);
+            }
+            return builder.toString();
+        } catch (Exception error) {
+            return "Unable to read inbound history.";
+        }
+    }
+
     private String maskPhone(String value) {
         String digits = BridgeConfig.onlyDigits(value);
         if (digits.length() <= 4) return digits;
         return "***" + digits.substring(digits.length() - 4);
+    }
+
+    private boolean ignoringBatteryOptimizations() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+            return true;
+        }
+        PowerManager powerManager = getSystemService(PowerManager.class);
+        return powerManager != null && powerManager.isIgnoringBatteryOptimizations(getPackageName());
+    }
+
+    private void requestBatteryOptimizationExemption() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+            return;
+        }
+        if (ignoringBatteryOptimizations()) {
+            return;
+        }
+        Intent intent = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+        intent.setData(Uri.parse("package:" + getPackageName()));
+        startActivity(intent);
     }
 
     private String localIp() {
