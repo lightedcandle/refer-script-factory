@@ -1,7 +1,7 @@
 # PLAN-REFER-FACTORY-NODE-INTEGRATION-001
 
 Title: Add the first read-only Sovereign Node consumer to the standalone CLI
-Status: Implemented and verified locally; commit not authorized
+Status: Implemented, verified, committed, and reconciled by `PLAN-REFER-FACTORY-MAIN-RECONCILIATION-001`
 Date: 2026-07-17
 Contract: `CONTRACT-REFER-FACTORY-NODE-INTEGRATION-001`
 Target start: `a49d4e2d2c3c68b4f8f88a603df131c912f2dcd5`

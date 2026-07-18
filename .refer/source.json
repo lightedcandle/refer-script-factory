@@ -1,13 +1,16 @@
 {
-  "universalGovernanceRoot": "E:/refer.os/REFER.OS",
-  "universalAgentSurface": {
-    "path": "E:/refer.os/AGENTS.md",
-    "mtime": "2026-07-17T04:11:00.9631906Z"
-  },
+  "consumer_binding_version": "1.0.0",
+  "last_verified_hash": "cd81eccbaf7b03351fb12279c1f92d2de76573808913a666ccac519062a3d3fe",
+  "schema_version": "1.0.0",
   "universalAgentBootstrap": {
+    "mtime": "2026-07-17T01:19:47.1252678Z",
     "path": "E:/refer.os/REFER.OS/refer.agent.md",
-    "mtime": "2026-07-17T01:19:47.1252678Z"
+    "sha256": "72fc9c7c3d86e5c4ae33bf5c5d25a7979522382b02a6d44e79757f52ee3bad53"
   },
-  "universalModelRouting": "E:/refer.os/REFER.OS/refer.model-routing.md",
-  "lastCheckedAt": "2026-07-17T11:01:47.6968805Z"
+  "universalAgentSurface": {
+    "mtime": "2026-07-18T12:29:10.6983899Z",
+    "path": "E:/refer.os/AGENTS.md",
+    "sha256": "b98bf5f07451153ef12f9dca50416c06405ac1990795926f366af0c567d7f095"
+  },
+  "universal_content_hash": "f590b13e4adfc8eb1208a9bb5df61f257dfa7a0fdb5ec9cdef867e389e780ae5"
 }

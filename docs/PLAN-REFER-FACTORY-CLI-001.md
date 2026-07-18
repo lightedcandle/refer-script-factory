@@ -1,14 +1,14 @@
 # PLAN-REFER-FACTORY-CLI-001
 
 Title: Implement the Standalone Script Factory CLI Adapter
-Status: Implemented and verified locally
+Status: Implemented, verified, committed, and reconciled by `PLAN-REFER-FACTORY-MAIN-RECONCILIATION-001`
 Date: 2026-07-16
 Contract: `CONTRACT-REFER-FACTORY-CLI-001`
 Target: `E:\refer-script-factory`
 Required base: `c4ebb508079842fae2e4cd5af4dbb8f009291cf9`
 Primary owner: `mind-agent`, bounded implementation
 Model route: Mini requested; the host-exposed Codex implementation model is the disclosed substitute
-Method lineage: Construct Method; branch assimilation, commit, and publish are not authorized
+Method lineage: Construct Method; committed on its completed plan branch and reconciled locally; publish remains unauthorized
 
 ## Identity
 

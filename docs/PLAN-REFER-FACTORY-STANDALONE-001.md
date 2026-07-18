@@ -1,7 +1,7 @@
 # PLAN-REFER-FACTORY-STANDALONE-001
 
 Title: Establish the Host-Independent Script Factory Identity and Language
-Status: Implemented locally; verification passed; unstaged
+Status: Implemented, verified, committed on the standalone lineage, and reconciled by `PLAN-REFER-FACTORY-MAIN-RECONCILIATION-001`
 Date: 2026-07-15
 Target: `E:\refer-script-factory`
 Primary owner: `governance-agent` on the architecture-sensitive route

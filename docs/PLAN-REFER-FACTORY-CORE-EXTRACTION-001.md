@@ -1,7 +1,7 @@
 # PLAN-REFER-FACTORY-CORE-EXTRACTION-001
 
 Title: Extract the Provider-Neutral Script Factory Core
-Status: Implemented and verified
+Status: Implemented, verified, committed, and reconciled by `PLAN-REFER-FACTORY-MAIN-RECONCILIATION-001`
 Date: 2026-07-15
 Contract: `CONTRACT-REFER-FACTORY-CORE-EXTRACTION-001`
 Target: `E:\refer-script-factory`

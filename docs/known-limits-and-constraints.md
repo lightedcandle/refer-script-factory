@@ -478,3 +478,25 @@ Update this file whenever a tool, provider, transport path, script, runner, or p
 - Mitigation: run `npm.cmd ci` first, then use `npx.cmd tsc -p . --noEmit`; do not install or upgrade TypeScript ad hoc
 - Script/doc now encoding mitigation: this ledger and the lockfile-pinned project toolchain
 - Verification: `npm.cmd ci` restored the lockfile-pinned toolchain, after which `npx.cmd tsc -p . --noEmit`, the core-only compile, the extension compile, and the full regression suite passed
+
+### Windows PowerShell SHA256 Has No Static HashData Method
+
+- Date: 2026-07-18
+- Domain/provider: Windows PowerShell / .NET cryptography
+- Operation: hashing compact Git worktree status packets during Factory reconciliation
+- Symptom: `[Security.Cryptography.SHA256]::HashData(...)` failed because the static method was unavailable
+- Likely cause: this Windows PowerShell session exposes an older .NET API surface
+- Mitigation: use `[Security.Cryptography.SHA256]::Create().ComputeHash(...)` and dispose the instance
+- Script/doc now encoding mitigation: this ledger
+- Verification: the replacement produced the expected historical Factory status fingerprints and the standard empty SHA-256 value
+
+### Harmony Safe Apply Rejects Legacy Or Dirty Source Records
+
+- Date: 2026-07-18
+- Domain/provider: REFER Harmony / automatic inheritance
+- Operation: refreshing `.refer/source.json` after merging a legacy exact-mtime source record with the current schema-bound consumer binding
+- Symptom: `apply-safe` first returned `semantic-incompatibility` for `source-record-schema-version`, then returned `dirty-tree` after the schema-only compatibility repair
+- Likely cause: Harmony intentionally requires a clean Git tree and the current source-record schema before it writes generated binding targets
+- Mitigation: use the read-only `classifyAutomaticInheritance(..., ignoreDirty: true)` path to obtain the exact two-file Harmony plan, apply only those declared binding values inside the active contract, commit the scoped compatibility result, then rerun normal `apply-safe` and require `no_change`
+- Script/doc now encoding mitigation: this ledger and the governed Harmony classifier
+- Verification: the classifier returned `safe-binding-drift` with exactly `.refer/source.json` and `.refer/generated/universal-agent.md`; final normal no-change verification is required before queue admission
