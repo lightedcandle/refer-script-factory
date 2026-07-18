@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-07-16T13:01:16.353Z",
+  "generated_at": "2026-07-18T12:38:24.920Z",
   "forges": [
     {
       "forge_id": "authority-resolver-forge",
@@ -153,7 +153,8 @@
         "refer.runScriptographer",
         "refer.contractModeOn",
         "refer.contractModeOff",
-        "refer.contractModeToggle"
+        "refer.contractModeToggle",
+        "refer.universal.source-sync"
       ]
     },
     {

@@ -1,6 +1,6 @@
 # Script Class Registry
 
-Generated: 2026-07-16T13:01:10.370Z
+Generated: 2026-07-18T12:38:24.052Z
 
 | Script | Class | Sequence | Forge | Status |
 | --- | --- | --- | --- | --- |
@@ -42,6 +42,7 @@ Generated: 2026-07-16T13:01:10.370Z
 | `npm.test` | Validator Script | SEQ-I | `verification-forge` | ready |
 | `npm.verify` | Validator Script | SEQ-I | `verification-forge` | ready |
 | `refer.authority.resolve` | Reference Script | SEQ-D | `authority-resolver-forge` | ready |
+| `refer.universal.source-sync` | Function Script | SEQ-G | `script-factory-kernel-forge` | ready |
 | `refer.doctrine.compile` | Forge Script | SEQ-F | `doctrine-compiler-forge` | ready |
 | `refer.scriptionary.term` | Governing Script | SEQ-L | `scriptionary-term-forge` | ready |
 | `npm.refer.server` | Sequencer Script | SEQ-E | `server-endpoint-forge` | ready |

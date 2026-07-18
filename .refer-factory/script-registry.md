@@ -1,6 +1,6 @@
 # Domain Script Registry
 
-Updated: 2026-07-17T11:38:21.906Z
+Updated: 2026-07-18T12:38:23.051Z
 
 Before direct work, identify the domain and check that domain's registry/check_first surfaces for an existing script.
 
@@ -28,7 +28,7 @@ Package scripts discovered in this domain:
 - `compile:core`: `tsc -p tsconfig.core.json --noEmit`
 - `verify:core-boundary`: `node scripts/verify/core-boundary.mjs`
 - `verify:core`: `npm run compile:core && npm run verify:core-boundary`
-- `test`: `npm run compile && node dist/test/metrics.test.js && node dist/test/processEvents.test.js && node dist/test/bootstrapDryRun.test.js && node dist/test/bootstrapApply.test.js && node dist/test/bootstrapProcessEvents.test.js && node dist/test/bootstrapHealth.test.js && node dist/test/codebaseMiles.test.js && node dist/test/codebases.test.js && node dist/test/scriptBlueprint.test.js && node dist/test/scriptDna.test.js && node dist/test/scriptographer.test.js && node dist/test/referIntake.test.js && node dist/test/referOrchestrator.test.js && node dist/test/referProcessEvents.test.js && node dist/test/referChatSession.test.js && node dist/test/referChatMode.test.js && node dist/test/referOrchestratorRunner.test.js && node dist/test/referTargetRegistry.test.js && node dist/test/referCoach.test.js && node dist/test/orchestratorRoadmap.test.js && node dist/test/factoryGaps.test.js && node dist/test/schemaValidation.test.js && node dist/test/lawToc.test.js && node dist/test/updateSync.test.js && node dist/test/factoryRegistries.test.js && node dist/test/standaloneLanguage.test.js && node dist/test/authorityResolver.test.js && node dist/test/doctrineCompiler.test.js && node dist/test/scriptionaryTerm.test.js && node dist/test/modificationLoop.test.js && node dist/test/coreApi.test.js && node dist/test/coreBoundary.test.js && node dist/test/vscodeAdapterCompatibility.test.js && node dist/test/cliAdapter.test.js && node dist/test/sovereignNodeMcpClient.test.js && node dist/test/sovereignNodeCli.test.js`
+- `test`: `npm run compile && node dist/test/metrics.test.js && node dist/test/processEvents.test.js && node dist/test/bootstrapDryRun.test.js && node dist/test/bootstrapApply.test.js && node dist/test/bootstrapProcessEvents.test.js && node dist/test/bootstrapHealth.test.js && node dist/test/codebaseMiles.test.js && node dist/test/codebases.test.js && node dist/test/scriptBlueprint.test.js && node dist/test/scriptDna.test.js && node dist/test/scriptographer.test.js && node dist/test/referIntake.test.js && node dist/test/referOrchestrator.test.js && node dist/test/referProcessEvents.test.js && node dist/test/referChatSession.test.js && node dist/test/referChatMode.test.js && node dist/test/referOrchestratorRunner.test.js && node dist/test/referTargetRegistry.test.js && node dist/test/referCoach.test.js && node dist/test/orchestratorRoadmap.test.js && node dist/test/factoryGaps.test.js && node dist/test/schemaValidation.test.js && node dist/test/lawToc.test.js && node dist/test/updateSync.test.js && node dist/test/factoryRegistries.test.js && node dist/test/standaloneLanguage.test.js && node dist/test/authorityResolver.test.js && node dist/test/universalSourceSync.test.js && node dist/test/doctrineCompiler.test.js && node dist/test/scriptionaryTerm.test.js && node dist/test/modificationLoop.test.js && node dist/test/coreApi.test.js && node dist/test/coreBoundary.test.js && node dist/test/vscodeAdapterCompatibility.test.js && node dist/test/cliAdapter.test.js && node dist/test/sovereignNodeMcpClient.test.js && node dist/test/sovereignNodeCli.test.js`
 - `test:cli`: `npm run compile && node dist/test/cliAdapter.test.js`
 - `test:node`: `npm run compile && node dist/test/sovereignNodeMcpClient.test.js && node dist/test/sovereignNodeCli.test.js`
 - `verify`: `npm run test`
@@ -54,6 +54,7 @@ Package scripts discovered in this domain:
 - `repair:modification-loop`: `node scripts/repair/modification-loop.mjs`
 - `authority:resolve`: `node scripts/reference/authority-resolver.mjs resolve`
 - `authority:report`: `node scripts/reference/authority-resolver.mjs report`
+- `universal:source-sync`: `node scripts/reference/universal-source-sync.mjs`
 - `doctrine:compile`: `node scripts/doctrine/doctrine-compiler.mjs compile`
 - `doctrine:report`: `node scripts/doctrine/doctrine-compiler.mjs report`
 - `scriptionary:candidate`: `node scripts/scriptionary/scriptionary-term.mjs candidate`
