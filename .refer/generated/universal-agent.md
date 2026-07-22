@@ -1,9 +1,9 @@
 <!-- REFER-GENERATED:BEGIN refer-universal-agent-v1 -->
 schema_version: 2.0.0
 consumer_binding_version: 1.0.0
-release_id: refer-binding-951d30ae0835b77bd47e02b210aedb5927974aa46d9f42716a1a30e6d37a2c46
-release_manifest_hash: e2efbe29ab9e91942cbd2f61b6c3f803c484519496b9a571502de55218ee6746
-universal_content_hash: 951d30ae0835b77bd47e02b210aedb5927974aa46d9f42716a1a30e6d37a2c46
-AGENTS.md: e5bbee3848f46786364d0c78277d0f3fc1740cfa838119bb10d23e6a45f2fb86
-REFER.OS/refer.agent.md: 6ba199e3e807f7cfe8603589e3582a87090728737273e67760ce02cff27dc740
+release_id: refer-binding-22ce7999246fc0a55d14d41042911a97832bd872362dd54e08a13d38d57ef809
+release_manifest_hash: e22a8c3a38b928717f3731c4a4fb64116cf04571e99f9f03363c0532b8117ea5
+universal_content_hash: 22ce7999246fc0a55d14d41042911a97832bd872362dd54e08a13d38d57ef809
+AGENTS.md: 75d85f2f661b7c7cf0dd5fdceaed6ce20c0c6e196c707f9fcd60cd5b4468cb02
+REFER.OS/refer.agent.md: a2e7f0f61ca2d6f677b5539660096e3158af1c7dc75a90dfb4b2e22dd8113704
 <!-- REFER-GENERATED:END refer-universal-agent-v1 -->
