@@ -1,7 +1,7 @@
 <!-- REFER-GENERATED:BEGIN refer-universal-agent-v1 -->
 schema_version: 1.0.0
 consumer_binding_version: 1.0.0
-universal_content_hash: f590b13e4adfc8eb1208a9bb5df61f257dfa7a0fdb5ec9cdef867e389e780ae5
-AGENTS.md: b98bf5f07451153ef12f9dca50416c06405ac1990795926f366af0c567d7f095
-REFER.OS/refer.agent.md: 72fc9c7c3d86e5c4ae33bf5c5d25a7979522382b02a6d44e79757f52ee3bad53
+universal_content_hash: 32d2a9dce7e6d0221a311b19b59bb1c862ef963cf1af7e3f45ac01225dff099e
+AGENTS.md: 13c282953b23b744cb020f978e0bcb5e91f0625e3021afbb3ab65e80a638debd
+REFER.OS/refer.agent.md: 33dbb89848121efca8931b14d1aea9bcdbe7de1989fb0e290761288b7eff3b8f
 <!-- REFER-GENERATED:END refer-universal-agent-v1 -->

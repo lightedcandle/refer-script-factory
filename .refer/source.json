@@ -1,16 +1,16 @@
 {
   "consumer_binding_version": "1.0.0",
-  "last_verified_hash": "cd81eccbaf7b03351fb12279c1f92d2de76573808913a666ccac519062a3d3fe",
+  "last_verified_hash": "9615d5c3310db426adfb7196710e02758037b0320ee1b5d798ea7bdd777292e2",
   "schema_version": "1.0.0",
   "universalAgentBootstrap": {
-    "mtime": "2026-07-17T01:19:47.1252678Z",
+    "mtime": "2026-07-20T00:31:20.0970924Z",
     "path": "E:/refer.os/REFER.OS/refer.agent.md",
-    "sha256": "72fc9c7c3d86e5c4ae33bf5c5d25a7979522382b02a6d44e79757f52ee3bad53"
+    "sha256": "33dbb89848121efca8931b14d1aea9bcdbe7de1989fb0e290761288b7eff3b8f"
   },
   "universalAgentSurface": {
-    "mtime": "2026-07-18T12:29:10.6983899Z",
+    "mtime": "2026-07-20T00:32:47.4177321Z",
     "path": "E:/refer.os/AGENTS.md",
-    "sha256": "b98bf5f07451153ef12f9dca50416c06405ac1990795926f366af0c567d7f095"
+    "sha256": "13c282953b23b744cb020f978e0bcb5e91f0625e3021afbb3ab65e80a638debd"
   },
-  "universal_content_hash": "f590b13e4adfc8eb1208a9bb5df61f257dfa7a0fdb5ec9cdef867e389e780ae5"
+  "universal_content_hash": "32d2a9dce7e6d0221a311b19b59bb1c862ef963cf1af7e3f45ac01225dff099e"
 }
