@@ -1,6 +1,10 @@
 {
+  "absorption_method_version": "2.0.0",
+  "binding_profile": "refer-automatic-inheritance-v1",
   "consumer_binding_version": "1.0.0",
-  "last_verified_hash": "9615d5c3310db426adfb7196710e02758037b0320ee1b5d798ea7bdd777292e2",
+  "last_verified_hash": "47acc9f32691eab930837de7b6d1e8ab7ff57a290290fc230d42c212ac710b1d",
+  "release_manifest_hash": "e2efbe29ab9e91942cbd2f61b6c3f803c484519496b9a571502de55218ee6746",
+  "required_release_id": "refer-binding-951d30ae0835b77bd47e02b210aedb5927974aa46d9f42716a1a30e6d37a2c46",
   "schema_version": "1.0.0",
   "universalAgentBootstrap": {
     "mtime": "2026-07-20T00:31:20.0970924Z",
