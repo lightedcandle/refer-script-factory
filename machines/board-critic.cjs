@@ -209,7 +209,18 @@ for (const f of findings) {
       driver: "I7",
       tier: 1,
       dimension: f.dimension,
-      subject: "the Living Factory board",
+      // The subject is what this finding is ABOUT, and it must be specific.
+      //
+      // Every board finding used to carry the same string, so rule 3 below -
+      // "three findings on one subject means it is being re-noticed rather
+      // than fixed" - counted three DIFFERENT problems as one recurring one and
+      // raised a false alarm against its own deposits. It reached the operator's
+      // NEEDS YOU column, which is the most expensive place in the system to
+      // put a thing that is not true.
+      //
+      // Keyed this way the rule finally means what it says: the same defect,
+      // found again, after somebody thought it was fixed.
+      subject: `board: ${f.key}`,
       claim: f.claim,
       evidence: f.evidence,
       seen: false,

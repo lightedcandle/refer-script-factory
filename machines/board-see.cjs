@@ -129,7 +129,10 @@ function deposit() {
         driver: "I7",
         tier: 1,
         dimension: f.dimension,
-        subject: "the Living Factory board",
+        // Specific, not "the board" - see the same note in board-critic. A
+        // shared subject string turns three unrelated problems into a fake
+        // recurrence and puts it in front of him.
+        subject: `board: ${f.key}`,
         claim: f.claim,
         evidence: f.evidence,
         seen: true, // it was SEEN. That is the whole point of this station.
@@ -401,6 +404,59 @@ if (!chromium) {
           "all-does-not-restore",
           `After filtering, clicking ALL brings back ${back} rows out of ${seen.rowTotal}. ${seen.rowTotal - back} stay hidden.`,
           `Measured by rendered height. Work hidden behind a filter that will not reopen is invisible while still being counted. Snapshot: ${path.relative(ROOT, bad)}`,
+        );
+      }
+    }
+  }
+
+  // ---- T4b  a deposit must open, and close again ---------------------------
+  //
+  // Operator: "tapping the deposit in or out card item should expand
+  // untruncate to see full details toggle retruncate." Both columns.
+  //
+  // Measured as height, never as a class name. Asserting the element gained an
+  // "open" class is the r.hidden mistake wearing a different word - it reads
+  // back what the click handler just wrote and tells you nothing about whether
+  // anything grew on screen.
+  for (const which of ["inrow", "outrow"]) {
+    const row = await page.$(`.${which}`);
+    if (!row) continue;
+    const h0 = await row.evaluate((r) => r.getBoundingClientRect().height);
+    await row.click();
+    const h1 = await row.evaluate((r) => r.getBoundingClientRect().height);
+    await row.click();
+    const h2 = await row.evaluate((r) => r.getBoundingClientRect().height);
+
+    if (h1 <= h0) {
+      const bad = await shot(`expand-${which}-FAILED`);
+      say(
+        `row-does-not-expand-${which}`,
+        `Tapping a ${which === "inrow" ? "deposit" : "resolved"} row does not open it - the row is ${Math.round(h1)}px before and after.`,
+        `Measured as rendered height across a real click. The full claim and the evidence stay hidden, so the board still shows only the first 74 characters of everything. Snapshot: ${path.relative(ROOT, bad)}`,
+      );
+    } else if (Math.abs(h2 - h0) > 2) {
+      const bad = await shot(`collapse-${which}-FAILED`);
+      say(
+        `row-does-not-close-${which}`,
+        `A ${which === "inrow" ? "deposit" : "resolved"} row opens on tap but will not close again: ${Math.round(h0)}px, ${Math.round(h1)}px open, ${Math.round(h2)}px after tapping a second time.`,
+        `A row that opens and stays open pushes the rest of the column below the fold, and on a wall display below the fold is gone. Snapshot: ${path.relative(ROOT, bad)}`,
+      );
+    }
+  }
+
+  // Only one row open at a time, or a few taps bury the column.
+  {
+    const rows = await page.$$(".inrow");
+    if (rows.length >= 2) {
+      await rows[0].click();
+      await rows[1].click();
+      const openCount = await page.evaluate(() => document.querySelectorAll(".feedrow.open").length);
+      await rows[1].click(); // leave the board as it was found
+      if (openCount > 1) {
+        say(
+          "rows-stack-open",
+          `${openCount} deposit rows stay open at once, so a few taps push the rest of the list off the screen.`,
+          "Opening a second row should close the first. On a wall monitor nobody scrolls back.",
         );
       }
     }
