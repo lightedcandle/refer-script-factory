@@ -233,6 +233,76 @@ const add = (id, name, met, detail, why) => conditions.push({ id, name, met: met
   );
 }
 
+// ---- 8. SOMETHING OTHER THAN A PERSON WINDS THE CLOCK ------------------------
+//
+// This gate printed FULLY AUTONOMOUS for a day while the factory was not
+// autonomous in the only sense that matters: NOTHING ON THE MACHINE INVOKED THE
+// CLOCK. Stations declared 10- and 15-minute cadences and the thing walking them
+// was a person, by hand, whenever they happened to be present.
+//
+// Every one of the other seven conditions was true and the whole was false. They
+// all measure what happens WHEN the factory runs; not one asked what makes it
+// run. So the gate was measuring a machine that only existed while being
+// watched, which is precisely the failure the operator named: "the living
+// factory appears stale, can't seem to keep up with life."
+//
+// Two pieces of evidence, and both are required. A registered task proves the
+// intent; a tick nobody was present for proves the fact. The first without the
+// second is a task that is scheduled and failing silently, which is the same
+// shape as a green check that checks nothing.
+{
+  let scheduler = null; // healthy status word, or null
+  let schedulerState = "absent"; // absent | disabled | <status>
+  try {
+    const { execSync } = require("child_process");
+    // schtasks rather than the PowerShell cmdlet: no module load, and it is
+    // present on every Windows since XP.
+    const out = execSync('schtasks /query /tn "LivingFactory-Clock" /fo LIST', { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] });
+    const status = (out.match(/Status:\s*(\w+)/i) || [])[1] || "unknown";
+    schedulerState = status;
+    if (/^(Ready|Running)$/i.test(status)) scheduler = status;
+  } catch {
+    // Not registered, or not Windows. Either way this condition is unmet, and an
+    // unmet condition is never reported as met because it could not be checked.
+  }
+  // ABSENT AND DISABLED ARE DIFFERENT FACTS. The first version said "no task is
+  // registered" when the task existed and had simply been switched off - which
+  // sends somebody to create a task that is already there. This board's own rule
+  // and it was broken inside the check written to enforce autonomy.
+
+  // A tick that happened while nobody was here. The clock records every
+  // station's last run; if the newest is more recent than this session could
+  // account for, something else is winding it.
+  // lastRunAt, an epoch number - NOT lastRun. The first version read a field
+  // that does not exist, so every value was zero and the condition could only
+  // ever fail. A check that cannot pass is the mirror of one that cannot fail,
+  // and both are worthless for the same reason: the answer does not depend on
+  // the world. Verified against the real clock-state.json rather than assumed.
+  const lastRuns = Object.values(clock.stations || {})
+    .map((s) => Number(s.lastRunAt) || Date.parse(s.lastRun || "") || 0)
+    .filter(Boolean);
+  const newestTick = lastRuns.length ? Math.max(...lastRuns) : 0;
+  const tickAgeMin = newestTick ? Math.round((now - newestTick) / MS.m) : null;
+
+  // Fifteen minutes: the ticker runs every five, so three consecutive misses is
+  // a real outage rather than a slow cycle.
+  const ticking = tickAgeMin !== null && tickAgeMin <= 15;
+
+  add(
+    "wound-from-outside",
+    "Something other than a person winds the clock",
+    !!scheduler && ticking,
+    !scheduler
+      ? schedulerState === "absent"
+        ? "No LivingFactory-Clock task exists on this host. The clock runs only when somebody runs it. Install it: SovereignNode/scripts/install-factory-clock.ps1"
+        : `LivingFactory-Clock exists but is ${schedulerState}. It does not need creating, it needs switching back on.`
+      : !ticking
+        ? `LivingFactory-Clock is ${scheduler}, but the newest station run is ${tickAgeMin === null ? "unknown" : tickAgeMin + " minutes"} old - the task is registered and not delivering.`
+        : `LivingFactory-Clock is ${scheduler}; newest station run ${tickAgeMin} minutes ago.`,
+    "Every other condition here measures what happens WHEN the factory runs. None of them asks what makes it run, and for a day all seven passed while the only thing invoking the clock was a person doing it by hand. A factory that is alive because somebody is watching it is the arrangement this system exists to end.",
+  );
+}
+
 // ---- report -----------------------------------------------------------------
 
 const met = conditions.filter((c) => c.met).length;
