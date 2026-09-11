@@ -86,7 +86,14 @@ const runAt = (r) => {
   const t = Date.parse(r.run || "");
   return Number.isNaN(t) ? null : t;
 };
-const isOpen = (r) => /^(contract:|seer$|operator$)/.test(String(r.triggers || ""));
+// A later record naming this one as its subject, and terminal itself, closes it.
+// The belt is append-only, so this is the only way a finding can ever die - and
+// without it the critic's own rules counted finished work as outstanding. It was
+// re-raising a recurrence built from three records that were all already closed.
+const TERMINAL = (t) => /^(terminal:.+|closed)$/.test(String(t || "").trim());
+const closedIds = new Set(belt.filter((r) => TERMINAL(r.triggers) && r.subject).map((r) => String(r.subject)));
+const isClosed = (r) => TERMINAL(r.triggers) || closedIds.has(String(r.id));
+const isOpen = (r) => /^(contract:|seer$|operator$)/.test(String(r.triggers || "")) && !isClosed(r);
 const ago = (t) => (!t ? "never" : `${Math.round((now - t) / MS.h)}h ago`);
 
 // A later record acts on an earlier one by naming it as subject. Append-only
@@ -161,11 +168,16 @@ const say = (key, claim, evidence, triggers, owner, dimension) =>
     (bySubject[s] ||= []).push(r);
   }
   for (const [subj, rs] of Object.entries(bySubject)) {
-    if (rs.length < 3) continue;
+    // Only findings that are STILL OPEN count toward a recurrence. "The fix has
+    // not held" is a claim about a live problem; three closed records on one
+    // subject are three problems that were dealt with, and reporting them as a
+    // recurrence puts finished work back in front of him.
+    const live = rs.filter(isOpen);
+    if (live.length < 3) continue;
     say(
       `recurring-${subj.replace(/[^a-z0-9]+/gi, "-").slice(0, 40)}`,
-      `"${subj}" has earned ${rs.length} separate findings. It is being re-noticed rather than fixed.`,
-      `Records: ${rs.map((r) => r.id).join(", ")}. Three or more findings on one subject means the fix has not held, or the subject is really a class of problem wearing one name.`,
+      `"${subj}" has ${live.length} findings still open against it. It is being re-noticed rather than fixed.`,
+      `Open: ${live.map((r) => r.id).join(", ")}.${rs.length > live.length ? ` (${rs.length - live.length} more on this subject are already closed and are not counted.)` : ""} Three or more OPEN findings on one subject means the fix has not held, or the subject is really a class of problem wearing one name.`,
       "operator",
       "operator",
       "architecture",
@@ -191,6 +203,47 @@ const say = (key, claim, evidence, triggers, owner, dimension) =>
       "body",
       "body",
     );
+  }
+}
+
+// ---- 5. the belt says one thing, the board shows another ---------------------
+//
+// The seer checks that the board agrees with ITSELF - chips against rows, counts
+// against what they label. It passed for hours while the board was wrong,
+// because the board was perfectly coherent and coherently wrong: a finding
+// closed by a later record was still being drawn as open, so the chip and the
+// rows agreed on a number that should not have existed.
+//
+// No single-source check can catch that. This one compares two sources - what
+// the belt says is still open, against how many rows the seer actually counted
+// on the page - which is the only way a shared assumption gets caught.
+{
+  const detail = path.join(CTX, "board-see-detail.json");
+  if (fs.existsSync(detail)) {
+    let seen = null;
+    try {
+      seen = JSON.parse(fs.readFileSync(detail, "utf8")).seen;
+    } catch {
+      /* the seer owns reporting its own output; not this machine's job */
+    }
+    if (seen && typeof seen.rowTotal === "number") {
+      // Closed by a later record naming it, or terminal in its own right.
+      const closed = new Set(belt.filter((r) => /^(terminal:|closed$)/.test(String(r.triggers || "")) && r.subject).map((r) => String(r.subject)));
+      const ids = new Set(belt.map((r) => String(r.id)));
+      const stillOpen = belt.filter(
+        (r) => isOpen(r) && !closed.has(String(r.id)) && !(/^(terminal:|closed$)/.test(String(r.triggers || "")) && r.subject && ids.has(String(r.subject))),
+      ).length;
+      if (stillOpen !== seen.rowTotal) {
+        say(
+          "belt-and-board-disagree",
+          `The belt has ${stillOpen} item${stillOpen === 1 ? "" : "s"} still open and the board is drawing ${seen.rowTotal} row${seen.rowTotal === 1 ? "" : "s"}.`,
+          `Counted from the belt, against what the seer counted on the rendered page. ${seen.rowTotal > stillOpen ? "The board is showing work that is already finished, which is how two fixed items sat in his column with their own closures visible on the same screen." : "The board is hiding open work, which is worse - it cannot be acted on if it cannot be seen."}`,
+          "contract:body",
+          "body",
+          "body",
+        );
+      }
+    }
   }
 }
 
