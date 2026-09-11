@@ -500,6 +500,50 @@ if (!chromium) {
     }
   }
 
+  // ---- T4d  the readout must stay inside the belt --------------------------
+  //
+  // The operator found the status line running out through the conveyor on both
+  // sides - 646 to 1274 against a loop interior of 704 to 1215. It had grown
+  // there gradually, one sentence at a time, which is exactly the kind of drift
+  // nobody notices in a screenshot they have looked at fifty times.
+  //
+  // Measured against the LOOP PATH's own box, so the check keeps working if the
+  // loop is ever resized.
+  {
+    const spill = await page.evaluate(() => {
+      const loop = document.querySelector("svg #board");
+      if (!loop) return null;
+      const svg = loop.ownerSVGElement;
+      const panel = svg.parentElement;
+      const lb = loop.getBoundingClientRect();
+      // The conveyor has a stroke width; the usable interior is inside it.
+      const w = parseFloat(getComputedStyle(loop).strokeWidth) || 0;
+      const sx = lb.width / (svg.viewBox.baseVal.width || 1);
+      const inset = (w * sx) / 2;
+      const inner = { left: lb.left + inset, right: lb.right - inset, top: lb.top + inset, bottom: lb.bottom - inset };
+      const out = [];
+      for (const s of panel.querySelectorAll("span")) {
+        const r = s.getBoundingClientRect();
+        if (!r.height || !s.textContent.trim()) continue;
+        // Only the readout - things deliberately outside the loop are not spill.
+        const insideish = r.left > lb.left - 40 && r.right < lb.right + 40 && r.top > lb.top && r.bottom < lb.bottom;
+        if (!insideish) continue;
+        if (r.left < inner.left - 1 || r.right > inner.right + 1) {
+          out.push(`${s.textContent.trim().slice(0, 28)} (${Math.round(r.left)}-${Math.round(r.right)} vs ${Math.round(inner.left)}-${Math.round(inner.right)})`);
+        }
+      }
+      return out;
+    });
+    if (spill && spill.length) {
+      const bad = await shot("belt-spill-FAILED");
+      say(
+        "readout-outside-the-belt",
+        `${spill.length} line(s) of the centre readout run outside the conveyor loop.`,
+        `Measured against the loop path's own box: ${spill.join("; ")}. Text crossing the belt reads as a rendering fault to anyone glancing at it. Snapshot: ${path.relative(ROOT, bad)}`,
+      );
+    }
+  }
+
   // ---- T5  the board must not pretend --------------------------------------
   if (seen.bannerShowing) {
     say(
