@@ -1,0 +1,241 @@
+#!/usr/bin/env node
+/**
+ * BOARD CRITIC - the thing that reads the board and asks why nothing happened.
+ *
+ * UNIVERSAL MACHINE. Runs against the repo it is invoked in (process.cwd()).
+ *
+ * Operator, 2026-09-11: "That problem could have been discovered just by looking
+ * at the page. So apparently nothing is looking at the page and extrapolating,
+ * and wondering, why are there issues on the page that are not being addressed?"
+ *
+ * He is right, and it is the largest structural gap the factory has had.
+ *
+ * THE BOARD WAS THE BIGGEST LEAK IN THE SYSTEM. Section 3.1 says an output
+ * nobody picks up is a leak, and a leak is the only way this system dies
+ * quietly. The board is the terminal display of everything the factory knows -
+ * and nothing read it. Watchers deposited, the board rendered, and there the
+ * chain stopped. Every defect found on it so far was found by a person looking
+ * at it, which is exactly the labour this whole system exists to remove.
+ *
+ * So this reads the board's own state and asks the questions a person asks when
+ * they look at it:
+ *
+ *   Is anything shown as needing attention that nobody has touched?
+ *   Is any domain carrying work with nobody watching it?
+ *   Is the same thing being reported again and again without resolving?
+ *   Does any count on the board disagree with what it counts?
+ *
+ * WHY THIS IS A SCRIPT AND NOT A SESSION. Most of "looking at the page" is not
+ * looking - it is arithmetic over the data the page renders, and arithmetic
+ * needs no judgement. What genuinely needs eyes (does this LOOK wrong, is the
+ * layout broken) stays with the seer. Splitting them is what makes the cheap
+ * half run every cycle instead of once a day.
+ *
+ *   node <factory>/machines/board-critic.cjs         report
+ *   node <factory>/machines/board-critic.cjs --json  machine-readable
+ *
+ * Exit 1 when it finds something nobody is acting on.
+ */
+const fs = require("fs");
+const path = require("path");
+
+const ROOT = process.cwd();
+const CTX = path.join(ROOT, ".claude/agent-context");
+const BELT = path.join(CTX, "findings.jsonl");
+const JSON_OUT = process.argv.includes("--json");
+
+const MS = { h: 36e5, d: 864e5 };
+const STALE_HOURS = 24; // open, untouched, and older than this = nobody picked it up
+
+if (!fs.existsSync(BELT)) {
+  console.error(`board-critic: no belt in ${ROOT}`);
+  process.exit(2);
+}
+
+const belt = fs
+  .readFileSync(BELT, "utf8")
+  .replace(/^﻿/, "")
+  .split("\n")
+  .filter((l) => l.trim())
+  .map((l) => {
+    try {
+      return JSON.parse(l);
+    } catch {
+      return null;
+    }
+  })
+  .filter(Boolean);
+
+const stations = [];
+for (const rel of ["tools", "tools/factory", "scripts", "machines"]) {
+  const dir = path.join(ROOT, rel);
+  if (!fs.existsSync(dir)) continue;
+  for (const f of fs.readdirSync(dir)) {
+    if (!f.endsWith(".station.json")) continue;
+    try {
+      const d = JSON.parse(fs.readFileSync(path.join(dir, f), "utf8"));
+      if (d && d.id) stations.push(d);
+    } catch {
+      /* the clock reports unreadable declarations; not this machine's job */
+    }
+  }
+}
+
+const now = Date.now();
+const runAt = (r) => {
+  const t = Date.parse(r.run || "");
+  return Number.isNaN(t) ? null : t;
+};
+const isOpen = (r) => /^(contract:|seer$|operator$)/.test(String(r.triggers || ""));
+const ago = (t) => (!t ? "never" : `${Math.round((now - t) / MS.h)}h ago`);
+
+// A later record acts on an earlier one by naming it as subject. Append-only
+// means the whole history is the state, so "has anyone touched this" is a
+// question about what came after it, never about the record itself.
+const actedOn = new Set(belt.filter((r) => r.subject).map((r) => String(r.subject)));
+
+const findings = [];
+const say = (key, claim, evidence, triggers, owner, dimension) =>
+  findings.push({ key, claim, evidence, triggers, owner, dimension });
+
+// ---- 1. A domain carrying work with nobody watching it ----------------------
+//
+// This is the one he found by eye. Generalised so it is never found by eye again.
+{
+  const watched = new Set(stations.map((s) => s.owns).filter(Boolean));
+  const load = {};
+  for (const r of belt) {
+    if (!isOpen(r)) continue;
+    for (const d of ["body", "mind", "spirit"]) {
+      if (r.owner === d || String(r.triggers) === `contract:${d}`) load[d] = (load[d] || 0) + 1;
+    }
+  }
+  for (const [dim, n] of Object.entries(load)) {
+    if (watched.has(dim)) continue;
+    say(
+      `unwatched-dimension-${dim}`,
+      `${dim} is carrying ${n} open item${n === 1 ? "" : "s"} and no station watches it.`,
+      `Stations declare what they own: ${stations.map((s) => `${s.id}->${s.owns || "nothing"}`).join(", ")}. Nothing owns ${dim}.`,
+      `contract:${dim}`,
+      dim,
+      dim,
+    );
+  }
+}
+
+// ---- 2. Open, untouched, and old -------------------------------------------
+//
+// The question a person asks looking at the board: this has been sitting here,
+// why has nothing happened? A finding nobody picked up is the leak's quieter
+// cousin - it HAS an address, and the address never collected.
+{
+  const stale = belt.filter((r) => {
+    if (!isOpen(r)) return false;
+    if (actedOn.has(String(r.id))) return false;
+    const t = runAt(r);
+    return t && now - t > STALE_HOURS * MS.h;
+  });
+  if (stale.length) {
+    const worst = stale.sort((a, b) => runAt(a) - runAt(b))[0];
+    say(
+      "open-and-untouched",
+      `${stale.length} finding${stale.length === 1 ? " has" : "s have"} been open and untouched for over ${STALE_HOURS}h. Nothing has picked ${stale.length === 1 ? "it" : "them"} up.`,
+      `Oldest: "${worst.id}" deposited ${ago(runAt(worst))}, addressed to ${worst.triggers}. Full list: ${stale.map((s) => s.id).join(", ")}. A finding with an address that never collects is a leak that passed the leak check.`,
+      "operator",
+      "operator",
+      "architecture",
+    );
+  }
+}
+
+// ---- 3. The same thing, reported again ---------------------------------------
+//
+// A subject that keeps earning new findings is not being fixed; it is being
+// re-noticed. That is a different problem from a single open item and wants a
+// different answer.
+{
+  const bySubject = {};
+  for (const r of belt) {
+    const s = r.subject && String(r.subject);
+    if (!s || s.startsWith("supersedes") || belt.some((x) => String(x.id) === s)) continue;
+    (bySubject[s] ||= []).push(r);
+  }
+  for (const [subj, rs] of Object.entries(bySubject)) {
+    if (rs.length < 3) continue;
+    say(
+      `recurring-${subj.replace(/[^a-z0-9]+/gi, "-").slice(0, 40)}`,
+      `"${subj}" has earned ${rs.length} separate findings. It is being re-noticed rather than fixed.`,
+      `Records: ${rs.map((r) => r.id).join(", ")}. Three or more findings on one subject means the fix has not held, or the subject is really a class of problem wearing one name.`,
+      "operator",
+      "operator",
+      "architecture",
+    );
+  }
+}
+
+// ---- 4. Counts that disagree with what they count ---------------------------
+//
+// The board has been wrong this way twice - a panel counting 4 and rendering 2,
+// and a centre counting held work as circulating. Both were found by eye.
+{
+  const open = belt.filter(isOpen);
+  const carried = open.filter((r) => ["body", "mind", "spirit"].some((d) => r.owner === d || String(r.triggers) === `contract:${d}`));
+  const held = open.filter((r) => String(r.triggers) === "operator" && !carried.includes(r));
+  const unplaced = open.length - carried.length - held.length;
+  if (unplaced !== 0) {
+    say(
+      "open-items-counted-nowhere",
+      `${unplaced} open item${unplaced === 1 ? " is" : "s are"} counted in neither the carriers nor the held pile.`,
+      `open ${open.length} = carried ${carried.length} + held ${held.length} + ${unplaced} unaccounted. Every open record must appear somewhere on the board or it is invisible while being counted.`,
+      "contract:body",
+      "body",
+      "body",
+    );
+  }
+}
+
+// ---- deposit, once per distinct finding --------------------------------------
+
+const beltText = fs.readFileSync(BELT, "utf8");
+let deposited = 0;
+for (const f of findings) {
+  const id = `critic-${f.key}`;
+  if (beltText.includes(`"${id}"`)) continue;
+  fs.appendFileSync(
+    BELT,
+    JSON.stringify({
+      id,
+      run: new Date(now).toISOString(),
+      driver: "I7",
+      tier: 1,
+      dimension: f.dimension,
+      subject: "the Living Factory board",
+      claim: f.claim,
+      evidence: f.evidence,
+      seen: false,
+      confidence: "measured",
+      triggers: f.triggers,
+      owner: f.owner,
+    }) + "\n",
+    "utf8",
+  );
+  deposited++;
+}
+
+const report = { checkedAt: new Date(now).toISOString(), repo: path.basename(ROOT), found: findings.length, deposited, findings };
+fs.writeFileSync(path.join(CTX, "board-critic.json"), JSON.stringify(report, null, 2) + "\n");
+
+if (JSON_OUT) {
+  console.log(JSON.stringify(report, null, 2));
+} else {
+  console.log(`board-critic: ${findings.length} thing(s) the board is showing that nobody is acting on  [${report.repo}]`);
+  for (const f of findings) {
+    console.log(`\n  ${f.claim}`);
+    console.log(`    ${f.evidence}`);
+    console.log(`    -> ${f.triggers}`);
+  }
+  if (!findings.length) console.log("  Nothing shown on the board is going unaddressed.");
+  if (deposited) console.log(`\n  deposited ${deposited} (the rest were already on the belt)`);
+}
+
+process.exit(findings.length ? 1 : 0);
