@@ -462,6 +462,44 @@ if (!chromium) {
     }
   }
 
+  // ---- T4c  nothing may be drawn on top of the centre readout --------------
+  //
+  // The operator found a parked carrier card sitting directly on the "BELT
+  // IDLE" heading - the MIND label occupied x 951-969, y 403-411, entirely
+  // inside the heading's box. At a glance it read as a slightly busy middle
+  // rather than as two things in the same pixels, which is why it survived
+  // several careful looks at the screenshot.
+  //
+  // Geometry catches what the eye forgives. Boxes that intersect are a fact.
+  {
+    const overlaps = await page.evaluate(() => {
+      const board = document.querySelector("svg #board");
+      if (!board) return null;
+      const svg = board.ownerSVGElement;
+      const panel = svg.parentElement;
+      const hit = (a, b) => !(a.right <= b.left || b.right <= a.left || a.bottom <= b.top || b.bottom <= a.top);
+      // A carrier card is the little rounded rect with a coloured spine.
+      const cards = [...svg.querySelectorAll("g")]
+        .filter((g) => /^translate/.test(g.getAttribute("transform") || "") && g.querySelector("rect[rx='3']"))
+        .map((g) => g.getBoundingClientRect());
+      // The readout is the absolutely-positioned overlay sitting over the loop.
+      const readout = [...panel.querySelectorAll("span")]
+        .filter((s) => s.textContent.trim() && s.getBoundingClientRect().height > 0)
+        .map((s) => ({ t: s.textContent.trim().slice(0, 30), r: s.getBoundingClientRect() }));
+      const found = [];
+      for (const c of cards) for (const o of readout) if (hit(c, o.r)) found.push(o.t);
+      return [...new Set(found)];
+    });
+    if (overlaps && overlaps.length) {
+      const bad = await shot("overlap-FAILED");
+      say(
+        "carrier-card-over-readout",
+        `A carrier card is drawn on top of the centre readout, covering: ${overlaps.join(", ")}.`,
+        `Boxes measured in a real browser and found to intersect. Two things in the same pixels read as one slightly busy thing, which is why this survives being looked at. Snapshot: ${path.relative(ROOT, bad)}`,
+      );
+    }
+  }
+
   // ---- T5  the board must not pretend --------------------------------------
   if (seen.bannerShowing) {
     say(
