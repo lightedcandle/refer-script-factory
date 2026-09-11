@@ -91,7 +91,23 @@ const runAt = (r) => {
 // without it the critic's own rules counted finished work as outstanding. It was
 // re-raising a recurrence built from three records that were all already closed.
 const TERMINAL = (t) => /^(terminal:.+|closed)$/.test(String(t || "").trim());
-const closedIds = new Set(belt.filter((r) => TERMINAL(r.triggers) && r.subject).map((r) => String(r.subject)));
+
+// NOT EVERY TERMINAL RECORD CLOSES WHAT IT NAMES. A word that means NOTED does
+// not resolve anything - attaching a lesson or a recommendation to a finding
+// explains it, which is the opposite of fixing it.
+//
+// This machine disagreed with the board for about ten minutes because the rule
+// was fixed in one place and not the other, and THE CROSS-SOURCE CHECK BELOW
+// CAUGHT IT: the belt said 13 open, the board drew 20. That check exists exactly
+// for a divergence between two definitions of the same thing, and the first
+// thing it found was this machine's own.
+//
+// Seventh place one rule has been written twice on this board. The vocabulary is
+// factory law (precedent P13) and both readers must keep it identical.
+const NOTING = /^terminal:(recorded|definition|annotation|note)$/;
+const closedIds = new Set(
+  belt.filter((r) => TERMINAL(r.triggers) && !NOTING.test(String(r.triggers || "").trim()) && r.subject).map((r) => String(r.subject)),
+);
 const isClosed = (r) => TERMINAL(r.triggers) || closedIds.has(String(r.id));
 const isOpen = (r) => /^(contract:|seer$|operator$)/.test(String(r.triggers || "")) && !isClosed(r);
 const ago = (t) => (!t ? "never" : `${Math.round((now - t) / MS.h)}h ago`);
@@ -226,13 +242,23 @@ const say = (key, claim, evidence, triggers, owner, dimension) =>
     } catch {
       /* the seer owns reporting its own output; not this machine's job */
     }
-    if (seen && typeof seen.rowTotal === "number") {
-      // Closed by a later record naming it, or terminal in its own right.
-      const closed = new Set(belt.filter((r) => /^(terminal:|closed$)/.test(String(r.triggers || "")) && r.subject).map((r) => String(r.subject)));
+    // Only meaningful if the board was BUILT after the newest record. A belt
+    // that has grown since the last render is not a board telling lies, it is a
+    // board that has not caught up yet - and reporting that as a disagreement
+    // would fire after every single deposit, which is a flood, not a check.
+    const boardFile = path.join(CTX, "factory-tracker.html");
+    const builtAt = fs.existsSync(boardFile) ? fs.statSync(boardFile).mtimeMs : 0;
+    const newestRecord = Math.max(0, ...belt.map((r) => Date.parse(r.run || "") || 0));
+    const boardIsCurrent = builtAt > newestRecord;
+
+    if (seen && typeof seen.rowTotal === "number" && boardIsCurrent) {
+      // One rule, read from one place. This block had its own copy of "what
+      // closes a finding" and the copy drifted the moment the real rule changed
+      // - which is what this very check then reported. Using closedIds and
+      // isOpen means there is nothing left to drift apart from.
       const ids = new Set(belt.map((r) => String(r.id)));
-      const stillOpen = belt.filter(
-        (r) => isOpen(r) && !closed.has(String(r.id)) && !(/^(terminal:|closed$)/.test(String(r.triggers || "")) && r.subject && ids.has(String(r.subject))),
-      ).length;
+      const isCloser = (r) => TERMINAL(r.triggers) && !NOTING.test(String(r.triggers || "").trim()) && r.subject && ids.has(String(r.subject));
+      const stillOpen = belt.filter((r) => isOpen(r) && !isCloser(r)).length;
       if (stillOpen !== seen.rowTotal) {
         say(
           "belt-and-board-disagree",

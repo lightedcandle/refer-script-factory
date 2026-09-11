@@ -65,12 +65,34 @@ const PORT =
 // forever while the display sat frozen - a check that passes for the wrong
 // reason, which is worse than no check because it is trusted. The board server
 // sets an x-living-factory header; nothing else will.
+//
+// AND IT MUST BE THE CURRENT SERVER, not merely a running one.
+//
+// The board's /seen endpoint was written, its tests failed, and nothing was
+// wrong with the change: the process answering requests had started before that
+// code existed. A check that asks only "is something listening" cannot see that,
+// and the gap is permanent - every future change to the server has the same
+// problem, and each one presents as a broken feature rather than a stale
+// process, which is a genuinely expensive way to lose an hour.
+//
+// The server reports its own file's modification time. If the file on disk is
+// newer than what is running, the running one is replaced.
 const listening = () =>
   new Promise((resolve) => {
     const req = http.get({ host: "127.0.0.1", port: PORT, path: "/stamp", timeout: 1500 }, (res) => {
       const ours = res.headers["x-living-factory"] === "board";
+      const running = Number(res.headers["x-board-version"] || 0);
       res.resume();
-      resolve(ours ? true : "foreign");
+      if (!ours) return resolve("foreign");
+      let onDisk = 0;
+      try {
+        onDisk = Math.round(fs.statSync(SERVER).mtimeMs);
+      } catch {
+        /* no file to compare against; a running server is the best available */
+      }
+      // A server too old to report its version is also too old to keep.
+      if (onDisk && (!running || onDisk - running > 2000)) return resolve("stale");
+      resolve(true);
     });
     req.on("timeout", () => {
       req.destroy();
@@ -103,7 +125,22 @@ const listening = () =>
     process.exit(1);
   }
 
-  console.log(`board-serve-check: NOT listening on ${PORT} - reviving`);
+  if (up === "stale") {
+    // Replace it. The old process is holding the port, so it has to go first -
+    // and it is ours, which is the only reason killing it is safe.
+    console.log(`board-serve-check: server on ${PORT} is older than the code - replacing it`);
+    try {
+      const { execSync } = require("child_process");
+      const out = execSync(`netstat -ano -p tcp | findstr LISTENING | findstr :${PORT}`, { encoding: "utf8" });
+      const pid = (out.trim().split(/\s+/).pop() || "").trim();
+      if (pid && /^\d+$/.test(pid)) process.kill(Number(pid));
+    } catch {
+      console.error("  could not stop the old server; it will keep serving stale code");
+    }
+    await new Promise((r) => setTimeout(r, 800));
+  } else {
+    console.log(`board-serve-check: NOT listening on ${PORT} - reviving`);
+  }
   // detached + unref so the server outlives this station's process. A child that
   // dies with its parent would come back for exactly as long as the check runs,
   // which is a revival that revives nothing.

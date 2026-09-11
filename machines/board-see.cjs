@@ -544,6 +544,50 @@ if (!chromium) {
     }
   }
 
+  // ---- T4e  a tab must show one pane, and every tab must work --------------
+  //
+  // The year chart rendered underneath the classroom because its pane carried an
+  // inline display:flex, and an inline style beats [hidden]. That is the THIRD
+  // time this exact fight has been lost on this board, and the second time
+  // inside a change whose own comment warned about it. Written rules clearly do
+  // not hold here; a check does.
+  //
+  // Measured by rendered height, so a pane that is "hidden" but still occupying
+  // the screen fails, which is precisely what happened.
+  {
+    const tabResults = await page.evaluate(async () => {
+      const tabs = [...document.querySelectorAll(".paneltab[data-panel]")];
+      const bodies = [...document.querySelectorAll(".panelbody[data-panel]")];
+      if (!tabs.length || !bodies.length) return null;
+      const out = [];
+      for (const t of tabs) {
+        t.click();
+        await new Promise((r) => setTimeout(r, 60));
+        const want = t.getAttribute("data-panel");
+        const visible = bodies.filter((b) => b.getBoundingClientRect().height > 0).map((b) => b.getAttribute("data-panel"));
+        out.push({ want, visible });
+      }
+      return out;
+    });
+    if (tabResults) {
+      for (const r of tabResults) {
+        if (r.visible.length !== 1 || r.visible[0] !== r.want) {
+          const bad = await shot(`tab-${r.want}-FAILED`);
+          say(
+            `tab-shows-wrong-pane-${r.want}`,
+            `Selecting the ${r.want.toUpperCase()} tab leaves ${r.visible.length === 0 ? "nothing" : r.visible.join(" and ")} on screen.`,
+            `Measured as rendered height after a real click. ${r.visible.length > 1 ? "Two panes are drawn on top of each other, which reads as a rendering fault." : "The tab selects nothing at all."} Snapshot: ${path.relative(ROOT, bad)}`,
+          );
+        }
+      }
+      // Leave it as the room should find it.
+      await page.evaluate(() => {
+        const first = document.querySelector(".paneltab[data-panel]");
+        if (first) first.click();
+      });
+    }
+  }
+
   // ---- T5  the board must not pretend --------------------------------------
   if (seen.bannerShowing) {
     say(
