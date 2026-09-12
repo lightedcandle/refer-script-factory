@@ -18,11 +18,60 @@ The law, the guard's exact behaviour and the branch policy are in `AGENTS.md` un
 1. `E:/refer.os/AGENTS.md` — universal REFER agent law
 2. `AGENTS.md` (this repo) — factory governance, machines, and Script-First Law
 
+## Before you treat this working tree as current
+
+```powershell
+git status -sb
+```
+
+Main is production for `machines/`, and this tree is where several lanes and a
+scheduler meet. A session that reads `AGENTS.md`, `CLAUDE.md` or the shelf from a
+tree that is behind origin is reading superseded law and cannot tell. On
+2026-09-12 a session wrote a whole `CLAUDE.md` two commits behind, blind to the
+machines law, the gates and the thread register that were already on origin.
+
+Being behind is not an error state here — it is the normal cost of a repo with a
+scheduler and several lanes. Reading it as current is the error.
+
+## Commands
+
+Tests are compiled Node scripts, not a test runner: `npm run test` compiles to
+`dist/` and runs ~37 `dist/test/*.test.js` in sequence. No watch, no `--filter`,
+no lint step.
+
+```powershell
+npm run test            # compile + every test
+npm run compile         # tsc only - narrow type check, emits dist/
+npm run verify:core     # core type-check + the provider-neutral boundary check
+```
+
+Run one test by compiling once, then invoking the file. PowerShell 5.1 has no
+`&&`:
+
+```powershell
+npm run compile; node dist/test/coreApi.test.js
+```
+
+`npm run test:cli` and `npm run test:node` are the two named subsets.
+
+The gates are separate from the tests and cover `machines/`, which the TypeScript
+suite does not touch at all:
+
+```powershell
+npm run gate:machines   # run this BEFORE the save - see the machines section above
+npm run gate:prove      # breaks the gate five ways, requires it to catch each
+npm run gate:pulse-belt
+```
+
+After adding or changing a script under `scripts/**`, regenerate rather than
+hand-editing: `npm run scripts:registry`.
+
 ## Repo-specific notes
 
 - `machines/` holds the universal machines of the Living Factory — one copy, every repo. Every machine resolves its subject from `process.cwd()` and never from `__dirname` (precedent P13). `machines/README.md` is the working doc; `machines/kind.cjs` is the belt's only vocabulary.
 - The belt (`.claude/agent-context/findings.jsonl`) is **per consuming repo and never in this one**. Findings are about a repo; a shared belt would merge several repos' work into one unreadable stream.
-- Provider-neutral core lives under `src/core/**` (no VS Code APIs or host adapters).
+- Provider-neutral core lives under `src/core/**` (no VS Code APIs or host adapters). The rule is machine-checked, not honour-system: `scripts/verify/core-boundary.mjs` walks every import, export, `require` and dynamic import in the AST and fails on `vscode` or on any relative path escaping `src/core`. `src/core/index.ts` is the intentional public API.
+- **`src/chat/`, `src/contracts/`, `src/commands/` and `src/cockpit/` are one-line re-export shims**, kept only for compatibility — `export * from "../core/..."` or `"../adapters/vscode/..."`. Edit the target under `src/core/**` or `src/adapters/**`. A change made in a shim is either lost or a boundary violation, and the filename gives no hint which.
 - `refer-zo-bootstrap/` is the sibling Zo-scoped factory — a separate git repository nested in this working tree, ignored here, reference material only unless the user explicitly asks for Zo/bootstrap/hive work.
 - `alliance-hub/` (submodule, own `AGENTS.md`) holds the live `telechurchlive` subdomain app source.
 - Script-First Law: repeating work becomes a script, not a habit; record tool/provider limits in `docs/known-limits-and-constraints.md`.

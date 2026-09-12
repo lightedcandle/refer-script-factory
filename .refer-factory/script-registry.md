@@ -1,6 +1,6 @@
 # Domain Script Registry
 
-Updated: 2026-07-18T12:38:23.051Z
+Updated: 2026-09-12T15:56:36.249Z
 
 Before direct work, identify the domain and check that domain's registry/check_first surfaces for an existing script.
 
@@ -9,6 +9,7 @@ Before direct work, identify the domain and check that domain's registry/check_f
 | Domain | Scope | Authority | Check First |
 |---|---|---|---|
 | REFER Script Factory | Provider-neutral TypeScript source and doctrine, plus current host-adapter registrations. | `src/core/contracts/scriptFactory.ts` | `src/core/contracts/scriptFactory.ts`<br>`docs/script-legend.md`<br>`package.json` |
+| Living Factory Machines | The universal machines other repos consume. Live: a scheduler reads machines/*.cjs off disk every five minutes, so saving is deploying and main is production. | `AGENTS.md#machines-there-is-no-deploy-step-so-saving-is-deploying` | `AGENTS.md`<br>`machines/README.md`<br>`machines/kind.cjs` |
 | Current Chat Surface | Token tracking, script-use logging, current-context reset, and chat-surface self-observation. | `.refer-factory/script-registry.json` | `docs/chat-surface-scripts.md`<br>`scripts/chat-surface/`<br>`package.json` |
 | Hive Director | Cross-node identity, hive build plan, node heartbeat, and ratification status. | `.refer-factory/hive-node-registry.json` | `docs/hive-build-plan.md`<br>`.refer-factory/hive-node-registry.md`<br>`scripts/hive/` |
 | Alliance Hub | Telechurchlive Alliance app source, Cloudflare Pages/Functions, Supabase migrations, SMS routing, formula/retrieval flows. | `alliance-hub/AGENTS.md` | `alliance-hub/AGENTS.md`<br>`alliance-hub/package.json`<br>`alliance-hub/tools/`<br>`alliance-hub/scripts/sms/`<br>`alliance-hub/supabase/migrations/`<br>`alliance-hub/docs/records-split-sequence.md` |
@@ -24,6 +25,9 @@ Before direct work, identify the domain and check that domain's registry/check_f
 
 Package scripts discovered in this domain:
 
+- `gate:machines`: `node scripts/ci/machines-gate.mjs`
+- `gate:prove`: `node scripts/ci/prove-gate-bites.mjs`
+- `gate:pulse-belt`: `node scripts/ci/pulse-belt-cycle.mjs`
 - `compile`: `tsc -p ./`
 - `compile:core`: `tsc -p tsconfig.core.json --noEmit`
 - `verify:core-boundary`: `node scripts/verify/core-boundary.mjs`
@@ -79,6 +83,16 @@ Package scripts discovered in this domain:
 - `alliance:forms-check`: `npm --prefix alliance-hub run check`
 - `alliance:forms-deploy`: `npm --prefix alliance-hub run deploy`
 
+### Living Factory Machines
+
+| Script | Command | Entrypoint | Purpose | Status |
+|---|---|---|---|---|
+| `machines.scheduler-invoked` | `not runnable from this repo` | `machines/*.cjs` | The machines are invoked by a consuming repo's scheduler as factory:<name>, with cwd set to that repo, per its own *.station.json. The machine is universal and the cadence is local. Nothing here starts them, and a machine run from this directory reports on this repo rather than the intended one. | reference |
+| `machines.gate` | `npm run gate:machines` | `scripts/ci/machines-gate.mjs` | Parse every machine, refuse a literal U+FEFF in any parsed file, and run each declared read-only path against a throwaway fixture repo. Run it before the save, not after the push. | active |
+| `machines.gate-prove` | `npm run gate:prove` | `scripts/ci/prove-gate-bites.mjs` | Break the gate five ways and require it to catch each. Edits live machines briefly, so it refuses to run outside a linked worktree. | active |
+| `machines.pulse-belt-cycle` | `npm run gate:pulse-belt` | `scripts/ci/pulse-belt-cycle.mjs` | Exercise one full pulse-belt cycle. | active |
+| `machines.triage` | `node <factory>/machines/triage.cjs <handle\|id> --contract` | `machines/triage.cjs` | Turn a deposit into a contract and record that somebody did. --list shows what is waiting. Work becomes work by an act; no open record is ever inferred to be a contract. | active |
+
 ### Current Chat Surface
 
 | Script | Command | Entrypoint | Purpose | Status |
@@ -115,6 +129,24 @@ Package scripts discovered in this domain:
 | `alliance.hub.deploy.cloudflare` | `npm --prefix alliance-hub run deploy` | `alliance-hub/tools/deploy.mjs` | Deploy Alliance Hub to Cloudflare Pages only after explicit 'push to Cloudflare' or 'push all' approval. | guarded |
 | `alliance.hub.records.split` | `source migrations` | `alliance-hub/supabase/migrations/20260528164951_wave1_records_split.sql` | Record the verified alliance_records split method: keyed table first, legacy STI fallback during verification, mirror/backfill where needed. | active |
 
+Package scripts discovered in this domain:
+
+- `check`: `node tools/check.mjs`
+- `forms:generate`: `node tools/forms/generate.mjs`
+- `forms:check`: `node tools/forms-library-check.mjs`
+- `start:local`: `wrangler pages dev public --port 8788`
+- `deploy`: `node tools/deploy.mjs --deploy`
+- `deploy:dry`: `node tools/deploy.mjs`
+- `supabase:push`: `node tools/supabase-push.mjs`
+- `supabase:push:dry`: `node tools/supabase-push.mjs --dry-run`
+- `formula:benchmark`: `node tools/formula-contract-benchmark.mjs`
+- `retrieval:sync`: `node tools/retrieval-sync.mjs`
+- `seed:smoke`: `node tools/seed-pack-smoke.mjs`
+- `sms:factory`: `node tools/sms-script-factory.mjs`
+- `sms:route`: `node tools/sms-script-factory.mjs route`
+- `sms:validate`: `node tools/sms-script-factory.mjs validate`
+- `sms:regex`: `node tools/sms-script-factory.mjs regex`
+
 ### REFER Zo Bootstrap
 
 | Script | Command | Entrypoint | Purpose | Status |
@@ -124,6 +156,54 @@ Package scripts discovered in this domain:
 | `zo.codec-self-test` | `npm --prefix refer-zo-bootstrap run codec:self-test` | `refer-zo-bootstrap/scripts/factory/compression-codec.mjs` | Verify bidirectional machine compression/decompression before transport use. | active |
 | `zo.contract-runner` | `npm --prefix refer-zo-bootstrap run contract:run-once` | `refer-zo-bootstrap/scripts/factory/contract-inbox-runner.mjs` | Run one Zo-side inbox contract and emit talkback. | active |
 | `zo.adaptive-heartbeat` | `node refer-zo-bootstrap/scripts/factory/heartbeat.mjs --status` | `refer-zo-bootstrap/scripts/factory/heartbeat.mjs` | Run/status the Zo node-local adaptive heartbeat, tightening during work and relaxing up to a 24-hour dormant pulse. | active |
+
+Package scripts discovered in this domain:
+
+- `check`: `node --check tools/vipc-bootstrap.mjs && node --check tools/zo-mcp.mjs && node --check scripts/factory.mjs && node --check scripts/bootstrap.mjs && node --check scripts/hive/api.mjs && node --check scripts/hive/dispatcher.mjs && node --check scripts/hive/receive.mjs && node --check scripts/hive/talkback.mjs && node --check scripts/factory/factory.mjs && node --check scripts/factory/bootstrap.mjs && node --check scripts/factory/compression-codec.mjs && node --check scripts/factory/bilateral-sim.mjs && node --check scripts/factory/token-log-bridge.mjs && node --check scripts/factory/dataset-store.mjs && node --check scripts/factory/heartbeat.mjs && node --check scripts/factory/train-cars/01-dashboard.mjs && node --check scripts/factory/train-cars/02-spawn-worker.mjs && node --check scripts/factory/train-cars/03-scan-workspace.mjs && node --check scripts/factory/train-cars/04-hive-sync.mjs && node --check scripts/factory/contract-inbox-runner.mjs && node --check scripts/factory/backfill-zo-local-usage.mjs && node --check scripts/factory/ship-contract-to-zo.mjs && node --check scripts/factory/fetch-zo-talkback.mjs && node --check scripts/factory/dispatch-contract.mjs && node --check scripts/factory/sync-tandem-runtime-to-zo.mjs && node --check scripts/factory/node-scope.mjs && node --check scripts/factory/local-script-registry.mjs && node --check scripts/factory/draft-promotion-runner.mjs && node --check scripts/factory/local-intake-runner.mjs && node --check scripts/factory/inbox-automation.mjs && node --check scripts/factory/registry-doctor.mjs && node --check scripts/factory/evolution-loop.mjs && node --check scripts/factory/route-manifest-bridge.mjs && node --check scripts/factory/script-dictionary.mjs && node --check scripts/factory/hive/api.mjs && node --check scripts/factory/hive/dispatcher.mjs && node --check scripts/factory/hive/receive.mjs && node --check scripts/factory/hive/talkback.mjs && node -e "JSON.parse(require('fs').readFileSync('scripts/factory/scriptionary.json','utf8')); JSON.parse(require('fs').readFileSync('scopes/alliance/site-manifest.json','utf8')); JSON.parse(require('fs').readFileSync('scopes/alliance/phase2-data-contract.json','utf8'));" && node --check scripts/factory/artifacts/atomic-common.mjs && node --check scripts/factory/artifacts/page-add.mjs && node --check scripts/factory/artifacts/section-add.mjs && node --check scripts/factory/artifacts/card-add.mjs && node --check scripts/factory/artifacts/button-add.mjs && node --check scripts/factory/artifacts/field-add.mjs && node --check scripts/factory/artifacts/text-add.mjs && node --check scripts/factory/artifacts/form-add.mjs && node --check scripts/factory/artifacts/scan-workspace.mjs && node --check scopes/alliance/site/server.ts && node --check scopes/alliance/supabase-apply.mjs && node --check scopes/alliance/supabase-edge-deploy.mjs && node --check scopes/alliance/sms-relay-deploy.mjs && node --check scopes/alliance/supabase-probe.mjs && node --check scopes/alliance/sync-supabase-env-to-zo.mjs && node --check scopes/alliance/story-scope.mjs && node --check scopes/alliance/alliance-vocabulary.mjs && node --check scopes/alliance/sync-story-to-zo.mjs && node --check scopes/alliance/phase3-manifest.mjs && node --check scopes/alliance/build-site-from-manifest.mjs && node --check scopes/alliance/phase1-status.mjs && node --check scopes/alliance/phase1-next.mjs && node --check scopes/alliance/phase2-status.mjs && node --check scopes/alliance/phase2-next.mjs && node --check scopes/alliance/phase3-status.mjs && node --check scopes/alliance/phase3-next.mjs && node --check scopes/alliance/phase4-status.mjs && node --check scopes/alliance/phase4-next.mjs && node --check scopes/alliance/phase5-status.mjs && node --check scopes/alliance/phase5-next.mjs && node --check scopes/alliance/phase5-persistence-probe.mjs && node --check scopes/alliance/sync-site-to-zo.mjs && node --check scopes/alliance/sync-phase2-to-zo.mjs`
+- `bootstrap`: `node tools/vipc-bootstrap.mjs`
+- `verify`: `node tools/vipc-bootstrap.mjs --mode verify`
+- `simulate`: `node scripts/factory/bilateral-sim.mjs`
+- `codec:self-test`: `node scripts/factory/compression-codec.mjs self-test`
+- `contract:run-once`: `node scripts/factory/contract-inbox-runner.mjs --once`
+- `tandem:ship`: `node scripts/factory/ship-contract-to-zo.mjs`
+- `tandem:fetch`: `node scripts/factory/fetch-zo-talkback.mjs`
+- `dispatch:contract`: `node scripts/factory/dispatch-contract.mjs`
+- `tandem:sync-runtime`: `node scripts/factory/sync-tandem-runtime-to-zo.mjs`
+- `tandem:backfill-usage`: `node scripts/factory/backfill-zo-local-usage.mjs`
+- `scope:record`: `node scripts/factory/node-scope.mjs record`
+- `scope:report`: `node scripts/factory/node-scope.mjs report`
+- `factory:registry`: `node scripts/factory/local-script-registry.mjs`
+- `factory:promote-drafts`: `node scripts/factory/draft-promotion-runner.mjs --all`
+- `factory:intake`: `node scripts/factory/local-intake-runner.mjs`
+- `factory:automation-once`: `node scripts/factory/inbox-automation.mjs --once`
+- `factory:automation-status`: `node scripts/factory/inbox-automation.mjs --status`
+- `factory:registry-doctor`: `node scripts/factory/registry-doctor.mjs`
+- `factory:evolve`: `node scripts/factory/evolution-loop.mjs`
+- `route:manifest-bridge`: `node scripts/factory/route-manifest-bridge.mjs`
+- `alliance:site-build`: `node scopes/alliance/build-site-from-manifest.mjs`
+- `alliance:phase1-status`: `node scopes/alliance/phase1-status.mjs`
+- `alliance:phase1-next`: `node scopes/alliance/phase1-next.mjs`
+- `alliance:phase2-status`: `node scopes/alliance/phase2-status.mjs`
+- `alliance:phase2-next`: `node scopes/alliance/phase2-next.mjs`
+- `alliance:phase3-status`: `node scopes/alliance/phase3-status.mjs`
+- `alliance:phase3-next`: `node scopes/alliance/phase3-next.mjs`
+- `alliance:phase4-status`: `node scopes/alliance/phase4-status.mjs`
+- `alliance:phase4-next`: `node scopes/alliance/phase4-next.mjs`
+- `alliance:phase5-status`: `node scopes/alliance/phase5-status.mjs`
+- `alliance:phase5-next`: `node scopes/alliance/phase5-next.mjs`
+- `alliance:phase5-probe`: `node scopes/alliance/phase5-persistence-probe.mjs`
+- `alliance:supabase-apply`: `node scopes/alliance/supabase-apply.mjs`
+- `alliance:supabase-edge-deploy`: `node scopes/alliance/supabase-edge-deploy.mjs`
+- `alliance:sms-relay-deploy`: `node scopes/alliance/sms-relay-deploy.mjs`
+- `alliance:sms-relay-maintenance`: `node scopes/alliance/sms-relay-maintenance.mjs`
+- `alliance:supabase-env-sync`: `node scopes/alliance/sync-supabase-env-to-zo.mjs`
+- `alliance:supabase-probe`: `node scopes/alliance/supabase-probe.mjs`
+- `alliance:story-scope`: `node scopes/alliance/story-scope.mjs`
+- `alliance:vocabulary`: `node scopes/alliance/alliance-vocabulary.mjs`
+- `alliance:story-sync`: `node scopes/alliance/sync-story-to-zo.mjs`
+- `alliance:phase3-manifest`: `node scopes/alliance/phase3-manifest.mjs`
+- `alliance:phase2-sync`: `node scopes/alliance/sync-phase2-to-zo.mjs`
+- `alliance:site-sync`: `node scopes/alliance/sync-site-to-zo.mjs`
 
 ## Files
 
