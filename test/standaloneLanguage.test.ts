@@ -24,7 +24,19 @@ for (const relativePath of [
 
 const agents = read("AGENTS.md");
 assert.match(agents, /provider-neutral system that converts ratified REFER Execution Contracts/);
-assert.match(agents, /Script Factory VS Code adapter/);
+
+// This used to require the literal "Script Factory VS Code adapter", to stop
+// AGENTS.md presenting that host as the product. The host is gone; the thing the
+// guard was protecting is not. AGENTS.md must still say that hosts are adapters
+// and that the core does not depend on them, because the next host will arrive
+// with the same gravity the last one had.
+assert.match(agents, /adapters and operator surfaces/);
+assert.match(agents, /Host adapters depend on the core/);
+assert.match(
+  agents,
+  /VS Code adapter was retired on 2026-09-12/,
+  "AGENTS.md must record the retirement: a reader who finds src/adapters/vscode missing needs to know it was removed, not that the checkout is broken",
+);
 
 const legend = createScriptLegend();
 const requiredTerms = new Set([
@@ -73,10 +85,7 @@ for (const forbidden of [
     "docs/script-factory-text-diagram.md",
     "docs/Refer Script Factory.mmd",
     "docs/user-law-expansion.md",
-    "src/chat/referParticipant.ts",
     "src/chat/referOrchestratorRunner.ts",
-    "src/commands/contractMode.ts",
-    "src/cockpit/contractChatPanel.ts",
     "src/contracts/referCoach.ts",
     "src/contracts/referIntake.ts",
     "src/contracts/referOrchestrator.ts",
@@ -89,48 +98,52 @@ for (const forbidden of [
   }
 }
 
-const vsCodeSpecificEntries = new Set([
-  "refer.chat.participant",
-  "refer.scan.codebase",
-]);
+// The VS Code adapter was retired on 2026-09-12. This check used to permit VS
+// Code wording on adapter-specific entries; with no adapter, any such wording in
+// the registry now describes something that does not exist.
+//
+// "Command Palette" is deliberately not in the pattern: the Command Surface
+// legend term is doctrine about host commands in general, and outliving one host
+// is the whole point of a provider-neutral vocabulary.
+// One entry may say the word, and only this one: the core boundary checker
+// rejects the `vscode` module specifier by name, and it should keep doing so
+// precisely because no adapter is left to make such an import legitimate.
+// Naming what a guard refuses is not describing a surface.
+const boundaryEntry = "npm.verify.core-boundary";
 for (const entry of scriptFactoryEntries) {
-  const wording = `${entry.entrypoint} ${entry.does} ${entry.detail}`;
-  if (/VS Code|Command Palette/i.test(wording)) {
-    assert.ok(
-      entry.surface === "vscode-command" || vsCodeSpecificEntries.has(entry.script_id),
-      `${entry.script_id} uses VS Code wording without being adapter-specific`,
-    );
-  }
+  if (entry.script_id === boundaryEntry) continue;
+  const wording = `${entry.entrypoint} ${entry.label} ${entry.does} ${entry.detail}`;
+  assert.equal(
+    /VS Code|vscode/i.test(wording),
+    false,
+    `${entry.script_id} still describes a VS Code surface, which no longer exists`,
+  );
 }
-
-for (const id of [
-  "refer.contractModeOn",
-  "refer.contractModeOff",
-  "refer.contractModeToggle",
-]) {
-  const entry = scriptFactoryEntries.find((candidate) => candidate.script_id === id);
-  assert.ok(entry, `missing compatibility entry: ${id}`);
-  assert.match(`${entry.label} ${entry.does} ${entry.detail}`, /legacy intake-session/i);
-  assert.match(entry.detail, /Execution Contract/i);
-  assert.match(entry.detail, /does not|not a|neither state/i);
-}
+assert.ok(
+  scriptFactoryEntries.some((entry) => entry.script_id === boundaryEntry),
+  `${boundaryEntry} must stay registered: it is what keeps the vscode import gone`,
+);
 
 const packageJson = JSON.parse(read("package.json")) as {
   version: string;
   description: string;
-  contributes: { commands: { command: string; title: string }[] };
+  bin?: Record<string, string>;
+  [key: string]: unknown;
 };
 assert.equal(packageJson.version, "0.0.1");
 assert.match(packageJson.description, /provider-neutral REFER system/i);
-const commandTitles = new Map(
-  packageJson.contributes.commands.map((command) => [command.command, command.title]),
-);
-assert.equal(commandTitles.get("refer.contractModeOn"), "REFER: Legacy Intake Session On");
-assert.equal(commandTitles.get("refer.contractModeOff"), "REFER: Legacy Intake Session Off");
-assert.equal(
-  commandTitles.get("refer.contractModeToggle"),
-  "REFER: Toggle Legacy Intake Session",
-);
+
+// The retirement must not creep back by someone reinstating a manifest field
+// "just to package it". A lone `contributes` block reads as harmless and pulls
+// the whole adapter behind it.
+for (const field of ["contributes", "activationEvents", "publisher", "main", "categories"]) {
+  assert.equal(
+    field in packageJson,
+    false,
+    `package.json declares ${field}: this is a Node package with a CLI bin, not a VS Code extension`,
+  );
+}
+assert.ok(packageJson.bin?.["refer-script-factory"], "the CLI bin must stay declared");
 
 const domainRegistry = JSON.parse(read(".refer-factory/script-registry.json")) as {
   domains: {

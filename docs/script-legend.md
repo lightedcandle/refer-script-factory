@@ -221,12 +221,12 @@ Give humans, agents, and local LLMs one deterministic language for scripts, scri
 ### Host Command
 - Plain English: Explicit Host Action
 - Meaning: An explicit action exposed by an interactive host.
-- Deterministic use: Use it for core command descriptions; use Command Palette only for the current VS Code adapter surface.
+- Deterministic use: Use it for core command descriptions. Name a host's own idiom, such as a Command Palette entry, only when documenting that adapter.
 
 ### Operator Interface
 - Plain English: Human-Facing Factory Controls
 - Meaning: The human-facing view of factory state, evidence, and controls.
-- Deterministic use: Use it in core doctrine instead of cockpit or webview. Name a webview only when documenting the current VS Code adapter implementation.
+- Deterministic use: Use it in core doctrine instead of cockpit or webview. Name a host's own rendering, such as a webview, only when documenting that adapter.
 
 ### Target Workspace
 - Plain English: Authorized Repository Boundary
@@ -236,7 +236,7 @@ Give humans, agents, and local LLMs one deterministic language for scripts, scri
 ### Host-Provided Model
 - Plain English: Model Supplied By The Host
 - Meaning: A language model selected or supplied by the current interactive host.
-- Deterministic use: Use it in provider-neutral orchestration descriptions instead of VS Code selected model or another provider-specific selector.
+- Deterministic use: Use it in provider-neutral orchestration descriptions instead of any host- or provider-specific selector.
 
 ### Event/Output Sink
 - Plain English: Result Destination
@@ -286,7 +286,7 @@ Give humans, agents, and local LLMs one deterministic language for scripts, scri
 ### Command Surface
 - Plain English: Host Command Layer
 - Meaning: The governed layer for actions exposed through explicit host commands.
-- Deterministic use: Use it for host-command entries. The current vscode-command entries are adapter-specific implementations of this surface.
+- Deterministic use: Use it for host-command entries. No host adapter currently implements this surface: the VS Code adapter was retired on 2026-09-12, and the term is kept because the surface is a doctrine category, not one host's feature.
 
 ### HTTP Endpoint Surface
 - Plain English: Local Server Route Layer
@@ -374,7 +374,7 @@ Give humans, agents, and local LLMs one deterministic language for scripts, scri
 - Rule: Every runnable Script Factory entry must have exactly one Script Kind.
 
 ### Surface
-- Allowed values: orchestration, vscode-command, npm, http-endpoint, request-type
+- Allowed values: orchestration, npm, http-endpoint, request-type
 - Rule: Surface describes where the entry appears or how it is invoked. Request Type entries are categories, not runnable scripts.
 
 ### Input Points
@@ -406,7 +406,7 @@ Give humans, agents, and local LLMs one deterministic language for scripts, scri
 - Rule: Conceptual UI layer labels must come from this list. If a new layer label appears in a panel, add it here or rename it to an existing governed label.
 
 ### Registered Script Label
-- Allowed values: @refer Chat Request, HTTP Request, Command Request, @refer Chat Pipeline, Script Factory VS Code Chat Adapter, REFER Orchestrator, Resolution Loop, Context Picker, Scan Codebase, Script Legend, Scriptographer, Scan Factory Gaps, Server Chat Route, Server Health Route, Server Targets Route, Initialize Repo, Emit Send Contract Planning Draft, Emit Script Blueprint, Emit Script DNA Seed, Refresh Codebases, Scan Codebase, View Codebase Tree, Scan Factory Gaps, View Factory Gaps, Run Scriptographer, View Scriptographer Report, Check For Updates, Apply Update, Legacy Intake Session On, Legacy Intake Session Off, Toggle Legacy Intake Session, Compile, Compile Core, Verify Core Boundary, Verify Core, Test, Verify, Authority Resolver, Universal Source Sync, Doctrine Compiler, Scriptionary Term, REFER Server
+- Allowed values: @refer Chat Request, HTTP Request, Command Request, @refer Chat Pipeline, REFER Orchestrator, Resolution Loop, Context Picker, Scan Codebase, Script Legend, Scriptographer, Scan Factory Gaps, Server Chat Route, Server Health Route, Server Targets Route, Compile, Compile Core, Verify Core Boundary, Verify Core, Test, Verify, Authority Resolver, Universal Source Sync, Doctrine Compiler, Scriptionary Term, REFER Server
 - Rule: Script card labels must come from the Script Factory registry. Do not invent parallel names in UI panels, status messages, or generated context.
 
 ### Script Action Label
@@ -472,10 +472,6 @@ Give humans, agents, and local LLMs one deterministic language for scripts, scri
 ### orchestration
 - Allowed kinds: Single Script, Multi Script
 - Rule: Use for internal workflow scripts and pipelines such as @refer Chat Pipeline, REFER Orchestrator, Resolution Loop, Scan Codebase, and Script Legend.
-
-### vscode-command
-- Allowed kinds: Single Script
-- Rule: Use for current VS Code adapter Command Palette actions. They may call orchestration scripts but should be represented as adapter-specific command surfaces.
 
 ### npm
 - Allowed kinds: Single Script, Multi Script

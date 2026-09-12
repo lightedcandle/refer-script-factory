@@ -1,6 +1,6 @@
 {
   "schema": "refer.hive.node-registry.v1",
-  "updated_at": "2026-09-12T05:25:02.352Z",
+  "updated_at": "2026-09-12T11:27:05.129Z",
   "purpose": "Track the machines the factory can reach - outposts that receive work, do it and report back - together with their roles, lifecycle state, and ratification evidence.",
   "purpose_original": "Track hive-capable factory and Zo computer nodes, their roles, deployment state, and ratification evidence.",
   "vocabulary": {
@@ -801,8 +801,8 @@
         }
       ],
       "created_at": "2026-04-29T17:09:16.543Z",
-      "updated_at": "2026-09-12T05:25:02.352Z",
-      "last_seen_at": "2026-09-12T05:25:02.352Z",
+      "updated_at": "2026-09-12T11:27:05.129Z",
+      "last_seen_at": "2026-09-12T11:27:05.129Z",
       "heartbeat": {
         "policy": "adaptive",
         "mode": "living-factory",
@@ -811,22 +811,22 @@
         "interval_label": "15m",
         "max_interval_ms": 86400000,
         "max_interval_label": "24h",
-        "next_due_at": "2026-09-12T07:25:02.352Z",
-        "current_interval_ms": 7200000,
-        "current_interval_label": "2h",
-        "last_beat_at": "2026-09-12T05:25:02.352Z"
+        "next_due_at": "2026-09-12T19:27:05.129Z",
+        "current_interval_ms": 28800000,
+        "current_interval_label": "8h",
+        "last_beat_at": "2026-09-12T11:27:05.129Z"
       },
       "host": {
         "platform": "win32",
-        "booted_at": "2026-09-11T06:33:36.326Z",
-        "uptime_hours": 22.9,
+        "booted_at": "2026-09-11T06:33:36.324Z",
+        "uptime_hours": 28.9,
         "reboot_pending": false,
         "reboot_pending_reasons": [],
         "restart_window": {
           "from": 0,
           "to": 6
         },
-        "checked_at": "2026-09-12T05:25:02.352Z"
+        "checked_at": "2026-09-12T11:27:05.129Z"
       }
     }
   ]

@@ -34,13 +34,19 @@ Two things that are easy to get wrong here:
 
 ## `src/` — the Script Factory
 
-The provider-neutral system that converts ratified REFER Execution Contracts and
-verified methods into bounded script plans, artifacts, verification evidence, and
-reusable registrations.
+The Script Factory is the provider-neutral system that converts ratified REFER
+Execution Contracts and verified methods into bounded script plans, artifacts,
+verification evidence, and reusable registrations.
 
-VS Code, CLI, HTTP, MCP, and future hosts are adapters and operator surfaces.
-The current implementation includes a Script Factory VS Code adapter, but VS
-Code is not the product identity or canonical runtime.
+CLI, HTTP, MCP, and future hosts are adapters and operator surfaces; none of
+them is the product identity or canonical runtime.
+
+**The VS Code adapter was retired on 2026-09-12.** The operator no longer uses
+VS Code, so the adapter, the extension manifest, the cockpit webviews and the
+`@refer` chat participant are gone, and this is a plain Node package with a CLI
+bin. It is worth recording what that cost: **nothing under `src/core/**` changed
+to remove it.** The one-way dependency law was written so a host could be
+outlived, and it was.
 
 Telechurch is the pilot consumer, not a product dependency.
 
@@ -58,19 +64,23 @@ the repo-local `AGENTS.md` and the live REFER.OS authority recorded in
 `.refer/source.json`.
 
 The dependency law is one-way: the provider-neutral core under `src/core/**`
-imports no VS Code APIs or host adapters, and host adapters depend on the core.
-`src/core/index.ts` is the intentional public API. The current VS Code adapter
-lives under `src/adapters/vscode/**`.
+imports no host adapters, and host adapters depend on the core.
+`src/core/index.ts` is the intentional public API. The surviving adapters are
+`src/adapters/cli/**`, `src/adapters/ollama/**` and `src/server/**`.
 
 The rule is machine-checked rather than honour-system: `scripts/verify/core-boundary.mjs`
 walks every import, export, `require` and dynamic import in the AST under
 `src/core` and fails on `vscode` or on any relative path escaping the directory.
 
-`src/chat/`, `src/contracts/`, `src/commands/` and `src/cockpit/` are **one-line
-re-export shims** kept for compatibility — `export * from "../core/..."` or
-`"../adapters/vscode/..."`. Edit the target, not the shim. A change made in a
-shim is either lost or a boundary violation, and the filename gives no hint
-which.
+`src/chat/` and `src/contracts/` are **mixed, and this is the trap.** Some files
+are one-line `export * from "../core/..."` re-exports. Others re-export the core
+contract *and* add the `node:fs` side the provider-neutral core is not allowed to
+have — `referIntake.ts` adds `writeReferIntakeRecord`, `scriptLegend.ts` adds
+`writeScriptLegend`, and `codebaseTree.ts`, `factoryGaps.ts` and
+`scriptographer.ts` are hundreds of lines of real implementation.
+
+Open the file before assuming which it is. Editing a re-export is lost work;
+moving a filesystem function down into `src/core/**` breaks the boundary check.
 
 Focused boundary verification is available through:
 
@@ -78,25 +88,24 @@ Focused boundary verification is available through:
 npm run verify:core
 ```
 
-## Current VS Code Adapter Slice
+## What survived the adapter
 
-- REFER activity container
-- Dashboard webview for Live/Average token MPG, Miles, road quality, and repo health
-- Process panel that renders local process events
-- Bootstrap Library panel that inventories REFER bootstrap source references
-- Refer Library panel that browses readable REFER.OS document aliases
-- Contract Reader compatibility panel that displays legacy intake-session turns separately from normal chat
-- `REFER: Initialize Repo` dry-run command with explicit apply confirmation
-- `REFER: Emit Send Contract Planning Draft` command
-- `REFER: Emit Script Blueprint` command for intake-to-plan-to-script routing
-- `REFER: Emit Script DNA Seed` command for normalized custom script specs
-- `REFER: Refresh Codebases` command for derived monorepo/subspace discovery
-- `REFER: Check for Updates` and `REFER: Apply Update` commands
-- Agent governance bootstrap through `AGENTS.md` and `.refer-factory/agent-profile.json`
+The panels, the activity container and the `REFER: *` command palette entries are
+gone. What the adapter was a front end *for* is still here and still tested:
+
+- Bootstrap dry-run and apply, with agent governance through `AGENTS.md` and `.refer-factory/agent-profile.json`
+- The codebase/subspace registry and the treefile scanner
+- Intake records, the orchestrator and the bounded resolution loop
+- Script Blueprint, Script DNA, Send Contract planning drafts
+- Script class, forge, lineage, authority, doctrine and scriptionary registries
 - JSON schemas for packets, metrics, process events, adapters, and bootstrap
 - Portable JSON script packets with Angular, React, Node, and generic adapters
-- Dormant REFER.OS reference library under `unscripted-laws/REFER.OS`
-- TypeScript tests for metrics, process events, and bootstrap dry-run
+- The dormant REFER.OS reference library under `unscripted-laws/REFER.OS`
+
+Most of it is reachable today only from the npm scripts below, the HTTP endpoint,
+or by importing the module. **Several capabilities now have no caller at all** —
+the update machinery is the clearest case. That is the honest state of it, and
+naming it is cheaper than letting someone discover it as a bug.
 
 ## Standalone CLI And Sovereign Node Reads
 
@@ -157,19 +166,13 @@ no watch mode and no `--filter`. PowerShell 5.1 has no `&&`:
 npm run compile; node dist/test/coreApi.test.js
 ```
 
-## Run The Current VS Code Adapter Locally
-
-Open this repo in VS Code and start the `Run REFER Extension` launch
-configuration. In the Extension Development Host, open the REFER activity bar
-container and run `REFER: Initialize Repo` from the command palette.
-
-The released sidebar includes Dashboard, Process, Bootstrap Library, and Refer Library views.
-
 ## Bootstrap
 
-Run `REFER: Initialize Repo` from VS Code to inspect the bootstrap dry-run
-report. The command writes REFER bootstrap files only after the modal
-confirmation is accepted.
+`src/bootstrap/dryRun.ts` produces the report and `src/bootstrap/apply.ts` writes
+the files, and apply is deliberately a separate call so nothing lands without an
+explicit second act. The `REFER: Initialize Repo` command that paired them behind
+a modal went with the VS Code adapter; the two-step shape is the part that
+mattered and it is unchanged.
 
 Bootstrap installs REFER as a layer inside an existing repo. If `AGENTS.md`
 already exists, REFER preserves the existing instructions and adds or refreshes
@@ -221,9 +224,9 @@ Lines of code, process state, updates, and governance remain repo-level.
 Bootstrap writes `.refer-factory/codebases.json` as a derived subspace registry.
 It records internal codebases such as `apps/*`, `packages/*`, `services/*`, and
 `workers/*` so plans can target the right paths without creating separate REFER
-installs. Operators can run `REFER: Refresh Codebases`, and
-`refer.autoRefreshCodebases` keeps the registry current when the current VS Code
-adapter activates.
+installs. `REFER: Refresh Codebases` and the `refer.autoRefreshCodebases` setting
+that kept it current on activation both went with the VS Code adapter, so the
+registry is now refreshed only when something calls `refreshCodebaseRegistry`.
 New folders are added as `discovered`; removed folders are marked `missing` so
 manual aliases and overrides are not lost.
 
@@ -301,36 +304,33 @@ term candidates capture new words, methods, strategies, sequence ranks, chain
 actions, artifacts, statuses, rules, or reusable system effects; promotion can
 insert a vetted term into the Script Legend source.
 
-## Current VS Code Adapter Intake
+## Intake
 
-The Script Factory VS Code adapter contributes the `@refer` chat participant.
-Prompts sent to `@refer` enter REFER before the host-provided model sees them:
-raw input is stored as an intake record under `.refer-factory/intake/`, a compact
-intake envelope is sent to the model, and the response is driven through a
-bounded resolution loop. Neither record is execution authority. Every loop terminates as
-`resolved_as_is`, `needs_more_info`, `needs_script`,
-`blocked_by_policy_or_scope`, or `failed_with_reason`.
+A prompt enters REFER before the model sees it: raw input is stored as an intake
+record under `.refer-factory/intake/`, a compact intake envelope is sent to the
+model, and the response is driven through a bounded resolution loop. Neither
+record is execution authority. Every loop terminates as `resolved_as_is`,
+`needs_more_info`, `needs_script`, `blocked_by_policy_or_scope`, or
+`failed_with_reason`.
+
+The `@refer` chat participant was the VS Code entry into this and is gone. **The
+pipeline itself is host-neutral and intact** — the HTTP endpoint below drives the
+same intake, the same orchestrator and the same loop, and writes the same
+`.refer-factory/intake/` and `.refer-factory/chat/sessions/` artifacts.
+
+Session records under `.refer-factory/chat/sessions/` keep raw intake, the compact
+envelope, resolution state, output and progress. The Contract Reader panel that
+displayed them was a read-only view and went with the adapter; the records are
+still written and are plain JSON. Nothing in them ever created, ratified or
+authorized a REFER Execution Contract.
 
 The orchestrator backlog is tracked in `docs/refer-orchestrator-roadmap.md` and
 mirrored by `createOrchestratorRoadmap()` so new capabilities can be marked
 available and integrated without losing the intended sequence.
 
-The current VS Code adapter also contributes Contract Reader below Refer Library.
-It is a read-only operator-interface surface for legacy intake-session tracking
-sent through `@refer`: each runtime session stores raw intake, compact intake
-envelope, resolution state, assistant output, and progress under
-`.refer-factory/chat/sessions/`.
-
-Contract Reader shows three compatibility lights: Idle, Turn, and Persist. Turn
-is legacy intake-session state for one `@refer` runtime session and returns to
-Idle when complete. Persist is persistent legacy intake-session state, controlled by
-`REFER: Legacy Intake Session On`, `REFER: Legacy Intake Session Off`, or
-`REFER: Toggle Legacy Intake Session`. These UI states do not create, ratify, or
-authorize a REFER Execution Contract. Their command IDs retain `contractMode`
-only for runtime compatibility; behavioral/API migration is deferred.
-
-REFER Coach is scaffolded as a future `@refer coach` mode for helping users set
-up local LLMs, provider routing, workspace readiness, and efficient REFER usage.
+REFER Coach is scaffolded for helping users set up local LLMs, provider routing,
+workspace readiness, and efficient REFER usage. It has no host to be invoked from
+yet.
 
 ## REFER Orchestrator Endpoint
 
@@ -396,11 +396,12 @@ Invoke-RestMethod `
 `workspaceRoot` is still accepted as a development fallback, but target ids are
 the stable selector for simulations. Successful calls write the same
 `.refer-factory/intake/`, `.refer-factory/chat/sessions/`, and
-`.refer-factory/process-state.json` artifacts used by Contract Reader.
+`.refer-factory/process-state.json` artifacts the retired Contract Reader used to
+display. They are plain JSON and are still written.
 
 ## Unscripted Law Library
 
-The current VS Code adapter keeps the historical REFER.OS markdown library in
+The historical REFER.OS markdown library lives in
 `unscripted-laws/REFER.OS`. These documents are dormant references, not active
 shipped governance. The always-on shipped rules should be limited to how Smart
 Intake and the Script Factory work: intake records, Execution Contract gating, deterministic
@@ -420,22 +421,21 @@ The expansion model is documented in `docs/user-law-expansion.md`.
 
 ## Updates
 
-The current VS Code adapter checks for reference/script updates on activation when `refer.autoCheckUpdates`
-is enabled. Operators can also run `REFER: Check for Updates` manually. Updates
-are driven by a manifest, filtered by `refer.updateChannel`, previewed in a VS
-Code notification, and applied only after explicit confirmation.
+The update machinery in `src/updates/**` is driven by a manifest, filtered by an
+update channel, and applies only after explicit confirmation. Before replacement,
+existing targets are backed up under `.refer-factory/updates/backup-*`, state is
+tracked in `.refer-factory/updates/state.json`, and check/apply events are
+collapsed into the process state file.
 
-Before replacement, existing targets are backed up under
-`.refer-factory/updates/backup-*`. Update state is tracked in
-`.refer-factory/updates/state.json`, and check/apply events are collapsed into
-the process state file.
+**It currently has no caller.** The VS Code adapter was what invoked it on
+activation, and it was retired on 2026-09-12. The contracts, the backup path and
+`updateSync.test.ts` are intact, so wiring it to the CLI is a small job — but
+until something calls it, nothing checks for updates.
 
 ## Packaging
 
-```powershell
-npm run verify
-npx @vscode/vsce package
-```
+There is nothing to package. This is a private Node package with a CLI bin; the
+`vsce` step went with the extension manifest.
 
 ## Scope Guard
 

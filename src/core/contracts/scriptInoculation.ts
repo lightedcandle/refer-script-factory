@@ -11,7 +11,8 @@ export const scriptInoculationRegistry: TrojanEntry[] = [
   {
     id: "trojan.recursive-scan",
     label: "Unbounded Recursive Scanner",
-    symptom: "VS Code hangs and memory usage spikes to 100%.",
+    symptom:
+      "The host process hangs and memory usage spikes to 100%. First observed in the VS Code adapter, retired 2026-09-12; the failure is the scanner's, not the host's.",
     failure_mode: "Infinite Recursion",
     containment_rule: "Never allow a scanner to follow symlinks or recurse without a depth limit of 5.",
     lesson_learned: "Breadth-first scanning with a strict depth budget is the only safe way to map unknown subspaces.",

@@ -27,14 +27,10 @@ assert.ok(
       candidate.ratified,
   ),
 );
-assert.ok(
-  report.candidates.some(
-    (candidate) =>
-      candidate.name === "REFER: Run Scriptographer" &&
-      candidate.classification === "entrypoint-label" &&
-      candidate.ratified,
-  ),
-);
+// The "REFER: Run Scriptographer" entrypoint-label candidate came from
+// package.json contributes.commands, which went with the VS Code adapter on
+// 2026-09-12. Its source is gone, so asserting on it would only prove the
+// scanner can still return nothing.
 
 const target = writeScriptographerReport(root, report);
 assert.equal(target, scriptographerReportPath(root));

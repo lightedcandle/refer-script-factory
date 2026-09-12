@@ -456,14 +456,14 @@ export function createScriptLegend(): ScriptLegend {
         plain_name: "Explicit Host Action",
         meaning: "An explicit action exposed by an interactive host.",
         deterministic_use:
-          "Use it for core command descriptions; use Command Palette only for the current VS Code adapter surface.",
+          "Use it for core command descriptions. Name a host's own idiom, such as a Command Palette entry, only when documenting that adapter.",
       },
       {
         term: "Operator Interface",
         plain_name: "Human-Facing Factory Controls",
         meaning: "The human-facing view of factory state, evidence, and controls.",
         deterministic_use:
-          "Use it in core doctrine instead of cockpit or webview. Name a webview only when documenting the current VS Code adapter implementation.",
+          "Use it in core doctrine instead of cockpit or webview. Name a host's own rendering, such as a webview, only when documenting that adapter.",
       },
       {
         term: "Target Workspace",
@@ -478,7 +478,7 @@ export function createScriptLegend(): ScriptLegend {
         plain_name: "Model Supplied By The Host",
         meaning: "A language model selected or supplied by the current interactive host.",
         deterministic_use:
-          "Use it in provider-neutral orchestration descriptions instead of VS Code selected model or another provider-specific selector.",
+          "Use it in provider-neutral orchestration descriptions instead of any host- or provider-specific selector.",
       },
       {
         term: "Event/Output Sink",
@@ -555,7 +555,7 @@ export function createScriptLegend(): ScriptLegend {
         plain_name: "Host Command Layer",
         meaning: "The governed layer for actions exposed through explicit host commands.",
         deterministic_use:
-          "Use it for host-command entries. The current vscode-command entries are adapter-specific implementations of this surface.",
+          "Use it for host-command entries. No host adapter currently implements this surface: the VS Code adapter was retired on 2026-09-12, and the term is kept because the surface is a doctrine category, not one host's feature.",
       },
       {
         term: "HTTP Endpoint Surface",
@@ -679,13 +679,7 @@ export function createScriptLegend(): ScriptLegend {
       },
       {
         name: "Surface",
-        allowed_values: [
-          "orchestration",
-          "vscode-command",
-          "npm",
-          "http-endpoint",
-          "request-type",
-        ],
+        allowed_values: ["orchestration", "npm", "http-endpoint", "request-type"],
         rule:
           "Surface describes where the entry appears or how it is invoked. Request Type entries are categories, not runnable scripts.",
       },
@@ -852,12 +846,6 @@ export function createScriptLegend(): ScriptLegend {
         allowed_values: ["Single Script", "Multi Script"],
         rule:
           "Use for internal workflow scripts and pipelines such as @refer Chat Pipeline, REFER Orchestrator, Resolution Loop, Scan Codebase, and Script Legend.",
-      },
-      {
-        name: "vscode-command",
-        allowed_values: ["Single Script"],
-        rule:
-          "Use for current VS Code adapter Command Palette actions. They may call orchestration scripts but should be represented as adapter-specific command surfaces.",
       },
       {
         name: "npm",

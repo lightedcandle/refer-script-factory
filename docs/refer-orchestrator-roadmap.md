@@ -7,7 +7,7 @@ exists to support them.
 
 ## Current Foundation
 
-- The current Script Factory VS Code adapter contributes the `@refer` participant.
+- No host adapter currently offers an interactive participant. The VS Code `@refer` participant was retired on 2026-09-12; the HTTP endpoint drives the same intake and loop.
 - Contract Reader displays saved legacy intake-session turns below Refer Library.
 - Raw prompt text is stored as an intake record under `.refer-factory/intake/`.
 - Compact REFER intake envelopes are sent to the host-provided model; they do not authorize execution.
@@ -27,7 +27,7 @@ exists to support them.
 | ORCH-004 | Script execution protocol | scaffolded | A safe runner can execute registered scripts with bounded inputs and return packets. | `script_execution` station |
 | ORCH-005 | Adapter file-operation interpreters | scaffolded | Angular/React/Node/generic adapters can translate portable JSON operations into concrete file edits. | `framework_operations` packets |
 | ORCH-006 | Response validation | scaffolded | A validator can check model/script output against schema, policy, target paths, and acceptance criteria. | post-model resolution envelope |
-| ORCH-007 | Drill-down form mechanics | scaffolded | A host adapter can render missing fields through its operator interface; the current VS Code adapter may use Quick Pick, InputBox, or view controls. | `needs_more_info` terminal |
+| ORCH-007 | Drill-down form mechanics | scaffolded | A host adapter can render missing fields through its operator interface, using whatever control that host provides. | `needs_more_info` terminal |
 | ORCH-008 | Script creation workflow | scaffolded | `needs_script` can emit a Script DNA seed, register the gap, and prompt the user to approve script creation. | `needs_script` terminal |
 | ORCH-009 | Process event logging for chat cycles | scaffolded | Intake, pass decisions, terminal states, and failures can be collapsed into `.refer-factory/process-state.json`. | every `@refer` pass |
 | ORCH-010 | Sensitive-data guard for raw fallback | scaffolded | Raw prompt fallback can redact or refuse secrets before the second model pass. | `scan_raw_input` path |

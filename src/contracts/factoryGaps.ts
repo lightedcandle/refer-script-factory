@@ -42,8 +42,6 @@ export function scanFactoryGaps(workspaceRoot: string, generatedAt = new Date())
   const gaps: FactoryGap[] = [
     ...scanTerminologyGaps(),
     ...scanRegistryGaps(),
-    ...scanCommandGaps(workspaceRoot),
-    ...scanCockpitViewLabelGaps(workspaceRoot),
     ...scanScriptographerGaps(workspaceRoot),
     ...scanArtifactGaps(workspaceRoot),
     ...scanStatusGaps(),
@@ -167,69 +165,6 @@ function scanRegistryGaps(): FactoryGap[] {
   return gaps;
 }
 
-function scanCommandGaps(workspaceRoot: string): FactoryGap[] {
-  const packageJsonPath = path.join(workspaceRoot, "package.json");
-  if (!fs.existsSync(packageJsonPath)) {
-    return [
-      {
-        id: "command.package-json-missing",
-        severity: "error",
-        category: "command",
-        title: "package.json is missing",
-        detail: "Command contributions cannot be verified without package.json.",
-        repair_hint: "Restore package.json or run the scanner from the extension workspace root.",
-      },
-    ];
-  }
-
-  const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8")) as {
-    contributes?: { commands?: { command?: string }[] };
-  };
-  const contributedCommands = new Set(
-    packageJson.contributes?.commands?.map((command) => command.command).filter(Boolean) ?? [],
-  );
-
-  return scriptFactoryEntries
-    .filter((entry) => entry.surface === "vscode-command" && !contributedCommands.has(entry.script_id))
-    .map((entry) => ({
-      id: `command.not-contributed.${entry.script_id}`,
-      severity: "error",
-      category: "command",
-      title: `Command is not contributed: ${entry.label}`,
-      detail: `${entry.script_id} appears in the Script Factory registry but not in package.json contributes.commands.`,
-      repair_hint: "Add the command to package.json and register it in src/extension.ts.",
-    }));
-}
-
-function scanCockpitViewLabelGaps(workspaceRoot: string): FactoryGap[] {
-  const packageJsonPath = path.join(workspaceRoot, "package.json");
-  if (!fs.existsSync(packageJsonPath)) {
-    return [];
-  }
-
-  const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8")) as {
-    contributes?: { views?: Record<string, { name?: string }[]> };
-  };
-  const legend = createScriptLegend();
-  const governedViewLabels = new Set(
-    legend.taxonomy.find((category) => category.name === "Operator Interface Label")?.allowed_values ?? [],
-  );
-  const viewLabels = Object.values(packageJson.contributes?.views ?? {})
-    .flat()
-    .map((view) => view.name)
-    .filter((name): name is string => Boolean(name));
-
-  return viewLabels
-    .filter((label) => !governedViewLabels.has(label))
-    .map((label) => ({
-      id: `terminology.unlisted-cockpit-view-label.${slug(label)}`,
-      severity: "error",
-      category: "terminology",
-      title: `Operator interface label is not in legend: ${label}`,
-      detail: `${label} appears in package.json contributes.views but is not listed in the Script Legend Operator Interface Label taxonomy.`,
-      repair_hint: "Add the view label to src/core/contracts/scriptLegend.ts or rename package.json to an existing governed label.",
-    }));
-}
 
 function scanScriptographerGaps(workspaceRoot: string): FactoryGap[] {
   return runScriptographer(workspaceRoot)

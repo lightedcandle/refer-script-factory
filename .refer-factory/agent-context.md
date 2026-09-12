@@ -1,20 +1,15 @@
 # REFER Agent Context
 
-Generated: 2026-07-18T12:38:30.356Z
+Generated: 2026-09-12T16:28:29.304Z
 Workspace: E:\refer-script-factory
 
 ## Summary
-- Files indexed: 281
-- Directories indexed: 29
+- Files indexed: 240
+- Directories indexed: 21
 
 ## Important Entrypoints
-- src/adapters/vscode/cockpit/scriptFactoryPanel.ts
-- src/adapters/vscode/extension.ts
-- src/adapters/vscode/referParticipant.ts
 - src/chat/referOrchestratorRunner.ts
-- src/chat/referParticipant.ts
 - src/chat/referResolutionLoop.ts
-- src/cockpit/scriptFactoryPanel.ts
 - src/contracts/codebaseTree.ts
 - src/contracts/referOrchestrator.ts
 - src/contracts/scriptFactory.ts
@@ -25,12 +20,16 @@ Workspace: E:\refer-script-factory
 - src/core/orchestration/referOrchestratorRunner.ts
 - src/core/orchestration/referResolutionLoop.ts
 - src/core/ports/runtime.ts
-- src/extension.ts
+- src/server/referOrchestratorServer.ts
+- src/server/referTargetRegistry.ts
+- test/authorityResolver.test.ts
+- test/bootstrapApply.test.ts
+- test/bootstrapDryRun.test.ts
+- test/bootstrapHealth.test.ts
 
 ## Package And Extension Surface
 - package.json: npm scripts
 
-- package.json: VS Code view contributions
 
 ## Guidance
 Use this file as a compact map before opening full source files. Open the specific files above only when their details are needed.
