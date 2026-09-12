@@ -1002,6 +1002,151 @@ if (!chromium) {
     }
   }
 
+  // ---- T4h  click to explain: every element must open, and be checkable -----
+  //
+  // Operator, 2026-09-12: "add click info to everything on the board so when
+  // clicked it shows what this artifact is and what its for. and make sure the
+  // info correlates to its active wiring as truth."
+  //
+  // Three checks, and the third is the one that makes the feature worth having.
+  //
+  // A panel is only trustworthy because every line in it names the FILE it came
+  // from. That promise is checkable from here and from nowhere else: the page
+  // can print a path, and only this process can go and see whether the path is
+  // real. A panel citing a file that does not exist is worse than a panel with
+  // no citation, because the citation is what makes it believed.
+  {
+    const info = await page.evaluate(() => {
+      const els = [...document.querySelectorAll("[data-explain]")];
+      const wrap = document.getElementById("xwrap");
+      const store = document.getElementById("xstore");
+      const keys = store ? [...store.children].map((c) => c.getAttribute("data-explain-for")) : [];
+      return {
+        elements: els.map((e) => e.getAttribute("data-explain")),
+        keys,
+        hasWrap: !!wrap,
+        // Every source line the build produced, panels and open-row wiring alike.
+        sources: store ? [...store.querySelectorAll(".xsource")].map((s) => s.textContent.trim()) : [],
+        // A cell the board marks as running tighter than declared. The asterisk
+        // is the board's own admission that two numbers differ.
+        tight: [...document.querySelectorAll('[data-explain^="rhythm:"]')]
+          .filter((c) => /\*/.test(c.textContent))
+          .map((c) => c.getAttribute("data-explain")),
+      };
+    });
+
+    // (1) EVERY CLICKABLE ELEMENT OPENS A PANEL. Measured as the rendered height
+    // of the panel after a real click, never as a class name - asserting the
+    // element gained a class reads back what the handler just wrote.
+    const dead = [];
+    if (info.hasWrap) {
+      for (const key of info.elements) {
+        const opened = await page.evaluate((k) => {
+          const el = document.querySelector('[data-explain="' + k + '"]');
+          if (!el) return { h: 0, missing: true };
+          el.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+          const w = document.getElementById("xwrap");
+          const r = w.getBoundingClientRect();
+          const title = w.querySelector(".xtitle");
+          return { h: Math.round(r.height), hidden: w.hidden, title: title ? title.textContent.trim() : "" };
+        }, key);
+        if (opened.missing || opened.hidden || opened.h < 40 || opened.title === "NOT RECORDED") dead.push(key);
+      }
+      await page.keyboard.press("Escape");
+    }
+    if (!info.hasWrap || !info.keys.length) {
+      say(
+        "explain-panel-absent",
+        "The board carries no explain panel at all, so nothing on it can say what it is or how it is wired.",
+        `Looked for #xwrap and #xstore on the rendered page and found ${info.hasWrap ? "the panel with no content" : "neither"}. Every element on this board is drawn from a source, and without this the source is unreachable from the screen.`,
+        "contract:body",
+        "body",
+      );
+    } else if (dead.length) {
+      const bad = await shot("explain-does-not-open-FAILED");
+      say(
+        "explain-element-does-not-open",
+        `${dead.length} clickable element(s) on the board open nothing, or open an empty panel: ${dead.join(", ")}.`,
+        `Measured as the rendered height of the panel after a real click on each element. An element marked as explainable that explains nothing is worse than one that was never marked, because the invitation was accepted and answered with a blank. Snapshot: ${path.relative(ROOT, bad)}`,
+        "contract:body",
+        "body",
+      );
+    }
+
+    // (2) NO PANEL MAY CITE A FILE THAT DOES NOT EXIST.
+    //
+    // Only the leading token of a source line is a path - the rest is the field
+    // within it, or prose. Anything without a slash and an extension is a
+    // sentence, not a citation, and is left alone.
+    const cited = new Map();
+    for (const s of info.sources) {
+      const head = s.split("·")[0].trim();
+      if (!/^[A-Za-z]:\/|^[\w.@-]+\//.test(head)) continue;
+      if (!/\.[A-Za-z0-9]{1,6}$/.test(head)) continue;
+      if (head.includes(" ")) continue;
+      cited.set(head, (cited.get(head) || 0) + 1);
+    }
+    const ghosts = [...cited.keys()].filter((p) => !fs.existsSync(path.isAbsolute(p) ? p : path.join(ROOT, p)));
+    if (ghosts.length) {
+      say(
+        "explain-cites-a-file-that-is-not-there",
+        `${ghosts.length} source(s) named in the board's panels point at files that do not exist: ${ghosts.join(", ")}.`,
+        `Every path printed in a panel was resolved against the repo root from this process. A citation is the whole reason a panel is believed rather than read - one that cannot be opened turns the panel from evidence into decoration. ${cited.size} distinct path(s) were checked.`,
+        "contract:body",
+        "body",
+      );
+    }
+
+    // (3) A DISAGREEMENT MUST RENDER AS A DISAGREEMENT.
+    //
+    // The board marks a rhythm running tighter than it declared with a single
+    // asterisk, which explained nothing for as long as it existed. If the cell
+    // admits the two numbers differ, its panel has to say so in the loud block -
+    // otherwise the drift is still only visible to somebody who already knew.
+    for (const key of info.tight) {
+      const tone = await page.evaluate((k) => {
+        const el = document.querySelector('[data-explain="' + k + '"]');
+        el.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+        const line = document.querySelector("#xwrap .xhead-line");
+        return line ? line.className : null;
+      }, key);
+      if (!tone || !/x-disagree/.test(tone)) {
+        const bad = await shot("explain-hides-disagreement-FAILED");
+        say(
+          "explain-hides-a-disagreement",
+          `${key} is drawn as running tighter than it declared, and its panel does not report the two values as disagreeing.`,
+          `The cell carries the asterisk the board uses to mark a tightened interval, and the opened panel's headline is ${tone || "absent"} rather than a disagreement. The asterisk is what this panel exists to replace; a panel that shows the same fact just as quietly has replaced nothing. Snapshot: ${path.relative(ROOT, bad)}`,
+          "contract:body",
+          "body",
+        );
+      }
+    }
+    await page.keyboard.press("Escape");
+
+    // One open thing on the board, whichever kind it is. A panel and a deposit
+    // row are two halves of one disclosure, and two open at once push the rest
+    // of the column off a wall display.
+    const both = await page.evaluate(() => {
+      const el = document.querySelector("[data-explain]");
+      const row = document.querySelector(".inrow");
+      if (!el || !row) return null;
+      row.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      el.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      const n = document.querySelectorAll(".feedrow.open").length + (document.getElementById("xwrap").hidden ? 0 : 1);
+      document.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      return n;
+    });
+    if (both !== null && both > 1) {
+      say(
+        "explain-and-row-stack-open",
+        `${both} things stay open on the board at once - a panel and a deposit row do not close each other.`,
+        "Opening either should close the other. They are two halves of one disclosure, and on a wall monitor whatever they push below the fold is simply gone.",
+        "contract:body",
+        "body",
+      );
+    }
+  }
+
   // ---- T5  the board must not pretend --------------------------------------
   if (seen.bannerShowing) {
     say(
