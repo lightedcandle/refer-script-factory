@@ -24,6 +24,51 @@ Publish rule:
 
 - When a repo defines `publish`, treat it as commit plus the repo's governed deploy or release path, not as a deploy-only action.
 
+## Machines: there is no deploy step, so saving is deploying
+
+`machines/` holds the universal machines of the Living Factory. They are not
+built, bundled, installed or deployed. A scheduler reads `machines/<name>.cjs`
+off disk at the moment it fires — every five minutes, against a live board — so
+**the moment a machine is saved, that is the version that runs.** Main is
+production and the only rollback is another commit.
+
+Measured 2026-09-12: a worker was midway through editing `watcher.cjs` when the
+12:50 tick fired, ran the half-written file, and armed eight annotations onto the
+live belt.
+
+A guard on the consuming side refuses to run a machine whose file has
+uncommitted changes, and it fails open when git cannot answer, because a guard
+that stops the factory is worse than the thing it prevents. **The consequence is
+that a half-edited machine does not run at all.** Leave a file part-written and
+the rhythm it drives goes quiet, silently. Commit promptly, or expect a station
+to stop.
+
+### The gate
+
+```powershell
+npm run gate:machines
+```
+
+Parses every machine, refuses a literal U+FEFF in any file something parses, and
+runs each machine's read-only path against a throwaway fixture repo to check its
+exit code. `npm run gate:prove` breaks the gate five ways and requires it to
+catch each one; it edits live machines for a second at a time, so it refuses to
+run outside a linked worktree.
+
+Run the gate **before the save**, not after the push. The GitHub workflow runs
+the same script, but a commit on main is already live locally before GitHub sees
+it — on main that job is an alarm, not a gate.
+
+### Branch policy
+
+- **A machine that is declared on a trigger goes through a pull request.** Those
+  files are live within five minutes of being written, and a PR is the only point
+  at which the code is not yet running anywhere.
+- **Direct to main is fine** for docs, for `scripts/`, and for a machine that no
+  repo has declared yet.
+- Do not import the Telechurch branch-lineage convention. This repo has no
+  concurrent lanes and no release path, and that machinery would be ceremony.
+
 ## Sibling Zo Factory
 
 `refer-zo-bootstrap` is the Zo-scoped sibling factory. It owns Zo computer bootstrapping, Zo Files transfer, Zo personas/rules, hive node deployment, dispatch, talkback, heartbeat, datasets, and the Telechurch Zo proving instance.
