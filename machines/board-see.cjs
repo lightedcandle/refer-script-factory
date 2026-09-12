@@ -316,10 +316,19 @@ if (!chromium) {
       innerWidth: window.innerWidth,
       // A row whose text is wider than its box is silently cut off on a wall
       // display, where nobody can scroll it.
-      clipped: rows
+      //
+      // The cells are NAMED, not just counted. A count sends whoever reads it
+      // back to the browser to find out which cell - which is a second
+      // measuring pass for information this pass already had in its hand.
+      clippedCells: rows
         .filter(vis)
         .flatMap((r) => [...r.children])
-        .filter((c) => c.scrollWidth > c.clientWidth + 2).length,
+        .filter((c) => c.scrollWidth > c.clientWidth + 2)
+        .map((c) => ({
+          text: (c.textContent || "").replace(/\s+/g, " ").trim().slice(0, 40),
+          box: c.clientWidth,
+          needs: c.scrollWidth,
+        })),
     };
   });
 
@@ -623,6 +632,79 @@ if (!chromium) {
     }
   }
 
+  // ---- T4g  a cycle cannot count down past its own pace --------------------
+  //
+  // Every cycle cell prints two numbers about the same station: the pace it
+  // runs on, and how long until it next fires. The second can never exceed the
+  // first. If it does, the two were computed from different intervals.
+  //
+  // This is written because it happened, and because it was INVISIBLE to every
+  // other check here. The board read:
+  //
+  //     BOARD CRITIC  15m *  ... 1h 44m          AUTONOMY  30m *  ... 5h 34m
+  //
+  // The pace came from the interval the clock had tightened to after a fault;
+  // the countdown came from the ceiling the station DECLARED. Both stations
+  // were healthy and running every fifteen and thirty minutes, and the board
+  // told the room they were hours away. The bar between the two numbers was
+  // drawn from the pace, so it sat at 100% above a countdown reading 1h 44m -
+  // a tile disagreeing with itself, passing every test on this station.
+  //
+  // The same one line reached the footer strip, which picks the five nearest
+  // stations by that wrong number, so the two about to fire were the two it
+  // left out; and it reached the ALIVE lamp, which measured every station
+  // against its ceiling - meaning a station tightened to 15m could be DEAD for
+  // nearly six hours under the words "every station inside its interval".
+  //
+  // Tightened stations are the ones the clock has decided to watch most
+  // closely. Computing their schedule from the ceiling made the board least
+  // accurate exactly where it most needed to be right.
+  {
+    const cells = await page.evaluate(() => {
+      const UNIT = { s: 1e3, m: 6e4, h: 36e5, d: 864e5, w: 6048e5 };
+      const ms = (text) => {
+        const t = (text || "").trim();
+        if (!t) return null;
+        if (/^(due|now)$/i.test(t)) return 0;
+        let total = null;
+        for (const m of t.matchAll(/(\d+)\s*([smhdw])/gi)) total = (total || 0) + Number(m[1]) * UNIT[m[2].toLowerCase()];
+        return total;
+      };
+      // The cycle cells are the only things on the board carrying a title that
+      // opens "every " - set by the builder next to the pace it prints.
+      return [...document.querySelectorAll('div[title^="every "]')].map((cell) => {
+        const spans = [...cell.querySelectorAll("span")];
+        const name = (spans[0] && spans[0].textContent) || "";
+        const paceText = ((spans[1] && spans[1].textContent) || "").replace(/\*/g, "");
+        const whenText = (spans[2] && spans[2].textContent) || "";
+        return {
+          name: name.replace(/\s+/g, " ").trim(),
+          paceText: paceText.trim(),
+          whenText: whenText.replace(/\s+/g, " ").trim(),
+          pace: ms(paceText),
+          when: ms(whenText),
+        };
+      });
+    });
+
+    // A minute of slack: both numbers are rendered as rounded words, so "15m"
+    // against "15m" must pass while "15m" against "1h 44m" must not.
+    const SLACK = 60 * 1000;
+    const liars = (cells || []).filter((c) => c.pace !== null && c.when !== null && c.when > c.pace + SLACK);
+    if (liars.length) {
+      const bad = await shot("cycle-countdown-FAILED");
+      say(
+        "cycle-countdown-exceeds-pace",
+        `${liars.length} cycle cell(s) count down past the pace printed beside them: ${liars
+          .map((c) => `${c.name} says every ${c.paceText} but ${c.whenText} away`)
+          .join("; ")}.`,
+        `Read off the rendered cells. A station cannot be further from firing than its own interval, so the pace and the countdown were computed from different numbers - almost certainly the declared ceiling against the interval the clock actually tightened to. Snapshot: ${path.relative(ROOT, bad)}`,
+        "contract:body",
+        "body",
+      );
+    }
+  }
+
   // ---- T5  the board must not pretend --------------------------------------
   if (seen.bannerShowing) {
     say(
@@ -643,11 +725,13 @@ if (!chromium) {
       "Nobody scrolls a wall monitor. Anything past the right edge is not shown at all.",
     );
   }
-  if (seen.clipped > 0) {
+  if (seen.clippedCells.length > 0) {
     say(
       "text-clipped",
-      `${seen.clipped} cell(s) on the board are cut off mid-text.`,
-      "Measured with scrollWidth against clientWidth, which is the only way to catch truncation - judging it by eye from a scaled screenshot reports crowding, not clipping.",
+      `${seen.clippedCells.length} cell(s) on the board are cut off mid-text: ${seen.clippedCells.map((c) => `"${c.text}"`).join(", ")}.`,
+      `Measured with scrollWidth against clientWidth, which is the only way to catch truncation - judging it by eye from a scaled screenshot reports crowding, not clipping. ${seen.clippedCells
+        .map((c) => `"${c.text}" has ${c.box}px and needs ${c.needs}px`)
+        .join("; ")}.`,
     );
   }
 
