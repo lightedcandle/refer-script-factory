@@ -55,3 +55,11 @@ jobs:
       # A CI checkout is neither, and no scheduler is reading it.
       - name: prove the gate bites
         run: node scripts/ci/prove-gate-bites.mjs --force
+
+      # The gate checks that every machine RUNS. This checks that the pulse belt
+      # WORKS: that a card moves through its three stages on a real clock, that
+      # ordinary scheduler jitter does not collapse the cycle, and - the half
+      # that matters most - that a tick which genuinely did not happen still
+      # shows as a hole. None of that is visible in an exit code.
+      - name: pulse belt cycle
+        run: node scripts/ci/pulse-belt-cycle.mjs

@@ -130,6 +130,7 @@ const MANIFEST = {
   "mind-watch.cjs": { args: ["--dry", "--json"], exit: 1, why: "no database credentials, and it refuses to report a condition as met because it could not check" },
   "night-watch.cjs": { args: ["--json"], exit: 2, why: "no baseline was ever marked. Exit 2 and not 1: never-ran and ran-and-found-nothing are different facts" },
   "provider-watch.cjs": { args: ["--json"], exit: [0, 1], why: "asks the host whether Docker is running, which is not a property of this repo. Both codes are correct; crashing is not, so the run must still emit JSON carrying docker.reachable", expect: (out) => "reachable" in (JSON.parse(out).docker || {}) },
+  "pulse-belt.cjs": { args: ["--list"], exit: 0, why: "--list derives the cycle and writes nothing. On a fixture with no pulse-belt.jsonl this is the first-run path: one card, two empty stages, and NOT reported as a gap, because never-run and stopped are different facts" },
   "pulse-check.cjs": { args: ["--json"], exit: 1, why: "the fixture's trigger has never run and two records name nothing to trigger - both are real faults and it must say so" },
   "session-life.cjs": { args: [], exit: 0, why: "library - the one definition of whether a dispatched agent is still alive" },
   "triage.cjs": { args: ["--list"], exit: 0, why: "lists what is awaiting judgement" },

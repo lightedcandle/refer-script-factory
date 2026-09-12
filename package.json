@@ -229,6 +229,7 @@
   "scripts": {
     "gate:machines": "node scripts/ci/machines-gate.mjs",
     "gate:prove": "node scripts/ci/prove-gate-bites.mjs",
+    "gate:pulse-belt": "node scripts/ci/pulse-belt-cycle.mjs",
     "compile": "tsc -p ./",
     "compile:core": "tsc -p tsconfig.core.json --noEmit",
     "verify:core-boundary": "node scripts/verify/core-boundary.mjs",
