@@ -6,6 +6,18 @@ dist/
 # repo lived in exactly one place, and a fresh clone would not have inherited it.
 refer-zo-bootstrap/
 .claude/worktrees/
+# VS Code Local History. It snapshots whatever is open, including files that are
+# ignored everywhere else, and it was tracked here rather than ignored - so on
+# 2026-06-17 the commit named "chore: repo safeguard snapshot" pushed two
+# alliance-hub/.dev.vars snapshots to a PUBLIC repo. What those two held was mild
+# (a local placeholder secret and one phone number). What they would hold today
+# is not: that same file now carries SUPABASE_SERVICE_ROLE_KEY, OPEN_AI_CHAT_KEY
+# and ALLIANCE_SMS_RELAY_TOKEN.
+#
+# The .env* rules below never covered it, because a .dev.vars is not a .env. The
+# hole was never the pattern list - it was that an editor was allowed to choose
+# what enters the repo.
+.history/
 alliance-hub/.deploy/
 alliance-hub/.wrangler/
 *.vsix
@@ -23,3 +35,9 @@ npm-debug.log*
 .refer-factory/pulse-belt.json
 .refer-factory/updates/
 zo-computer/usage/*.jsonl
+# Same class as the line above, in the other directory it was written to. Nothing
+# in this repo has written it since 2026-05-01.
+usage/*.jsonl
+# Chromium crash noise from an Electron host, 316 bytes of it, tracked since
+# April. npm-debug.log* above did not match the name.
+debug.log
