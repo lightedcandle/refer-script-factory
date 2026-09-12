@@ -725,7 +725,7 @@ function routineRuns(taskId, sinceMs) {
   for (const f of files) {
     let j;
     try {
-      j = JSON.parse(fs.readFileSync(f, "utf8").replace(/^﻿/, ""));
+      j = JSON.parse(fs.readFileSync(f, "utf8").replace(/^\uFEFF/, ""));
     } catch (err) {
       if (err instanceof SyntaxError) {
         unreadableRunFiles++;
@@ -809,7 +809,7 @@ function readReport(file, staleAfterMs) {
   }
   let j;
   try {
-    j = JSON.parse(raw.replace(/^﻿/, ""));
+    j = JSON.parse(raw.replace(/^\uFEFF/, ""));
   } catch (err) {
     if (!(err instanceof SyntaxError)) throw err;
     return { state: "unreadable", why: "exists and will not parse" };
