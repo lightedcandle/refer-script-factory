@@ -136,15 +136,23 @@ bump so the two repos are never both authoritative.
 
 ### The submodule points at a feature branch, not at main
 
-`alliance-hub` is checked out on `codex/tier-columns-responsive-fix` and the
-gitlink in the index is `cc18f49` while the worktree sits at `ff254a3` — 19
-commits of real product work ahead. `git status` has therefore been permanently
-dirty on ` M alliance-hub`.
+`alliance-hub` is checked out on `codex/tier-columns-responsive-fix`. The gitlink
+was `cc18f49` while the worktree sat at `ff254a3` — 19 commits of real product
+work ahead — so `git status` was permanently dirty on ` M alliance-hub`.
 
-Deliberately not resolved. Committing the bump would pin this repo to an
-in-flight feature branch head; switching the checkout to `main` would pull the
-rug from under a concurrent codex session working in that tree. Both are worse
-than a dirty line.
+**The pointer is now committed at `ff254a3`, and that was not deliberate.** This
+entry previously said the bump was being left alone on purpose; a blanket
+`git add -A` in the retirement commit staged it anyway. Recording the slip rather
+than quietly rewriting the entry, because the entry was the thing that was
+supposed to stop it.
+
+Not reverted, on the merits rather than to excuse it: `ff254a3` is pushed and
+reachable on the remote, so clones resolve it, and putting the gitlink back would
+restore the permanent dirty line without making anything truer. What is still
+wrong is what was wrong before — **this repo is pinned to the head of somebody's
+in-flight feature branch, not to `alliance-hub` main.** The submodule working
+directory was not touched: still on `codex/tier-columns-responsive-fix`, still
+clean, the concurrent lane undisturbed.
 
 **Revival condition — that codex lane merges to `alliance-hub` main.** Then the
 pointer goes to main's head and stays there, and a submodule pinned to anything
