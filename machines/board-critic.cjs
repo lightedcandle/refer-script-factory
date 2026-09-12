@@ -207,7 +207,13 @@ const say = (key, claim, evidence, triggers, owner, dimension) =>
 // and a centre counting held work as circulating. Both were found by eye.
 {
   const open = belt.filter(isOpen);
-  const carried = open.filter((r) => ["body", "mind", "spirit"].some((d) => r.owner === d || String(r.triggers) === `contract:${d}`));
+  // ANY contracted domain is carried, not only the three drawn as carriers.
+  // This check reported "1 open item counted nowhere" for an architecture item
+  // whose only fault was that its domain had no card on the belt - the drawing
+  // deciding what the data was allowed to be. Eighth place this one rule lives;
+  // the board was corrected first and this followed, which is the drift the
+  // cross-source check exists to catch and did.
+  const carried = open.filter((r) => /^contract:/.test(String(r.triggers || "")) || ["body", "mind", "spirit"].some((d) => r.owner === d));
   const held = open.filter((r) => String(r.triggers) === "operator" && !carried.includes(r));
   const unplaced = open.length - carried.length - held.length;
   if (unplaced !== 0) {
