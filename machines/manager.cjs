@@ -1,8 +1,16 @@
 #!/usr/bin/env node
 /**
- * BOARD CRITIC - the thing that reads the board and asks why nothing happened.
+ * THE FACTORY MANAGER - the thing that reads the board and asks why nothing
+ * happened.
  *
  * UNIVERSAL MACHINE. Runs against the repo it is invoked in (process.cwd()).
+ *
+ * Renamed from board-critic 2026-09-12, on the operator's direction. "Critic"
+ * undersold it: this is the only thing in the factory that reads the WHOLE board
+ * and asks why nothing moved, which is a manager's job rather than a reviewer's.
+ * Its trigger id is `manager` - short, because it has to fit the board's cycle
+ * strip - and the schedule carries its history across the rename so it does not
+ * read as NEVER RUN for a cycle.
  *
  * Operator, 2026-09-11: "That problem could have been discovered just by looking
  * at the page. So apparently nothing is looking at the page and extrapolating,
@@ -31,8 +39,8 @@
  * layout broken) stays with the seer. Splitting them is what makes the cheap
  * half run every cycle instead of once a day.
  *
- *   node <factory>/machines/board-critic.cjs         report
- *   node <factory>/machines/board-critic.cjs --json  machine-readable
+ *   node <factory>/machines/manager.cjs         report
+ *   node <factory>/machines/manager.cjs --json  machine-readable
  *
  * Exit 1 when it finds something nobody is acting on.
  */
@@ -48,7 +56,7 @@ const MS = { h: 36e5, d: 864e5 };
 const STALE_HOURS = 24; // open, untouched, and older than this = nobody picked it up
 
 if (!fs.existsSync(BELT)) {
-  console.error(`board-critic: no belt in ${ROOT}`);
+  console.error(`manager: no belt in ${ROOT}`);
   process.exit(2);
 }
 
@@ -66,20 +74,10 @@ const belt = fs
   })
   .filter(Boolean);
 
-const stations = [];
-for (const rel of ["tools", "tools/factory", "scripts", "machines"]) {
-  const dir = path.join(ROOT, rel);
-  if (!fs.existsSync(dir)) continue;
-  for (const f of fs.readdirSync(dir)) {
-    if (!f.endsWith(".station.json")) continue;
-    try {
-      const d = JSON.parse(fs.readFileSync(path.join(dir, f), "utf8"));
-      if (d && d.id) stations.push(d);
-    } catch {
-      /* the clock reports unreadable declarations; not this machine's job */
-    }
-  }
-}
+// Discovery via triggers.cjs, so the declaration suffix exists in one place.
+// The schedule reports unreadable declarations; not this machine's job.
+const { discoverTriggers } = require("./triggers.cjs");
+const stations = discoverTriggers(ROOT);
 
 const now = Date.now();
 const runAt = (r) => {
@@ -138,7 +136,7 @@ const say = (key, claim, evidence, triggers, owner, dimension) =>
     say(
       `unwatched-dimension-${dim}`,
       `${dim} is carrying ${n} open item${n === 1 ? "" : "s"} and no station watches it.`,
-      `Stations declare what they own: ${stations.map((s) => `${s.id}->${s.owns || "nothing"}`).join(", ")}. Nothing owns ${dim}.`,
+      `Triggers declare what they own: ${stations.map((s) => `${s.id}->${s.owns || "nothing"}`).join(", ")}. Nothing owns ${dim}.`,
       `contract:${dim}`,
       dim,
       dim,
@@ -319,12 +317,15 @@ for (const f of findings) {
 }
 
 const report = { checkedAt: new Date(now).toISOString(), repo: path.basename(ROOT), found: findings.length, deposited, findings };
-fs.writeFileSync(path.join(CTX, "board-critic.json"), JSON.stringify(report, null, 2) + "\n");
+// manager.json, not board-critic.json. Verified before renaming that nothing
+// reads the old filename - a report nobody consumes can be renamed freely, and a
+// report somebody consumes cannot.
+fs.writeFileSync(path.join(CTX, "manager.json"), JSON.stringify(report, null, 2) + "\n");
 
 if (JSON_OUT) {
   console.log(JSON.stringify(report, null, 2));
 } else {
-  console.log(`board-critic: ${findings.length} thing(s) the board is showing that nobody is acting on  [${report.repo}]`);
+  console.log(`manager: ${findings.length} thing(s) the board is showing that nobody is acting on  [${report.repo}]`);
   for (const f of findings) {
     console.log(`\n  ${f.claim}`);
     console.log(`    ${f.evidence}`);

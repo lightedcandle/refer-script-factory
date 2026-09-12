@@ -62,20 +62,15 @@ const belt = fs.existsSync(path.join(CTX, "findings.jsonl"))
       .filter(Boolean)
   : [];
 
-const clock = readJson(path.join(CTX, "clock-state.json"), { stations: {} });
+// Discovery and the schedule state both come from triggers.cjs, so the file
+// suffix and the state key exist in one place - see that file for why.
+const { discoverTriggers, readScheduleState } = require("./triggers.cjs");
+
+const schedule = readScheduleState(CTX);
 const pulse = readJson(path.join(CTX, "pulse.json"), null);
 const restart = readJson(path.join(CTX, "host-restart.json"), null);
 
-const stations = [];
-for (const rel of ["tools", "tools/factory", "scripts", "machines"]) {
-  const dir = path.join(ROOT, rel);
-  if (!fs.existsSync(dir)) continue;
-  for (const f of fs.readdirSync(dir)) {
-    if (!f.endsWith(".station.json")) continue;
-    const d = readJson(path.join(dir, f), null);
-    if (d && d.id) stations.push(d);
-  }
-}
+const stations = discoverTriggers(ROOT);
 
 const now = Date.now();
 const runAt = (r) => {
@@ -92,7 +87,7 @@ const add = (id, name, met, detail, why) => conditions.push({ id, name, met: met
 {
   const late = stations
     .map((s) => {
-      const st = clock.stations[s.id] || {};
+      const st = schedule.triggers[s.id] || {};
       const every = durMs(s.every);
       if (!every) return { id: s.id, bad: true, note: "no readable interval" };
       if (!st.lastRunAt) return { id: s.id, bad: true, note: "never run" };
@@ -101,11 +96,11 @@ const add = (id, name, met, detail, why) => conditions.push({ id, name, met: met
     })
     .filter((x) => x.bad);
   add(
-    "stations-current",
-    "Every station runs on its own clock",
+    "triggers-current",
+    "Every trigger fires on its own schedule",
     stations.length > 0 && late.length === 0,
-    late.length ? late.map((l) => `${l.id}: ${l.note}`).join("; ") : `${stations.length} stations, all inside interval`,
-    "A station that stops without anyone noticing is the failure this whole system was built to end.",
+    late.length ? late.map((l) => `${l.id}: ${l.note}`).join("; ") : `${stations.length} triggers, all inside interval`,
+    "A trigger that stops without anyone noticing is the failure this whole system was built to end.",
   );
 }
 
@@ -233,12 +228,12 @@ const add = (id, name, met, detail, why) => conditions.push({ id, name, met: met
   );
 }
 
-// ---- 8. SOMETHING OTHER THAN A PERSON WINDS THE CLOCK ------------------------
+// ---- 8. SOMETHING OTHER THAN A PERSON KEEPS THE SCHEDULE --------------------
 //
 // This gate printed FULLY AUTONOMOUS for a day while the factory was not
-// autonomous in the only sense that matters: NOTHING ON THE MACHINE INVOKED THE
-// CLOCK. Stations declared 10- and 15-minute cadences and the thing walking them
-// was a person, by hand, whenever they happened to be present.
+// autonomous in the only sense that matters: NOTHING ON THE MACHINE TICKED THE
+// SCHEDULE. Triggers declared 10- and 15-minute cadences and the thing walking
+// them was a person, by hand, whenever they happened to be present.
 //
 // Every one of the other seven conditions was true and the whole was false. They
 // all measure what happens WHEN the factory runs; not one asked what makes it
@@ -253,32 +248,45 @@ const add = (id, name, met, detail, why) => conditions.push({ id, name, met: met
 {
   let scheduler = null; // healthy status word, or null
   let schedulerState = "absent"; // absent | disabled | <status>
-  try {
-    const { execSync } = require("child_process");
-    // schtasks rather than the PowerShell cmdlet: no module load, and it is
-    // present on every Windows since XP.
-    const out = execSync('schtasks /query /tn "LivingFactory-Clock" /fo LIST', { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] });
-    const status = (out.match(/Status:\s*(\w+)/i) || [])[1] || "unknown";
-    schedulerState = status;
-    if (/^(Ready|Running)$/i.test(status)) scheduler = status;
-  } catch {
-    // Not registered, or not Windows. Either way this condition is unmet, and an
-    // unmet condition is never reported as met because it could not be checked.
+  let taskName = "LivingFactory-Schedule";
+  // BOTH TASK NAMES, while the rename is in flight. The task is registered
+  // against a checkout that advances on its own schedule, so for a while the
+  // host may carry the old name, the new one, or - briefly - both. Checking only
+  // the new name would report a dead factory the moment this file landed and
+  // before the task was re-registered, which is a false alarm inside the one
+  // condition that exists to catch a real one.
+  const { execSync } = require("child_process");
+  for (const name of ["LivingFactory-Schedule", "LivingFactory-Clock"]) {
+    try {
+      // schtasks rather than the PowerShell cmdlet: no module load, and it is
+      // present on every Windows since XP.
+      const out = execSync(`schtasks /query /tn "${name}" /fo LIST`, { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] });
+      const status = (out.match(/Status:\s*(\w+)/i) || [])[1] || "unknown";
+      taskName = name;
+      schedulerState = status;
+      if (/^(Ready|Running)$/i.test(status)) scheduler = status;
+      // A healthy task ends the search. An unhealthy one does not: the other
+      // name may be the live one.
+      if (scheduler) break;
+    } catch {
+      // Not registered under this name, or not Windows. An unmet condition is
+      // never reported as met because it could not be checked.
+    }
   }
   // ABSENT AND DISABLED ARE DIFFERENT FACTS. The first version said "no task is
   // registered" when the task existed and had simply been switched off - which
   // sends somebody to create a task that is already there. This board's own rule
   // and it was broken inside the check written to enforce autonomy.
 
-  // A tick that happened while nobody was here. The clock records every
-  // station's last run; if the newest is more recent than this session could
-  // account for, something else is winding it.
+  // A tick that happened while nobody was here. The schedule records every
+  // trigger's last run; if the newest is more recent than this session could
+  // account for, something else is keeping it.
   // lastRunAt, an epoch number - NOT lastRun. The first version read a field
   // that does not exist, so every value was zero and the condition could only
   // ever fail. A check that cannot pass is the mirror of one that cannot fail,
   // and both are worthless for the same reason: the answer does not depend on
-  // the world. Verified against the real clock-state.json rather than assumed.
-  const lastRuns = Object.values(clock.stations || {})
+  // the world. Verified against the real state file rather than assumed.
+  const lastRuns = Object.values(schedule.triggers || {})
     .map((s) => Number(s.lastRunAt) || Date.parse(s.lastRun || "") || 0)
     .filter(Boolean);
   const newestTick = lastRuns.length ? Math.max(...lastRuns) : 0;
@@ -290,16 +298,16 @@ const add = (id, name, met, detail, why) => conditions.push({ id, name, met: met
 
   add(
     "wound-from-outside",
-    "Something other than a person winds the clock",
+    "Something other than a person keeps the schedule",
     !!scheduler && ticking,
     !scheduler
       ? schedulerState === "absent"
-        ? "No LivingFactory-Clock task exists on this host. The clock runs only when somebody runs it. Install it: SovereignNode/scripts/install-factory-clock.ps1"
-        : `LivingFactory-Clock exists but is ${schedulerState}. It does not need creating, it needs switching back on.`
+        ? "Neither LivingFactory-Schedule nor LivingFactory-Clock exists on this host. The schedule is kept only when somebody runs it. Install it: SovereignNode/scripts/install-factory-schedule.ps1"
+        : `${taskName} exists but is ${schedulerState}. It does not need creating, it needs switching back on.`
       : !ticking
-        ? `LivingFactory-Clock is ${scheduler}, but the newest station run is ${tickAgeMin === null ? "unknown" : tickAgeMin + " minutes"} old - the task is registered and not delivering.`
-        : `LivingFactory-Clock is ${scheduler}; newest station run ${tickAgeMin} minutes ago.`,
-    "Every other condition here measures what happens WHEN the factory runs. None of them asks what makes it run, and for a day all seven passed while the only thing invoking the clock was a person doing it by hand. A factory that is alive because somebody is watching it is the arrangement this system exists to end.",
+        ? `${taskName} is ${scheduler}, but the newest trigger run is ${tickAgeMin === null ? "unknown" : tickAgeMin + " minutes"} old - the task is registered and not delivering.`
+        : `${taskName} is ${scheduler}; newest trigger run ${tickAgeMin} minutes ago.`,
+    "Every other condition here measures what happens WHEN the factory runs. None of them asks what makes it run, and for a day all seven passed while the only thing ticking the schedule was a person doing it by hand. A factory that is alive because somebody is watching it is the arrangement this system exists to end.",
   );
 }
 

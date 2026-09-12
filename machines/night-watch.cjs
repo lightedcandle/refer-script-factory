@@ -74,10 +74,16 @@ const snapTimes = () => {
   }
 };
 
+// The schedule state via triggers.cjs, which knows both filenames and both
+// keys. Reading "clock-state.json" by hand here would have made every trigger
+// look as though it had never run the moment that file was renamed - and this
+// machine's whole job is to say what ran overnight.
+const { readScheduleState } = require("./triggers.cjs");
+
 const state = () => {
-  const clock = readJson(path.join(CTX, "clock-state.json"), { stations: {} });
+  const schedule = readScheduleState(CTX);
   const runs = {};
-  for (const [id, s] of Object.entries(clock.stations || {})) runs[id] = Number(s.runs) || 0;
+  for (const [id, s] of Object.entries(schedule.triggers || {})) runs[id] = Number(s.runs) || 0;
   return {
     at: new Date().toISOString(),
     runs,

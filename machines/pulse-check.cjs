@@ -70,20 +70,10 @@ const durMs = (spec) => {
   return Number(m[1]) * { s: 1e3, m: 6e4, h: 36e5, d: 864e5 }[m[2].toLowerCase()];
 };
 
-const stations = [];
-for (const rel of ["tools", "tools/factory", "scripts", "machines"]) {
-  const dir = path.join(ROOT, rel);
-  if (!fs.existsSync(dir)) continue;
-  for (const f of fs.readdirSync(dir)) {
-    if (!f.endsWith(".station.json")) continue;
-    try {
-      const d = JSON.parse(fs.readFileSync(path.join(dir, f), "utf8"));
-      if (d && d.id) stations.push(d);
-    } catch {
-      /* an unreadable declaration is the clock's problem to report, not this one's */
-    }
-  }
-}
+// Discovery via triggers.cjs, so the declaration suffix exists in one place.
+// An unreadable declaration is the schedule's problem to report, not this one's.
+const { discoverTriggers } = require("./triggers.cjs");
+const stations = discoverTriggers(ROOT);
 
 // ---- read the belt ----------------------------------------------------------
 
