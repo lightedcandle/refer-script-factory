@@ -39,7 +39,7 @@ const DO_MARK = process.argv.includes("--mark");
 
 const readJson = (p, fb) => {
   try {
-    return JSON.parse(fs.readFileSync(p, "utf8").replace(/^﻿/, ""));
+    return JSON.parse(fs.readFileSync(p, "utf8").replace(/^\uFEFF/, ""));
   } catch {
     return fb;
   }
@@ -48,7 +48,7 @@ const belt = () =>
   fs.existsSync(BELT)
     ? fs
         .readFileSync(BELT, "utf8")
-        .replace(/^﻿/, "")
+        .replace(/^\uFEFF/, "")
         .split("\n")
         .filter((l) => l.trim())
         .map((l) => {

@@ -33,7 +33,7 @@ const JSON_OUT = process.argv.includes("--json");
 
 const readJson = (p, fb) => {
   try {
-    return JSON.parse(fs.readFileSync(p, "utf8").replace(/^﻿/, ""));
+    return JSON.parse(fs.readFileSync(p, "utf8").replace(/^\uFEFF/, ""));
   } catch {
     return fb;
   }

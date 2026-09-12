@@ -81,7 +81,7 @@ let records = [];
 if (fs.existsSync(BELT)) {
   records = fs
     .readFileSync(BELT, "utf8")
-    .replace(/^﻿/, "")
+    .replace(/^\uFEFF/, "")
     .split("\n")
     .filter((l) => l.trim())
     .map((l, i) => {
