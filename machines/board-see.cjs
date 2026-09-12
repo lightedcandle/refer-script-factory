@@ -588,6 +588,41 @@ if (!chromium) {
     }
   }
 
+  // ---- T4f  the cycle strip must read shortest to longest ------------------
+  //
+  // Operator asked for it explicitly, and an explicit instruction is exactly the
+  // kind of thing that gets quietly undone by the next change to the same file.
+  // Read off the RENDERED page in left-to-right order, so this checks what a
+  // person sees rather than what the data was sorted as.
+  {
+    const strip = await page.evaluate(() => {
+      const UNIT = { m: 60, h: 3600, d: 86400, s: 1 };
+      const cells = [...document.querySelectorAll("div")]
+        .filter((d) => /^[A-Z][A-Z .…]{3,22}\s*\d+[smhd]/.test((d.textContent || "").replace(/\s+/g, " ").trim()) && d.children.length <= 4)
+        .map((d) => {
+          const t = (d.textContent || "").replace(/\s+/g, " ").trim();
+          const m = t.match(/(\d+)([smhd])/);
+          return { t: t.slice(0, 34), x: Math.round(d.getBoundingClientRect().left), y: Math.round(d.getBoundingClientRect().top), secs: m ? Number(m[1]) * UNIT[m[2]] : null };
+        })
+        .filter((c) => c.y < 300 && c.secs !== null);
+      const uniq = [];
+      for (const c of cells.sort((a, b) => a.x - b.x)) if (!uniq.some((u) => u.x === c.x)) uniq.push(c);
+      return uniq;
+    });
+    if (strip && strip.length > 2) {
+      const wrong = [];
+      for (let i = 1; i < strip.length; i++) if (strip[i].secs < strip[i - 1].secs) wrong.push(`${strip[i - 1].t} then ${strip[i].t}`);
+      if (wrong.length) {
+        const bad = await shot("strip-order-FAILED");
+        say(
+          "cycle-strip-out-of-order",
+          `The cycle strip is not in order, shortest pulse first: ${wrong.join("; ")}.`,
+          `Read left to right off the rendered page. The strip is ordered by the pace printed on each cell, so a cell showing a shorter pace must sit to the left of a longer one - including a station that has tightened after a fault, which should move toward the front. Snapshot: ${path.relative(ROOT, bad)}`,
+        );
+      }
+    }
+  }
+
   // ---- T5  the board must not pretend --------------------------------------
   if (seen.bannerShowing) {
     say(
