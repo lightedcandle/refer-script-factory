@@ -78,10 +78,27 @@ It lives in `.claude/agent-context/board-read.json`, keyed by record id with the
 
 | Machine | What it asks |
 | ------- | ------------ |
-| `kind.cjs` | Not a station — the belt's vocabulary, required by everything that reads it. See above. |
+| `kind.cjs` | Not a station — the belt's vocabulary and the handle numbering, required by everything that reads it. See above. |
 | `triage.cjs` | Turns a deposit into a contract, and records that somebody did. `--list` shows what is waiting. |
+| `watcher.cjs` | **Zone 1, incoming.** What should be judged, in what order, by when. Publishes a standing ordered ready-list. See below. |
 | `pulse-check.cjs` | Did every station that should have deposited, deposit — and is the belt still sound? Derives its expectations from the repo's own station declarations. |
 | `provider-watch.cjs` | The WORLD tier. Covers Docker fully; names Supabase and Cloudflare as session-only rather than omitting them, because an absent provider reads as fine and "nobody looked" is a different fact from "nothing wrong". |
+
+## The watcher, and the four zones it does not cover
+
+`watcher.cjs` covers **incoming, and only incoming** — deposits awaiting triage and decisions held for him. The other four zones named in `watcher-has-five-zones` (the belt, the rail of rhythms, the intake doors, the closed pile) are declared in the machine and marked NOT COVERED in every report it prints, because a watcher that half-covers five zones reports confidently about places it cannot see.
+
+It is the **judging** half of the factory, so it takes a **timestamped lock** before it reads anything — the scheduler's singleton protects the mechanical half, and two watchers reaching different conclusions about one item is a corruption rather than a delay. Timestamped and not boolean, so a crashed holder expires after 15 minutes instead of wedging judgement shut forever. Taken with exclusive create (`wx`), which is atomic, so the winner of a race is decided by the filesystem rather than by a read-then-write window.
+
+**Five outcomes and no more.** HOLD (fresh, timer still running — *silent*, counted only), COMPLETE (real but underspecified — the gap is named), PROMOTE (true, specified, owned, timer expired), RETIRE (provably no longer live), RAISE (his by law, or the proposed action is on the never-autonomous list).
+
+**Three rules that are easy to break and expensive to break:**
+
+- **Re-verification runs before prioritising, on anything older than four hours**, and it is a **falsification** test rather than a confirmation one — it asks whether anything has changed that would make the record false, not whether the record can be re-proven. A waiting deposit decays; attention rises with age rather than falling.
+- **An expired timer forces a decision and never a promotion.** Expiry raises the item into the front band and requires one of the five. Auto-promotion manufactures work nobody judged.
+- **Priority is computed, never a field** — tier, waited as a fraction of its own timer, how many open records name it, and whether it is his, which outranks everything. A hand-set priority field becomes another blank nobody fills.
+
+**Promotion is built and disarmed.** Without `--arm` the machine writes nothing to the belt at all; it writes `.claude/agent-context/watcher-queue.json`, a **standing** ordered list with a freshness stamp so intake can refuse a decayed judgement. `ready` is empty while disarmed and says so in words, because an empty list with no explanation reads as an empty morning. `--arm-limit N` caps how many **acceptances** are written in one run (annotations are never capped, since they accept nothing); acts are taken in queue order, so a RETIRE is never starved by a run of promotions.
 
 ## What is not here, and why
 

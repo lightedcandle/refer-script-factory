@@ -251,6 +251,42 @@ function beltIndex(records) {
   };
 }
 
+// ---- THE HANDLE HE SAYS OUT LOUD -------------------------------------------
+//
+// One letter for the domain, one number, stable forever because the belt is
+// append-only and the Nth body record is always B<n>. Record ids are written for
+// machines - "filter-verified-its-own-assignment" is precise and unsayable - and
+// asking him to read one aloud is asking him to do the machine's filing.
+//
+// IT LIVES HERE BECAUSE IT WAS ABOUT TO BE WRITTEN A THIRD TIME. triage.cjs and
+// deposit.cjs each carried a hand-written copy, both with a comment explaining
+// that the duplication was deliberate: handles.json is written by the board, and
+// a lookup that only works after a successful render fails exactly when
+// something is wrong. That reasoning is right and it argues against reading the
+// BOARD'S FILE - not for keeping N copies of eight lines. This is the same
+// answer kindOf and isDone already got, for the same reason: every rule written
+// twice in this factory has drifted, and the board's own comments count that
+// eight times over.
+//
+// It derives from the belt, so no two callers can disagree.
+const HANDLE_LETTER = Object.freeze({ body: "B", mind: "M", spirit: "S", architecture: "A", hive: "H", world: "W", dev: "D", law: "L", refer: "R", shed: "X" });
+
+function handleIndex(records) {
+  const list = Array.isArray(records) ? records.filter(Boolean) : [];
+  const byHandle = new Map();
+  const handleOf = new Map();
+  const seq = {};
+  for (const r of list) {
+    const dim = String(r.dimension || "").toLowerCase();
+    const letter = /^X\d/.test(String(r.driver || "")) ? "X" : HANDLE_LETTER[dim] || (dim ? dim[0].toUpperCase() : "?");
+    seq[letter] = (seq[letter] || 0) + 1;
+    const h = `${letter}${seq[letter]}`;
+    byHandle.set(h, r);
+    handleOf.set(String(r.id), h);
+  }
+  return { byHandle, handleOf, HANDLE_LETTER };
+}
+
 /** The record a triage act appends. One shape, so every door writes the same thing. */
 function triageRecord({ id, kind, dimension, owner, to, by, why }) {
   const k = String(kind || "").trim().toLowerCase();
@@ -277,4 +313,4 @@ function triageRecord({ id, kind, dimension, owner, to, by, why }) {
   };
 }
 
-module.exports = { KIND, KIND_WORDS, NOTING, selfTerminal, isNoting, beltIndex, triageRecord };
+module.exports = { KIND, KIND_WORDS, NOTING, HANDLE_LETTER, selfTerminal, isNoting, beltIndex, handleIndex, triageRecord };

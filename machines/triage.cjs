@@ -59,23 +59,12 @@ const records = fs
 const IX = beltIndex(records);
 
 // The same numbering the board draws, so a handle he says out loud resolves
-// here. Duplicated from deposit.cjs deliberately and for the reason stated
-// there: handles.json is written by the board, and a lookup that only works
-// after a successful render fails exactly when something is wrong.
-const HANDLE_LETTER = { body: "B", mind: "M", spirit: "S", architecture: "A", hive: "H", world: "W", dev: "D", law: "L", refer: "R", shed: "X" };
-const byHandle = new Map();
-const handleOf = new Map();
-{
-  const seq = {};
-  for (const r of records) {
-    const dim = String(r.dimension || "").toLowerCase();
-    const letter = /^X\d/.test(String(r.driver || "")) ? "X" : HANDLE_LETTER[dim] || (dim ? dim[0].toUpperCase() : "?");
-    seq[letter] = (seq[letter] || 0) + 1;
-    const h = `${letter}${seq[letter]}`;
-    byHandle.set(h, r);
-    handleOf.set(String(r.id), h);
-  }
-}
+// here. It is derived from the BELT rather than read from handles.json, which
+// the board writes - a lookup that only works after a successful render fails
+// exactly when something is wrong. That was the reason this block was once
+// written out by hand in two files; the rule now lives once, in kind.cjs, and
+// still never touches the board's output.
+const { byHandle, handleOf } = require("./kind.cjs").handleIndex(records);
 
 if (LIST) {
   const waiting = records.filter(IX.isAwaitingTriage);

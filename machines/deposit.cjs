@@ -49,24 +49,12 @@ const records = fs
   })
   .filter(Boolean);
 
-// The same numbering the board draws. Duplicated deliberately rather than read
+// The same numbering the board draws, derived from the belt rather than read
 // from handles.json: that file is written by the board, and a lookup that only
 // works after a successful render is a lookup that fails exactly when something
-// is wrong. Both derive from the belt, so they cannot disagree.
-const HANDLE_LETTER = { body: "B", mind: "M", spirit: "S", architecture: "A", hive: "H", world: "W", dev: "D", law: "L", refer: "R", shed: "X" };
-const handles = new Map();
-const byHandle = new Map();
-{
-  const seq = {};
-  for (const r of records) {
-    const dim = String(r.dimension || "").toLowerCase();
-    const letter = /^X\d/.test(String(r.driver || "")) ? "X" : HANDLE_LETTER[dim] || (dim ? dim[0].toUpperCase() : "?");
-    seq[letter] = (seq[letter] || 0) + 1;
-    const h = `${letter}${seq[letter]}`;
-    handles.set(String(r.id), h);
-    byHandle.set(h, r);
-  }
-}
+// is wrong. The rule lives once, in kind.cjs, for the same reason kindOf and
+// isDone do - every copy of it in this factory has drifted.
+const { byHandle, handleOf: handles } = require("./kind.cjs").handleIndex(records);
 
 // The belt's vocabulary, from the one file that holds it.
 const { beltIndex } = require("./kind.cjs");
