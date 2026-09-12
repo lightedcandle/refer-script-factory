@@ -28,9 +28,28 @@ const SUFFIXES = [".trigger.json", ".station.json"];
 const SEARCH = ["tools", "tools/factory", "scripts", "machines"];
 const STATE_FILES = ["schedule-state.json", "clock-state.json"];
 
+// THE BOM STRIP IS LOAD-BEARING, AND THIS FILE IS THE WORST PLACE TO OMIT IT.
+//
+// Measured 2026-09-12: a declaration written by PowerShell 5.1 - whose
+// `Out-File -Encoding utf8` writes a byte-order mark BY DEFAULT, so this is the
+// ordinary way to make one on this machine - begins with U+FEFF. JSON.parse
+// rejects it, the catch below returns the fallback, and the trigger becomes
+// INVISIBLE. Not broken, not reported: absent. The scheduler will not run that
+// station, the pulse will not expect it, and the board will not draw a row for
+// it, all without a single error anywhere.
+//
+// That is the exact failure this file's own header was written about - four
+// machines discovering declarations independently, and "a machine that finds NO
+// triggers does not crash, it cheerfully reports that everything is fine". Every
+// other reader in this factory already strips it. This one, the single discovery
+// point for every declaration in the repo, did not.
+//
+// Found by accident: a fixture whose trigger was written with Out-File reported
+// the default cadence instead of the declared one, and said so out loud only
+// because stageLength() names where it read the number from.
 function readJson(p, fallback) {
   try {
-    return JSON.parse(fs.readFileSync(p, "utf8"));
+    return JSON.parse(fs.readFileSync(p, "utf8").replace(/^\uFEFF/, ""));
   } catch {
     return fallback;
   }
