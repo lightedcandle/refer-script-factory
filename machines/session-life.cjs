@@ -53,6 +53,20 @@ const path = require("path");
 
 const PROJECTS = path.join(process.env.USERPROFILE || process.env.HOME || "", ".claude/projects");
 
+// SWALLOW ONLY THE ERROR YOU EXPECT.
+//
+// A bare `catch {}` around a filesystem read also catches ReferenceError,
+// TypeError and every other programming mistake - and here that would report a
+// working agent as DEAD, which hands its work back to incoming as abandoned.
+// The honest failure is a crash: a crash is a message, and a plausible status
+// is not.
+//
+// Written because it happened on this board's chat door: a removed constant left
+// a ReferenceError inside a catch, the door reported UNOBSERVED, and the build
+// succeeded. Nothing anywhere said a check had not run.
+const expectedFsError = (err) =>
+  !!err && ["ENOENT", "ENOTDIR", "EACCES", "EPERM", "EBUSY", "EMFILE", "ELOOP", "ENAMETOOLONG"].includes(err.code);
+
 // A project directory is the repo's absolute path with the drive colon, the
 // separators and the dots all replaced by "-".
 const tokenize = (p) => p.replace(/[:\\/.]/g, "-");
@@ -85,7 +99,8 @@ function sessionLife(id, root, aliveMs) {
       let files;
       try {
         files = fs.readdirSync(dir);
-      } catch {
+      } catch (err) {
+        if (!expectedFsError(err)) throw err;
         continue;
       }
       for (const f of files) {
@@ -95,21 +110,22 @@ function sessionLife(id, root, aliveMs) {
         if (!own && !f.startsWith(String(id).slice(0, 8))) continue;
         try {
           seen.push({ where: own ? "transcript (worktree)" : "transcript", at: fs.statSync(path.join(dir, f)).mtimeMs });
-        } catch {
-          /* vanished between listing and stat */
+        } catch (err) {
+          if (!expectedFsError(err)) throw err; // vanished between listing and stat is fine; a bug is not
         }
       }
     }
-  } catch {
-    /* no projects directory on this host - not an error, just no evidence */
+  } catch (err) {
+    // No projects directory on this host is expected: no evidence, not an error.
+    if (!expectedFsError(err)) throw err;
   }
 
   // 3 - the folder, and only because something is better than nothing.
   try {
     const p = path.join(repoRoot, ".claude/worktrees", String(id));
     if (fs.existsSync(p)) seen.push({ where: "worktree folder", at: fs.statSync(p).mtimeMs, weak: true });
-  } catch {
-    /* no worktree */
+  } catch (err) {
+    if (!expectedFsError(err)) throw err; // no worktree is fine; a bug is not
   }
 
   if (!seen.length) return null;
