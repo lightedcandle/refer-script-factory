@@ -18,6 +18,17 @@ refer-zo-bootstrap/
 # hole was never the pattern list - it was that an editor was allowed to choose
 # what enters the repo.
 .history/
+# Ephemeral git worktrees OF the alliance-hub submodule, one per in-flight lane,
+# parked in this tree for convenience. They are not this repo's content and they
+# are not submodules - a worktree's `.git` is a file pointing back into the parent
+# repo, so it cannot be cloned independently.
+#
+# One of them, `agents-stormy-guanaco`, had been committed as a submodule gitlink
+# with a `.gitmodules` entry pointing at the alliance-hub remote. A fresh clone
+# running `git submodule update` would have checked alliance-hub out a SECOND
+# time, at whatever branch that agent lane happened to be on, into a directory
+# meant to be disposable. Same reasoning as `.claude/worktrees/` above.
+alliance-hub.worktrees/
 alliance-hub/.deploy/
 alliance-hub/.wrangler/
 *.vsix
