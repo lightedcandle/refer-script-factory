@@ -58,7 +58,6 @@ export function runScriptographer(
       ),
     ),
     ...factoryLayerCandidates(taxonomy),
-    ...packageJsonCandidates(workspaceRoot, taxonomy, entrypoints),
   ]);
 
   return {
@@ -92,56 +91,6 @@ function factoryLayerCandidates(
   );
 }
 
-function packageJsonCandidates(
-  workspaceRoot: string,
-  taxonomy: Map<string, Set<string>>,
-  entrypoints: Set<string>,
-): ScriptographerCandidate[] {
-  const packageJsonPath = path.join(workspaceRoot, "package.json");
-  if (!fs.existsSync(packageJsonPath)) {
-    return [];
-  }
-
-  const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8")) as {
-    contributes?: {
-      commands?: { title?: string }[];
-      views?: Record<string, { name?: string }[]>;
-      viewsContainers?: { activitybar?: { name?: string; title?: string }[] };
-    };
-  };
-  const cockpitLabels = taxonomy.get("Operator Interface Label") ?? new Set<string>();
-  const viewNames = Object.values(packageJson.contributes?.views ?? {})
-    .flat()
-    .map((view) => view.name)
-    .filter((name): name is string => Boolean(name));
-  const activityLabels =
-    packageJson.contributes?.viewsContainers?.activitybar?.flatMap((item) =>
-      [item.name, item.title].filter((name): name is string => Boolean(name)),
-    ) ?? [];
-  const commandTitles =
-    packageJson.contributes?.commands
-      ?.map((command) => command.title)
-      .filter((title): title is string => Boolean(title)) ?? [];
-
-  return [
-    ...[...viewNames, ...activityLabels].map((name) =>
-      candidate(
-        name,
-        "cockpit-view-label",
-        "package.json contributes.views",
-        cockpitLabels.has(name),
-      ),
-    ),
-    ...commandTitles.map((name) =>
-      candidate(
-        name,
-        "entrypoint-label",
-        "package.json contributes.commands",
-        entrypoints.has(name),
-      ),
-    ),
-  ];
-}
 
 function candidate(
   name: string,

@@ -31,6 +31,55 @@ const DOMAINS = [
     ],
   },
   {
+    id: "machines",
+    label: "Living Factory Machines",
+    scope:
+      "The universal machines other repos consume. Live: a scheduler reads machines/*.cjs off disk every five minutes, so saving is deploying and main is production.",
+    authority: "AGENTS.md#machines-there-is-no-deploy-step-so-saving-is-deploying",
+    check_first: ["AGENTS.md", "machines/README.md", "machines/kind.cjs"],
+    scripts: [
+      {
+        id: "machines.scheduler-invoked",
+        command: "not runnable from this repo",
+        entrypoint: "machines/*.cjs",
+        purpose:
+          "The machines are invoked by a consuming repo's scheduler as factory:<name>, with cwd set to that repo, per its own *.station.json. The machine is universal and the cadence is local. Nothing here starts them, and a machine run from this directory reports on this repo rather than the intended one.",
+        status: "reference",
+      },
+      {
+        id: "machines.gate",
+        command: "npm run gate:machines",
+        entrypoint: "scripts/ci/machines-gate.mjs",
+        purpose:
+          "Parse every machine, refuse a literal U+FEFF in any parsed file, and run each declared read-only path against a throwaway fixture repo. Run it before the save, not after the push.",
+        status: "active",
+      },
+      {
+        id: "machines.gate-prove",
+        command: "npm run gate:prove",
+        entrypoint: "scripts/ci/prove-gate-bites.mjs",
+        purpose:
+          "Break the gate five ways and require it to catch each. Edits live machines briefly, so it refuses to run outside a linked worktree.",
+        status: "active",
+      },
+      {
+        id: "machines.pulse-belt-cycle",
+        command: "npm run gate:pulse-belt",
+        entrypoint: "scripts/ci/pulse-belt-cycle.mjs",
+        purpose: "Exercise one full pulse-belt cycle.",
+        status: "active",
+      },
+      {
+        id: "machines.triage",
+        command: "node <factory>/machines/triage.cjs <handle|id> --contract",
+        entrypoint: "machines/triage.cjs",
+        purpose:
+          "Turn a deposit into a contract and record that somebody did. --list shows what is waiting. Work becomes work by an act; no open record is ever inferred to be a contract.",
+        status: "active",
+      },
+    ],
+  },
+  {
     id: "chat-surface",
     label: "Current Chat Surface",
     scope: "Token tracking, script-use logging, current-context reset, and chat-surface self-observation.",

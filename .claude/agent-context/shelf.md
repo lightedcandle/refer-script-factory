@@ -82,3 +82,90 @@ Nothing moved on 2026-09-12 and that was deliberate. Blocked on the same
 decision as the shelved thread above — whether the factory becomes an installed,
 versioned runtime — because `schedule.cjs` is an engine rather than a machine,
 and moving an engine is a decision about where authority over cadence lives.
+
+### `board-serve-check.cjs` passes silently in every repo but Telechurch
+
+A universal machine with a product-shaped path baked in:
+
+```js
+const SERVER = path.join(ROOT, "tools/factory/serve-tracker.cjs");
+```
+
+`ROOT` is correctly `process.cwd()`, so P13 is satisfied — but
+`tools/factory/serve-tracker.cjs` only exists in Telechurch. Verified by reading
+the code rather than trusting the note in `docs/seven-machines-pending-move.md`:
+when the file is absent the machine prints *"no server script … nothing to keep
+alive"* and calls **`process.exit(0)`**.
+
+So in every consuming repo that is not Telechurch, the board's keeper reports
+healthy while checking nothing. That is the failure shape `triggers.cjs` names in
+its own header as the one *"this whole factory exists to remove"* — not broken,
+not reported: absent.
+
+**Not fixed here on purpose.** It is a live machine, saving is deploying, and
+tacking a behaviour change onto a cleanup pass is how the 12:50 incident
+happened. It also needs a decision this pass should not make: whether the right
+answer is factory-root discovery for the server script, or distinguishing *"this
+repo declares a board server and it is missing"* (a fault) from *"this repo has
+no board server"* (fine). Those are different machines.
+
+**Revival condition — none needed; it is ready to do now**, in its own commit,
+with `npm run gate:machines` before the save and a check that Telechurch's board
+keeper still works after. Related: [[seven-machines-pending-move]], whose
+`serve-tracker.cjs` section already says this line must change in the same commit
+that moves the file. The file has not moved, and the defect is live regardless.
+
+### App material still in the provider-neutral repo
+
+`alliance-android-sms-bridge/` (25 files, a Java/Gradle Android app) and
+`The Alliance Story/` (9 files, branding and narrative) are Alliance product
+material sitting in the repo whose own README Scope Guard forbids exactly that.
+The operator ruled on 2026-09-12: **move both to `alliance-hub`.**
+
+**Blocked on one word, not on a decision.** `alliance-hub/AGENTS.md` permits
+pushing git branches only when the operator explicitly says *"push all"*. A local
+commit in a worktree would not be enough: this repo's submodule pointer would
+then name a commit that exists on no remote, and every clone would break on
+`git submodule update`. So the move lands as one cross-repo act or not at all.
+
+**Revival condition — the operator says "push all" for alliance-hub.** At that
+point: worktree off alliance-hub `main` (never the checked-out branch, which
+carries a concurrent codex lane), copy both directories, commit, push, bump the
+submodule pointer here, then `git rm -r` the originals in the same commit as the
+bump so the two repos are never both authoritative.
+
+### The submodule points at a feature branch, not at main
+
+`alliance-hub` is checked out on `codex/tier-columns-responsive-fix` and the
+gitlink in the index is `cc18f49` while the worktree sits at `ff254a3` — 19
+commits of real product work ahead. `git status` has therefore been permanently
+dirty on ` M alliance-hub`.
+
+Deliberately not resolved. Committing the bump would pin this repo to an
+in-flight feature branch head; switching the checkout to `main` would pull the
+rug from under a concurrent codex session working in that tree. Both are worse
+than a dirty line.
+
+**Revival condition — that codex lane merges to `alliance-hub` main.** Then the
+pointer goes to main's head and stays there, and a submodule pinned to anything
+other than main becomes the reportable anomaly it should always have been.
+
+### A heartbeat is being written into a tracked registry
+
+`.refer-factory/hive-node-registry.json` is rewritten by heartbeats — on
+2026-09-12 the only delta across a full working session was `updated_at`,
+`last_seen_at`, `next_due_at` and `current_interval_label`. It is tracked, so the
+tree is permanently dirty and ` M` on it means nothing.
+
+This is the same defect `.gitignore` already names for the pulse belt — *"a
+heartbeat is not a registry, and dirty has to mean something"* — but the fix
+cannot be the same one. The pulse belt is heartbeat all the way through and was
+simply ignored. This file is a genuine registry (roles, account scope, transport,
+datasets, ratification evidence) **with** heartbeat fields embedded in it.
+Ignoring it would lose the registry; tracking it keeps the noise.
+
+**Revival condition — none needed; it is a bounded split anyone can do.** Move
+the heartbeat fields to a sibling `.refer-factory/hive-node-heartbeat.json`,
+ignore that, and leave the registry tracked and quiet. Left undone here only
+because it edits a file a live machine writes on a timer, and that wants its own
+pass rather than being tacked onto a cleanup.

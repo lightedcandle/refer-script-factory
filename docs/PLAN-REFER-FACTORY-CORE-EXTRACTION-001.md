@@ -6,6 +6,15 @@ Date: 2026-07-15
 Contract: `CONTRACT-REFER-FACTORY-CORE-EXTRACTION-001`
 Target: `E:\refer-script-factory`
 Execution branch: `codex/PLAN-REFER-FACTORY-CORE-EXTRACTION-001--agent--core-extraction`
+
+> **Historical record. The VS Code adapter this plan extracted was retired on
+> 2026-09-12**, along with `src/extension.ts` and the `src/cockpit/` and
+> `src/commands/` wrappers. Paths below no longer exist and the plan is left
+> unedited on purpose.
+>
+> This plan is the reason the retirement was cheap: it put the host behind a
+> one-way dependency law, and removing the host afterwards required no change to
+> `src/core/**` at all. That is the plan's result, not a contradiction of it.
 Base: `codex/governed-model-routing` at `b9ff5961240b47ea5cae588cb5012fe5916ed714`
 Primary owner: `governance-agent`, with bounded `mind-agent` implementation
 Model route: Terra/Mini role routing requested; GPT-5 Codex used as the nearest host-exposed substitution

@@ -1,12 +1,7 @@
 export interface ScriptFactoryEntry {
   script_id: string;
   label: string;
-  surface:
-    | "orchestration"
-    | "vscode-command"
-    | "npm"
-    | "http-endpoint"
-    | "request-type";
+  surface: "orchestration" | "npm" | "http-endpoint" | "request-type";
   entrypoint: string;
   does: string;
   detail: string;
@@ -50,28 +45,18 @@ const baseScriptFactoryEntries: ScriptFactoryEntry[] = [
     script_id: "refer.chat.pipeline",
     label: "@refer Chat Pipeline",
     surface: "orchestration",
-    entrypoint: "@refer Participant -> REFER Orchestrator -> Resolution Loop",
-    does: "Receives your @refer message, runs the work pipeline, and saves the result.",
+    entrypoint: "Host Adapter -> REFER Orchestrator -> Resolution Loop",
+    does: "Receives an interactive-host message, runs the work pipeline, and saves the result.",
     detail:
       "This is the host-neutral interactive workflow bundled as one multi script. A host adapter hands an intake envelope to the orchestrator, the resolution loop uses a host-provided model, and an event/output sink receives the final result.",
     script_kind: "Multi Script",
     input_points: ["User", "Agent", "Scripts"],
     exit_points: ["User", "Agent", "Repo", "Scripts"],
     child_scripts: [
-      "refer.chat.participant",
       "refer.orchestrate.chat",
       "refer.context.picker",
       "refer.resolution.loop",
     ],
-  },
-  {
-    script_id: "refer.chat.participant",
-    label: "Script Factory VS Code Chat Adapter",
-    surface: "orchestration",
-    entrypoint: "src/adapters/vscode/referParticipant.ts#registerReferChatParticipant",
-    does: "Adapts native VS Code Chat messages to the Script Factory.",
-    detail:
-      "This adapter-specific entry connects the VS Code Chat box to REFER. It receives @refer messages, maintains legacy intake-session controls, shows progress, and hands intake records to the provider-neutral orchestration flow.",
   },
   {
     script_id: "refer.orchestrate.chat",
@@ -105,10 +90,10 @@ const baseScriptFactoryEntries: ScriptFactoryEntry[] = [
     script_id: "refer.scan.codebase",
     label: "Scan Codebase",
     surface: "orchestration",
-    entrypoint: "src/adapters/vscode/commands/scanCodebase.ts#scanCodebaseCommand",
+    entrypoint: "src/contracts/codebaseTree.ts#writeCodebaseTree",
     does: "Builds a local map of the target workspace and emits the treefile.",
     detail:
-      "Use this when REFER needs a fresh map of the target workspace. It scans useful source, test, config, docs, and resource files, writes .refer-factory/codebase-tree.json and .refer-factory/agent-context.md, then gives the treefile to the current event/output sink. The current VS Code adapter opens it in the editor.",
+      "Use this when REFER needs a fresh map of the target workspace. It scans useful source, test, config, docs, and resource files, writes .refer-factory/codebase-tree.json and .refer-factory/agent-context.md, then gives the treefile to the current event/output sink.",
   },
   {
     script_id: "refer.script.legend",
@@ -132,11 +117,10 @@ const baseScriptFactoryEntries: ScriptFactoryEntry[] = [
     script_id: "refer.scan.factoryGaps",
     label: "Scan Factory Gaps",
     surface: "orchestration",
-    entrypoint:
-      "src/adapters/vscode/commands/scanFactoryGaps.ts#scanFactoryGapsCommand",
+    entrypoint: "src/contracts/factoryGaps.ts#scanFactoryGaps",
     does: "Finds missing pieces in the Script Factory system.",
     detail:
-      "Use this when REFER needs to inspect itself. It checks doctrine terms, registry entries, command contributions, generated artifacts, status mappings, and self-healing gaps, then writes .refer-factory/factory-gaps.json.",
+      "Use this when REFER needs to inspect itself. It checks doctrine terms, registry entries, generated artifacts, status mappings, and self-healing gaps, then writes .refer-factory/factory-gaps.json.",
   },
   {
     script_id: "refer.server.chat",
@@ -164,150 +148,6 @@ const baseScriptFactoryEntries: ScriptFactoryEntry[] = [
     does: "Shows which local workspaces the server can work on.",
     detail:
       "Use this before sending a server prompt when you have more than one project. It lists the local workspaces REFER knows about so the server can route the request to the right place.",
-  },
-  {
-    script_id: "refer.initializeRepo",
-    label: "Initialize Repo",
-    surface: "vscode-command",
-    entrypoint: "REFER: Initialize Repo",
-    does: "Sets up REFER files in a repo after showing you what will change.",
-    detail:
-      "Use this when you want to add REFER governance to a project. It scans the workspace, shows a preview of files it would create or update, and only applies those changes after you confirm.",
-  },
-  {
-    script_id: "refer.emitSendContract",
-    label: "Emit Send Contract Planning Draft",
-    surface: "vscode-command",
-    entrypoint: "REFER: Emit Send Contract Planning Draft",
-    does: "Opens a non-authorizing planning draft you can review or edit.",
-    detail:
-      "This creates a planning artifact that describes possible work, target scope, and verification. It does not authorize execution; only a separately ratified REFER Execution Contract does that.",
-  },
-  {
-    script_id: "refer.emitScriptBlueprint",
-    label: "Emit Script Blueprint",
-    surface: "vscode-command",
-    entrypoint: "REFER: Emit Script Blueprint",
-    does: "Shows how a chat request can become a reusable script.",
-    detail:
-      "Use this when you want to understand or design the pipeline from a normal chat message to a repeatable automation. It opens a blueprint showing the stages REFER expects.",
-  },
-  {
-    script_id: "refer.emitScriptDnaSeed",
-    label: "Emit Script DNA Seed",
-    surface: "vscode-command",
-    entrypoint: "REFER: Emit Script DNA Seed",
-    does: "Starts a new custom script definition.",
-    detail:
-      "Use this when a repeated task deserves its own script. It opens a starter template with the script name, expected inputs, expected outputs, rules it should follow, and checks it should pass.",
-  },
-  {
-    script_id: "refer.refreshCodebases",
-    label: "Refresh Codebases",
-    surface: "vscode-command",
-    entrypoint: "REFER: Refresh Codebases",
-    does: "Updates REFER's map of the current repo.",
-    detail:
-      "Use this after files or folders change. It scans the workspace and updates REFER's local map of projects, subfolders, and code areas so future work can target the right place.",
-  },
-  {
-    script_id: "refer.scanCodebase",
-    label: "Scan Codebase",
-    surface: "vscode-command",
-    entrypoint: "REFER: Scan Codebase",
-    does: "Runs the codebase scanner from the command palette.",
-    detail:
-      "Use this command to refresh REFER's codebase treefile and compact agent context file, then open the treefile in the normal VS Code editor.",
-  },
-  {
-    script_id: "refer.viewCodebaseTree",
-    label: "View Codebase Tree",
-    surface: "vscode-command",
-    entrypoint: "REFER: View Codebase Tree",
-    does: "Opens the latest codebase treefile in VS Code.",
-    detail:
-      "Use this after a scan when you want to inspect .refer-factory/codebase-tree.json without running the scanner again.",
-  },
-  {
-    script_id: "refer.scanFactoryGaps",
-    label: "Scan Factory Gaps",
-    surface: "vscode-command",
-    entrypoint: "REFER: Scan Factory Gaps",
-    does: "Runs the factory gap scanner from the command palette.",
-    detail:
-      "Use this command to check whether the Script Factory has missing terminology, missing registry entries, missing command contributions, missing generated artifacts, or unmapped statuses.",
-  },
-  {
-    script_id: "refer.viewFactoryGaps",
-    label: "View Factory Gaps",
-    surface: "vscode-command",
-    entrypoint: "REFER: View Factory Gaps",
-    does: "Opens the latest factory gap report in VS Code.",
-    detail:
-      "Use this after a factory gap scan when you want to inspect .refer-factory/factory-gaps.json without running the scanner again.",
-  },
-  {
-    script_id: "refer.runScriptographer",
-    label: "Run Scriptographer",
-    surface: "vscode-command",
-    entrypoint: "REFER: Run Scriptographer",
-    does: "Runs the vocabulary discovery and classification scan.",
-    detail:
-      "Use this command to discover candidate factory names, classify them against the Script Legend and Script Registry, and write .refer-factory/scriptographer-report.json.",
-  },
-  {
-    script_id: "refer.viewScriptographerReport",
-    label: "View Scriptographer Report",
-    surface: "vscode-command",
-    entrypoint: "REFER: View Scriptographer Report",
-    does: "Opens the latest Scriptographer report in VS Code.",
-    detail:
-      "Use this after running Scriptographer when you want to inspect discovered names and ratification status without running the scanner again.",
-  },
-  {
-    script_id: "refer.checkForUpdates",
-    label: "Check For Updates",
-    surface: "vscode-command",
-    entrypoint: "REFER: Check for Updates",
-    does: "Checks whether REFER has updates available.",
-    detail:
-      "Use this to see whether the dormant REFER reference library, scripts, or packaged files in this repo are behind the current update list. It reports what would need to change without applying anything.",
-  },
-  {
-    script_id: "refer.applyUpdate",
-    label: "Apply Update",
-    surface: "vscode-command",
-    entrypoint: "REFER: Apply Update",
-    does: "Installs pending REFER updates after you approve them.",
-    detail:
-      "Use this after checking for updates. It asks for confirmation, backs up existing files, applies the listed updates, records the update state, and tells you if anything failed.",
-  },
-  {
-    script_id: "refer.contractModeOn",
-    label: "Legacy Intake Session On",
-    surface: "vscode-command",
-    entrypoint: "REFER: Legacy Intake Session On",
-    does: "Keeps legacy intake-session tracking on for future host turns.",
-    detail:
-      "This compatibility command persists intake-session tracking for future @refer runtime sessions. It does not create, ratify, or authorize a REFER Execution Contract; the contractMode command ID remains only for compatibility.",
-  },
-  {
-    script_id: "refer.contractModeOff",
-    label: "Legacy Intake Session Off",
-    surface: "vscode-command",
-    entrypoint: "REFER: Legacy Intake Session Off",
-    does: "Turns off persistent legacy intake-session tracking.",
-    detail:
-      "This compatibility command stops persistent legacy intake-session tracking. Individual runtime sessions may still use transient tracking, but neither state grants or ratifies a REFER Execution Contract.",
-  },
-  {
-    script_id: "refer.contractModeToggle",
-    label: "Toggle Legacy Intake Session",
-    surface: "vscode-command",
-    entrypoint: "REFER: Toggle Legacy Intake Session",
-    does: "Switches persistent legacy intake-session tracking to the opposite state.",
-    detail:
-      "This compatibility command checks the current legacy intake-session setting and flips it. The UI state is runtime tracking, not a ratified REFER Execution Contract.",
   },
   {
     script_id: "npm.compile",
@@ -439,15 +279,6 @@ function withDefaultFlowMetadata(entry: ScriptFactoryEntry): ScriptFactoryEntry 
       script_kind: entry.script_id === "npm.refer.server" ? "Multi Script" : "Single Script",
       input_points: ["User", "Scripts", "Repo"],
       exit_points: ["User", "Repo", "Scripts"],
-      ...entry,
-    };
-  }
-
-  if (entry.surface === "vscode-command") {
-    return {
-      script_kind: "Single Script",
-      input_points: ["User", "Repo"],
-      exit_points: ["User", "Repo"],
       ...entry,
     };
   }

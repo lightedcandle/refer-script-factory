@@ -19,6 +19,11 @@ This repository is the canonical home for Refer Script Factory.
 
 Before merging, confirm that:
 
-1. The repo still reads as a VS Code extension plus local factory tooling.
-2. The README matches the current shipped surfaces.
+1. The repo still reads as a factory root: the universal `machines/` layer plus
+   the provider-neutral Script Factory and its CLI/HTTP adapters. It stopped
+   reading as a VS Code extension on 2026-09-12, when that adapter was retired.
+2. The README matches the current shipped surfaces — including saying plainly
+   where a capability survives with no caller.
 3. New scripts or schemas have tests or clear verification steps.
+4. `npm run verify` passes. It covers both halves: the `gate:*` machine checks
+   and the TypeScript suite. Neither one covers the other.

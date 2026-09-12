@@ -74,7 +74,7 @@ export function createOrchestratorRoadmap(): OrchestratorRoadmap {
         capability: "Drill-down form mechanics",
         status: "scaffolded",
         integrate_when_available:
-          "A host adapter can render missing fields through its operator interface; the current VS Code adapter may use Quick Pick, InputBox, or view controls.",
+          "A host adapter can render missing fields through its operator interface, using whatever control that host provides.",
         target_hook: "needs_more_info terminal",
       },
       {
