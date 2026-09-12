@@ -10,7 +10,7 @@ Use this document after context compaction, in a fresh chat, or whenever work me
 
 1. `refer-script-factory`
    - Path: `e:\refer-script-factory`
-   - Scope: provider-neutral Script Factory, current Codex/VS Code adapter, typed intake, registry, scan/context assets, and local process events.
+   - Scope: provider-neutral Script Factory, the universal `machines/` layer, the CLI and HTTP adapters, typed intake, registry, scan/context assets, and local process events.
    - Authority for: general Script Factory concepts that are not Zo-specific.
 
 2. `refer-zo-bootstrap`

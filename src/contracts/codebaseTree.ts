@@ -258,13 +258,10 @@ function shortHash(input: Buffer): string {
 
 function fileRoles(relative: string, content: string): string[] {
   const roles: string[] = [];
-  if (relative === "src/extension.ts") roles.push("extension-compatibility-entrypoint");
-  if (relative === "src/adapters/vscode/extension.ts") roles.push("extension-entrypoint");
   if (relative === "src/core/index.ts") roles.push("core-public-api");
   if (relative === "src/core/ports/runtime.ts") roles.push("core-runtime-ports");
   if (relative === "src/core/evidence/processEvent.ts") roles.push("core-process-event-contract");
   if (relative.includes("scriptFactory")) roles.push("script-registry");
-  if (relative.includes("referParticipant")) roles.push("chat-participant");
   if (relative.includes("referOrchestrator")) roles.push("orchestration");
   if (relative.includes("referResolutionLoop")) roles.push("resolution-loop");
   if (relative.includes("server/")) roles.push("server");
@@ -274,18 +271,20 @@ function fileRoles(relative: string, content: string): string[] {
 }
 
 function directoryRoles(relative: string): string[] {
-  if (relative === "src/chat") return ["compatibility-orchestration"];
-  if (relative === "src/cockpit") return ["vscode-compatibility-wrappers"];
-  if (relative === "src/commands") return ["vscode-compatibility-wrappers"];
-  if (relative === "src/contracts") return ["contract-compatibility-wrappers"];
+  // src/chat and src/contracts are MIXED, and calling them wrappers sent at
+  // least one agent to edit the wrong file. Each holds some one-line re-exports
+  // of a core contract AND some real modules that add the node:fs side the
+  // provider-neutral core is not allowed to have.
+  if (relative === "src/chat") return ["filesystem-orchestration", "core-reexports"];
+  if (relative === "src/contracts") return ["filesystem-contract-layer", "core-reexports"];
   if (relative === "src/core") return ["provider-neutral-core"];
   if (relative === "src/core/contracts") return ["core-contracts"];
   if (relative === "src/core/orchestration") return ["core-orchestration"];
   if (relative === "src/core/ports") return ["core-ports"];
   if (relative === "src/core/evidence") return ["core-evidence"];
-  if (relative === "src/adapters/vscode") return ["vscode-adapter"];
-  if (relative === "src/adapters/vscode/cockpit") return ["vscode-webview-ui"];
-  if (relative === "src/adapters/vscode/commands") return ["vscode-commands"];
+  if (relative === "src/adapters/cli") return ["cli-adapter"];
+  if (relative === "src/adapters/ollama") return ["local-model-adapter"];
+  if (relative === "src/integrations/sovereign-node") return ["sovereign-node-read-consumer"];
   if (relative === "src/server") return ["http-server"];
   return [];
 }

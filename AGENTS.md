@@ -6,7 +6,9 @@ This repo is governed by REFER.
 
 `refer-script-factory` is the seed implementation and doctrine source for the REFER Script Factory. The Script Factory is the provider-neutral system that converts ratified REFER Execution Contracts and verified methods into bounded script plans, artifacts, verification evidence, and reusable registrations.
 
-VS Code, CLI, HTTP, MCP, and future hosts are adapters and operator surfaces around that system. The current VS Code implementation is the `Script Factory VS Code adapter`; it is not the product identity or canonical runtime. The provider-neutral core lives under `src/core/**`, exposes its intentional API through `src/core/index.ts`, and imports no VS Code APIs or host adapters. Host adapters depend on the core. The standalone CLI owns its terminal behavior under `src/adapters/cli/**`. Its read-only Sovereign Node consumer lives under `src/integrations/sovereign-node/**`, uses only the Node-owned `refer-script-factory-node-read-v1` six-tool local-stdio contract, and must never move Node authority or mutation capability into the provider-neutral core.
+CLI, HTTP, MCP, and future hosts are adapters and operator surfaces around that system; none of them is the product identity or canonical runtime. The provider-neutral core lives under `src/core/**`, exposes its intentional API through `src/core/index.ts`, and imports no host adapters. Host adapters depend on the core.
+
+**The VS Code adapter was retired on 2026-09-12** — the operator does not use VS Code. `src/adapters/vscode/**`, the extension manifest, the cockpit webviews, the `@refer` chat participant and the `refer.*` commands are gone, and this package is a plain Node package with a CLI bin. The doctrine that survives it is the part that mattered: a host is an adapter, and the core outlived the host that was written first, without a single change to `src/core/**`. `scripts/verify/core-boundary.mjs` still rejects a `vscode` import by name, and should keep doing so precisely because no adapter remains to make one legitimate. The standalone CLI owns its terminal behavior under `src/adapters/cli/**`. Its read-only Sovereign Node consumer lives under `src/integrations/sovereign-node/**`, uses only the Node-owned `refer-script-factory-node-read-v1` six-tool local-stdio contract, and must never move Node authority or mutation capability into the provider-neutral core.
 
 The factory should mature toward local-first operation:
 
@@ -91,7 +93,7 @@ file with the editor, which is one habit rather than one more check.
 
 `refer-zo-bootstrap` is the Zo-scoped sibling factory. It owns Zo computer bootstrapping, Zo Files transfer, Zo personas/rules, hive node deployment, dispatch, talkback, heartbeat, datasets, and the Telechurch Zo proving instance.
 
-This repo, `refer-script-factory`, remains the provider-neutral Script Factory and broader factory doctrine source, while also carrying the current Codex/VS Code adapter implementation. Do not merge Zo-specific runtime assumptions into the core by default.
+This repo, `refer-script-factory`, remains the provider-neutral Script Factory and broader factory doctrine source, and is also the factory root for the `machines/` layer other repos consume. Do not merge Zo-specific runtime assumptions into the core by default.
 
 Current app-source rule: the public `telechurchlive` subdomain source is in `alliance-hub/`. Treat `refer-zo-bootstrap/` as reference material only unless the user explicitly asks for Zo, bootstrap, hive, Zo Files, Zo personas/rules, dispatch/talkback, or live Zo runtime work.
 
@@ -195,7 +197,7 @@ During local development, `refer-zo-bootstrap` may be checked out inside this wo
 
 Do not confuse the repositories:
 
-- Work in `e:\refer-script-factory` for the provider-neutral Script Factory, its current VS Code adapter, and factory doctrine.
+- Work in `e:\refer-script-factory` for the provider-neutral Script Factory, the universal `machines/` layer, and factory doctrine.
 - Work in `e:\refer-script-factory\refer-zo-bootstrap` for Zo bootstrap, hive, Telechurch Zo, dispatch/talkback/heartbeat, and Zo deployment.
 - If there is any ambiguity before editing, run `git rev-parse --show-toplevel` in the target directory and confirm the repository root.
 - Same branch names across the two repos do not imply shared history or shared commits.
@@ -248,9 +250,8 @@ Use the factory vocabulary precisely:
 
 - The source registry lives in `src/core/contracts/scriptFactory.ts`.
 - The script terminology authority lives in `src/core/contracts/scriptLegend.ts` and `docs/script-legend.md`.
-- The codebase scanner lives in `src/contracts/codebaseTree.ts`, with its current host command in `src/adapters/vscode/commands/scanCodebase.ts`.
-- The current VS Code adapter operator interface lives in `src/adapters/vscode/cockpit/scriptFactoryPanel.ts`.
-- The native `@refer` entrypoint lives in `src/adapters/vscode/referParticipant.ts`.
+- The codebase scanner lives in `src/contracts/codebaseTree.ts`. It has no host command since the VS Code adapter was retired; call `writeCodebaseTree` or run `npm run scripts:codebase`.
+- There is no operator interface. The cockpit webviews went with the adapter, and the board served by the `machines/` layer is the surface that replaced them — in each consuming repo, not this one.
 - The provider-neutral orchestration runner lives in `src/core/orchestration/referOrchestratorRunner.ts`; the filesystem compatibility runner remains at `src/chat/referOrchestratorRunner.ts`.
 - The resolution loop lives in `src/core/orchestration/referResolutionLoop.ts`.
 

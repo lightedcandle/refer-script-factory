@@ -83,6 +83,38 @@ decision as the shelved thread above — whether the factory becomes an installe
 versioned runtime — because `schedule.cjs` is an engine rather than a machine,
 and moving an engine is a decision about where authority over cadence lives.
 
+### `board-serve-check.cjs` passes silently in every repo but Telechurch
+
+A universal machine with a product-shaped path baked in:
+
+```js
+const SERVER = path.join(ROOT, "tools/factory/serve-tracker.cjs");
+```
+
+`ROOT` is correctly `process.cwd()`, so P13 is satisfied — but
+`tools/factory/serve-tracker.cjs` only exists in Telechurch. Verified by reading
+the code rather than trusting the note in `docs/seven-machines-pending-move.md`:
+when the file is absent the machine prints *"no server script … nothing to keep
+alive"* and calls **`process.exit(0)`**.
+
+So in every consuming repo that is not Telechurch, the board's keeper reports
+healthy while checking nothing. That is the failure shape `triggers.cjs` names in
+its own header as the one *"this whole factory exists to remove"* — not broken,
+not reported: absent.
+
+**Not fixed here on purpose.** It is a live machine, saving is deploying, and
+tacking a behaviour change onto a cleanup pass is how the 12:50 incident
+happened. It also needs a decision this pass should not make: whether the right
+answer is factory-root discovery for the server script, or distinguishing *"this
+repo declares a board server and it is missing"* (a fault) from *"this repo has
+no board server"* (fine). Those are different machines.
+
+**Revival condition — none needed; it is ready to do now**, in its own commit,
+with `npm run gate:machines` before the save and a check that Telechurch's board
+keeper still works after. Related: [[seven-machines-pending-move]], whose
+`serve-tracker.cjs` section already says this line must change in the same commit
+that moves the file. The file has not moved, and the defect is live regardless.
+
 ### App material still in the provider-neutral repo
 
 `alliance-android-sms-bridge/` (25 files, a Java/Gradle Android app) and

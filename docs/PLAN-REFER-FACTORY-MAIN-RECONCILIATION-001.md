@@ -6,6 +6,13 @@ Date: 2026-07-18
 Contract: `CONTRACT-REFER-FACTORY-MAIN-RECONCILIATION-001`
 Target: `E:\refer-script-factory`
 Branch: `codex/PLAN-REFER-FACTORY-MAIN-RECONCILIATION-001--agent--assimilation`
+
+> **Historical record.** The file inventories below list `src/adapters/vscode/**`,
+> `src/cockpit/**`, `src/commands/**`, `src/extension.ts` and
+> `test/vscodeAdapterCompatibility.test.ts`, all of which were removed on
+> 2026-09-12 when the VS Code adapter was retired. Left unedited on purpose: an
+> execution record that is revised to match the present stops being evidence of
+> what was actually done.
 Branch mode: `PARALLEL`
 Primary owner: `governance-agent` / assimilation coordinator
 Model route: GPT-5.6 Sol

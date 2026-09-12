@@ -415,7 +415,7 @@ npm run hive:registry:heartbeat -- --id alliance --status planned --activity wat
 
 ## Next Capabilities
 
-- Hive Backlog views inside the VS Code Script Factory cockpit.
+- Hive Backlog views on the board served by the `machines/` layer. (Originally planned for the VS Code cockpit, retired 2026-09-12.)
 - Director Build Loop hardening: dispatch retries and stricter schema validation.
 - Broader remote execution runner: add more governed operation types only after each operation has explicit guards and talkback evidence.
 - Live Alliance Zo staging from the generated node deployment pack.

@@ -3,7 +3,7 @@
 Read `AGENTS.md` before doing substantive work here — it is the binding law for this repo, not this file. This file only helps a fresh Claude session find that law faster.
 
 **Role:** factory-repo (`repo_id: refer-script-factory` in the ecosystem map)
-**Purpose:** seed implementation and doctrine source for the REFER Script Factory — the provider-neutral system that converts ratified REFER Execution Contracts and verified methods into bounded script plans, artifacts, verification evidence, and reusable registrations. VS Code/CLI/HTTP/MCP are adapters around it, not the product identity.
+**Purpose:** seed implementation and doctrine source for the REFER Script Factory — the provider-neutral system that converts ratified REFER Execution Contracts and verified methods into bounded script plans, artifacts, verification evidence, and reusable registrations. CLI/HTTP/MCP are adapters around it, not the product identity.
 
 ## Read this before editing anything in `machines/`
 
@@ -71,7 +71,8 @@ hand-editing: `npm run scripts:registry`.
 - `machines/` holds the universal machines of the Living Factory — one copy, every repo. Every machine resolves its subject from `process.cwd()` and never from `__dirname` (precedent P13). `machines/README.md` is the working doc; `machines/kind.cjs` is the belt's only vocabulary.
 - The belt (`.claude/agent-context/findings.jsonl`) is **per consuming repo and never in this one**. Findings are about a repo; a shared belt would merge several repos' work into one unreadable stream.
 - Provider-neutral core lives under `src/core/**` (no VS Code APIs or host adapters). The rule is machine-checked, not honour-system: `scripts/verify/core-boundary.mjs` walks every import, export, `require` and dynamic import in the AST and fails on `vscode` or on any relative path escaping `src/core`. `src/core/index.ts` is the intentional public API.
-- **`src/chat/`, `src/contracts/`, `src/commands/` and `src/cockpit/` are one-line re-export shims**, kept only for compatibility — `export * from "../core/..."` or `"../adapters/vscode/..."`. Edit the target under `src/core/**` or `src/adapters/**`. A change made in a shim is either lost or a boundary violation, and the filename gives no hint which.
+- **`src/chat/` and `src/contracts/` are MIXED, and this is the trap here.** Some files are one-line `export * from "../core/..."` re-exports; others are real modules that re-export the core contract *and* add the `node:fs` side the provider-neutral core is not allowed to have — `referIntake.ts` adds `writeReferIntakeRecord`, `scriptLegend.ts` adds `writeScriptLegend`, and `codebaseTree.ts`, `factoryGaps.ts` and `scriptographer.ts` are several hundred lines of real implementation. Open the file before assuming. Editing a re-export is lost work; moving a filesystem function into `src/core/**` breaks the boundary check.
+- The VS Code adapter was **retired on 2026-09-12** — `src/adapters/vscode/**`, `src/cockpit/`, `src/commands/`, the extension manifest and the `@refer` participant are gone. This is a plain Node package with a CLI bin. `standaloneLanguage.test.ts` fails if a manifest field comes back.
 - `refer-zo-bootstrap/` is the sibling Zo-scoped factory — a separate git repository nested in this working tree, ignored here, reference material only unless the user explicitly asks for Zo/bootstrap/hive work.
 - `alliance-hub/` (submodule, own `AGENTS.md`) holds the live `telechurchlive` subdomain app source.
 - Script-First Law: repeating work becomes a script, not a habit; record tool/provider limits in `docs/known-limits-and-constraints.md`.

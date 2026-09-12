@@ -31,7 +31,7 @@ export function createReferCoachPlan(): ReferCoachPlan {
         id: "coach.providers",
         title: "Provider routing",
         purpose: "Map local and cloud models to REFER roles.",
-        evidence: ["available local models", "available VS Code chat models"],
+        evidence: ["available local models", "models the interactive host offers"],
         next_action:
           "Assign local models to prompt wash and stronger models to code execution.",
       },
