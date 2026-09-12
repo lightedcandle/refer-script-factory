@@ -1,14 +1,53 @@
 # Refer Script Factory
 
-The Script Factory is the provider-neutral system that converts ratified
-REFER Execution Contracts and verified methods into bounded script plans,
-artifacts, verification evidence, and reusable registrations.
+This repository is the **factory root**. Two things live here, and they are not
+the same kind of thing. Read this section before the rest of the file, because
+for a long time the file described only the second one.
+
+## `machines/` — the Living Factory machine layer, and the part that is running
+
+One copy of each machine, shared by every repo that runs a factory. The machine
+is universal; the cadence is local, declared by each consuming repo in its own
+`*.trigger.json`.
+
+**There is no build and no deploy step. Saving a file is deploying it.** A
+scheduler reads `machines/<name>.cjs` off disk at the moment it fires — every
+five minutes, against a live board — so the moment a machine is saved, that is
+the version that runs. Main is production and the only rollback is another
+commit.
+
+Run `npm run gate:machines` **before the save**, not after the push. The full
+law, the guard's behaviour and the branch policy are in `AGENTS.md` under
+*Machines: there is no deploy step, so saving is deploying*; `machines/README.md`
+is the working doc, and `machines/kind.cjs` is the belt's only vocabulary.
+
+Two things that are easy to get wrong here:
+
+- **The machines do not run from this repo.** A consuming repo's scheduler
+  invokes them as `factory:<name>` with `cwd` set to that repo. Every machine
+  resolves its subject from `process.cwd()` and never from `__dirname`. One run
+  from this directory reports on *this* repo while looking exactly like a report
+  on the intended one.
+- **The belt (`.claude/agent-context/findings.jsonl`) is per consuming repo and
+  never in this one.** Findings are about a repo; a shared belt would merge
+  several repos' work into one unreadable stream.
+
+## `src/` — the Script Factory
+
+The provider-neutral system that converts ratified REFER Execution Contracts and
+verified methods into bounded script plans, artifacts, verification evidence, and
+reusable registrations.
 
 VS Code, CLI, HTTP, MCP, and future hosts are adapters and operator surfaces.
 The current implementation includes a Script Factory VS Code adapter, but VS
 Code is not the product identity or canonical runtime.
 
 Telechurch is the pilot consumer, not a product dependency.
+
+The two halves have **no overlap in verification**: `npm run test` compiles and
+runs the TypeScript suite and touches no machine; the `gate:*` scripts check the
+machines and touch no TypeScript. `npm run verify` runs both — see
+[Verify](#verify).
 
 ## Repository Identity
 
@@ -21,8 +60,17 @@ the repo-local `AGENTS.md` and the live REFER.OS authority recorded in
 The dependency law is one-way: the provider-neutral core under `src/core/**`
 imports no VS Code APIs or host adapters, and host adapters depend on the core.
 `src/core/index.ts` is the intentional public API. The current VS Code adapter
-lives under `src/adapters/vscode/**`; legacy source paths remain thin forwarding
-modules where compatibility requires them.
+lives under `src/adapters/vscode/**`.
+
+The rule is machine-checked rather than honour-system: `scripts/verify/core-boundary.mjs`
+walks every import, export, `require` and dynamic import in the AST under
+`src/core` and fails on `vscode` or on any relative path escaping the directory.
+
+`src/chat/`, `src/contracts/`, `src/commands/` and `src/cockpit/` are **one-line
+re-export shims** kept for compatibility — `export * from "../core/..."` or
+`"../adapters/vscode/..."`. Edit the target, not the shim. A change made in a
+shim is either lost or a boundary violation, and the filename gives no hint
+which.
 
 Focused boundary verification is available through:
 
@@ -76,6 +124,37 @@ absolute source paths are removed from CLI output.
 ```powershell
 npm install
 npm run verify
+```
+
+`verify` covers both halves of the repo, live layer first so a broken machine
+fails in seconds rather than after a full TypeScript compile:
+
+```text
+gate:machines    every machine parses, no literal U+FEFF in any parsed file,
+                 every declared read-only path returns what it should
+gate:pulse-belt  a card actually moves incoming -> belt -> resolved on a real
+                 clock, and a tick that did not happen still shows as a hole
+test             compile, then ~37 dist/test/*.test.js in sequence
+verify:core      src/core type-checks standalone, and imports nothing outside
+                 itself or from vscode
+```
+
+Until 2026-09-12 `verify` was `npm run test` alone — which runs no machine at
+all. The repo's named verification entrypoint did not check the only layer that
+was actually running, and a green check that checks nothing is worse than no
+check, because it is trusted.
+
+`npm run gate:prove` is deliberately **not** in `verify`. It breaks the gate five
+ways to prove it still bites, which means editing live machines for a second at a
+time; it refuses to run outside a linked worktree for that reason, and forcing it
+in a routine verify would reproduce the exact incident recorded in `AGENTS.md`.
+CI runs it on a checkout no scheduler is reading.
+
+To run one test, compile once and invoke the file directly — there is no runner,
+no watch mode and no `--filter`. PowerShell 5.1 has no `&&`:
+
+```powershell
+npm run compile; node dist/test/coreApi.test.js
 ```
 
 ## Run The Current VS Code Adapter Locally
@@ -363,3 +442,16 @@ npx @vscode/vsce package
 This repo must not import Telechurch app code. Use Telechurch only as a pilot
 target workspace through an adapter; app-specific implementation remains outside
 the provider-neutral core.
+
+**The guard is currently not satisfied, and saying so is the point of a guard.**
+`alliance-android-sms-bridge/` and `The Alliance Story/` are Alliance product
+material sitting in this tree. Nothing imports them, so the dependency law holds
+and `verify:core` stays green — but a guard that reads as met while two app
+directories sit in the root is the kind of check that gets trusted and should not
+be. The move to `alliance-hub` is ruled on and recorded as an open thread in
+`.claude/agent-context/shelf.md`, with what unblocks it.
+
+**This repository is public.** `.gitignore` is the only thing standing between an
+editor's autosave and a published file, and on 2026-06-17 it lost: VS Code Local
+History was tracked rather than ignored and pushed two `alliance-hub/.dev.vars`
+snapshots. Before adding a directory here, check what writes into it on a timer.
