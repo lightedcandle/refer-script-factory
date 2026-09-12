@@ -86,28 +86,17 @@ for (const r of records) {
 
 // Proven from disk, never believed. A dispatch is a claim that somebody is
 // working; the only evidence that survives a process dying is a file.
-const SESSION_DIR = path.join(process.env.USERPROFILE || "", ".claude/projects/E--Telechurch-e2e-v2");
-const WORKTREES = path.join(ROOT, ".claude/worktrees");
-const sessionLife = (id) => {
-  if (!id) return null;
-  const seen = [];
-  try {
-    for (const f of fs.readdirSync(SESSION_DIR)) {
-      if (f.endsWith(".jsonl") && f.startsWith(String(id).slice(0, 8))) seen.push(fs.statSync(path.join(SESSION_DIR, f)).mtimeMs);
-    }
-  } catch {
-    /* no transcripts on this host */
-  }
-  try {
-    const p = path.join(WORKTREES, String(id));
-    if (fs.existsSync(p)) seen.push(fs.statSync(p).mtimeMs);
-  } catch {
-    /* no worktree */
-  }
-  if (!seen.length) return null;
-  const at = Math.max(...seen);
-  return { at, alive: now - at < ALIVE_MS };
-};
+//
+// ONE DEFINITION, in session-life.cjs, shared with intake-worker. It used to be
+// written out here and could not see a spawned agent at all: a worktree session
+// writes its transcript to its OWN project directory, and the filename is a uuid
+// rather than the session id, so the prefix match never matched and this fell
+// through to the worktree folder's mtime - which does not move while work is
+// happening. Every spawned agent went invisible about half an hour after its
+// folder last changed, and THIS is the file that turns invisible into
+// "abandoned". Full account in session-life.cjs.
+const { sessionLife: lifeOf } = require("./session-life.cjs");
+const sessionLife = (id) => lifeOf(id, ROOT, ALIVE_MS);
 
 const held = records.filter((r) => dispatchFor.has(String(r.id)));
 const outcomes = { working: [], delivered: [], abandoned: [] };

@@ -88,24 +88,25 @@ const adviceOf = (r) => adviceFor.get(String(r.id)) || r.recommend || null;
 const dispatchFor = new Map();
 for (const r of records) if (r.subject && r.dispatch) dispatchFor.set(String(r.subject), r.dispatch);
 
-const SESSION_DIR = path.join(process.env.USERPROFILE || "", ".claude/projects/E--Telechurch-e2e-v2");
-const WORKTREES = path.join(ROOT, ".claude/worktrees");
+// ONE DEFINITION, in session-life.cjs, shared with exit-worker. Written out
+// here once and blind to every spawned agent - see the account in that file.
+const { sessionLife } = require("./session-life.cjs");
 const alive = (id) => {
-  const seen = [];
-  try {
-    for (const f of fs.readdirSync(SESSION_DIR)) if (f.endsWith(".jsonl") && f.startsWith(String(id).slice(0, 8))) seen.push(fs.statSync(path.join(SESSION_DIR, f)).mtimeMs);
-  } catch {
-    /* none */
-  }
-  try {
-    const p = path.join(WORKTREES, String(id));
-    if (fs.existsSync(p)) seen.push(fs.statSync(p).mtimeMs);
-  } catch {
-    /* none */
-  }
-  return seen.length ? now - Math.max(...seen) < ALIVE_MS : false;
+  const life = sessionLife(id, ROOT, ALIVE_MS);
+  return !!(life && life.alive);
 };
 
+// CAPACITY COUNTS EVERY DOOR, AND ALWAYS HAS.
+//
+// `dispatchFor` is built from every record carrying a dispatch, whoever made it,
+// so this counts work that arrived through chat and through a spawn exactly as
+// it counts work this worker sent. Stated here because it has been read the
+// other way once: the proof is that it reports 1 on the belt while `armed` is
+// false, and that one is a dispatch it did not make.
+//
+// What it CANNOT count is a live session that no belt record names - and that is
+// a missing record, not a wrong filter. Do not "fix" this into counting only our
+// own dispatches; that would be the bug it was mistaken for.
 const onBelt = records.filter((r) => !isDone(r) && !isCloser(r) && !isAnnotation(r) && dispatchFor.has(String(r.id)) && alive(dispatchFor.get(String(r.id)).session));
 const room = Math.max(0, CAPACITY - onBelt.length);
 
