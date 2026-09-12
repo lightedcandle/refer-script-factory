@@ -82,3 +82,58 @@ Nothing moved on 2026-09-12 and that was deliberate. Blocked on the same
 decision as the shelved thread above — whether the factory becomes an installed,
 versioned runtime — because `schedule.cjs` is an engine rather than a machine,
 and moving an engine is a decision about where authority over cadence lives.
+
+### App material still in the provider-neutral repo
+
+`alliance-android-sms-bridge/` (25 files, a Java/Gradle Android app) and
+`The Alliance Story/` (9 files, branding and narrative) are Alliance product
+material sitting in the repo whose own README Scope Guard forbids exactly that.
+The operator ruled on 2026-09-12: **move both to `alliance-hub`.**
+
+**Blocked on one word, not on a decision.** `alliance-hub/AGENTS.md` permits
+pushing git branches only when the operator explicitly says *"push all"*. A local
+commit in a worktree would not be enough: this repo's submodule pointer would
+then name a commit that exists on no remote, and every clone would break on
+`git submodule update`. So the move lands as one cross-repo act or not at all.
+
+**Revival condition — the operator says "push all" for alliance-hub.** At that
+point: worktree off alliance-hub `main` (never the checked-out branch, which
+carries a concurrent codex lane), copy both directories, commit, push, bump the
+submodule pointer here, then `git rm -r` the originals in the same commit as the
+bump so the two repos are never both authoritative.
+
+### The submodule points at a feature branch, not at main
+
+`alliance-hub` is checked out on `codex/tier-columns-responsive-fix` and the
+gitlink in the index is `cc18f49` while the worktree sits at `ff254a3` — 19
+commits of real product work ahead. `git status` has therefore been permanently
+dirty on ` M alliance-hub`.
+
+Deliberately not resolved. Committing the bump would pin this repo to an
+in-flight feature branch head; switching the checkout to `main` would pull the
+rug from under a concurrent codex session working in that tree. Both are worse
+than a dirty line.
+
+**Revival condition — that codex lane merges to `alliance-hub` main.** Then the
+pointer goes to main's head and stays there, and a submodule pinned to anything
+other than main becomes the reportable anomaly it should always have been.
+
+### A heartbeat is being written into a tracked registry
+
+`.refer-factory/hive-node-registry.json` is rewritten by heartbeats — on
+2026-09-12 the only delta across a full working session was `updated_at`,
+`last_seen_at`, `next_due_at` and `current_interval_label`. It is tracked, so the
+tree is permanently dirty and ` M` on it means nothing.
+
+This is the same defect `.gitignore` already names for the pulse belt — *"a
+heartbeat is not a registry, and dirty has to mean something"* — but the fix
+cannot be the same one. The pulse belt is heartbeat all the way through and was
+simply ignored. This file is a genuine registry (roles, account scope, transport,
+datasets, ratification evidence) **with** heartbeat fields embedded in it.
+Ignoring it would lose the registry; tracking it keeps the noise.
+
+**Revival condition — none needed; it is a bounded split anyone can do.** Move
+the heartbeat fields to a sibling `.refer-factory/hive-node-heartbeat.json`,
+ignore that, and leave the registry tracked and quiet. Left undone here only
+because it edits a file a live machine writes on a timer, and that wants its own
+pass rather than being tacked onto a cleanup.
