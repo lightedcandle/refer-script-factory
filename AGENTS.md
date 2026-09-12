@@ -59,6 +59,24 @@ Run the gate **before the save**, not after the push. The GitHub workflow runs
 the same script, but a commit on main is already live locally before GitHub sees
 it — on main that job is an alarm, not a gate.
 
+### Commit messages and PR bodies are files too
+
+`git commit -F <file>` and `gh pr create --body-file <file>`, never inline `-m`
+or `--body` — PowerShell re-tokenizes quoted spans.
+
+**But write those files with an editor, not with PowerShell.** PS 5.1's
+`Out-File -Encoding utf8` prepends a byte-order mark, and `git commit -F` takes
+the file verbatim, so the commit subject begins with an invisible U+FEFF.
+Commit `567c711c` in this repo is one, committed on 2026-09-12 by a session that
+had already written the same trap into `triggers.cjs` and `.gitignore` that
+morning.
+
+The existing rule named `Get-Content`/`Set-Content` and *source files*. This is a
+different cmdlet and a different target, which is why it did not catch: **the
+machines gate scans source, and a commit message is not source.** There is no
+gate here and there should not be a new one for it — the fix is to write the
+file with the editor, which is one habit rather than one more check.
+
 ### Branch policy
 
 - **A machine that is declared on a trigger goes through a pull request.** Those

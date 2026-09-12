@@ -16,5 +16,10 @@ npm-debug.log*
 .env*
 .refer-factory/*.local.json
 .refer-factory/process-state.json
+# The pulse belt is universal factory state, rewritten every tick by the one
+# machine that owns it. Registries under .refer-factory are tracked; a heartbeat
+# is not a registry, and "dirty has to mean something".
+.refer-factory/pulse-belt.jsonl
+.refer-factory/pulse-belt.json
 .refer-factory/updates/
 zo-computer/usage/*.jsonl

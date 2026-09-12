@@ -2,8 +2,19 @@
 /**
  * THE PULSE BELT - the tick made visible, riding the conveyor it powers.
  *
- * UNIVERSAL MACHINE. Runs against the repo it is invoked in (process.cwd()),
- * never __dirname (precedent P13).
+ * UNIVERSAL MACHINE, AND UNIVERSAL STATE - which is the unusual part.
+ *
+ * Most machines are one copy acting on many repos: the code is shared, the
+ * output is per repo, because a finding is ABOUT a repo. The tick is not about
+ * a repo. There is one scheduler on this host and one routine behind it, so
+ * there is one heartbeat, and it is kept in ONE file in the factory:
+ *
+ *     <factory>/.refer-factory/pulse-belt.jsonl
+ *
+ * Only the CADENCE is read from process.cwd() - the repo whose scheduler is
+ * driving, and whose trigger declaration says how often it beats. Every card
+ * records which repo drove it, so one shared file with more than one driver
+ * stays legible.
  *
  * Operator, 2026-09-12: "I want the 5 minute tick to be added to the deposit,
  * refresh the board, and placed on the belt with the time on it and watcher
@@ -104,7 +115,65 @@ const path = require("path");
 const { discoverTriggers } = require("./triggers.cjs");
 
 const ROOT = process.cwd();
-const CTX = path.join(ROOT, ".claude/agent-context");
+
+// THE CARDS LIVE IN THE FACTORY, NOT IN THE REPO. This was wrong in the first
+// version and the operator caught it: "why is the pulse repo sensitive, shouldn't
+// it be universal, doesn't the living factory show both universal and app
+// deposits?"
+//
+// Yes on all three. The first version put the cards in <repo>/.claude/agent-context
+// by analogy with findings.jsonl, and the analogy does not hold. THE BELT IS
+// ABOUT A REPO; THE PULSE IS NOT. There is one scheduler on this host and one
+// driver behind it - the `living-factory-pulse` routine - so one heartbeat. A
+// per-repo file gives N counters for that one heartbeat: "beat 43" here and
+// "beat 12" there, describing the same tick.
+//
+// And it breaks the best part of the machine. Gap detection would report a hole
+// in every repo the scheduler did not happen to tick that round - announcing
+// death in a perfectly alive factory, which is exactly the failure class this
+// system exists to remove.
+//
+// The board already draws both kinds and the pattern is already established:
+// node-heartbeat.cjs writes the host block to <factory>/.refer-factory/hive-node-registry.json
+// through this same discovery chain, and build-tracker.cjs reads it back and
+// cites where it read it. Its comment states the rule - "the host is part of the
+// factory, so its state belongs on the board". The tick is the same kind of
+// thing: factory state, drawn on every repo's board.
+// UNLIKE EVERY OTHER MACHINE, THIS ONE DOES NOT HAVE TO SEARCH FOR THE FACTORY.
+// It lives in it. `__dirname/..` is the factory root by definition, so the
+// discovery chain the other machines need - REFER_FACTORY_ROOT, then a known
+// path, then a sibling - cannot fail here, and an error branch for "factory not
+// found" would be unreachable code claiming to guard something. Dead
+// error-handling is a lie about the failure modes.
+//
+// Note which `__dirname` this is, because P13 forbids the other one: the SUBJECT
+// still comes from process.cwd() - the repo being ticked, and where the cadence
+// is declared. This is the sibling use, a factory file locating another part of
+// the factory, which is the one legitimate case. See
+// docs/seven-machines-pending-move.md.
+const OWN_FACTORY = path.resolve(__dirname, "..");
+
+// REFER_FACTORY_ROOT still means something: it points the cards at a DIFFERENT
+// factory, which is how the cycle test writes into a fixture instead of here.
+// So an override that is set and wrong is a real, reachable configuration
+// failure and is refused - a silent fall back to the real factory would write
+// live cards during a test, which is the accident this check exists to stop.
+const OVERRIDE = process.env.REFER_FACTORY_ROOT || null;
+const looksLikeFactory = (c) => fs.existsSync(path.join(c, "machines", "pulse-belt.cjs"));
+
+if (OVERRIDE && !looksLikeFactory(OVERRIDE)) {
+  console.error(
+    `pulse-belt: REFER_FACTORY_ROOT is set to ${OVERRIDE}, and there is no machines/pulse-belt.cjs there.\n` +
+      "  Refusing to guess. Falling back to the real factory would write live cards from whatever\n" +
+      "  set this variable, and that is worse than stopping.\n" +
+      "  This is NOT the pulse having stopped - nothing was read and nothing was written."
+  );
+  process.exit(2);
+}
+
+const FACTORY = OVERRIDE || OWN_FACTORY;
+
+const CTX = path.join(FACTORY, ".refer-factory");
 const CARDS = path.join(CTX, "pulse-belt.jsonl");
 const REPORT = path.join(CTX, "pulse-belt.json");
 
@@ -234,20 +303,38 @@ const { cards: existing, unreadable, firstRun } = readCards();
 const kept = existing.filter((c) => stageOf(c, now) !== null);
 const dropped = existing.length - kept.length;
 
-// The new card. `seq` is carried forward so the count survives cards expiring;
-// it is what lets the board say how many times the factory has beaten, which a
-// three-card window cannot.
+// ONE BEAT PER TICK, however many drivers call in.
+//
+// Moving the cards to the factory made this file shared, so the single-writer
+// guarantee no longer comes from "each repo has its own". It comes from here:
+// if a card already exists inside the current stage window, the tick has already
+// been recorded and this run adds nothing. Two schedulers, or a scheduler and
+// somebody running it by hand, produce one beat rather than two.
+//
+// The window is a stage minus the grace, the same boundary stageOf uses, so a
+// beat is never both "on time" and "a duplicate".
+const newest = kept.reduce((m, c) => Math.max(m, Date.parse(c.at)), 0);
+const alreadyBeat = newest > 0 && now - newest < STAGE.ms - GRACE_MS;
+
+// `seq` is carried forward so the count survives cards expiring; it is what lets
+// the board say how many times the factory has beaten, which a three-card window
+// cannot.
 const lastSeq = kept.concat(existing).reduce((m, c) => (Number.isFinite(c.seq) && c.seq > m ? c.seq : m), 0);
 const at = new Date(now).toISOString();
-const card = {
-  id: `pulse-${at.replace(/[:.]/g, "-")}`,
-  at,
-  seq: lastSeq + 1,
-  source: "pulse-belt",
-  why: "the tick, made visible - this card is the power the conveyor runs on",
-};
+const card = alreadyBeat
+  ? null
+  : {
+      id: `pulse-${at.replace(/[:.]/g, "-")}`,
+      at,
+      seq: lastSeq + 1,
+      source: "pulse-belt",
+      // Which repo's scheduler drove this beat. One file, many possible drivers,
+      // so a card that cannot say who beat it makes a shared belt unreadable.
+      drivenFrom: path.basename(ROOT),
+      why: "the tick, made visible - this card is the power the conveyor runs on",
+    };
 
-const next = kept.concat([card]).sort((a, b) => Date.parse(a.at) - Date.parse(b.at));
+const next = kept.concat(card ? [card] : []).sort((a, b) => Date.parse(a.at) - Date.parse(b.at));
 
 // A gap is the interesting signal, so it is measured rather than inferred from a
 // card count: with regular ticks every stage is occupied, and a stage with
@@ -257,9 +344,15 @@ for (const s of STAGES) occupancy[s] = next.filter((c) => stageOf(c, now) === s)
 const empty = STAGES.filter((s) => occupancy[s] === 0);
 const gap = !firstRun && empty.length > 0;
 
+// Nothing to write when the tick was already recorded AND nothing expired:
+// rewriting identical content would move the file's mtime, and the board reloads
+// on mtime change. A display that flickers on every no-op is a display that
+// stops meaning anything.
+const changed = Boolean(card) || dropped > 0;
+
 let wrote = false;
 let writeError = null;
-if (!DRY) {
+if (!DRY && changed) {
   try {
     fs.mkdirSync(CTX, { recursive: true });
     writeAtomic(CARDS, next.map((c) => JSON.stringify(c)).join("\n") + "\n");
@@ -272,20 +365,24 @@ if (!DRY) {
 const report = {
   checkedAt: at,
   repo: path.basename(ROOT),
-  file: path.relative(ROOT, CARDS).replace(/\\/g, "/"),
+  factory: FACTORY.replace(/\\/g, "/"),
+  file: CARDS.replace(/\\/g, "/"),
+  universal: true,
   stageMs: STAGE.ms,
   graceMs: GRACE_MS,
   stageEvery: STAGE.every,
   stageFrom: STAGE.from || "default (no pulse trigger declared in this repo)",
   lifetimeMs: LIFETIME_MS,
-  beat: card.seq,
-  added: DRY ? null : card.id,
+  beat: card ? card.seq : lastSeq,
+  added: card && !DRY ? card.id : null,
+  alreadyBeat,
+  changed,
   dropped,
   unreadable,
   occupancy,
   gap,
   emptyStages: empty,
-  cards: next.map((c) => ({ id: c.id, at: c.at, seq: c.seq, stage: stageOf(c, now) })),
+  cards: next.map((c) => ({ id: c.id, at: c.at, seq: c.seq, stage: stageOf(c, now), drivenFrom: c.drivenFrom || null })),
   wrote,
   dry: DRY,
   writeError,
@@ -304,15 +401,19 @@ if (JSON_OUT) {
   console.log(JSON.stringify(report, null, 2));
 } else {
   const where = STAGE.from ? `${STAGE.every} (from the "${STAGE.from}" trigger)` : `${STAGE.every} (default - no pulse trigger declared here)`;
-  console.log(`pulse-belt: beat ${card.seq} in ${report.repo}, one stage = ${where}`);
+  const lead = alreadyBeat ? `already beat this stage, at beat ${lastSeq}` : `beat ${card.seq}`;
+  console.log(`pulse-belt: ${lead}, driven from ${report.repo}, one stage = ${where}`);
+  console.log(`  cards: ${report.file}  (universal - one heartbeat, one file)`);
   for (const s of STAGES) {
     const c = next.find((x) => stageOf(x, now) === s);
     const age = c ? Math.round((now - Date.parse(c.at)) / 1000) : null;
-    console.log(`  ${s.padEnd(9)} ${c ? `${c.id}  (${age}s old, beat ${c.seq})` : "- empty: nothing ran in this window"}`);
+    const who = c && c.drivenFrom ? ` via ${c.drivenFrom}` : "";
+    console.log(`  ${s.padEnd(9)} ${c ? `${c.id}  (${age}s old, beat ${c.seq}${who})` : "- empty: nothing ran in this window"}`);
   }
   if (dropped) console.log(`  removed ${dropped} card(s) past ${LIFETIME_MS / 6e4}m`);
   if (unreadable) console.log(`  ${unreadable} unreadable line(s) skipped`);
   if (gap) console.log(`  GAP: ${empty.join(", ")} empty - the cycle is not being driven on time`);
+  if (!DRY && !changed) console.log(`  nothing changed, so nothing written - the board must not flicker on a no-op`);
   if (DRY) console.log(`  (${LIST ? "--list" : "--dry"}: nothing written)`);
 }
 
