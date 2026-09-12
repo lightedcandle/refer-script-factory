@@ -58,7 +58,18 @@ function discoverTriggers(root) {
       // it twice would quietly double every total computed from this list.
       if (seen.has(d.id)) continue;
       seen.add(d.id);
-      found.push({ ...d, kind: d.kind || "schedule", legacyName: suffix === ".station.json" });
+      // A rhythm that declares `drivenBy` instead of `run` is EXTERNALLY DRIVEN:
+      // discovered and drawn like every other one, never fired by this repo's
+      // scheduler. The primordial tick is the case that forced it - it runs the
+      // scheduler, so the scheduler cannot run it without recursing, and until it
+      // had a declaration the rail had to borrow another trigger's row to draw it.
+      // One registration pattern rather than two.
+      found.push({
+        ...d,
+        kind: d.kind || (d.drivenBy ? "external" : "schedule"),
+        external: !!d.drivenBy,
+        legacyName: suffix === ".station.json",
+      });
     }
   }
   return found;
