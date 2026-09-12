@@ -82,6 +82,7 @@ It lives in `.claude/agent-context/board-read.json`, keyed by record id with the
 | `triage.cjs` | Turns a deposit into a contract, and records that somebody did. `--list` shows what is waiting. |
 | `watcher.cjs` | **Zone 1, incoming.** What should be judged, in what order, by when. Publishes a standing ordered ready-list. See below. |
 | `pulse-check.cjs` | Did every station that should have deposited, deposit — and is the belt still sound? Derives its expectations from the repo's own station declarations. |
+| `pulse-belt.cjs` | The tick, made visible: one card incoming, one on the belt, one just resolved, removed after three stages. **Universal state, not per repo** — see below. |
 | `provider-watch.cjs` | The WORLD tier. Covers Docker fully; names Supabase and Cloudflare as session-only rather than omitting them, because an absent provider reads as fine and "nobody looked" is a different fact from "nothing wrong". |
 
 ## The watcher, and the four zones it does not cover
@@ -99,6 +100,23 @@ It is the **judging** half of the factory, so it takes a **timestamped lock** be
 - **Priority is computed, never a field** — tier, waited as a fraction of its own timer, how many open records name it, and whether it is his, which outranks everything. A hand-set priority field becomes another blank nobody fills.
 
 **Promotion is built and disarmed.** Without `--arm` the machine writes nothing to the belt at all; it writes `.claude/agent-context/watcher-queue.json`, a **standing** ordered list with a freshness stamp so intake can refuse a decayed judgement. `ready` is empty while disarmed and says so in words, because an empty list with no explanation reads as an empty morning. `--arm-limit N` caps how many **acceptances** are written in one run (annotations are never capped, since they accept nothing); acts are taken in queue order, so a RETIRE is never starved by a run of promotions.
+
+## Two kinds of state, and the board draws both
+
+Operator, 2026-09-12: *"why is the pulse repo sensitive, shouldn't it be universal, doesn't the living factory show both universal and app deposits?"*
+
+Yes — and the first version of `pulse-belt.cjs` got this wrong by copying the belt's shape onto something that is not shaped like the belt. The distinction is worth stating once, because "the machine is universal" and "its output is universal" are different claims and only the first is true of most machines here:
+
+| | Lives | Why |
+| --- | ----- | --- |
+| **App state** — findings, read receipts, baselines | `<repo>/.claude/agent-context/` | It is *about* that repo. A shared belt would merge several repos' work into one unreadable stream. |
+| **Factory state** — the tick, the host block | `<factory>/.refer-factory/` | It is about the *factory*, which there is one of. Per-repo copies would be several answers to a question that has one. |
+
+`node-heartbeat.cjs` already writes the host block to `<factory>/.refer-factory/hive-node-registry.json`, and `build-tracker.cjs` reads it back through the same discovery and cites where it read it — *"the host is part of the factory, so its state belongs on the board."* The pulse is the same kind of thing and follows the same path.
+
+**What goes wrong if you get it backwards.** There is one scheduler and one `living-factory-pulse` routine, so one heartbeat. A per-repo pulse belt gives N beat counters for that one heartbeat — and, worse, its gap detection reports a hole in every repo the scheduler did not happen to tick that round. It announces death in a perfectly alive factory, which is the failure class this whole directory exists to remove.
+
+**A machine writing universal state must refuse a wrong `REFER_FACTORY_ROOT` rather than fall back.** `pulse-belt.cjs` lives in the factory, so it can always find it via `__dirname` and never needs to search — the override exists only so a test can write into a fixture. A bogus override that silently fell back to the real factory would write **live** cards during a test run. That is not hypothetical: it happened once on 2026-09-12 and left two real files behind, which is why the check exists and why `pulse-belt-cycle.mjs` case J asserts it.
 
 ## What is not here, and why
 
