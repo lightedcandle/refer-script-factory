@@ -18,6 +18,8 @@
     "refer-script-factory": "./dist/src/adapters/cli/index.js"
   },
   "scripts": {
+    "pulse": "node machines/pulse-belt.cjs",
+    "pulse:list": "node machines/pulse-belt.cjs --list",
     "gate:machines": "node scripts/ci/machines-gate.mjs",
     "gate:prove": "node scripts/ci/prove-gate-bites.mjs",
     "gate:pulse-belt": "node scripts/ci/pulse-belt-cycle.mjs",
