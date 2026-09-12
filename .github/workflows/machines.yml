@@ -1,0 +1,57 @@
+# The machines gate, on GitHub.
+#
+# READ THIS BEFORE TRUSTING IT. In this repo the scheduler reads machines/*.cjs
+# off disk at the moment it fires, every five minutes, against a live board.
+# There is no build and no deploy: saving a file IS deploying it. So a commit on
+# main is live LOCALLY, immediately, and this workflow reports on it minutes
+# later from a different machine. IT CANNOT STOP A BAD SAVE.
+#
+# What it is genuinely for is the pull request path - which is why the branch
+# policy in AGENTS.md requires one for any machine that is declared on a trigger.
+# On a PR the code is not live anywhere, so a red check here arrives in time to
+# matter. On main it is an alarm, not a gate.
+#
+# The gate that actually stops the bad save is the same script run by hand before
+# the save: `npm run gate:machines`. This job exists so that nobody has to trust
+# that it was.
+name: machines
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The gate lists tracked files itself, so it needs real history rather
+          # than a shallow clone's index. Submodules stay unfetched on purpose:
+          # alliance-hub is a product repo and nothing here checks it.
+          submodules: false
+
+      - uses: actions/setup-node@v4
+        with:
+          # Pinned to the runtime the machines actually run on locally. Checking
+          # them against a different Node would be checking a different thing.
+          node-version: '24'
+
+      - name: machines gate
+        run: node scripts/ci/machines-gate.mjs --verbose
+
+      # The gate is only worth its green check if somebody has watched it fail,
+      # and "somebody watched it once" decays. This breaks five things on purpose
+      # and requires each to be caught, so a gate that quietly stops checking
+      # fails here rather than going green forever.
+      #
+      # Safe on a runner and nowhere else: it edits live machines for a second at
+      # a time, so it refuses to run outside a linked worktree without --force.
+      # A CI checkout is neither, and no scheduler is reading it.
+      - name: prove the gate bites
+        run: node scripts/ci/prove-gate-bites.mjs --force
