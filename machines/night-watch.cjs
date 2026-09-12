@@ -131,8 +131,12 @@ const fresh = all.filter((r) => {
   const t = Date.parse(r.run || "");
   return !Number.isNaN(t) && t >= from;
 });
-const NOTING = /^terminal:(recorded|definition|annotation|note)$/;
-const selfTerminal = (r) => /^(terminal:.+|closed)$/.test(String(r.triggers || "").trim());
+// The belt's vocabulary, from the one file that holds it. Imported rather than
+// copied because the words change: `triaged` was added when deposits and
+// contracts became different things, and a stale copy here would have reported
+// every acceptance of work as an overnight closure - the night report saying
+// eight things were finished on a night when eight things were merely started.
+const { NOTING, selfTerminal } = require("./kind.cjs");
 const newFindings = fresh.filter((r) => !selfTerminal(r));
 const closures = fresh.filter((r) => selfTerminal(r) && !NOTING.test(String(r.triggers || "").trim()) && r.subject);
 const lessons = fresh.filter((r) => r.lesson);

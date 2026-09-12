@@ -69,17 +69,15 @@ const records = fs
   })
   .filter(Boolean);
 
-const NOTING = /^terminal:(recorded|definition|annotation|note)$/;
-const selfTerminal = (r) => /^(terminal:.+|closed)$/.test(String(r.triggers || "").trim());
-const ids = new Set(records.map((r) => String(r.id)));
-const closedBy = new Map();
-for (const r of records) {
-  if (!selfTerminal(r) || NOTING.test(String(r.triggers || "").trim())) continue;
-  if (r.subject) closedBy.set(String(r.subject), r);
-}
-const isDone = (r) => selfTerminal(r) || closedBy.has(String(r.id));
-const isCloser = (r) => selfTerminal(r) && !NOTING.test(String(r.triggers || "").trim()) && r.subject && ids.has(String(r.subject));
-const isAnnotation = (r) => NOTING.test(String(r.triggers || "").trim()) && r.subject && ids.has(String(r.subject));
+// The belt's vocabulary, from the one file that holds it. This block used to be
+// a hand-written copy of a rule that also lives in the board, the manager, the
+// exit worker and the deposit lookup - six copies, which drifted every time the
+// rule changed.
+const { beltIndex } = require("./kind.cjs");
+const IX = beltIndex(records);
+const isDone = IX.isDone;
+const isCloser = IX.isCloser;
+const isAnnotation = IX.isAnnotation;
 
 const adviceFor = new Map();
 for (const r of records) if (r.subject && r.recommend) adviceFor.set(String(r.subject), r.recommend);
@@ -110,8 +108,20 @@ const alive = (id) => {
 const onBelt = records.filter((r) => !isDone(r) && !isCloser(r) && !isAnnotation(r) && dispatchFor.has(String(r.id)) && alive(dispatchFor.get(String(r.id)).session));
 const room = Math.max(0, CAPACITY - onBelt.length);
 
+// ONLY A CONTRACT MAY BE DISPATCHED.
+//
+// Operator, 2026-09-12: "don't put notifications on the belt, only contracts to
+// be processed." A deposit is seen and not yet judged - dispatching one would be
+// this worker deciding that something is work, which is a decision reserved to
+// whoever triages it. A note has nothing to do. A decision is his.
+//
+// This is the enforcement point for the whole taxonomy: everything else about
+// kind is display, and this is the line where it decides what actually happens.
+// The "his by law" filter below is kept as well, deliberately redundant - a
+// decision could only reach here through a mis-set kind, and the cost of that
+// mistake is an agent taking a decision that was reserved.
 const waiting = records
-  .filter((r) => !isDone(r) && !isCloser(r) && !isAnnotation(r) && !dispatchFor.has(String(r.id)))
+  .filter((r) => IX.isOpenContract(r) && !dispatchFor.has(String(r.id)))
   // His by law. Never pick these up.
   .filter((r) => String(r.triggers || "") !== "operator" && r.owner !== "operator" && !r.operatorDecision)
   .map((r) => ({ r, advice: adviceOf(r), at: Date.parse(r.run || "") || 0 }))
@@ -174,7 +184,14 @@ if (JSON_OUT) {
 } else {
   console.log(`intake-worker: ${onBelt.length}/${CAPACITY} on the belt, ${waiting.length} waiting, room for ${room}  [${report.repo}]`);
   for (const p of picks) console.log(`  would dispatch  ${p.r.id}${p.advice ? "" : "   (no recommendation - it would have to work one out)"}`);
-  if (!picks.length) console.log(room ? "  nothing eligible to pick up" : "  belt is full");
+  if (!picks.length) {
+    // NOTHING ELIGIBLE AND NOTHING ACCEPTED ARE DIFFERENT FACTS, and they look
+    // identical from a worker that only prints the first. A queue of unjudged
+    // deposits is a factory waiting on a person, not a factory with nothing to do.
+    const untriaged = records.filter(IX.isAwaitingTriage).length;
+    if (room && untriaged) console.log(`  nothing eligible - ${untriaged} deposit(s) are waiting to be judged, and only a contract can be dispatched`);
+    else console.log(room ? "  nothing eligible to pick up" : "  belt is full");
+  }
   if (DO_DISPATCH) for (const s of started) console.log(`  DISPATCHED ${s.id}${s.error ? " - FAILED: " + s.error : " (pid " + s.pid + ")"}`);
   else if (picks.length) console.log(`\n  Not armed. Brief written to .claude/agent-context/intake-brief.txt; run with --dispatch to start them.`);
 }

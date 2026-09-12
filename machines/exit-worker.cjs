@@ -67,16 +67,18 @@ const records = fs
   })
   .filter(Boolean);
 
-// The belt's vocabulary, kept identical to the board's. Precedent P13: one rule,
-// and both readers must hold the same copy.
-const NOTING = /^terminal:(recorded|definition|annotation|note)$/;
-const selfTerminal = (r) => /^(terminal:.+|closed)$/.test(String(r.triggers || "").trim());
-const closedBy = new Map();
-for (const r of records) {
-  if (!selfTerminal(r) || NOTING.test(String(r.triggers || "").trim())) continue;
-  if (r.subject) closedBy.set(String(r.subject), r);
-}
-const isDone = (r) => selfTerminal(r) || closedBy.has(String(r.id));
+// The belt's vocabulary, from the one file that holds it. Precedent P13 said one
+// rule and every reader holding the same copy; holding the same copy turned out
+// to mean not holding a copy at all.
+//
+// This matters here more than anywhere. terminal:triaged is in the NOTING family,
+// and if this file kept an older copy that did not know the word, accepting a
+// deposit as work would look to THIS machine like a closure - and it would report
+// the work delivered at the moment somebody agreed to start it.
+const { beltIndex } = require("./kind.cjs");
+const IX = beltIndex(records);
+const closedBy = IX.closedBy;
+const isDone = IX.isDone;
 
 const dispatchFor = new Map();
 for (const r of records) {

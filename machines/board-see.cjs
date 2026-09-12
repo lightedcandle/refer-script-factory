@@ -103,6 +103,18 @@ const findings = [];
 const say = (key, claim, evidence, triggers = "contract:body", owner = "body", dimension = "body") =>
   findings.push({ key, claim, evidence, triggers, owner, dimension });
 
+// A CHECK THAT COULD NOT HAVE FAILED DID NOT PASS.
+//
+// Some of these tests need material on the board to mean anything - a note to
+// prove notes stay out of the work columns, an unread one to prove read state
+// survives a reload. With nothing to test they report nothing, which on this
+// station's own report is indistinguishable from a pass, and a check nobody has
+// seen fail is a check nobody has reason to trust.
+//
+// So they say so. Not as findings - nothing is wrong - but printed beside the
+// result, so "everything passed" can be read honestly.
+const vacuous = [];
+
 // ---- deposit ----------------------------------------------------------------
 //
 // At most one deposit per defect per DAY, not per defect ever.
@@ -158,6 +170,7 @@ function finish(shots) {
     deposited,
     snapshots: shots,
     findings,
+    vacuous,
   };
   fs.mkdirSync(CTX, { recursive: true });
   fs.writeFileSync(path.join(CTX, "board-see.json"), JSON.stringify(report, null, 2) + "\n");
@@ -172,6 +185,7 @@ function finish(shots) {
       console.log(`    -> ${f.triggers}`);
     }
     if (!findings.length) console.log("  Every chip filters, every count matches its rows, nothing is clipped.");
+    for (const v of vacuous) console.log(`  NOT TESTED: ${v}`);
     for (const s of shots) console.log(`  snapshot: ${path.relative(ROOT, s)}`);
     if (deposited) console.log(`  deposited ${deposited}`);
   }
@@ -305,11 +319,48 @@ if (!chromium) {
       const s = r.getAttribute("data-status") || "(none)";
       byStatus[s] = (byStatus[s] || 0) + 1;
     }
+    // KIND, counted the same way as state and from the same rows. A record has
+    // both, and the board draws two strips of chips because they answer two
+    // different questions.
+    const byKind = {};
+    for (const r of rows) {
+      const k = r.getAttribute("data-kind") || "(none)";
+      byKind[k] = (byKind[k] || 0) + 1;
+    }
+    const kindPicks = [...document.querySelectorAll(".kindpick")].map((p) => ({
+      key: p.getAttribute("data-pick"),
+      count: Number((p.textContent.match(/\d+/) || [])[0] ?? -1),
+      visible: vis(p),
+    }));
+    // WHERE NOTES ARE, AND WHERE THEY MUST NOT BE. Read off the page as three
+    // separate populations, because "a note is not on the belt" is only a real
+    // check if the same pass can also see that the notes exist somewhere.
+    const noteRows = [...document.querySelectorAll(".noterow")];
+    const notesOnBoard = {
+      inReading: noteRows.length,
+      unread: noteRows.filter((r) => r.getAttribute("data-read") === "0").length,
+      inIncoming: rows.filter((r) => r.getAttribute("data-kind") === "note").length,
+      inResolved: [...document.querySelectorAll(".outrow")].filter((r) => r.getAttribute("data-kind") === "note").length,
+      onBelt: [...document.querySelectorAll(".beltrow")].filter((r) => r.getAttribute("data-kind") === "note").length,
+    };
+    // The counts the centre prints, read as text the way a person reads them -
+    // never as a value this code set.
+    const num = (sel) => {
+      const el = document.querySelector(sel);
+      if (!el) return null;
+      const m = (el.textContent || "").match(/\d+/);
+      return m ? Number(m[0]) : null;
+    };
+    const printed = { contracted: num(".opencount"), triage: num(".triagecount") };
     const banner = [...document.querySelectorAll("*")].find((e) => /NOT RECEIVING FROM THE FACTORY/i.test(e.textContent || "") && e.children.length === 0);
     return {
       rowTotal: rows.length,
       renderedTotal: rows.filter(vis).length,
       byStatus,
+      byKind,
+      kindPicks,
+      notesOnBoard,
+      printed,
       picks,
       bannerShowing: !!(banner && vis(banner)),
       pageScrollWidth: document.documentElement.scrollWidth,
@@ -386,6 +437,144 @@ if (!chromium) {
         `Clicking the ${p.key} chip leaves ${shown} rows on screen when only ${want} are ${p.key}.`,
         `Measured as rendered height after a real click, at 1920x1080. ${shown === seen.rowTotal ? "The filter changed nothing at all - every row is still showing." : "The filter is selecting the wrong set."} Snapshot of the failing state: ${path.relative(ROOT, bad)}`,
       );
+    }
+  }
+
+  // ---- T3b  THE KIND CHIPS MUST FILTER TOO, AND NOT LIE --------------------
+  //
+  // Same two tests as the state chips, on the other axis. Written as a separate
+  // pass rather than folded into T1/T3 because the two strips combine with AND:
+  // a kind chip is clicked while the state filter is on ALL, and the state chips
+  // were clicked while the kind filter is on ALL. Interleaving them would test a
+  // combination nobody has asked for and miss the ones they have.
+  //
+  // THE STATE FILTER IS CLEARED FIRST, and forgetting it is how this check
+  // reported three failures against a board that was working: T3 above leaves the
+  // LAST state chip applied, so every kind measurement was taken through a
+  // hourglass filter and came back zero. The board was ANDing correctly and the
+  // test was asking the wrong question - which is worth having happened, because
+  // a wrong reading here would have sent somebody to rewrite a correct filter.
+  {
+    const back = await page.$('.statpick[data-pick="all"]');
+    if (back) {
+      await back.click();
+      await page.evaluate(settle);
+    }
+  }
+  for (const p of seen.kindPicks) {
+    if (!p.key || p.key === "all" || p.count < 0) continue;
+    const actual = seen.byKind[p.key] || 0;
+    if (p.count !== actual) {
+      say(
+        `kind-legend-count-${p.key}`,
+        `The ${p.key} chip says ${p.count} but there are ${actual} ${p.key} rows on the board.`,
+        `Counted by looking: ${JSON.stringify(seen.byKind)}. A legend that disagrees with what it labels teaches the room to distrust the whole board.`,
+      );
+    }
+  }
+  for (const p of seen.kindPicks) {
+    if (!p.key || p.key === "all") continue;
+    const el = await page.$(`.kindpick[data-pick="${p.key}"]`);
+    if (!el) continue;
+    await el.click();
+    await page.evaluate(settle);
+    const shown = await page.evaluate(() =>
+      [...document.querySelectorAll(".inrow")].filter((r) => r.getBoundingClientRect().height > 0).length,
+    );
+    const want = seen.byKind[p.key] || 0;
+    filterResults.push({ key: `kind:${p.key}`, shown, want });
+    if (shown !== want) {
+      const bad = await shot(`kindfilter-${p.key}-FAILED`);
+      say(
+        `kind-filter-does-not-filter-${p.key}`,
+        `Clicking the ${p.key} chip leaves ${shown} rows on screen when only ${want} are ${p.key}.`,
+        `Measured as rendered height after a real click, at 1920x1080. ${shown === seen.rowTotal ? "The filter changed nothing at all." : "The filter is selecting the wrong set."} Snapshot: ${path.relative(ROOT, bad)}`,
+      );
+    }
+  }
+  {
+    // And it must let go. Two strips that both hide rows can deadlock: leaving
+    // the kind filter on would make every state check below measure a subset and
+    // report the difference as a broken filter.
+    const kindAll = await page.$('.kindpick[data-pick="all"]');
+    if (kindAll) {
+      await kindAll.click();
+      await page.evaluate(settle);
+      const back = await page.evaluate(() =>
+        [...document.querySelectorAll(".inrow")].filter((r) => r.getBoundingClientRect().height > 0).length,
+      );
+      if (back !== seen.rowTotal) {
+        const bad = await shot("kindfilter-all-FAILED");
+        say(
+          "kind-all-does-not-restore",
+          `After filtering by kind, clicking ALL brings back ${back} rows out of ${seen.rowTotal}.`,
+          `Measured by rendered height. Work hidden behind a filter that will not reopen is invisible while still being counted. Snapshot: ${path.relative(ROOT, bad)}`,
+        );
+      }
+    } else if (seen.kindPicks.length) {
+      say(
+        "no-kind-all-chip",
+        "The kind legend has no ALL chip, so once a kind is clicked there is no way back to the whole list.",
+        `Kind chips found: ${seen.kindPicks.map((p) => p.key).join(", ")}.`,
+      );
+    }
+  }
+
+  // ---- T3c  A NOTE MAY NOT BE ANYWHERE WORK IS -----------------------------
+  //
+  // Operator, 2026-09-12: "don't put notifications on the belt, only contracts to
+  // be processed." The rule is enforced in the builder; this is the bump that
+  // proves it held, measured on the rendered page rather than asserted from the
+  // data the page was built from.
+  {
+    const n = seen.notesOnBoard;
+    const strays = [
+      n.inIncoming ? `${n.inIncoming} in the incoming column` : "",
+      n.inResolved ? `${n.inResolved} on the resolution table` : "",
+      n.onBelt ? `${n.onBelt} on the conveyor` : "",
+    ].filter(Boolean);
+    if (strays.length) {
+      const bad = await shot("note-on-the-belt-FAILED");
+      say(
+        "note-drawn-as-work",
+        `A note is being drawn where work goes: ${strays.join(", ")}.`,
+        `Counted from data-kind on the rendered rows. A note has no worker, no timer, no dispatch and no closure - drawn in a work column it sits there forever asking who owes it, which is the conflation this taxonomy removes. Snapshot: ${path.relative(ROOT, bad)}`,
+        "contract:body",
+        "body",
+      );
+    }
+    // A check that can only pass is not a check. If nothing on the belt is a note
+    // this test proves nothing, and says so rather than reporting a pass.
+    if (!n.inReading) {
+      vacuous.push("note-drawn-as-work: no notes exist on this belt, so nothing was actually tested");
+    }
+  }
+
+  // ---- T3d  THE OPEN COUNT MUST BE THE CONTRACT COUNT ----------------------
+  //
+  // "Open counts, domain tallies and age alarms count contracts only." The
+  // number is read as TEXT off the centre readout - the way a person reads it -
+  // and compared against the rows carrying data-kind="contract" plus whatever is
+  // riding the belt, because a contract being worked leaves the incoming column.
+  {
+    const printed = seen.printed.contracted;
+    if (printed === null) {
+      say(
+        "no-contract-count-printed",
+        "The board does not print how many contracts are open, so there is no number to check the belt against.",
+        "The centre readout carries the factory's own idea of its backlog. Without it, the only cross-source check left is the row count, and a board can draw the right number of wrong rows.",
+      );
+    } else {
+      const onBeltRows = await page.evaluate(() => document.querySelectorAll(".beltrow").length);
+      const contractRows = seen.byKind.contract || 0;
+      if (printed !== contractRows + onBeltRows) {
+        const bad = await shot("open-count-FAILED");
+        say(
+          "open-count-is-not-the-contract-count",
+          `The board says ${printed} contracted and draws ${contractRows} contract row${contractRows === 1 ? "" : "s"} incoming plus ${onBeltRows} on the belt.`,
+          `Read off the rendered page: the printed figure against the rows carrying data-kind="contract". Only contracts count as open work, so these are the same number by definition - if they differ, something that is not a contract is being counted as one, which is how a notification inflated the backlog in the first place. Snapshot: ${path.relative(ROOT, bad)}`,
+        );
+      }
     }
   }
 
@@ -468,6 +657,99 @@ if (!chromium) {
           "Opening a second row should close the first. On a wall monitor nobody scrolls back.",
         );
       }
+    }
+  }
+
+  // ---- T4b2  READ STATE MUST SURVIVE A RELOAD ------------------------------
+  //
+  // Operator, on notifications: "read state persists per record and must survive
+  // a reload; a state that resets on refresh is not a state, it is a decoration."
+  //
+  // This is the check that would have caught the half-built version. Read state
+  // is baked into the HTML at build time, so clicking a note turned it white and
+  // a refresh - serving the same HTML - turned it green again. Everything about
+  // the code looked right, and the feature did not work between two builds.
+  //
+  // So it is measured the only way that could have told the difference: click a
+  // real unread note, reload the real page, and look at the colour. Never at a
+  // class this code just toggled, never at the POST's response, and never at the
+  // file on disk - each of those confirms its own assignment.
+  {
+    // The reading area is behind a tab, and a hidden row cannot be clicked - so
+    // the pane is opened the way a person opens it, by pressing its tab.
+    const openNotes = async () => {
+      const tab = await page.$('.paneltab[data-panel="notes"]');
+      if (!tab) return false;
+      await tab.click();
+      await page.evaluate(settle);
+      return true;
+    };
+    const hasPane = await openNotes();
+    const target = hasPane
+      ? await page.evaluate(() => {
+          const row = document.querySelector('.noterow[data-read="0"]');
+          return row ? row.getAttribute("data-rid") : null;
+        })
+      : null;
+    if (!hasPane) {
+      say(
+        "no-reading-area",
+        "The board has no NOTES pane, so a notification has nowhere to go that is not a work column.",
+        "Only contracts ride the belt; a note needs a reading area or it has to be drawn as work to be drawn at all.",
+      );
+    } else if (!target) {
+      vacuous.push("read-state-survives-reload: no unread note exists on this board, so nothing was actually tested");
+    } else {
+      // The colour a person sees, not the class that produces it.
+      const colourOf = (rid) =>
+        page.evaluate((id) => {
+          const row = document.querySelector(`.noterow[data-rid="${CSS.escape(id)}"]`);
+          if (!row) return null;
+          const text = row.querySelector(".notetext");
+          const pip = row.querySelector(".notepip");
+          return {
+            colour: text ? getComputedStyle(text).color : null,
+            opacity: text ? getComputedStyle(text).opacity : null,
+            word: pip ? (pip.textContent || "").trim() : null,
+          };
+        }, rid);
+
+      const before = await colourOf(target);
+      const row = await page.$(`.noterow[data-rid="${target.replace(/"/g, '\\"')}"]`);
+      if (row) await row.click();
+      // The click posts; give the server a moment to have written it before the
+      // reload asks for it back. A race here would report a real feature broken.
+      await page.waitForTimeout(400);
+      const afterClick = await colourOf(target);
+
+      if (!afterClick || afterClick.word !== "READ") {
+        const bad = await shot("note-does-not-read-FAILED");
+        say(
+          "note-does-not-mark-read",
+          `Tapping an unread note does not mark it read - it still says "${(afterClick && afterClick.word) || "nothing"}".`,
+          `Measured on the rendered row after a real click. A note has two states and marking one read is the only act available on it; if the act does nothing the pane is a list, not a state. Snapshot: ${path.relative(ROOT, bad)}`,
+        );
+      } else {
+        await page.reload({ waitUntil: "networkidle" });
+        await page.evaluate(settle);
+        await openNotes();
+        // The page asks the server on load, so give that fetch the same grace.
+        await page.waitForTimeout(600);
+        const afterReload = await colourOf(target);
+        if (!afterReload || afterReload.word !== "READ") {
+          const bad = await shot("read-state-lost-FAILED");
+          say(
+            "read-state-does-not-survive-reload",
+            `A note marked read comes back unread after a reload - it reads "${(afterReload && afterReload.word) || "nothing"}" again.`,
+            `Clicked, reloaded, and re-measured from computed style on the rendered row: ${JSON.stringify(before)} before, ${JSON.stringify(afterClick)} after the click, ${JSON.stringify(afterReload)} after the reload. A state that resets on refresh is a decoration. Snapshot: ${path.relative(ROOT, bad)}`,
+          );
+        }
+      }
+      // Leave the tab strip as the room should find it.
+      await page.evaluate(() => {
+        const first = document.querySelector(".paneltab[data-panel]");
+        if (first) first.click();
+      });
     }
   }
 
@@ -619,8 +901,23 @@ if (!chromium) {
       return uniq;
     });
     if (strip && strip.length > 2) {
+      // THE PULSE IS EXEMPT, AND ONLY THE PULSE, AND ONLY IN THE FIRST SLOT.
+      //
+      // Operator, 2026-09-12: "move the pulse to the first slot on the left, this
+      // is the primordial tick for the living factory." It sits there by
+      // insertion rather than by sorting, because at five minutes it happens to
+      // sort first today and that is a coincidence - the moment any trigger
+      // declares something faster, a sorted pulse would move and the instruction
+      // would be silently undone.
+      //
+      // Which means this check has to know. Without the exemption it would report
+      // the operator's own arrangement as a fault the first time anything faster
+      // exists - a gate firing on the thing it was told to allow, which is worse
+      // than no gate because somebody would eventually "fix" the board to satisfy
+      // it.
+      const ordered = strip.length && /^PULSE\b/i.test(strip[0].t.trim()) ? strip.slice(1) : strip;
       const wrong = [];
-      for (let i = 1; i < strip.length; i++) if (strip[i].secs < strip[i - 1].secs) wrong.push(`${strip[i - 1].t} then ${strip[i].t}`);
+      for (let i = 1; i < ordered.length; i++) if (ordered[i].secs < ordered[i - 1].secs) wrong.push(`${ordered[i - 1].t} then ${ordered[i].t}`);
       if (wrong.length) {
         const bad = await shot("strip-order-FAILED");
         say(

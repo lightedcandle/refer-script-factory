@@ -68,14 +68,11 @@ const byHandle = new Map();
   }
 }
 
-const NOTING = /^terminal:(recorded|definition|annotation|note)$/;
-const selfTerminal = (r) => /^(terminal:.+|closed)$/.test(String(r.triggers || "").trim());
-const closedBy = new Map();
-for (const r of records) {
-  if (!selfTerminal(r) || NOTING.test(String(r.triggers || "").trim())) continue;
-  if (r.subject) closedBy.set(String(r.subject), r);
-}
-const isDone = (r) => selfTerminal(r) || closedBy.has(String(r.id));
+// The belt's vocabulary, from the one file that holds it.
+const { beltIndex } = require("./kind.cjs");
+const IX = beltIndex(records);
+const selfTerminal = IX.selfTerminal;
+const isDone = IX.isDone;
 
 // Advice and lessons can be attached by a later record, so resolve them the same
 // way the board does - otherwise "as recommended" would find nothing for exactly
@@ -95,7 +92,10 @@ if (LIST_OPEN) {
   for (const r of open) {
     const h = handles.get(String(r.id));
     const rec = adviceLate.get(String(r.id)) || r.recommend;
-    console.log(`  ${h.padEnd(5)} ${String(r.triggers).padEnd(16)} ${String(r.claim).replace(/\s+/g, " ").slice(0, 78)}`);
+    // The KIND goes on the line, because "open" covers a contract somebody owes
+    // and a deposit nobody has judged, and the two ask for opposite things from
+    // whoever is reading this list.
+    console.log(`  ${h.padEnd(5)} ${IX.kindOf(r).toUpperCase().padEnd(9)} ${String(r.triggers).padEnd(16)} ${String(r.claim).replace(/\s+/g, " ").slice(0, 78)}`);
     if (rec) console.log(`        -> ${String(rec).replace(/\s+/g, " ").slice(0, 100)}`);
   }
   process.exit(0);
@@ -116,6 +116,7 @@ const out = {
   handle: want,
   id: r.id,
   dimension: r.dimension,
+  kind: IX.kindOf(r),
   status: isDone(r) ? "closed" : "open",
   triggers: r.triggers,
   owner: r.owner,
@@ -130,7 +131,7 @@ const out = {
 if (JSON_OUT) {
   console.log(JSON.stringify(out, null, 2));
 } else {
-  console.log(`${want}  ${out.status.toUpperCase()}  [${out.dimension}]  -> ${out.triggers}`);
+  console.log(`${want}  ${out.kind.toUpperCase()}  ${out.status.toUpperCase()}  [${out.dimension}]  -> ${out.triggers}`);
   console.log(`  id: ${out.id}`);
   console.log(`\n  ${String(out.claim).replace(/\s+/g, " ")}`);
   if (out.evidence) console.log(`\n  why: ${String(out.evidence).replace(/\s+/g, " ")}`);

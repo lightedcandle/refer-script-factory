@@ -102,12 +102,27 @@ const TERMINAL = (t) => /^(terminal:.+|closed)$/.test(String(t || "").trim());
 //
 // Seventh place one rule has been written twice on this board. The vocabulary is
 // factory law (precedent P13) and both readers must keep it identical.
-const NOTING = /^terminal:(recorded|definition|annotation|note)$/;
-const closedIds = new Set(
-  belt.filter((r) => TERMINAL(r.triggers) && !NOTING.test(String(r.triggers || "").trim()) && r.subject).map((r) => String(r.subject)),
-);
-const isClosed = (r) => TERMINAL(r.triggers) || closedIds.has(String(r.id));
-const isOpen = (r) => /^(contract:|seer$|operator$)/.test(String(r.triggers || "")) && !isClosed(r);
+//
+// AND IT IS NOW READ FROM ONE FILE. kind.cjs holds the vocabulary - what closes
+// a finding, what is only an annotation, and what KIND each record is. This
+// machine had its own copy of the first two and the board had a third; the
+// comments above record them drifting and being caught by the cross-source check
+// below. There is one copy now.
+const { KIND, beltIndex } = require("./kind.cjs");
+const IX = beltIndex(belt);
+const NOTING = IX.NOTING;
+const isClosed = IX.isDone;
+
+// OPEN MEANS A CONTRACT SOMEBODY OWES.
+//
+// Operator, 2026-09-12: "don't put notifications on the belt, only contracts to
+// be processed." A deposit has not been judged, so nobody is late on it; a note
+// is not work; a decision is his. Every alarm below inherits this - the unwatched
+// domain, the stale finding, the recurrence, the carrier arithmetic - because all
+// four were counting things nobody had agreed to do and calling the total a
+// backlog.
+const isOpen = (r) => IX.isOpenContract(r);
+const isAwaitingTriage = (r) => IX.isAwaitingTriage(r);
 const ago = (t) => (!t ? "never" : `${Math.round((now - t) / MS.h)}h ago`);
 
 // A later record acts on an earlier one by naming it as subject. Append-only
@@ -188,6 +203,25 @@ const say = (key, claim, evidence, triggers, owner, dimension) =>
     // recurrence puts finished work back in front of him.
     const live = rs.filter(isOpen);
     if (live.length < 3) continue;
+
+    // A BACKLOG IS NOT A RECURRENCE, and the two look identical when they share
+    // a label. Many findings ABOUT one thing is work to do; one thing found many
+    // times is a fix that did not hold - and only the second deserves an alarm.
+    //
+    // The computable difference is TIME SPREAD. Twelve items queued inside one
+    // minute are a programme somebody wrote down; three findings arriving over
+    // days are a problem that keeps coming back.
+    //
+    // This rule raised three false alarms before the distinction was drawn, and
+    // every one of them reached the most expensive place on the board - the
+    // column that asks for his attention. The subject convention still stands,
+    // that a subject names the specific thing and never the programme it belongs
+    // to, but a convention nothing enforces gets broken again. It was, by the
+    // person who wrote it, an hour after writing it.
+    const times = live.map((r) => Date.parse(r.run || "")).filter((t) => !Number.isNaN(t));
+    const spreadMs = times.length > 1 ? Math.max(...times) - Math.min(...times) : 0;
+    if (spreadMs < MS.h) continue;
+
     say(
       `recurring-${subj.replace(/[^a-z0-9]+/gi, "-").slice(0, 40)}`,
       `"${subj}" has ${live.length} findings still open against it. It is being re-noticed rather than fixed.`,
@@ -211,14 +245,19 @@ const say = (key, claim, evidence, triggers, owner, dimension) =>
   // deciding what the data was allowed to be. Eighth place this one rule lives;
   // the board was corrected first and this followed, which is the drift the
   // cross-source check exists to catch and did.
+  //
+  // `open` is contracts only now, so `held` - work addressed to him - is no
+  // longer inside it and is counted from its own kind. Subtracting a bucket that
+  // can never contain anything would have made every unplaced contract vanish
+  // into a category of zero.
   const carried = open.filter((r) => /^contract:/.test(String(r.triggers || "")) || ["body", "mind", "spirit"].some((d) => r.owner === d));
-  const held = open.filter((r) => String(r.triggers) === "operator" && !carried.includes(r));
-  const unplaced = open.length - carried.length - held.length;
+  const held = belt.filter(IX.isOpenDecision);
+  const unplaced = open.length - carried.length;
   if (unplaced !== 0) {
     say(
       "open-items-counted-nowhere",
-      `${unplaced} open item${unplaced === 1 ? " is" : "s are"} counted in neither the carriers nor the held pile.`,
-      `open ${open.length} = carried ${carried.length} + held ${held.length} + ${unplaced} unaccounted. Every open record must appear somewhere on the board or it is invisible while being counted.`,
+      `${unplaced} open contract${unplaced === 1 ? " rides" : "s ride"} no carrier at all.`,
+      `open contracts ${open.length} = carried ${carried.length} + ${unplaced} unaccounted. (${held.length} decision(s) are held for him and ${belt.filter(isAwaitingTriage).length} deposit(s) await triage; neither is a contract and neither belongs in this sum.) A contract naming no domain is invisible while being counted, which is the leak this board exists to expose.`,
       "contract:body",
       "body",
       "body",
@@ -237,42 +276,142 @@ const say = (key, claim, evidence, triggers, owner, dimension) =>
 // No single-source check can catch that. This one compares two sources - what
 // the belt says is still open, against how many rows the seer actually counted
 // on the page - which is the only way a shared assumption gets caught.
+//
+// ---- WHAT WAS WRONG WITH IT, AND IT WAS THIS MACHINE ------------------------
+//
+// It reported: "The belt has 32 items still open and the board is drawing 29
+// rows." Neither number was wrong. They were taken five minutes apart.
+//
+// `stillOpen` was counted from the belt AT THE MOMENT THIS RAN. `seen.rowTotal`
+// was read out of board-see-detail.json, which the seer had written five minutes
+// earlier - and six records were deposited in between. Counted as of the seer's
+// own timestamp the belt said 29 and the board drew 29, exactly.
+//
+// The staleness guard existed and checked the wrong pair of clocks. It asked
+// whether the HTML was newer than the newest record, which says the page had
+// been rebuilt - and says nothing at all about whether the seer had looked at
+// that page. The number being compared is the SEER'S, so the seer's timestamp is
+// the one that has to be current. A guard reading a different file from the one
+// whose freshness it is protecting is a green check that checks nothing.
+//
+// Fixed twice over, because the timing was only half of it:
+//
+//   1. The seer's OWN checkedAt must be newer than the newest record. It is the
+//      author of the number.
+//   2. The comparison is now against what the BOARD says it drew, written by the
+//      builder into board-counts.json, rather than against a count this machine
+//      re-derives from the belt. The re-derivation was a ninth copy of the
+//      board's row rule and it was already wrong in a second way: the incoming
+//      column legitimately omits whatever is on the belt, so the moment a live
+//      agent picked something up this check would have cried disagreement about
+//      a board that was perfectly right.
+//
+// Two comparisons now, each between two real sources: belt against the builder's
+// claim, and the builder's claim against rendered geometry. Neither reader
+// re-derives the other's rule, which is the only arrangement in which a
+// disagreement means something.
 {
   const detail = path.join(CTX, "board-see-detail.json");
-  if (fs.existsSync(detail)) {
-    let seen = null;
+  const countsFile = path.join(CTX, "board-counts.json");
+  const readAt = (f, key) => {
     try {
-      seen = JSON.parse(fs.readFileSync(detail, "utf8")).seen;
+      const j = JSON.parse(fs.readFileSync(f, "utf8"));
+      return { j, at: Date.parse(j[key] || "") || 0 };
     } catch {
-      /* the seer owns reporting its own output; not this machine's job */
+      return null;
     }
-    // Only meaningful if the board was BUILT after the newest record. A belt
-    // that has grown since the last render is not a board telling lies, it is a
-    // board that has not caught up yet - and reporting that as a disagreement
-    // would fire after every single deposit, which is a flood, not a check.
-    const boardFile = path.join(CTX, "factory-tracker.html");
-    const builtAt = fs.existsSync(boardFile) ? fs.statSync(boardFile).mtimeMs : 0;
-    const newestRecord = Math.max(0, ...belt.map((r) => Date.parse(r.run || "") || 0));
-    const boardIsCurrent = builtAt > newestRecord;
+  };
+  const seerOut = readAt(detail, "checkedAt");
+  const boardOut = readAt(countsFile, "builtAt");
+  const newestRecord = Math.max(0, ...belt.map((r) => Date.parse(r.run || "") || 0));
 
-    if (seen && typeof seen.rowTotal === "number" && boardIsCurrent) {
-      // One rule, read from one place. This block had its own copy of "what
-      // closes a finding" and the copy drifted the moment the real rule changed
-      // - which is what this very check then reported. Using closedIds and
-      // isOpen means there is nothing left to drift apart from.
-      const ids = new Set(belt.map((r) => String(r.id)));
-      const isCloser = (r) => TERMINAL(r.triggers) && !NOTING.test(String(r.triggers || "").trim()) && r.subject && ids.has(String(r.subject));
-      const stillOpen = belt.filter((r) => isOpen(r) && !isCloser(r)).length;
-      if (stillOpen !== seen.rowTotal) {
-        say(
-          "belt-and-board-disagree",
-          `The belt has ${stillOpen} item${stillOpen === 1 ? "" : "s"} still open and the board is drawing ${seen.rowTotal} row${seen.rowTotal === 1 ? "" : "s"}.`,
-          `Counted from the belt, against what the seer counted on the rendered page. ${seen.rowTotal > stillOpen ? "The board is showing work that is already finished, which is how two fixed items sat in his column with their own closures visible on the same screen." : "The board is hiding open work, which is worse - it cannot be acted on if it cannot be seen."}`,
-          "contract:body",
-          "body",
-          "body",
-        );
-      }
+  // 1. THE BELT AGAINST WHAT THE BOARD SAYS IT DREW.
+  if (boardOut && boardOut.at > newestRecord) {
+    const openNow = belt.filter(isOpen).length;
+    const claimed = Number(boardOut.j.openContracts);
+    if (Number.isFinite(claimed) && claimed !== openNow) {
+      say(
+        "belt-and-board-disagree",
+        `The belt has ${openNow} contract${openNow === 1 ? "" : "s"} still open and the board built itself believing there ${claimed === 1 ? "was 1" : `were ${claimed}`}.`,
+        `Counted from the belt just now, against the figure the builder wrote into board-counts.json at ${boardOut.j.builtAt}, with no record deposited since. Two readers of one belt disagreeing about what is open means one of them holds a rule the other does not.`,
+        "contract:body",
+        "body",
+        "body",
+      );
+    }
+  }
+
+  // 2. WHAT THE BOARD SAYS IT DREW AGAINST WHAT IS ACTUALLY ON SCREEN.
+  //
+  // Only when the seer looked AFTER the build, and after the newest record.
+  // Otherwise the seer is describing a different page, which is not a lie - it is
+  // an observation that has not caught up, and reporting it as a disagreement
+  // would fire after every deposit. That flood is exactly what this check did.
+  if (seerOut && boardOut && seerOut.at >= boardOut.at && seerOut.at > newestRecord) {
+    const drew = Number(boardOut.j.incomingRows);
+    const seen = seerOut.j.seen;
+    if (seen && typeof seen.rowTotal === "number" && Number.isFinite(drew) && drew !== seen.rowTotal) {
+      say(
+        "board-and-screen-disagree",
+        `The board built ${drew} incoming row${drew === 1 ? "" : "s"} and the seer counted ${seen.rowTotal} on the rendered page.`,
+        `The builder's own figure against rendered geometry in a real browser. ${seen.rowTotal > drew ? "The page is showing rows the builder did not put there." : "Rows the builder emitted are not reaching the screen, which is worse - they cannot be acted on if they cannot be seen."}`,
+        "contract:body",
+        "body",
+        "body",
+      );
+    }
+  }
+
+  // 3. A CLOSER THAT NAMED ITS TARGET IN PROSE CLOSED NOTHING.
+  //
+  // closedBy is keyed on the subject string and asks for an exact match against
+  // a record id, so "supersedes belt record <id>" contains the id without
+  // equalling it and resolves nothing. Two findings were answered within 35
+  // minutes and then reported to the operator as open and neglected for 26 hours.
+  //
+  // The matcher is NOT made cleverer - a closure applied to the wrong record
+  // deletes real work silently, which is strictly worse than one that failed to
+  // apply. Exact match, and a loud complaint.
+  if (IX.orphanClosers.length) {
+    say(
+      "closer-names-its-target-in-prose",
+      `${IX.orphanClosers.length} terminal record${IX.orphanClosers.length === 1 ? "" : "s"} name${IX.orphanClosers.length === 1 ? "s" : ""} a finding in prose instead of by id, so ${IX.orphanClosers.length === 1 ? "it closed" : "they closed"} nothing.`,
+      IX.orphanClosers
+        .map((o) => `"${o.id}" has subject "${o.subject}" and appears to mean "${o.near}"`)
+        .join("; ") +
+        `. A subject must EQUAL the target's id. ${IX.proseSubjectClosers.length > IX.orphanClosers.length ? `${IX.proseSubjectClosers.length - IX.orphanClosers.length} more terminal record(s) carry a prose subject that names no id at all and cannot be recovered by any rule; those have to be re-filed by hand.` : ""} Fix the records, not the matcher: a closer that nearly matches an id would start closing the wrong findings.`,
+      "contract:architecture",
+      "architecture",
+      "architecture",
+    );
+  }
+
+  // 4. A TRIAGE QUEUE NOBODY IS WORKING.
+  //
+  // Open counts count contracts only now, which is right - and it means an
+  // unjudged deposit can no longer trip the stale alarm above. That would have
+  // been a silent hole: thirty deposits could sit for a week and every number on
+  // the board would read healthy, because none of them is work yet.
+  //
+  // So the pressure is reported in its own terms. Not "N findings are late" -
+  // nobody is late on a deposit - but "N have been sitting unjudged", which is a
+  // fact about the factory rather than about any one of them.
+  {
+    const cold = belt.filter((r) => {
+      if (!isAwaitingTriage(r)) return false;
+      const t = runAt(r);
+      return t && now - t > STALE_HOURS * MS.h;
+    });
+    if (cold.length) {
+      const worst = cold.slice().sort((a, b) => runAt(a) - runAt(b))[0];
+      say(
+        "deposits-awaiting-triage",
+        `${cold.length} deposit${cold.length === 1 ? " has" : "s have"} been waiting over ${STALE_HOURS}h for somebody to judge whether ${cold.length === 1 ? "it is" : "they are"} work.`,
+        `Oldest: "${worst.id}", deposited ${ago(runAt(worst))}. A deposit is not owed by anyone, so it cannot go stale the way a contract can - which is exactly why it needs its own alarm. Accept one with triage.cjs, or from the board, and it becomes a contract that the intake worker can dispatch.`,
+        "operator",
+        "operator",
+        "architecture",
+      );
     }
   }
 }
@@ -304,6 +443,18 @@ for (const f of findings) {
       // Keyed this way the rule finally means what it says: the same defect,
       // found again, after somebody thought it was fixed.
       subject: `board: ${f.key}`,
+      // A WATCHER DEPOSITS, IT DOES NOT CONTRACT.
+      //
+      // Operator, 2026-09-12: "deposits to be converted into contracts." This
+      // machine finds things; deciding that a finding is work somebody owes is a
+      // separate act somebody takes. Writing `contract` here would be the factory
+      // contracting work nobody judged, which is the defect the kind taxonomy
+      // exists to remove - committed by the machine that reports it.
+      //
+      // Except what is addressed to HIM, which is a decision by definition: the
+      // address and the kind say the same thing, and saying it once would leave
+      // the other to be inferred.
+      kind: f.triggers === "operator" ? KIND.DECISION : KIND.DEPOSIT,
       claim: f.claim,
       evidence: f.evidence,
       seen: false,
