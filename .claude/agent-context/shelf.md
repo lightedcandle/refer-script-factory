@@ -75,6 +75,48 @@ have fixed it.
 
 ## OPEN
 
+### I stopped the primordial tick by adding a duty to it — 2026-09-12
+
+**This is a discipline failure, not a missing rule, and it is recorded as one.**
+`living-factory-pulse`'s own SKILL.md says the run uses one tool, that earlier
+versions were given extra duties, that they needed a permission nobody was awake
+to answer, and that it therefore "sat at one, silently, for five hours, and the
+factory looked dead". I read that file, quoted it approvingly in my own reply,
+and then added a second command to the run anyway.
+
+What I added: `Push-Location E:\refer-script-factory; node machines\pulse-belt.cjs;
+Pop-Location`, to drive the universal pulse. By hand it takes 163ms and exits 0.
+
+**The command was never the problem — the directory crossing was.** A scheduled
+run's tool approvals are scoped to its own working folder. This task's folder is
+`E:/Telechurch-e2e-v2`; the command steps outside it, hit a permission prompt
+with nobody to answer, and the 23:01:46 run hung at its single PowerShell call
+with no activity after 23:01:57. Confirmed by reading the run's transcript: one
+tool call, no return.
+
+Because the scheduler will not overlap runs, the hung run also swallowed the
+23:06 and 23:11 ticks.
+
+Recovery so far: prompt reverted (and the revert now records this incident in the
+SKILL itself, so the next session to consider adding a duty reads about both
+times it failed); hung session stopped at ~23:08. **Not yet recovered:** no run
+has started since 23:01 as of 23:21 — `enabled: true`, `nextRunAt` advancing
+23:16 → 23:26, `lastRunAt` and `totalRuns` frozen. An explicit dispatch reported
+success and produced no session, and the dispatch path warns it shows the user a
+notice and starts nothing if the folder is untrusted. **Most likely a trust or
+permission notice is waiting on the operator's screen.**
+
+**The rule that did not exist, and now should:** a scheduled run can only reach
+its own working folder without prompting. Anything universal it must drive in
+another directory needs its own routine rooted there — which is also the right
+answer for the pulse, since the pulse is factory state and has no business being
+a duty of a product repo's clock.
+
+**Revival condition — the tick beating on its own schedule again**, evidenced by
+`totalRuns` increasing and `lastRunAt` advancing, not by the task merely
+reporting `enabled`. Only then should the pulse get a driver, and it must be a
+separate routine whose working folder is the factory.
+
 ### There are two REFER.OS installers and they disagree
 
 Found 2026-09-12 while planning the installed runtime
