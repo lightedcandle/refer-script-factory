@@ -775,6 +775,15 @@ function main(lockState) {
     return {
       id: `watched-${String(r.id).slice(0, 56)}-${now.toString(36)}`,
       run: new Date(now).toISOString(),
+      // WHAT THIS ANNOTATION ACTUALLY SAYS, reduced to one comparable string.
+      // The id carries a timestamp so it is unique per run, which means nothing
+      // downstream can ever recognise two annotations as the same observation.
+      // Without a signature to compare, a scheduled watcher re-states its verdict
+      // every cycle: eleven records an hour, none of them new, and the belt dies
+      // by flooding rather than by leaking - which is itself a finding on this
+      // belt. `mind-watch` already carries the rule in its own declaration:
+      // report CHANGES against a stored baseline, never state.
+      watchSig: `${x.outcome}|${x.rv.verdict}|${x.gaps.join(";")}`,
       driver: "I7",
       tier: Number.isFinite(Number(r.tier)) ? Number(r.tier) : 2,
       dimension: r.dimension || "architecture",
@@ -826,7 +835,27 @@ function main(lockState) {
   // open-contract count jumping in one step; an annotation accepts nothing,
   // transfers no authority and changes no count, so throttling it would only
   // withhold the reasoning from the records that most need it.
-  const wouldAnnotate = byOutcome.COMPLETE.map(annotationFor);
+  // AN ANNOTATION IS WRITTEN ONLY WHEN IT WOULD SAY SOMETHING NEW.
+  //
+  // The newest prior annotation for each record carries a `watchSig`. If this
+  // round's signature matches it, the verdict has not moved and re-stating it
+  // adds a line that nothing will ever read. Silence here is the same discipline
+  // as HOLD being silent: a watcher that repeats itself teaches everyone to stop
+  // reading it, and this one is meant to run on a clock.
+  //
+  // A record annotated BEFORE this field existed has no signature, so it is
+  // annotated once more and gains one. That is a one-time cost, not a loop.
+  const lastSig = new Map();
+  for (const rec of records) {
+    if (!/^watched-/.test(String(rec.id || ""))) continue;
+    lastSig.set(String(rec.subject), rec.watchSig === undefined ? null : rec.watchSig);
+  }
+  const annotationCandidates = byOutcome.COMPLETE.map(annotationFor);
+  const wouldAnnotate = annotationCandidates.filter((a) => {
+    const prior = lastSig.get(String(a.subject));
+    return prior === undefined || prior === null || prior !== a.watchSig;
+  });
+  const annotationsUnchanged = annotationCandidates.length - wouldAnnotate.length;
 
   // ACTS ARE TAKEN IN QUEUE ORDER, NOT GROUPED BY OUTCOME. Built by outcome
   // first, and it was wrong: --arm-limit then always spent itself on promotions
@@ -964,9 +993,11 @@ function main(lockState) {
   }
   if (!ARM) {
     console.log(`\n  Not armed. ${wouldAct.length} act(s) and ${wouldAnnotate.length} annotation(s) were computed and NOT written.`);
+    if (annotationsUnchanged) console.log(`  ${annotationsUnchanged} annotation(s) suppressed - their verdict has not moved since the last one.`);
     console.log(`  The queue is judgement only; accepting work stays a deliberate act. --arm writes them.`);
   } else {
     console.log(`\n  wrote ${written.length} record(s) to the belt${deferredByLimit ? `; ${deferredByLimit} act(s) held back by --arm-limit ${ARM_LIMIT}` : ""}`);
+    if (annotationsUnchanged) console.log(`  ${annotationsUnchanged} annotation(s) suppressed - their verdict has not moved since the last one.`);
   }
   if (!DRY) console.log(`  queue -> ${path.relative(ROOT, QUEUE).replace(/\\/g, "/")}  (good for ${humanMs(GOOD_FOR)})`);
 }
