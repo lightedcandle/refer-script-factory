@@ -427,10 +427,31 @@ existing targets are backed up under `.refer-factory/updates/backup-*`, state is
 tracked in `.refer-factory/updates/state.json`, and check/apply events are
 collapsed into the process state file.
 
-**It currently has no caller.** The VS Code adapter was what invoked it on
-activation, and it was retired on 2026-09-12. The contracts, the backup path and
-`updateSync.test.ts` are intact, so wiring it to the CLI is a small job — but
-until something calls it, nothing checks for updates.
+**It currently has no caller**, and — correcting an earlier version of this
+paragraph — **do not wire one up without reading this first.** The VS Code
+adapter invoked it on activation and was retired on 2026-09-12. An earlier draft
+of this README called wiring it to the CLI "a small job". That was wrong, and
+following it would have activated three defects at once:
+
+- **The verification is a gate that only looks like one.** `applyReferUpdate`
+  checks `if (artifact.sha256 && sha256(content) !== artifact.sha256)`, and
+  `createPackagedLawManifest` sets no `sha256` on any artifact. Every law file
+  installs unverified, and the check reads as if it verified them.
+- **It stamps REFER.OS with this repo's version.** `updateSync.ts:168` passes
+  `packagedVersion(extensionRoot)`, read from this `package.json`, so REFER.OS
+  installs as `0.0.1` — while upstream `E:/refer.os` declares
+  `release_id: refer-os-1.0.0` with its own bundle and content-hashed
+  distribution manifest.
+- **One filename means two different documents.** Vendored
+  `unscripted-laws/REFER.OS/refer.library.md` is 265,765 bytes of generated
+  concatenation titled "Refer Library". Live `E:/refer.os/REFER.OS/refer.library.md`
+  is 2,029 bytes titled "Reference Intelligence Doctrine". The copy path targets
+  `REFER.OS/<fileName>`, so applying the packaged manifest would overwrite live
+  doctrine with an unrelated document.
+
+The vendored library is 86 files; the live one is 118. This machinery predates
+the upstream packaging and now competes with it. Reconciling the two installers
+is the job — not calling this one.
 
 ## Packaging
 

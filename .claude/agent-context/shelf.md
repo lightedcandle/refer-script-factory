@@ -75,6 +75,55 @@ have fixed it.
 
 ## OPEN
 
+### There are two REFER.OS installers and they disagree
+
+Found 2026-09-12 while planning the installed runtime
+([`docs/PLAN-REFER-FACTORY-INSTALLED-RUNTIME-001.md`](../../docs/PLAN-REFER-FACTORY-INSTALLED-RUNTIME-001.md),
+draft, not ratified). **The premise of that work moved:** REFER.OS is not
+unpackaged waiting to be made installable. It is already packaged upstream —
+`E:/refer.os/REFER.OS/manifests/release.manifest.json` declares
+`release_id: refer-os-1.0.0` with a bundle, a content-hashed distribution
+manifest, evidence and a licence. Verified by reading the manifest.
+
+Meanwhile this repo carries its own older installer in `src/updates/**`, and the
+two do not agree. Each of the following was verified here, not taken on report:
+
+- **`src/updates` stamps REFER.OS with this repo's version.** `updateSync.ts:168`
+  passes `packagedVersion(extensionRoot)` from this `package.json`, so REFER.OS
+  installs as `0.0.1` against upstream's `1.0.0`. This is exactly the conflation
+  the shelved platform thread warns turns a two-month job into a two-year one,
+  and it was already committed in code while that warning was being written.
+- **Its verification is a gate that only looks like one.** `applyReferUpdate`
+  guards with `if (artifact.sha256 && …)` and `createPackagedLawManifest` sets no
+  `sha256` on any artifact, so every law file installs unverified.
+- **One filename, two different documents.** Vendored `refer.library.md` is
+  265,765 bytes of generated concatenation ("Refer Library"); live is 2,029 bytes
+  ("Reference Intelligence Doctrine"). The copy path targets
+  `REFER.OS/<fileName>`, so applying the packaged manifest overwrites live
+  doctrine. Vendored corpus is 86 files, live is 118.
+- **`.refer/source.json` has two schemas and two owners.** The file carries the v2
+  absorption shape; `scripts/reference/universal-source-sync.mjs` expects a
+  `sources[]` array. `node scripts/reference/universal-source-sync.mjs check`
+  exits **1** on a healthy tree — *"source record is missing or has no sources
+  array"*. Permanently red, so it reports nothing.
+
+**Not dangerous today, and that is the only reason it is shelved rather than
+fixed now:** nothing calls `src/updates/**`. Only `updateSync.test.ts` imports it;
+the VS Code adapter that invoked it was retired the same day. The README
+previously suggested wiring it to the CLI as "a small job" — that line has been
+corrected, because following it would have armed all three defects at once.
+
+**Revival condition — anything that would give `src/updates/**` a caller.** Not a
+date. The moment someone wants update-checking back, this must be answered first,
+and the answer is probably to delete this installer and consume upstream's rather
+than repair a second one.
+
+Reported by a planning subagent and independently verified here; two figures it
+supplied are *not* verified and should not be relied on without checking: that
+upstream's declared source set is 26 paths rather than the corpus, and that
+`attach`/`refresh`/`prove` cannot target a live consumer because the fixture
+selector is frozen.
+
 ### The seven machines still in the product repo
 
 Recorded in full at [`docs/seven-machines-pending-move.md`](../../docs/seven-machines-pending-move.md).
