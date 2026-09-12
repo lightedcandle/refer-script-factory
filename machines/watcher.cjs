@@ -1,25 +1,195 @@
 #!/usr/bin/env node
 /**
- * THE WATCHER - ZONE 1, INCOMING. What should be judged, in what order, by when.
+ * THE WATCHER - FIVE ZONES. What should be judged, what has stopped moving,
+ * what stopped keeping its promise, what can still get in, and what only looks
+ * finished.
  *
  * UNIVERSAL MACHINE. Resolves its subject repo from process.cwd(), never from
  * __dirname (precedent P13), and deposits to that repo's belt.
  *
  * ---------------------------------------------------------------------------
- * FIVE ZONES, AND THIS COVERS ONE
+ * FIVE ZONES, AND WHAT EACH ONE IS ALLOWED TO DO
  * ---------------------------------------------------------------------------
  *
  * `watcher-has-five-zones`: the round covers incoming, the belt, the rail of
  * rhythms, the intake doors, and the closed pile - one per place work can stop
- * moving unnoticed. Its own recommendation is the reason this file covers one:
+ * moving unnoticed. Its own recommendation set the order of construction:
  *
  *   "A watcher that half-covers five zones reports confidently about places it
  *    cannot see, which is worse than a watcher that covers one zone honestly."
  *
- * So ZONES below names all five and marks four NOT COVERED, and every report
- * says so. Absence is not failure - a zone nobody watched is a different fact
- * from a zone that came back clean, and this machine must never let the first
- * read as the second.
+ * Zone 1 was built and armed first and is unchanged. Zones 2 to 5 are added
+ * here, and each one still states its own coverage in every report - what it
+ * looked at, and what it could not look at. Absence is not failure: a zone
+ * nobody watched is a different fact from a zone that came back clean, and this
+ * machine must never let the first read as the second.
+ *
+ * AUTHORITY IS NOT SHARED BETWEEN THE ZONES, AND THAT IS DELIBERATE.
+ *
+ * Zone 1 may accept work, behind --arm, at most --arm-limit per run. That limit
+ * was an operator decision made while watching a real pass, and adding four more
+ * zones is not a reason to revisit it. So ZONES 2 TO 5 HAVE NO ACCEPTANCE POWER
+ * AT ALL. They observe, they annotate, and they queue. They do not promote, do
+ * not retire, do not close, do not dispatch, and do not return work to incoming
+ * - not even where they can see plainly that somebody should. Each zone's `can`
+ * and `cannot` are written into its declaration below and into every report, so
+ * a reader never has to infer what a verdict is going to cause.
+ *
+ * The one thing they may write is an ANNOTATION, and only when it says something
+ * the belt does not already carry. See the signature note further down: it now
+ * covers every zone, because all five run on the same thirty-minute clock and a
+ * watcher that re-states an unmoved verdict floods the belt it is watching.
+ *
+ * ---------------------------------------------------------------------------
+ * ZONE 2 - THE BELT. Is this still moving, and if not, why not?
+ * ---------------------------------------------------------------------------
+ *
+ * The liveness primitive already exists and is the whole point of this zone.
+ * `sessionLife` returns not just alive or dead but ITS OWN EVIDENCE - `where`
+ * and `at` - and this zone shows both, every time, because the four sources are
+ * not equally good. A transcript is a session writing its own turns. A worktree
+ * FOLDER's mtime only moves when a file is added or removed at the top level,
+ * which is almost never while work is happening; it is barely evidence at all.
+ * A verdict resting on it is reported as resting on it.
+ *
+ *   MOVING     alive, with the evidence named.
+ *   DELIVERED  the session is gone and the item was closed. Silent - the
+ *              closure already says it, and saying it twice is the board
+ *              congratulating itself for one piece of work.
+ *   QUIET      gone quiet, and something here says do not call that dead.
+ *   ADRIFT     gone, long past the horizon, nothing unfinished in the last
+ *              turn, and the item is still open. Reported, never returned.
+ *   UNSEEN     no evidence on disk at all. Not dead. Unobserved.
+ *
+ * QUIET IS THE ONE THAT WAS MISSING, and it is why this zone had to exist here
+ * rather than in exit-worker. `exit-worker-needs-a-quiet-outcome`: idle and dead
+ * are identical on disk, a session waiting for a reply writes nothing, and
+ * thirty minutes of quiet therefore meant ABANDONED and threw the work back to
+ * incoming. That finding also says why the fix does not belong downstream - "do
+ * not build a heuristic in exit-worker, it can only measure" - so the measuring
+ * stays there and the reading stays here.
+ *
+ * WHAT THE READING ACTUALLY IS, stated narrowly so nobody has to trust the word
+ * "judgement". Three reasons produce QUIET, and each is a fact rather than a
+ * feeling:
+ *
+ *   a. THE LAST TURN ASKED SOMETHING. The final assistant turn ends in a
+ *      question mark, or in one of a short list of asking forms. A session that
+ *      asked and got no answer is not abandoned; it is waiting, and the person
+ *      it is waiting for is the one who needs to see this.
+ *   b. THE LAST TURN IS A TOOL CALL WITH NO RESULT. Mechanical, and the
+ *      strongest of the three: the session stopped inside a tool it never got
+ *      back from, which is what an unanswered permission prompt looks like on
+ *      disk.
+ *   c. THE ONLY LIVENESS EVIDENCE IS WEAK. If the whole case for "dead" is a
+ *      folder mtime, then "dead" has not been shown. This one is the reason a
+ *      transcript-less background worker cannot be called adrift by silence.
+ *
+ * A run whose last turn is an API error is neither quiet nor adrift - it is a
+ * session that FAILED, which is a third thing, and it is named as one.
+ *
+ * ---------------------------------------------------------------------------
+ * ZONE 3 - THE RAIL. Is each rhythm keeping its own declared promise?
+ * ---------------------------------------------------------------------------
+ *
+ * Every trigger declares `every` and the schedule state records what it is
+ * actually running at. THE TWO DISAGREEING IS NORMAL - the adaptive ladder
+ * tightens a rhythm to its floor when it faults and lets it climb back a rung at
+ * a time - so a divergence is only worth reporting when nothing explains it.
+ *
+ * The ladder itself lives in the repo's scheduler, which a universal machine
+ * cannot import, so this checks the WEAKER, SAFER thing: an interval anywhere
+ * between the declared floor and the declared ceiling is explainable, and only
+ * one outside that range is reported. That errs quiet on purpose. Reimplementing
+ * the exact rungs here would be a second copy of a rule that lives somewhere
+ * else, and the first time the ladder changed upstream this would start raising
+ * alarms about a scheduler that was working correctly.
+ *
+ *   ON RHYTHM   fired inside its own interval. Silent.
+ *   LATE        overdue against the interval it is ACTUALLY running at, not the
+ *               one it declared. A tightened rhythm is late sooner, which is
+ *               the point of tightening it.
+ *   NEVER RUN   declared, and the state has no run for it. Not "late" - a
+ *               rhythm that has never fired and one that fired and stopped are
+ *               different faults with different fixes.
+ *   FAULTED     it ran and exited non-zero. Visible on the board only as a
+ *               tightened interval, which reads like diligence.
+ *   DRIFTED     running at an interval its own declaration cannot reach.
+ *   EXTERNAL    `drivenBy` something outside this repo. NEVER reported as
+ *               overdue for not being fired here, because this repo is not what
+ *               fires it - see the note on the primordial tick below.
+ *   PHANTOM     drawn on the rail with no declaration behind it.
+ *
+ * THE PHANTOM CHECK IS DELIBERATELY NOT A LOOKUP OF THE BOARD'S OWN LABEL. The
+ * board already flags one cell NOT A TRIGGER, and believing that flag would make
+ * this zone a mirror rather than a check. It reads the set of rhythm cells the
+ * board actually rendered and subtracts the set of declarations and the set of
+ * scheduled triggers; whatever is left is drawn by something that can neither
+ * declare it nor fire it. Same verdict, reached from the data. If the board's
+ * output is not on disk the check reports NOT CHECKED, never zero.
+ *
+ * AND A FAILED TICK NOW LEAVES A TRACE. `a-tick-that-could-not-run-leaves-no-
+ * trace`: five consecutive pulses failed and nothing the board can see recorded
+ * it, because the scheduler logs runs that HAPPENED - a run that could not start
+ * is indistinguishable from a quiet stretch. The harness does record them, with
+ * reasons, and where it keeps them is written into `routineRuns` below. This is
+ * a display gap rather than a data gap, which makes it the cheapest honest fix
+ * available, and it is the one thing on this rail that can say WHY the factory
+ * went still rather than only THAT it did.
+ *
+ * ---------------------------------------------------------------------------
+ * ZONE 4 - THE DOORS. Can work still get in, and does each door know it?
+ * ---------------------------------------------------------------------------
+ *
+ * Four doors: the three intake doors work arrives through - AUTO, CHAT, SPAWN -
+ * and the EXIT door finished work leaves by. Each one is observed through a
+ * report or through an evidence directory, and the states are kept apart on
+ * purpose because this factory has confused them seven times:
+ *
+ *   OPEN            observed, recently, and able to pull.
+ *   OFF             deliberately not pulling. ONLY AUTO CAN BE OFF. A person
+ *                   can always open a chat and an agent can always spawn one, so
+ *                   for those two the honest word is never "off".
+ *   NEVER OBSERVED  the report has never been written. This is NOT off. A door
+ *                   nobody has ever looked at and a door somebody switched off
+ *                   are opposite facts about whether anyone is in control.
+ *   UNREADABLE      the report exists and will not parse. Not absent either.
+ *   STALE           the report exists and is old. We know what it said; we do
+ *                   not know what is true now.
+ *   UNDRIVEN        the report is fine and nothing on the rail fires it. A door
+ *                   that only opens when somebody remembers is not a door.
+ *
+ * ---------------------------------------------------------------------------
+ * ZONE 5 - THE CLOSED PILE. Did the claim actually land?
+ * ---------------------------------------------------------------------------
+ *
+ * A terminal record closes its target only if `subject` EXACTLY EQUALS the
+ * target's id, and that is not going to change here. `kind.cjs` says why and it
+ * is right: a matcher that NEARLY matches an id would start closing the wrong
+ * findings, and a closure applied to the wrong record deletes real work silently
+ * - strictly worse than one that failed to apply.
+ *
+ * So this zone makes the failures VISIBLE AND ACTIONABLE and fuzzy-matches
+ * nothing.
+ *
+ *   LANDED        subject equals a known id. Silent.
+ *   SELF-CLOSING  terminal with no subject; it closes itself and nothing else.
+ *                 Silent, because that is a legitimate shape and not a miss.
+ *   NEAR MISS     the subject CONTAINS a known id without equalling it. This one
+ *                 was unmistakably reaching for that record, and the repair is a
+ *                 one-line re-file. Named, with the id it appears to mean.
+ *   UNRECOVERABLE the subject shares no id with anything on the belt. No honest
+ *                 rule recovers these; they need re-filing by hand, and the
+ *                 whole value this zone adds is that the list exists and is
+ *                 short enough to work through.
+ *
+ * ---------------------------------------------------------------------------
+ * THE LOOP - his six steps, with one insertion that is not optional
+ * ---------------------------------------------------------------------------
+ *
+ * Zone 1's loop. Zones 2 to 5 do not run it: they have no timers, because there
+ * is no unmade judgement to time - a rhythm that is late is late now, not late
+ * in four hours - and no promotion, because they cannot accept.
  *
  * ---------------------------------------------------------------------------
  * THE LOOP - his six steps, with one insertion that is not optional
@@ -89,8 +259,13 @@
  * named in the verdict so a reader can overrule it in one glance.
  *
  * ---------------------------------------------------------------------------
- * FIVE OUTCOMES, NO MORE
+ * FIVE OUTCOMES, NO MORE - IN ZONE 1
  * ---------------------------------------------------------------------------
+ *
+ * Each later zone has its own small vocabulary, listed above, because each asks
+ * a different question. What they share is the shape: exactly one outcome per
+ * thing, one of them meaning "fine, and therefore silent", and no outcome that
+ * quietly stands for "I could not tell".
  *
  *   HOLD      fresh and correct, timer still running. COMPLETELY SILENT - not
  *             listed, only counted. This is the most common outcome by far and a
@@ -126,6 +301,14 @@
  * with timers, re-verification results and named gaps, and writes NOTHING to the
  * belt. That is pure gain with no transfer of authority.
  *
+ * PROMOTION BELONGS TO ZONE 1 ALONE. Zones 2 to 5 write annotations and nothing
+ * else, ever, and their annotations are capped per run by
+ * --zone-annotate-limit. That cap is a narrowing, not a new power: four zones
+ * arriving at once would otherwise put a few dozen records on the belt in a
+ * single tick on their first armed pass, which is the failure this belt already
+ * has a name for - `a-belt-can-die-by-flooding-not-only-by-leaking`. Held-back
+ * annotations are counted and reported, and the most serious go first.
+ *
  * --arm-limit N exists for the same reason and is not the same thing as intake's
  * capacity. Intake's capacity governs how many contracts may be WORKED at once.
  * This governs how many acceptances may be WRITTEN in one run, so the belt's
@@ -144,6 +327,12 @@
  *   node <factory>/machines/watcher.cjs --show-holds   list the silent ones (debugging)
  *   node <factory>/machines/watcher.cjs --arm      also write the acts to the belt
  *   node <factory>/machines/watcher.cjs --arm --arm-limit 3
+ *   node <factory>/machines/watcher.cjs --zones 3,5     judge only these zones
+ *   node <factory>/machines/watcher.cjs --zone-annotate-limit 8
+ *
+ * --zones takes zone numbers or ids and is for proving one zone at a time; the
+ * ones left out report NOT ASKED, which is a third thing again - not covered,
+ * not clean, just not run this round.
  *
  * Exit 0 when it did its job, whatever it found - finding work is not a fault,
  * and a scheduler that reads a busy morning as a failure will nap the watcher.
@@ -154,7 +343,8 @@ const fs = require("fs");
 const os = require("os");
 const path = require("path");
 const { KIND, beltIndex, triageRecord } = require("./kind.cjs");
-const { repoRootOf } = require("./session-life.cjs");
+const { repoRootOf, sessionLife, tokenize, PROJECTS } = require("./session-life.cjs");
+const { discoverTriggers, readScheduleState } = require("./triggers.cjs");
 
 // ---------------------------------------------------------------------------
 // THE SUBJECT REPO
@@ -182,11 +372,25 @@ const DRY = has("--dry");
 const JSON_OUT = has("--json");
 const SHOW_HOLDS = has("--show-holds");
 const ARM = has("--arm");
-const ARM_LIMIT = (() => {
-  const i = argv.indexOf("--arm-limit");
-  if (i < 0) return Infinity;
+const numArg = (flag, fallback) => {
+  const i = argv.indexOf(flag);
+  if (i < 0) return fallback;
   const n = Number(argv[i + 1]);
-  return Number.isFinite(n) && n >= 0 ? n : Infinity;
+  return Number.isFinite(n) && n >= 0 ? n : fallback;
+};
+const ARM_LIMIT = numArg("--arm-limit", Infinity);
+
+// The new zones' whole write budget for one run. Eight rather than three
+// because an annotation accepts nothing and changes no count - it is the flood
+// that is being capped, not the authority, and there is no authority here to cap.
+const ZONE_ANNOTATE_LIMIT = numArg("--zone-annotate-limit", 8);
+
+// --zones 2,4  or  --zones belt,doors. Absent means all of them.
+const ZONES_ASKED = (() => {
+  const i = argv.indexOf("--zones");
+  if (i < 0) return null;
+  const raw = String(argv[i + 1] || "").split(/[,\s]+/).map((s) => s.trim().toLowerCase()).filter(Boolean);
+  return raw.length ? new Set(raw) : null;
 })();
 
 const MS = { s: 1e3, m: 6e4, h: 36e5, d: 864e5 };
@@ -200,15 +404,421 @@ const expectedFsError = (err) =>
   !!err && ["ENOENT", "ENOTDIR", "EACCES", "EPERM", "EBUSY", "EEXIST", "EMFILE", "ELOOP", "ENAMETOOLONG"].includes(err.code);
 
 // ---------------------------------------------------------------------------
-// THE ZONES. Four of five are NOT COVERED and say so in every report.
+// THE ZONES. All five are covered now, and each states what it may and may not
+// do - in the declaration, so a reader never infers it from behaviour.
 // ---------------------------------------------------------------------------
 const ZONES = [
-  { id: "incoming", covered: true, what: "deposits awaiting triage and decisions held for him" },
-  { id: "belt", covered: false, what: "open contracts and whether anything is actually moving" },
-  { id: "rail", covered: false, what: "rhythms: declared cadence against what actually fired" },
-  { id: "doors", covered: false, what: "auto, chat and spawn intake - are they open, are they pulling" },
-  { id: "closed-pile", covered: false, what: "claimed-done work that closed nothing" },
+  {
+    n: 1,
+    id: "incoming",
+    covered: true,
+    what: "deposits awaiting triage and decisions held for him",
+    asks: "what should be judged, in what order, by when",
+    can: "re-verify, time, prioritise, annotate, and - behind --arm, up to --arm-limit per run - accept a deposit as a contract or retire it",
+    cannot: "accept more than the arm limit in one run, or take a decision reserved to him",
+  },
+  {
+    n: 2,
+    id: "belt",
+    covered: true,
+    what: "work that was dispatched and is supposed to be moving",
+    asks: "is this still moving, and if not, why not",
+    can: "prove liveness from disk, name which evidence it had, and separate quiet from adrift",
+    cannot: "return work to incoming, close it, re-dispatch it, or touch a live session. exit-worker owns the act; this only reads",
+  },
+  {
+    n: 3,
+    id: "rail",
+    covered: true,
+    what: "rhythms: declared cadence against what actually fired, and runs that could not start",
+    asks: "is each rhythm keeping its own declared promise",
+    can: "compare declaration against schedule state, surface failed scheduled runs with their reasons, and name a rail cell nothing declares",
+    cannot: "fire a rhythm, change an interval, edit a declaration, or write to the schedule state",
+  },
+  {
+    n: 4,
+    id: "doors",
+    covered: true,
+    what: "auto, chat and spawn intake, and the exit door work leaves by",
+    asks: "can work still get in, and does each door know it",
+    can: "report each door's state and say which evidence it rests on, keeping off, never-observed, unreadable and stale apart",
+    cannot: "open a door, arm intake, or dispatch anything",
+  },
+  {
+    n: 5,
+    id: "closed-pile",
+    covered: true,
+    what: "claimed-done work that closed nothing",
+    asks: "did the claim actually land",
+    can: "list every terminal record whose subject matched no id, and name the near misses",
+    cannot: "fuzzy-match a subject to an id, re-file a record, or close anything on its behalf",
+  },
 ];
+const zoneAsked = (id) => {
+  if (!ZONES_ASKED) return true;
+  const z = ZONES.find((x) => x.id === id);
+  return ZONES_ASKED.has(id) || (z ? ZONES_ASKED.has(String(z.n)) : false);
+};
+
+// ---------------------------------------------------------------------------
+// WHAT THE LATER ZONES HAD TO LEARN TO READ
+// ---------------------------------------------------------------------------
+
+/**
+ * "30m" -> 1800000. NULL when it is not a duration, never a default.
+ *
+ * A declaration with an unparseable `every` is a declaration this machine cannot
+ * reason about, and inventing an hour for it would put a plausible number in
+ * front of somebody in exactly the place they came to check a number.
+ */
+const DURATION_RE = /^(\d+(?:\.\d+)?)\s*(ms|s|m|h|d)$/i;
+function parseEvery(v) {
+  const m = DURATION_RE.exec(String(v == null ? "" : v).trim());
+  if (!m) return null;
+  const n = Number(m[1]);
+  const u = m[2].toLowerCase();
+  return u === "ms" ? n : n * MS[u];
+}
+
+/** The last `bytes` of a file, as text. Cheap enough to do to a hundred transcripts. */
+function tailOf(file, bytes) {
+  let st;
+  try {
+    st = fs.statSync(file);
+  } catch (err) {
+    if (!expectedFsError(err)) throw err;
+    return null;
+  }
+  const len = Math.min(bytes, st.size);
+  const buf = Buffer.alloc(len);
+  let fd;
+  try {
+    fd = fs.openSync(file, "r");
+  } catch (err) {
+    if (!expectedFsError(err)) throw err;
+    return null;
+  }
+  try {
+    fs.readSync(fd, buf, 0, len, st.size - len);
+  } finally {
+    fs.closeSync(fd);
+  }
+  // The first line of a mid-file read is almost always a fragment. Dropping it
+  // when the read was truncated is the difference between a parse error every
+  // single time and none.
+  const text = buf.toString("utf8");
+  return len < st.size ? text.slice(text.indexOf("\n") + 1) : text;
+}
+
+/** JSONL entries out of a tail, skipping the ones that do not parse. */
+function entriesFromTail(text) {
+  const out = [];
+  for (const line of String(text || "").split("\n")) {
+    const t = line.trim();
+    if (!t.startsWith("{")) continue;
+    try {
+      out.push(JSON.parse(t));
+    } catch {
+      // A truncated or half-written line in a transcript being appended to right
+      // now is expected, and it is not this machine's to repair.
+    }
+  }
+  return out;
+}
+
+/**
+ * Where a session wrote its turns.
+ *
+ * THIS IS A SECOND COPY OF A RULE THAT LIVES IN session-life.cjs, and it is here
+ * only because that file was outside this change's write boundary. It uses that
+ * file's own exported primitives - PROJECTS and tokenize - so the parts most
+ * likely to drift are still shared, but the directory-naming rule itself is now
+ * written twice, which is the thing this factory has been burned by eight times.
+ * LIFT IT INTO session-life.cjs AS `transcriptsFor` at the first opportunity;
+ * until then, a change to how a worktree session's project directory is named
+ * has to be made in both places.
+ */
+function transcriptsFor(id, root) {
+  if (!id) return [];
+  const token = tokenize(repoRootOf(root));
+  const out = [];
+  let dirs;
+  try {
+    dirs = fs.readdirSync(PROJECTS);
+  } catch (err) {
+    if (!expectedFsError(err)) throw err;
+    return [];
+  }
+  for (const d of dirs) {
+    const own = d === `${token}--claude-worktrees-${id}`;
+    const base = d === token;
+    if (!own && !base) continue;
+    const dir = path.join(PROJECTS, d);
+    let files;
+    try {
+      files = fs.readdirSync(dir);
+    } catch (err) {
+      if (!expectedFsError(err)) throw err;
+      continue;
+    }
+    for (const f of files) {
+      if (!f.endsWith(".jsonl")) continue;
+      if (!own && !f.startsWith(String(id).slice(0, 8))) continue;
+      try {
+        out.push({ path: path.join(dir, f), at: fs.statSync(path.join(dir, f)).mtimeMs, own });
+      } catch (err) {
+        if (!expectedFsError(err)) throw err;
+      }
+    }
+  }
+  return out.sort((a, b) => b.at - a.at);
+}
+
+// The short list of asking forms. Kept short on purpose: every phrase added here
+// is a way for a genuinely abandoned session to be excused as waiting, and the
+// cost of that mistake is work sitting still while the board says somebody is
+// on it. A question mark carries most of the weight; these are the ones that
+// ask without one.
+const ASK_RE = /\b(shall i|should i|would you like|do you want|which (?:one|of these|would)|let me know|please confirm|awaiting (?:your )?(?:reply|confirmation|approval)|may i proceed|waiting (?:for|on) (?:you|your))\b/i;
+
+/**
+ * What the last turn of a transcript was.
+ *
+ * @returns {null | {kind:"api-error"|"awaiting-tool"|"question"|"statement", at:number|null, text:string, why:string}}
+ *          null when there is no transcript to read - which is NOT "it said
+ *          nothing". A session with no transcript is unobserved, and the caller
+ *          must not turn that into a verdict about what it was doing.
+ */
+function lastTurnOf(file) {
+  const text = tailOf(file, 192 * 1024);
+  if (text === null) return null;
+  const entries = entriesFromTail(text).filter((e) => e && (e.type === "assistant" || e.type === "user"));
+  if (!entries.length) return null;
+
+  const flatten = (c) => {
+    if (typeof c === "string") return c;
+    if (!Array.isArray(c)) return "";
+    return c.map((b) => (b && typeof b.text === "string" ? b.text : "")).join("\n");
+  };
+
+  const last = entries[entries.length - 1];
+  const at = Date.parse(last.timestamp || "") || null;
+
+  // A run that ended on an API error FAILED. Calling that quiet would excuse a
+  // starved session as a patient one, and calling it adrift would blame the
+  // session for something the account did.
+  const errored = entries.filter((e) => e.isApiErrorMessage).pop();
+  if (errored && errored === last) {
+    return { kind: "api-error", at, text: flatten(errored.message && errored.message.content).slice(0, 300), why: "the last turn is an API error, so this run failed rather than stopped" };
+  }
+
+  // A tool call with nothing coming back is the on-disk shape of an unanswered
+  // permission prompt. Mechanical, and the strongest of the three quiet signals.
+  const blocks = last.message && Array.isArray(last.message.content) ? last.message.content : [];
+  const calls = blocks.filter((b) => b && b.type === "tool_use").map((b) => b.id);
+  if (last.type === "assistant" && calls.length) {
+    return { kind: "awaiting-tool", at, text: String(blocks.map((b) => b.name).filter(Boolean).join(", ")).slice(0, 120), why: "the last turn is a tool call with no result after it - the session stopped inside a tool it never came back from" };
+  }
+
+  const said = flatten(last.message && last.message.content).trim();
+  const tailText = said.slice(-400);
+  if (last.type === "assistant" && (/\?\s*$/.test(said) || ASK_RE.test(tailText))) {
+    return { kind: "question", at, text: tailText.slice(-200), why: "the last turn asked something and nothing answered it" };
+  }
+  return { kind: "statement", at, text: tailText.slice(-200), why: "the last turn neither asked anything nor stopped inside a tool" };
+}
+
+// ---------------------------------------------------------------------------
+// WHERE THE HARNESS KEEPS A RUN THAT COULD NOT RUN
+// ---------------------------------------------------------------------------
+//
+// `a-tick-that-could-not-run-leaves-no-trace` said the failures are recorded
+// with their reasons and that surfacing them is a display gap. It is, and this
+// is where they are. Found by probing rather than assumed, which the finding
+// also asked for:
+//
+//   1. The desktop app writes ONE FILE PER SCHEDULED RUN under
+//      <app data>/Claude/claude-code-sessions/<a>/<b>/local_<uuid>.json. Each
+//      carries `scheduledTaskId`, `createdAt`, `lastActivityAt`, the `cwd` it
+//      ran in, and - the load-bearing field - `cliSessionId`.
+//   2. `cliSessionId` names the run's transcript, at
+//      ~/.claude/projects/<tokenised cwd>/<cliSessionId>.jsonl. A run that could
+//      not start ends its transcript on an assistant turn with
+//      `isApiErrorMessage: true`, and the reason is the message text.
+//
+// So the run file says a run was ATTEMPTED and the transcript says whether it
+// GOT ANYWHERE. Neither alone is enough: the scheduler's own state records only
+// runs that happened, which is exactly the hole.
+//
+// NOT OBSERVABLE IS NOT ZERO. On a host with no desktop app there is no store,
+// and this returns `observable: false` rather than a clean sheet. That
+// distinction is the whole reason the finding exists.
+const DESKTOP_SESSIONS = (() => {
+  const home = process.env.USERPROFILE || process.env.HOME || "";
+  const candidates = [
+    process.env.APPDATA ? path.join(process.env.APPDATA, "Claude", "claude-code-sessions") : null,
+    home ? path.join(home, "Library", "Application Support", "Claude", "claude-code-sessions") : null,
+    home ? path.join(home, ".config", "Claude", "claude-code-sessions") : null,
+  ].filter(Boolean);
+  for (const c of candidates) {
+    try {
+      if (fs.statSync(c).isDirectory()) return c;
+    } catch (err) {
+      if (!expectedFsError(err)) throw err;
+    }
+  }
+  return null;
+})();
+
+// Bounded, and the bound is reported when it bites. A scan that gave up and a
+// scan that found nothing are different facts - see the same rule in
+// session-life.cjs, where it is load-bearing for exactly this reason.
+const RUN_SCAN_MAX_FILES = 4000;
+const RUN_INSPECT_MAX = 250;
+
+function runFilesUnder(dir) {
+  const out = [];
+  let truncated = false;
+  const queue = [{ dir, depth: 0 }];
+  while (queue.length) {
+    const { dir: cur, depth } = queue.shift();
+    let entries;
+    try {
+      entries = fs.readdirSync(cur, { withFileTypes: true });
+    } catch (err) {
+      if (!expectedFsError(err)) throw err;
+      continue;
+    }
+    for (const e of entries) {
+      if (e.isSymbolicLink()) continue;
+      const full = path.join(cur, e.name);
+      if (e.isDirectory()) {
+        if (depth < 3) queue.push({ dir: full, depth: depth + 1 });
+        else truncated = true;
+        continue;
+      }
+      if (!e.isFile() || !/^local_.*\.json$/.test(e.name)) continue;
+      if (out.length >= RUN_SCAN_MAX_FILES) {
+        truncated = true;
+        return { files: out, truncated };
+      }
+      out.push(full);
+    }
+  }
+  return { files: out, truncated };
+}
+
+/**
+ * Every attempt the harness made at one scheduled routine inside a window, and
+ * which of them could not start.
+ *
+ * @param {string} taskId  the routine's id, e.g. "living-factory-pulse"
+ * @param {number} sinceMs epoch millis; runs older than this are not inspected
+ */
+function routineRuns(taskId, sinceMs) {
+  if (!DESKTOP_SESSIONS) {
+    return { observable: false, why: "no desktop session store on this host, so an attempted run leaves nothing this machine can read. This is NOT a clean run history.", where: null };
+  }
+  const { files, truncated } = runFilesUnder(DESKTOP_SESSIONS);
+  const attempts = [];
+  let unreadableRunFiles = 0;
+  for (const f of files) {
+    let j;
+    try {
+      j = JSON.parse(fs.readFileSync(f, "utf8").replace(/^\uFEFF/, ""));
+    } catch (err) {
+      if (err instanceof SyntaxError) {
+        unreadableRunFiles++;
+        continue;
+      }
+      if (!expectedFsError(err)) throw err;
+      continue;
+    }
+    if (String(j.scheduledTaskId || "") !== String(taskId)) continue;
+    const at = Number(j.createdAt) || 0;
+    if (!at || at < sinceMs) continue;
+    attempts.push({ at, until: Number(j.lastActivityAt) || null, cwd: j.cwd || null, cli: j.cliSessionId || null });
+  }
+  attempts.sort((a, b) => a.at - b.at);
+
+  const inspected = attempts.slice(-RUN_INSPECT_MAX);
+  const failed = [];
+  let unreadTranscripts = 0;
+  for (const a of inspected) {
+    if (!a.cli || !a.cwd) {
+      unreadTranscripts++;
+      continue;
+    }
+    const t = path.join(PROJECTS, tokenize(a.cwd), `${a.cli}.jsonl`);
+    const turn = lastTurnOf(t);
+    if (turn === null) {
+      // A run whose transcript is not on disk is a run this cannot judge. It is
+      // NOT counted as a success, and it is NOT counted as a failure.
+      unreadTranscripts++;
+      continue;
+    }
+    if (turn.kind === "api-error") failed.push({ at: new Date(a.at).toISOString(), atMs: a.at, reason: turn.text.replace(/\s+/g, " ").trim() });
+  }
+
+  // Consecutive matters more than total: one starved tick is weather, a run of
+  // them is the factory going still with a reason nobody can see.
+  let longestRun = 0;
+  let cur = 0;
+  const failedAt = new Set(failed.map((f) => f.atMs));
+  for (const a of inspected) {
+    if (failedAt.has(a.at)) cur++;
+    else cur = 0;
+    if (cur > longestRun) longestRun = cur;
+  }
+  let trailing = 0;
+  for (let i = inspected.length - 1; i >= 0 && failedAt.has(inspected[i].at); i--) trailing++;
+
+  return {
+    observable: true,
+    where: DESKTOP_SESSIONS.replace(/\\/g, "/"),
+    attempts: attempts.length,
+    inspected: inspected.length,
+    failed: failed.length,
+    longestConsecutiveFailures: longestRun,
+    failingRightNow: trailing,
+    firstFailure: failed.length ? failed[0].at : null,
+    lastFailure: failed.length ? failed[failed.length - 1].at : null,
+    reasons: [...new Set(failed.map((f) => f.reason))].slice(0, 4),
+    // Named rather than swallowed, so a number computed from half the evidence
+    // never renders as a number computed from all of it.
+    unreadableRunFiles,
+    runsWithNoReadableTranscript: unreadTranscripts,
+    scanTruncated: truncated,
+  };
+}
+
+/**
+ * A worker's own report, with absent, unreadable and stale kept apart.
+ *
+ * Three different facts arrive here as one missing number if this is written
+ * carelessly, and the doors zone exists mostly to keep them apart.
+ */
+function readReport(file, staleAfterMs) {
+  let raw;
+  try {
+    raw = fs.readFileSync(file, "utf8");
+  } catch (err) {
+    if (err && err.code === "ENOENT") return { state: "absent", why: "has never been written" };
+    if (!expectedFsError(err)) throw err;
+    return { state: "unreadable", why: `could not be read (${err.code})` };
+  }
+  let j;
+  try {
+    j = JSON.parse(raw.replace(/^\uFEFF/, ""));
+  } catch (err) {
+    if (!(err instanceof SyntaxError)) throw err;
+    return { state: "unreadable", why: "exists and will not parse" };
+  }
+  const at = Date.parse(j.checkedAt || j.builtAt || j.producedAt || "") || null;
+  if (at === null) return { state: "undated", why: "exists and carries no timestamp, so nothing here can say whether it is current", json: j, at: null };
+  if (now - at > staleAfterMs) return { state: "stale", why: `last written ${humanMs(now - at)} ago`, json: j, at };
+  return { state: "fresh", why: `written ${humanMs(now - at)} ago`, json: j, at };
+}
 
 // ---------------------------------------------------------------------------
 // THE LOCK - TAKEN BEFORE ANYTHING ELSE
@@ -746,6 +1356,513 @@ function main(lockState) {
   const byOutcome = { HOLD: [], COMPLETE: [], PROMOTE: [], RETIRE: [], RAISE: [] };
   for (const x of judged) byOutcome[x.outcome].push(x);
 
+  // =========================================================================
+  // ZONE 2 - THE BELT
+  // =========================================================================
+  //
+  // ALIVE_MS matches exit-worker's, deliberately: two machines disagreeing about
+  // what "alive" means would be worse than either being wrong, because the
+  // disagreement is invisible. ADRIFT_AFTER is longer and is this zone's own,
+  // and it is the number that makes QUIET mean something - between the two, a
+  // silent session is quiet rather than gone.
+  const ALIVE_MS = 30 * MS.m;
+  const ADRIFT_AFTER = 3 * MS.h;
+
+  function watchBelt() {
+    const dispatchFor = new Map();
+    for (const r of records) {
+      const s = r.subject && String(r.subject);
+      if (s && r.dispatch) dispatchFor.set(s, { ...r.dispatch, recordedAt: Date.parse(r.run || "") || null });
+    }
+    const held = records.filter((r) => dispatchFor.has(String(r.id)));
+
+    // The strength of a liveness proof, from session-life's own `where` string.
+    // A folder mtime only moves when a file is added or removed at the top level
+    // of a worktree, which is almost never while somebody is working inside it -
+    // so a verdict that rests on it says so, in the row, every time.
+    const strengthOf = (life) => {
+      if (!life) return { rank: 0, name: "none", note: "no evidence on disk at all" };
+      const w = String(life.where || "");
+      if (/^transcript/.test(w)) return { rank: 3, name: "transcript", note: "the session's own turns" };
+      if (/^worktree file/.test(w)) return { rank: 2, name: "worktree file", note: "something the worker wrote" };
+      if (/scan incomplete/.test(w)) return { rank: 0, name: "scan incomplete", note: "the walk hit its bound before finding anything - not the same as finding nothing" };
+      if (/^worktree folder/.test(w)) return { rank: 1, name: "worktree folder", note: "a folder mtime, which does not move while work is happening - barely evidence" };
+      return { rank: 1, name: w || "unknown", note: "an evidence source this zone does not recognise" };
+    };
+
+    const rows = [];
+    for (const r of held) {
+      const d = dispatchFor.get(String(r.id));
+      const life = sessionLife(d.session, ROOT, ALIVE_MS);
+      const strength = strengthOf(life);
+      const quietFor = life ? now - life.at : null;
+      const done = IX.isDone(r);
+
+      const ev = {
+        session: d.session || null,
+        via: d.via || null,
+        where: life ? life.where : null,
+        at: life ? new Date(life.at).toISOString() : null,
+        strength: strength.name,
+        strengthNote: strength.note,
+        quietFor: quietFor === null ? null : humanMs(quietFor),
+        heldFor: d.recordedAt ? humanMs(now - d.recordedAt) : null,
+      };
+
+      const push = (outcome, why, extra) => rows.push({ id: String(r.id), handle: H(r), outcome, why, evidence: ev, ...(extra || {}) });
+
+      if (life && life.alive) {
+        push("MOVING", `alive - ${strength.name} written ${humanMs(quietFor)} ago (${strength.note}).`);
+        continue;
+      }
+      if (done) {
+        push("DELIVERED", `the session is gone and the item was closed while it was held. The closure already says this; nothing more is owed.`);
+        continue;
+      }
+      if (!life) {
+        push("UNSEEN", `nothing on disk names session "${d.session}" - no transcript, no worktree, no folder. That is unobserved, not dead, and this zone will not call it either.`);
+        continue;
+      }
+
+      // The last turn, read for the one question a machine may honestly ask.
+      const tx = transcriptsFor(d.session, ROOT)[0] || null;
+      const turn = tx ? lastTurnOf(tx.path) : null;
+
+      if (turn && turn.kind === "api-error") {
+        push("QUIET", `the run FAILED rather than stopped - ${turn.why}. "${turn.text.replace(/\s+/g, " ").slice(0, 120)}". A failed run returns nothing to incoming here; somebody has to look at why it could not run.`, { lastTurn: turn.kind });
+        continue;
+      }
+      if (turn && turn.kind === "awaiting-tool") {
+        push("QUIET", `${turn.why} (${turn.text}). It is waiting, not gone.`, { lastTurn: turn.kind });
+        continue;
+      }
+      if (turn && turn.kind === "question") {
+        push("QUIET", `${turn.why}: "${turn.text.replace(/\s+/g, " ").slice(0, 140)}". Answer it and the work resumes; return it to incoming and whoever picks it up starts cold.`, { lastTurn: turn.kind });
+        continue;
+      }
+      if (strength.rank <= 1) {
+        push("QUIET", `quiet for ${humanMs(quietFor)}, and the only evidence either way is ${strength.name} - ${strength.note}. "Dead" has not been shown, so it is not being said.`, { lastTurn: turn ? turn.kind : null });
+        continue;
+      }
+      if (quietFor !== null && quietFor < ADRIFT_AFTER) {
+        push("QUIET", `quiet for ${humanMs(quietFor)}, which is past the ${humanMs(ALIVE_MS)} liveness horizon but short of the ${humanMs(ADRIFT_AFTER)} this zone needs before saying a session is gone. Thirty minutes of quiet meaning abandoned is the defect this outcome exists to end.`, { lastTurn: turn ? turn.kind : null });
+        continue;
+      }
+      push(
+        "ADRIFT",
+        `gone: quiet ${humanMs(quietFor)}, evidence was ${strength.name}, ${turn ? `and the last turn ${turn.why.replace(/^the last turn /, "")}` : "and its transcript could not be read"}. The item is still open. exit-worker owns returning it; this zone only says so.`,
+        { lastTurn: turn ? turn.kind : null },
+      );
+    }
+
+    const counts = { MOVING: 0, DELIVERED: 0, QUIET: 0, ADRIFT: 0, UNSEEN: 0 };
+    for (const x of rows) counts[x.outcome]++;
+    const withTranscript = rows.filter((x) => x.evidence.strength === "transcript").length;
+
+    return {
+      counts,
+      rows,
+      // MOVING and DELIVERED are the "nothing is wrong" outcomes and are silent
+      // for the same reason HOLD is: a watcher that reports every healthy item
+      // teaches everyone to stop reading it.
+      silent: ["MOVING", "DELIVERED"],
+      coverage:
+        `${held.length} dispatch record(s) on the belt; ${withTranscript} judged on a transcript and ${held.length - withTranscript} on weaker evidence or none. ` +
+        `This zone can only see work a belt record NAMES - a live session nobody wrote down is invisible here, and that is a missing record rather than a wrong filter.`,
+      cannotSee: "a session working in this repo that no belt record names; anything happening in a repo this machine was not invoked in; and, where no transcript exists, whether a silent session was asking something.",
+    };
+  }
+
+  // =========================================================================
+  // ZONE 3 - THE RAIL
+  // =========================================================================
+
+  function watchRail() {
+    const declared = discoverTriggers(ROOT);
+    const state = readScheduleState(CTX);
+    const stateIds = new Set(Object.keys(state.triggers || {}));
+    const declaredIds = new Set(declared.map((t) => t.id));
+
+    // LATE has to be generous enough that a rhythm is not reported the instant
+    // it is due. The scheduler itself only gets a chance to fire when the
+    // primordial tick wakes it, so anything inside one pulse of its deadline is
+    // on time by construction, and a quarter of its own interval on top of that
+    // absorbs jitter without hiding a rhythm that has actually stopped.
+    const graceFor = (iv) => Math.max(PULSE, Math.round(iv * 0.25));
+
+    const rows = [];
+    for (const t of declared) {
+      const s = state.triggers[t.id] || null;
+      const every = parseEvery(t.every);
+      const floor = parseEvery(t.floor);
+      // POSITIVE, not merely finite. `Number(null)` is 0 and 0 is finite, so the
+      // first version of this read a state entry whose intervalMs was null as a
+      // rhythm running every zero milliseconds - and then reported it LATE,
+      // overdue against a deadline of "immediately", forever. Caught by a fixture
+      // rather than by the live rail, where no trigger happens to carry a null.
+      const ivRaw = s ? Number(s.intervalMs) : NaN;
+      const iv = Number.isFinite(ivRaw) && ivRaw > 0 ? ivRaw : null;
+      const lastRunAt = s && Number(s.lastRunAt) ? Number(s.lastRunAt) : null;
+      const base = {
+        id: t.id,
+        owns: t.owns || null,
+        declared: t.every || null,
+        declaredMs: every,
+        running: iv === null ? null : humanMs(iv),
+        runs: s ? s.runs || 0 : null,
+        lastExit: s ? (s.lastExit === undefined ? null : s.lastExit) : null,
+        lastRun: lastRunAt ? new Date(lastRunAt).toISOString() : null,
+        quietFor: lastRunAt ? humanMs(now - lastRunAt) : null,
+        external: !!t.external,
+        drivenBy: t.drivenBy || null,
+      };
+      const push = (outcome, why, extra) => rows.push({ ...base, outcome, why, ...(extra || {}) });
+
+      // EXTERNAL FIRST, AND IT IS NEVER LATE HERE. A `drivenBy` rhythm is fired
+      // from outside this repo - the primordial tick runs the scheduler, so the
+      // scheduler cannot run it without recursing. Reporting it as overdue would
+      // be this repo complaining that something it is forbidden to fire did not
+      // fire. What CAN be said about it is whether its driver actually ran, and
+      // that is a different source entirely.
+      if (t.external) {
+        const taskId = /^claude-routine:(.+)$/.exec(String(t.drivenBy || ""));
+        const runs = taskId ? routineRuns(taskId[1], now - 24 * MS.h) : null;
+        const extra = { driver: t.drivenBy || null, driverRuns: runs };
+        // NOT SILENT, AND THIS WAS SILENT FOR ONE COMMIT. An external rhythm
+        // whose driver cannot be followed at all first fell into EXTERNAL,
+        // which this zone keeps quiet - so "the primordial tick is fine" and
+        // "nothing here can see whether the primordial tick ran" printed
+        // identically, which is the exact failure the finding behind this zone
+        // is about. It has its own outcome now, and that outcome is loud.
+        if (!runs || !runs.observable) {
+          push(
+            "DRIVER UNOBSERVED",
+            `driven by ${t.drivenBy || "something outside this repo"}, so this repo's scheduler never fires it and it can never be overdue here - but nothing here can say whether it ran either. ${runs ? runs.why : "Its driver is not named as `claude-routine:<id>`, which is the only form this machine can follow to a run history."} This is a blind spot, not a clean bill.`,
+            extra,
+          );
+          continue;
+        }
+        if (runs.failingRightNow > 0) {
+          push(
+            "FAILED RUNS",
+            `${runs.failingRightNow} of its most recent attempts could not run at all - ${runs.reasons.join("; ") || "reason not recorded"}. ` +
+              `${runs.failed} failed out of ${runs.inspected} inspected in the last 24h, longest unbroken stretch ${runs.longestConsecutiveFailures}. ` +
+              `The scheduler records runs that HAPPENED, so this is invisible on the rail: it looks like a quiet stretch, and the board would eventually say STALLED with no reason attached.`,
+            extra,
+          );
+          continue;
+        }
+        if (runs.failed > 0) {
+          push(
+            "FAILED RUNS",
+            `${runs.failed} of ${runs.inspected} attempts in the last 24h could not run - ${runs.reasons.join("; ") || "reason not recorded"}. Longest unbroken stretch ${runs.longestConsecutiveFailures}, last at ${runs.lastFailure}. It is running now; this is what the quiet earlier was.`,
+            extra,
+          );
+          continue;
+        }
+        // NO ATTEMPTS IS NOT A CLEAN HISTORY. A driver that fired a hundred
+        // times without failing and a driver that never fired at all produce
+        // the same "0 failed", and only one of them is good news. This is the
+        // same distinction the rest of this file keeps drawing, arriving one
+        // level further out - it is now about the thing that drives the thing
+        // that drives the factory.
+        if (runs.attempts === 0) {
+          push(
+            "DRIVER SILENT",
+            `driven by ${t.drivenBy}, and the harness recorded no attempt at all in the last 24h. It declares ${t.every}, so roughly ${Math.max(1, Math.round((24 * MS.h) / (every || 24 * MS.h)))} were due. Zero failures here means zero tries, not a clean run.`,
+            extra,
+          );
+          continue;
+        }
+        push("EXTERNAL", `driven by ${t.drivenBy}; ${runs.inspected} attempt(s) in the last 24h and none of them failed to start. Never overdue here, because this repo does not fire it.`, extra);
+        continue;
+      }
+
+      if (!s || lastRunAt === null) {
+        push("NEVER RUN", `declared in this repo and the schedule has no run recorded for it. That is not the same as late: a rhythm that has never fired usually means a declaration nothing picked up, and a rhythm that fired and stopped usually means a fault.`);
+        continue;
+      }
+
+      // DRIFTED, checked against the declaration's OWN range rather than against
+      // a copy of the ladder. See the header: the exact rungs live in the repo's
+      // scheduler, and reimplementing them here would raise alarms about a
+      // working scheduler the first time the ladder changed.
+      if (iv !== null && every !== null) {
+        const lo = floor === null ? null : Math.min(floor, every);
+        if (iv > every || (lo !== null && iv < lo)) {
+          push(
+            "DRIFTED",
+            `running every ${humanMs(iv)}, which its own declaration cannot reach - it declares ${t.every}${t.floor ? ` with a floor of ${t.floor}` : " and no floor"}. An adaptive rhythm may sit anywhere between its floor and its ceiling; this is outside both, so nothing in the declaration explains it.`,
+          );
+          continue;
+        }
+      }
+
+      const effective = iv !== null ? iv : every;
+      if (effective === null) {
+        // ITS OWN OUTCOME, not a late one. A rhythm nobody can compute a
+        // deadline for is not overdue - it is unschedulable, and calling it late
+        // would put a number in front of somebody that no clock produced.
+        push(
+          "UNSCHEDULABLE",
+          `neither its declaration nor the schedule state gives a readable interval - it declares "${t.every}" and the state holds ${s && s.intervalMs === undefined ? "no interval" : JSON.stringify(s ? s.intervalMs : null)}. No deadline can be computed for it, so none is invented: it cannot be late, because nothing can say when it was due.`,
+        );
+        continue;
+      }
+
+      const due = lastRunAt + effective;
+      if (now > due + graceFor(effective)) {
+        push(
+          "LATE",
+          `last ran ${humanMs(now - lastRunAt)} ago and it is running at ${humanMs(effective)}${iv !== null && every !== null && iv !== every ? ` (tightened from its declared ${t.every} by the adaptive ladder, which makes it late sooner - that is what tightening is for)` : ""}. Overdue by ${humanMs(now - due)}.`,
+        );
+        continue;
+      }
+
+      if (s.lastExit !== 0 && s.lastExit !== null && s.lastExit !== undefined) {
+        push(
+          "FAULTED",
+          `it ran ${humanMs(now - lastRunAt)} ago and exited ${s.lastExit}. On the board this shows only as a tightened interval, which reads like diligence rather than like a fault.`,
+        );
+        continue;
+      }
+
+      push("ON RHYTHM", `last ran ${humanMs(now - lastRunAt)} ago, running at ${humanMs(effective)}, next due in ${humanMs(due - now)}.`);
+    }
+
+    // ---- the phantom check, reached from the data ---------------------------
+    //
+    // Not by reading the board's own NOT A TRIGGER label - believing that would
+    // make this a mirror rather than a check. The set of rhythm cells the board
+    // RENDERED, minus everything declared, minus everything the scheduler knows
+    // about. What is left is drawn by something that can neither declare it nor
+    // fire it.
+    const boardFile = path.join(CTX, "factory-tracker.html");
+    let phantoms = null;
+    let phantomWhy = null;
+    let drawn = null;
+    try {
+      const html = fs.readFileSync(boardFile, "utf8");
+      drawn = [...new Set([...html.matchAll(/data-explain="rhythm:([^"]+)"/g)].map((m) => m[1]))];
+      phantoms = drawn.filter((id) => !declaredIds.has(id) && !stateIds.has(id));
+    } catch (err) {
+      if (err && err.code === "ENOENT") phantomWhy = "the board's rendered output is not on disk in this repo, so what it draws could not be compared with what is declared. NOT CHECKED - not clean.";
+      else if (!expectedFsError(err)) throw err;
+      else phantomWhy = `the board's rendered output could not be read (${err.code}). NOT CHECKED - not clean.`;
+    }
+    for (const p of phantoms || []) {
+      rows.push({
+        id: p,
+        owns: null,
+        declared: null,
+        running: null,
+        runs: null,
+        lastExit: null,
+        lastRun: null,
+        quietFor: null,
+        external: false,
+        drivenBy: null,
+        outcome: "PHANTOM",
+        why: `the board draws a rhythm cell "${p}" and nothing in this repo declares it - no trigger file names it and the schedule holds no state for it, so nothing can fire it. Reached by subtracting ${declaredIds.size} declarations and ${stateIds.size} scheduled triggers from the ${drawn.length} cells actually rendered, rather than by trusting any label on the cell.`,
+      });
+    }
+
+    const orphanState = [...stateIds].filter((id) => !declaredIds.has(id));
+    for (const id of orphanState) {
+      const s = state.triggers[id];
+      rows.push({
+        id,
+        owns: null,
+        declared: null,
+        running: s && s.intervalMs ? humanMs(Number(s.intervalMs)) : null,
+        runs: s ? s.runs || 0 : null,
+        lastExit: s ? (s.lastExit === undefined ? null : s.lastExit) : null,
+        lastRun: s && s.lastRunAt ? new Date(Number(s.lastRunAt)).toISOString() : null,
+        quietFor: s && s.lastRunAt ? humanMs(now - Number(s.lastRunAt)) : null,
+        external: false,
+        drivenBy: null,
+        outcome: "UNDECLARED",
+        why: `the schedule has run this ${s ? s.runs || 0 : 0} time(s) and no declaration in this tree explains it. A trigger with recorded runs and no declaration is invisible rather than wrong, which is worse - nothing can say what it is for or whether it should still exist.`,
+      });
+    }
+
+    const counts = {};
+    for (const x of rows) counts[x.outcome] = (counts[x.outcome] || 0) + 1;
+
+    return {
+      counts,
+      rows,
+      silent: ["ON RHYTHM", "EXTERNAL"],
+      coverage:
+        `${declared.length} declaration(s) and ${stateIds.size} scheduled trigger(s) in ${path.basename(ROOT)}; ` +
+        `${drawn === null ? "the board's rendered cells could not be read" : `${drawn.length} rhythm cell(s) rendered on the board`}. ` +
+        `Divergence between a declared cadence and a running one is EXPLAINED whenever the running interval lies between the declaration's floor and its ceiling; only an interval outside that range is reported.`,
+      cannotSee:
+        `the exact rungs of the adaptive ladder, which live in the repo's scheduler and are not importable from a universal machine - so a wrong-but-in-range interval reads as fine here` +
+        (phantomWhy ? `; and ${phantomWhy}` : ``),
+      phantomCheck: phantoms === null ? { checked: false, why: phantomWhy } : { checked: true, cellsDrawn: drawn.length, phantoms },
+    };
+  }
+
+  // =========================================================================
+  // ZONE 4 - THE DOORS
+  // =========================================================================
+
+  function watchDoors() {
+    const DOOR_STALE = 6 * MS.h;
+    const declaredIds = new Set(discoverTriggers(ROOT).map((t) => t.id));
+    const rows = [];
+
+    // ---- AUTO: the only door that can genuinely be OFF ----------------------
+    //
+    // Because it is the only one the factory operates. And OFF must never be
+    // drawn the same way as NEVER OBSERVED: one means somebody decided, the
+    // other means nobody has ever looked, and this factory has confused
+    // absence with a clean result seven times.
+    {
+      const rep = readReport(path.join(CTX, "intake-worker.json"), DOOR_STALE);
+      const driven = declaredIds.has("intake-worker") || declaredIds.has("intake");
+      const common = { door: "auto", report: "intake-worker.json", reportState: rep.state, observedAt: rep.at ? new Date(rep.at).toISOString() : null, drivenByARhythm: driven };
+      if (rep.state === "absent") rows.push({ ...common, outcome: "NEVER OBSERVED", why: `intake-worker.json has never been written, so this door has never been observed at all. That is not OFF. Nobody has decided anything about it; nobody has looked.` });
+      else if (rep.state === "unreadable") rows.push({ ...common, outcome: "UNREADABLE", why: `intake-worker.json ${rep.why}. Its last state is unknown, which is a different fact from the door being quiet.` });
+      else if (rep.state === "stale" || rep.state === "undated") rows.push({ ...common, outcome: "STALE", why: `intake-worker.json ${rep.why}${driven ? "" : ", and no rhythm on the rail fires it"}. What it says was true when it was written; nothing here says it is true now.` });
+      else if (!rep.json.armed) rows.push({ ...common, outcome: "OFF", why: `observed ${humanMs(now - rep.at)} ago and deliberately not pulling - it selects and briefs but will not dispatch without --dispatch. ${rep.json.waiting || 0} contract(s) waiting, room for ${rep.json.room === undefined ? "an unstated number" : rep.json.room}.`, waiting: rep.json.waiting ?? null, room: rep.json.room ?? null });
+      else rows.push({ ...common, outcome: "OPEN", why: `armed and observed ${humanMs(now - rep.at)} ago; ${(rep.json.dispatched || []).length} dispatched on its last pass, ${rep.json.waiting || 0} waiting.`, waiting: rep.json.waiting ?? null, room: rep.json.room ?? null });
+    }
+
+    // ---- CHAT and SPAWN: never OFF, only unobserved ------------------------
+    //
+    // A person can always open a session and an agent can always spawn one, so
+    // OFF is not a state either of them can be in. The most this machine can
+    // honestly say when the evidence is missing is that it cannot see them.
+    const evidenceDoor = (key, dir, what) => {
+      let present = false;
+      try {
+        present = fs.statSync(dir).isDirectory();
+      } catch (err) {
+        if (!expectedFsError(err)) throw err;
+      }
+      if (!present) {
+        rows.push({ door: key, report: dir.replace(/\\/g, "/"), reportState: "absent", observedAt: null, drivenByARhythm: null, outcome: "NEVER OBSERVED", why: `${what} is not on this host, so nothing here can watch this door. It cannot be switched off - a person can always open a session and an agent can always spawn one - so this is a gap in observation, never a closed door.` });
+        return;
+      }
+      rows.push({ door: key, report: dir.replace(/\\/g, "/"), reportState: "fresh", observedAt: null, drivenByARhythm: null, outcome: "OPEN", why: `${what} is present, so arrivals through this door are observable. This door has no off switch.` });
+    };
+    evidenceDoor("chat", PROJECTS, "the session transcript store");
+    evidenceDoor("spawn", path.join(ROOT, ".claude", "worktrees"), "the worktree directory");
+
+    // ---- EXIT: the way finished work leaves --------------------------------
+    //
+    // Counted as a door because it is one, and because a factory whose exit is
+    // not driven silently accumulates work that has already been done.
+    {
+      const rep = readReport(path.join(CTX, "exit-worker.json"), DOOR_STALE);
+      const driven = declaredIds.has("exit-worker") || declaredIds.has("exit");
+      const common = { door: "exit", report: "exit-worker.json", reportState: rep.state, observedAt: rep.at ? new Date(rep.at).toISOString() : null, drivenByARhythm: driven };
+      if (rep.state === "absent") rows.push({ ...common, outcome: "NEVER OBSERVED", why: `exit-worker.json has never been written. Nothing has ever taken finished work off the conveyor here.` });
+      else if (rep.state === "unreadable") rows.push({ ...common, outcome: "UNREADABLE", why: `exit-worker.json ${rep.why}.` });
+      else if (!driven) rows.push({ ...common, outcome: "UNDRIVEN", why: `exit-worker.json was ${rep.why}, and no trigger in this repo declares it - it runs only when somebody remembers. A door that opens on memory is the arrangement this whole factory exists to end.` });
+      else if (rep.state === "stale" || rep.state === "undated") rows.push({ ...common, outcome: "STALE", why: `exit-worker.json ${rep.why} even though a rhythm declares it, so the rhythm is not landing.` });
+      else rows.push({ ...common, outcome: "OPEN", why: `observed ${humanMs(now - rep.at)} ago; ${rep.json.held || 0} held, ${(rep.json.abandoned || []).length} returned on its last pass.` });
+    }
+
+    const counts = {};
+    for (const x of rows) counts[x.outcome] = (counts[x.outcome] || 0) + 1;
+    return {
+      counts,
+      rows,
+      silent: ["OPEN"],
+      coverage: `4 doors: auto, chat, spawn and exit. Auto and exit are judged from their own reports; chat and spawn from whether their evidence stores exist on this host. Only AUTO can be OFF, and only when its report exists and says so.`,
+      cannotSee: "how many arrivals came through chat or spawn - that is counted from dispatch records on the belt and belongs to the board, not here; and whether a door that looks open would actually admit anything, which only an arrival proves.",
+    };
+  }
+
+  // =========================================================================
+  // ZONE 5 - THE CLOSED PILE
+  // =========================================================================
+  //
+  // kind.cjs already computes the two lists this needs and already refuses to
+  // guess. This zone does not re-derive either - it renders them, ranks them,
+  // and says exactly what a person has to do, because the whole defect is that
+  // the lists existed and nothing looked at them.
+
+  function watchClosedPile() {
+    const terminals = records.filter((r) => IX.selfTerminal(r) && !IX.isNoting(r));
+    const near = new Map(IX.orphanClosers.map((o) => [String(o.id), o]));
+    const prose = new Map(IX.proseSubjectClosers.map((o) => [String(o.id), o]));
+
+    const rows = [];
+    for (const r of terminals) {
+      const subject = r.subject ? String(r.subject) : null;
+      const base = { id: String(r.id), handle: H(r), subject, run: r.run || null };
+      if (!subject) {
+        rows.push({ ...base, outcome: "SELF-CLOSING", why: "terminal with no subject, so it closes itself and nothing else. A legitimate shape, not a miss." });
+        continue;
+      }
+      if (IX.ids.has(subject)) {
+        rows.push({ ...base, outcome: "LANDED", why: `subject equals "${subject}" exactly, so it closed it.` });
+        continue;
+      }
+      const n = near.get(String(r.id));
+      if (n && n.near) {
+        rows.push({
+          ...base,
+          outcome: "NEAR MISS",
+          appearsToMean: n.near,
+          why: `its subject contains "${n.near}" without equalling it, so it closed nothing. It was unmistakably reaching for that record. The repair is to append one terminal record whose subject is exactly "${n.near}" - NOT to loosen the matcher, because a closer that nearly matches an id would start closing the wrong findings, and a closure applied to the wrong record deletes real work silently.`,
+        });
+        continue;
+      }
+      rows.push({
+        ...base,
+        outcome: "UNRECOVERABLE",
+        why: `its subject "${subject}" shares no id with anything on this belt, so no honest rule recovers what it meant to close. It has to be re-filed by hand: read it, decide which record it finished, and append a terminal record whose subject is exactly that id.${prose.has(String(r.id)) ? "" : " (kind.cjs did not list this one, which means it names a subject nothing else does either.)"}`,
+      });
+    }
+
+    const counts = {};
+    for (const x of rows) counts[x.outcome] = (counts[x.outcome] || 0) + 1;
+    return {
+      counts,
+      rows,
+      silent: ["LANDED", "SELF-CLOSING"],
+      coverage: `${terminals.length} terminal record(s) that are not annotations; every one of them checked for whether its subject equals a known id. Exact match, always - this zone reports and never repairs.`,
+      cannotSee: "which record an unrecoverable closer MEANT. That is what makes them unrecoverable, and guessing is the one thing that would make this worse than leaving them alone.",
+    };
+  }
+
+  // ---- run the zones that were asked for -----------------------------------
+  //
+  // A zone left out by --zones reports NOT ASKED. That is a third state and it
+  // matters: not covered, not clean, just not run this round. A reader who sees
+  // an empty zone must be able to tell which of the three they are looking at.
+  const zoneRunners = { belt: watchBelt, rail: watchRail, doors: watchDoors, "closed-pile": watchClosedPile };
+  const zoneResults = {};
+  for (const z of ZONES) {
+    if (z.id === "incoming") continue;
+    if (!zoneAsked(z.id)) {
+      zoneResults[z.id] = { n: z.n, asked: false, covered: true, asks: z.asks, can: z.can, cannot: z.cannot, why: "not asked for this round (--zones). This is not a clean result." };
+      continue;
+    }
+    const r = zoneRunners[z.id]();
+    const loud = r.rows.filter((x) => !r.silent.includes(x.outcome));
+    zoneResults[z.id] = {
+      n: z.n,
+      asked: true,
+      covered: true,
+      asks: z.asks,
+      can: z.can,
+      cannot: z.cannot,
+      coverage: r.coverage,
+      cannotSee: r.cannotSee,
+      counts: r.counts,
+      silentOutcomes: r.silent,
+      silentCount: r.rows.length - loud.length,
+      rows: loud,
+      ...(r.phantomCheck ? { phantomCheck: r.phantomCheck } : {}),
+    };
+  }
+
   // ---- 4 & 5. ANNOTATE, AND CONTRACT ---------------------------------------
   //
   // `watcher-metadata-is-an-annotation-not-an-edit`: the belt is append-only and
@@ -845,17 +1962,119 @@ function main(lockState) {
   //
   // A record annotated BEFORE this field existed has no signature, so it is
   // annotated once more and gains one. That is a one-time cost, not a loop.
+  // KEYED BY ZONE AND SUBJECT, NOT BY SUBJECT ALONE. Zone 2 annotates the same
+  // record ids zone 1 does, so a single-key map would let one zone's verdict
+  // suppress the other's - two different observations about one record, and the
+  // second one silently lost. A record annotated before this field existed has
+  // no zone and belongs to incoming, which is where all of them came from.
   const lastSig = new Map();
   for (const rec of records) {
     if (!/^watched-/.test(String(rec.id || ""))) continue;
-    lastSig.set(String(rec.subject), rec.watchSig === undefined ? null : rec.watchSig);
+    lastSig.set(`${rec.zone || "incoming"}|${String(rec.subject)}`, rec.watchSig === undefined ? null : rec.watchSig);
   }
-  const annotationCandidates = byOutcome.COMPLETE.map(annotationFor);
-  const wouldAnnotate = annotationCandidates.filter((a) => {
-    const prior = lastSig.get(String(a.subject));
+  const moved = (a) => {
+    const prior = lastSig.get(`${a.zone || "incoming"}|${String(a.subject)}`);
     return prior === undefined || prior === null || prior !== a.watchSig;
-  });
+  };
+
+  const annotationCandidates = byOutcome.COMPLETE.map(annotationFor);
+  const wouldAnnotate = annotationCandidates.filter(moved);
   const annotationsUnchanged = annotationCandidates.length - wouldAnnotate.length;
+
+  // ---- what zones 2 to 5 write, which is annotations and nothing else -------
+  //
+  // TWO SHAPES, AND THE DIFFERENCE IS A LIVE TRAP.
+  //
+  // Zones 2 and 5 annotate a REAL BELT RECORD, so their subject is that record's
+  // id exactly - which is the same convention every closer and annotator here
+  // has to follow, and the one twelve records already got wrong. Those
+  // annotations MUST NOT carry a `kind` field: kind.cjs attaches a declared kind
+  // to the SUBJECT when the subject names a known record, so setting one would
+  // silently reclassify the record being annotated. That is a rule about the
+  // later-wins mechanism, not about this file, and it is why zone 1's annotation
+  // has never carried one either.
+  //
+  // Zones 3 and 4 annotate a rhythm or a door, which are not belt records, so
+  // there is no id to name. They take a specific synthetic subject - the same
+  // `rhythm:<id>` and `door:<key>` the board already uses for its own panels,
+  // rather than a second vocabulary - and they DO declare `kind: note`, because
+  // with a subject that names no record the kind attaches to the annotation
+  // itself, and a note is exactly what it is: a statement to read, with nothing
+  // owed. Without it they would infer as finished contracts and pile up on the
+  // resolution table as work nobody did.
+  //
+  // Never a shared programme label in either shape. One subject, one thing.
+  const ZONE_SEVERITY = {
+    ADRIFT: 0,
+    UNRECOVERABLE: 1,
+    "NEVER OBSERVED": 1,
+    UNREADABLE: 1,
+    "FAILED RUNS": 1,
+    "NEVER RUN": 1,
+    "DRIVER SILENT": 1,
+    "DRIVER UNOBSERVED": 2,
+    UNDECLARED: 2,
+    UNSCHEDULABLE: 2,
+    PHANTOM: 2,
+    UNDRIVEN: 2,
+    LATE: 2,
+    FAULTED: 2,
+    DRIFTED: 2,
+    QUIET: 3,
+    "NEAR MISS": 3,
+    STALE: 3,
+    UNSEEN: 3,
+    OFF: 4,
+  };
+
+  function zoneAnnotationFor(zoneId, row) {
+    const namesARecord = zoneId === "belt" || zoneId === "closed-pile";
+    const subject = namesARecord ? String(row.id) : zoneId === "rail" ? `rhythm:${row.id}` : `door:${row.door}`;
+    const target = namesARecord ? records.find((r) => String(r.id) === String(row.id)) : null;
+    const label = namesARecord ? String(row.id) : subject;
+    return {
+      id: `watched-${zoneId}-${label.replace(/[^A-Za-z0-9]+/g, "-").slice(0, 44)}-${now.toString(36)}`,
+      run: new Date(now).toISOString(),
+      zone: zoneId,
+      // The comparable reduction of what this says. Same discipline as zone 1:
+      // an id carries a timestamp and is therefore never recognisable twice, so
+      // without a signature a clock-driven watcher re-states every verdict every
+      // cycle and the belt dies by flooding rather than by leaking.
+      watchSig: `${row.outcome}|${row.evidence ? row.evidence.strength : ""}|${row.appearsToMean || row.reportState || row.running || ""}`,
+      driver: "I7",
+      tier: (ZONE_SEVERITY[row.outcome] ?? 3) <= 1 ? 1 : 2,
+      dimension: (target && target.dimension) || row.owns || "architecture",
+      subject,
+      ...(namesARecord ? {} : { kind: KIND.NOTE }),
+      claim: `Watched in ${zoneId}: ${row.outcome}. ${row.why}`,
+      evidence: [
+        `Zone ${ZONES.find((z) => z.id === zoneId).n} of the watcher's round, which asks: ${ZONES.find((z) => z.id === zoneId).asks}.`,
+        row.evidence ? `Liveness evidence: ${row.evidence.where || "none"} at ${row.evidence.at || "never"}, strength ${row.evidence.strength} - ${row.evidence.strengthNote}.` : "",
+        row.driverRuns && row.driverRuns.observable
+          ? `Run history read from ${row.driverRuns.where}: ${row.driverRuns.inspected} attempt(s) inspected in 24h, ${row.driverRuns.failed} of which could not start${row.driverRuns.runsWithNoReadableTranscript ? `, and ${row.driverRuns.runsWithNoReadableTranscript} whose transcript could not be read and were therefore counted as neither` : ""}.`
+          : "",
+        `This zone may ${ZONES.find((z) => z.id === zoneId).can}. It may NOT ${ZONES.find((z) => z.id === zoneId).cannot}.`,
+        `Written by the watcher. This is an annotation, not an edit and not a closure - terminal:annotation is in the NOTING family.`,
+      ]
+        .filter(Boolean)
+        .join(" "),
+      seen: true,
+      confidence: "measured",
+      triggers: "terminal:annotation",
+      owner: (target && (target.owner || target.dimension)) || row.owns || "architecture",
+    };
+  }
+
+  const zoneCandidates = [];
+  for (const [zid, z] of Object.entries(zoneResults)) {
+    if (!z.asked) continue;
+    for (const row of z.rows) zoneCandidates.push({ zid, row, sev: ZONE_SEVERITY[row.outcome] ?? 3, ann: zoneAnnotationFor(zid, row) });
+  }
+  zoneCandidates.sort((a, b) => a.sev - b.sev || a.zid.localeCompare(b.zid) || String(a.ann.subject).localeCompare(String(b.ann.subject)));
+  const zoneMoved = zoneCandidates.filter((c) => moved(c.ann));
+  const zoneUnchanged = zoneCandidates.length - zoneMoved.length;
+  const zoneAllowed = zoneMoved.slice(0, ZONE_ANNOTATE_LIMIT);
+  const zoneDeferred = zoneMoved.length - zoneAllowed.length;
 
   // ACTS ARE TAKEN IN QUEUE ORDER, NOT GROUPED BY OUTCOME. Built by outcome
   // first, and it was wrong: --arm-limit then always spent itself on promotions
@@ -875,7 +2094,7 @@ function main(lockState) {
   let written = [];
   let deferredByLimit = wouldAct.length - actsAllowed.length;
   if (ARM && !DRY) {
-    const lines = [...wouldAnnotate, ...actsAllowed.map(actFor)];
+    const lines = [...wouldAnnotate, ...zoneAllowed.map((c) => c.ann), ...actsAllowed.map(actFor)];
     for (const rec of lines) {
       fs.appendFileSync(BELT, JSON.stringify(rec) + "\n", "utf8");
       written.push(rec.id);
@@ -926,9 +2145,15 @@ function main(lockState) {
     producedAt: new Date(now).toISOString(),
     goodFor: humanMs(GOOD_FOR),
     staleAfter: new Date(now + GOOD_FOR).toISOString(),
-    watcher: "incoming",
+    watcher: "five zones",
     zonesCovered: ZONES.filter((z) => z.covered).map((z) => z.id),
     zonesNotCovered: ZONES.filter((z) => !z.covered).map((z) => ({ id: z.id, what: z.what })),
+    zonesNotAsked: ZONES.filter((z) => z.covered && !zoneAsked(z.id)).map((z) => z.id),
+    // What each zone is allowed to do, carried in the output rather than only in
+    // the source, so nothing downstream has to read this file to know whether a
+    // verdict is going to cause anything. The answer for four of the five is no.
+    zoneAuthority: ZONES.map((z) => ({ id: z.id, n: z.n, asks: z.asks, can: z.can, cannot: z.cannot })),
+    zones: zoneResults,
     repo: path.basename(ROOT),
     root: ROOT.replace(/\\/g, "/"),
     invokedFrom: CWD.replace(/\\/g, "/"),
@@ -952,8 +2177,19 @@ function main(lockState) {
     holdsSilent: byOutcome.HOLD.length,
     holdsSilentBecause: "HOLD means fresh and correct with its decision timer still running. Listing them would be noise, and noise is how a board stops being read. They are counted so the total still reconciles.",
     lockClearedStale: lockState.cleared ? { host: lockState.cleared.host, pid: lockState.cleared.pid, takenAt: lockState.cleared.takenAt, unreadable: !!lockState.cleared.unreadable, reason: lockState.cleared.reason || null } : null,
-    wouldWrite: ARM ? written : [...wouldAnnotate.map((a) => a.id), ...actsAllowed.map((x) => `triaged-${String(x.r.id).slice(0, 60)}-*`)],
+    wouldWrite: ARM ? written : [...wouldAnnotate.map((a) => a.id), ...zoneAllowed.map((c) => c.ann.id), ...actsAllowed.map((x) => `triaged-${String(x.r.id).slice(0, 60)}-*`)],
     deferredByArmLimit: deferredByLimit,
+    zoneAnnotations: {
+      // Zones 2 to 5 accept nothing, so this counts writes rather than authority.
+      limit: ZONE_ANNOTATE_LIMIT,
+      candidates: zoneCandidates.length,
+      unchanged: zoneUnchanged,
+      wouldWrite: zoneAllowed.length,
+      deferred: zoneDeferred,
+      deferredBecause: zoneDeferred
+        ? `${zoneDeferred} annotation(s) were computed and held back by --zone-annotate-limit ${ZONE_ANNOTATE_LIMIT}. They are ordered by severity, so what was held back is the least serious of what moved. Nothing was dropped - the next run will offer them again.`
+        : null,
+    },
   };
 
   if (!DRY) {
@@ -968,7 +2204,8 @@ function main(lockState) {
   }
 
   const c = queue.counts;
-  console.log(`watcher [incoming]  ${queue.repo}  ${c.incoming} in incoming${DRY ? "   DRY - nothing written" : ""}${ARM ? "   ARMED" : ""}`);
+  console.log(`watcher  ${queue.repo}  ${c.incoming} in incoming${DRY ? "   DRY - nothing written" : ""}${ARM ? "   ARMED (zone 1 only; zones 2-5 annotate and nothing more)" : ""}`);
+  console.log(`  zone 1 INCOMING - what should be judged, in what order, by when?`);
   if (lockState.cleared)
     console.log(
       lockState.cleared.unreadable
@@ -977,7 +2214,13 @@ function main(lockState) {
     );
   if (unreadableLines) console.log(`  ${unreadableLines} belt line(s) would not parse and were skipped`);
   console.log(`  RAISE ${c.raise}   RETIRE ${c.retire}   PROMOTE ${c.promote}   COMPLETE ${c.complete}   HOLD ${c.hold} (silent)`);
-  console.log(`  zones: incoming COVERED; ${ZONES.filter((z) => !z.covered).map((z) => z.id).join(", ")} NOT COVERED - this round says nothing about them`);
+  const notAsked = ZONES.filter((z) => z.covered && !zoneAsked(z.id)).map((z) => z.id);
+  const notCovered = ZONES.filter((z) => !z.covered).map((z) => z.id);
+  console.log(
+    `  zones: ${ZONES.filter((z) => z.covered && zoneAsked(z.id)).map((z) => `${z.n} ${z.id}`).join(", ")} covered` +
+      (notAsked.length ? `; ${notAsked.join(", ")} NOT ASKED this round - not clean, just not run` : "") +
+      (notCovered.length ? `; ${notCovered.join(", ")} NOT COVERED` : ""),
+  );
   console.log("");
   for (const x of judged) {
     if (x.outcome === "HOLD" && !SHOW_HOLDS) continue;
@@ -991,13 +2234,47 @@ function main(lockState) {
     if (x.rv.required) console.log(`       re-verified: ${x.rv.verdict} - ${x.rv.why}`);
     for (const cv of x.caveats) console.log(`       caveat: ${cv}`);
   }
+  // ---- zones 2 to 5 ---------------------------------------------------------
+  //
+  // Each block leads with what the zone asked, then the distribution, then only
+  // the rows that are not silent. The distribution is printed even when every
+  // row is silent, because "I looked at fourteen and all fourteen were fine" and
+  // "I looked at nothing" must not print identically.
+  for (const z of ZONES) {
+    if (z.id === "incoming") continue;
+    const r = zoneResults[z.id];
+    console.log("");
+    if (!r.asked) {
+      console.log(`  zone ${z.n} ${z.id.toUpperCase()} - NOT ASKED this round. ${r.why}`);
+      continue;
+    }
+    const dist = Object.entries(r.counts).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k} ${v}`).join("   ") || "nothing to classify";
+    console.log(`  zone ${z.n} ${z.id.toUpperCase()} - ${z.asks}?`);
+    console.log(`    ${dist}${r.silentCount ? `   (${r.silentCount} silent)` : ""}`);
+    console.log(`    covers: ${r.coverage}`);
+    for (const row of r.rows) {
+      const name = row.door || row.id;
+      console.log(`    ${String(row.outcome).padEnd(14)} ${String(name).slice(0, 52)}`);
+      console.log(`       ${row.why}`);
+    }
+    if (!r.rows.length) console.log(`    nothing to report - every row landed on ${r.silentOutcomes.join(" or ")}, which this zone keeps silent.`);
+    console.log(`    cannot see: ${r.cannotSee}`);
+    console.log(`    authority: may ${z.can}. May NOT ${z.cannot}.`);
+  }
+  console.log("");
+
   if (!ARM) {
-    console.log(`\n  Not armed. ${wouldAct.length} act(s) and ${wouldAnnotate.length} annotation(s) were computed and NOT written.`);
+    console.log(`  Not armed. ${wouldAct.length} act(s) from zone 1, plus ${wouldAnnotate.length} incoming and ${zoneAllowed.length} zone annotation(s), were computed and NOT written.`);
+    if (zoneUnchanged) console.log(`  ${zoneUnchanged} zone annotation(s) suppressed - their verdict has not moved since the last one.`);
+    if (zoneDeferred) console.log(`  ${zoneDeferred} zone annotation(s) held back by --zone-annotate-limit ${ZONE_ANNOTATE_LIMIT}, least serious first. Nothing dropped.`);
     if (annotationsUnchanged) console.log(`  ${annotationsUnchanged} annotation(s) suppressed - their verdict has not moved since the last one.`);
     console.log(`  The queue is judgement only; accepting work stays a deliberate act. --arm writes them.`);
   } else {
-    console.log(`\n  wrote ${written.length} record(s) to the belt${deferredByLimit ? `; ${deferredByLimit} act(s) held back by --arm-limit ${ARM_LIMIT}` : ""}`);
-    if (annotationsUnchanged) console.log(`  ${annotationsUnchanged} annotation(s) suppressed - their verdict has not moved since the last one.`);
+    console.log(`  wrote ${written.length} record(s) to the belt${deferredByLimit ? `; ${deferredByLimit} act(s) held back by --arm-limit ${ARM_LIMIT}` : ""}`);
+    console.log(`  of those, ${zoneAllowed.length} came from zones 2-5, which accept nothing - annotations only.`);
+    if (annotationsUnchanged) console.log(`  ${annotationsUnchanged} incoming annotation(s) suppressed - their verdict has not moved since the last one.`);
+    if (zoneUnchanged) console.log(`  ${zoneUnchanged} zone annotation(s) suppressed - their verdict has not moved since the last one.`);
+    if (zoneDeferred) console.log(`  ${zoneDeferred} zone annotation(s) held back by --zone-annotate-limit ${ZONE_ANNOTATE_LIMIT}, least serious first. Nothing dropped.`);
   }
   if (!DRY) console.log(`  queue -> ${path.relative(ROOT, QUEUE).replace(/\\/g, "/")}  (good for ${humanMs(GOOD_FOR)})`);
 }

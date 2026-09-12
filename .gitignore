@@ -1,5 +1,11 @@
 node_modules/
 dist/
+# Both of these were excluded in .git/info/exclude, which is local to one disk and
+# never cloned. The directories are nested git repositories with their own
+# remotes, so no content was at risk - but the decision to keep them out of this
+# repo lived in exactly one place, and a fresh clone would not have inherited it.
+refer-zo-bootstrap/
+.claude/worktrees/
 alliance-hub/.deploy/
 alliance-hub/.wrangler/
 *.vsix
