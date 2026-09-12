@@ -154,8 +154,23 @@ function checkParse(files) {
 // CHECK 2 - no literal U+FEFF in tracked source.
 // ---------------------------------------------------------------------------
 
-// Written as the escape, which is the whole point of the rule this enforces.
-const ZWNBSP = /﻿/;
+// BUILT, not written as a literal and not written as an escape either.
+//
+// This line carried the defect it exists to find. It was authored as the
+// six-character escape - the form this check tells everyone else to use - and
+// it reached disk as the LITERAL character. Twice: the second time inside this
+// very comment, while explaining the first.
+//
+// So the escape is the right thing to write in a machine, and it is NOT
+// reliably typeable. The channel that writes the file may normalise the escape
+// back into the character, and the character is invisible, so nothing looks
+// wrong at any point. (This comment therefore does not spell the escape out.
+// Doing so is what broke it the second time.)
+//
+// String.fromCharCode cannot be normalised into anything. Every other file in
+// this repo can use the escape and be checked by this one; the file doing the
+// checking must not have to trust that its own spelling survived.
+const ZWNBSP = new RegExp(String.fromCharCode(0xfeff));
 const BINARY = /\.(png|jpe?g|gif|webp|ico|svg|pdf|zip|gz|woff2?|ttf|eot|mp4|webm|vsix|exe|dll|node)$/i;
 
 // PARSED means something reads this file with a parser or a regex, so a stray
@@ -169,8 +184,19 @@ const BINARY = /\.(png|jpe?g|gif|webp|ico|svg|pdf|zip|gz|woff2?|ttf|eot|mp4|webm
 // visible rather than a number to hide.
 const PARSED = /\.(cjs|mjs|js|jsx|ts|tsx|json|jsonl|mts|cts)$/i;
 
-function trackedFiles() {
-  const r = spawnSync("git", ["ls-files", "-z"], { cwd: REPO, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
+// TRACKED **AND** UNTRACKED-NOT-IGNORED, and the second half is not a nicety.
+//
+// The first version of this scanned `git ls-files` alone, and so it did not scan
+// itself: this file was untracked while it was being written, carried a literal
+// U+FEFF on the line above, and the gate reported PASS. It only caught it at the
+// moment of `git add`.
+//
+// That is the wrong scope for THIS repo specifically. There is no build step -
+// the scheduler reads machines/*.cjs off disk when it fires - so a new machine
+// is LIVE while it is still untracked. A check that waits for `git add` is
+// blind to the file most likely to be wrong, which is the one just written.
+function scannableFiles() {
+  const r = spawnSync("git", ["ls-files", "-z", "--cached", "--others", "--exclude-standard"], { cwd: REPO, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
   if (r.status !== 0) {
     // Failing open here would be the worse error: a gate that reports green
     // because it could not get the list is exactly the shape this repo is
@@ -185,7 +211,7 @@ function checkNoBom() {
   console.log("  bom");
   let scanned = 0;
   const prose = [];
-  for (const rel of trackedFiles()) {
+  for (const rel of scannableFiles()) {
     if (BINARY.test(rel)) continue;
     const abs = join(REPO, rel);
     let st;
