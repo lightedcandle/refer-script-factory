@@ -251,7 +251,12 @@ function readLock() {
     // in 5.1) failed to parse, was read as "unreadable", and was therefore
     // cleared as stale - so a LIVE holder was evicted and both watchers ran.
     // The lock's whole purpose, defeated by a byte order mark.
-    return JSON.parse(fs.readFileSync(LOCK, "utf8").replace(/^﻿/, ""));
+    // Written as the ESCAPE, not as a literal U+FEFF. The other belt readers in
+    // this factory carry the literal character, which is invisible in every
+    // editor and would become mojibake the first time anything round-trips the
+    // file through an ANSI codepage - and the strip would then silently stop
+    // working, which is precisely the failure being guarded against here.
+    return JSON.parse(fs.readFileSync(LOCK, "utf8").replace(/^\uFEFF/, ""));
   } catch (err) {
     if (err && err.code === "ENOENT") return null; // absent
     if (!expectedFsError(err) && !(err instanceof SyntaxError)) throw err;
@@ -359,7 +364,7 @@ function main(lockState) {
   try {
     records = fs
       .readFileSync(BELT, "utf8")
-      .replace(/^﻿/, "")
+      .replace(/^\uFEFF/, "") // the escape, not the literal - see readLock
       .split("\n")
       .filter((l) => l.trim())
       .map((l) => {
