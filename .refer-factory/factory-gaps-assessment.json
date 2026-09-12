@@ -1,0 +1,68 @@
+{
+  "schema": "refer.factory.gaps-assessment.v1",
+  "assessed_at": "2026-09-12T03:45:22.847Z",
+  "assessed_by": "Living Factory collection pass, Telechurch session",
+  "target": "E:/refer-script-factory/.refer-factory/factory-gaps.json",
+  "target_generated_at": "2026-04-30T18:45:44.895Z",
+  "belt_record": "status-gap-allowlist-is-hardcoded-and-has-drifted",
+
+  "what_this_file_is": "An assessment OF factory-gaps.json, not a regeneration of it. It was produced by reading the scanner's source and recomputing scanStatusGaps() against the current registry, NOT by executing the extension. factory-gaps.json itself is deliberately left untouched: the scanner owns that path, and a hand-written file at a generated path would be indistinguishable from a stale run.",
+
+  "method": {
+    "generator": "src/contracts/factoryGaps.ts :: scanStatusGaps()",
+    "rule": "Emit one gap per scriptFactoryEntries entry whose surface !== 'request-type' and whose script_id is absent from the hardcoded knownStatusBackedScripts allowlist.",
+    "registry_source": "src/core/contracts/scriptFactory.ts",
+    "registry_mtime": "2026-07-18T09:15:26",
+    "allowlist_size": 16,
+    "registry_entries": 42,
+    "registry_entries_excluding_request_type": 39
+  },
+
+  "verdict": {
+    "live": 19,
+    "already_fixed": 0,
+    "obsolete": 0,
+    "new_since_generation": 4,
+    "total_the_scanner_would_emit_today": 23,
+    "summary": "All 19 gaps recorded on 2026-04-30 are still emitted by the current code. None was fixed and none became obsolete: every one of the 19 script_ids is still present in the registry, and not one was ever added to the allowlist. The allowlist has not changed while the registry grew, so the count went UP by four rather than down."
+  },
+
+  "single_underlying_defect": "These are not 19 defects. They are one defect reported once per unmapped script: knownStatusBackedScripts is a hardcoded literal in the scanner, and nothing keeps it in step with the registry it is checked against. Fixing that one list retires all 23 rows at once. This restates belt records 'correction-factory-gaps-diagnosis' and 'a-belt-can-die-by-flooding-not-only-by-leaking', which is why the enumeration below lives in this file and NOT as 19 separate belt records.",
+
+  "live_gaps": [
+    { "id": "status.unmapped.refer.context.picker", "script_id": "refer.context.picker", "still_in_registry": true, "in_allowlist": false },
+    { "id": "status.unmapped.refer.script.legend", "script_id": "refer.script.legend", "still_in_registry": true, "in_allowlist": false },
+    { "id": "status.unmapped.refer.server.health", "script_id": "refer.server.health", "still_in_registry": true, "in_allowlist": false },
+    { "id": "status.unmapped.refer.server.targets", "script_id": "refer.server.targets", "still_in_registry": true, "in_allowlist": false },
+    { "id": "status.unmapped.refer.emitScriptBlueprint", "script_id": "refer.emitScriptBlueprint", "still_in_registry": true, "in_allowlist": false },
+    { "id": "status.unmapped.refer.emitScriptDnaSeed", "script_id": "refer.emitScriptDnaSeed", "still_in_registry": true, "in_allowlist": false },
+    { "id": "status.unmapped.refer.refreshCodebases", "script_id": "refer.refreshCodebases", "still_in_registry": true, "in_allowlist": false },
+    { "id": "status.unmapped.refer.viewCodebaseTree", "script_id": "refer.viewCodebaseTree", "still_in_registry": true, "in_allowlist": false },
+    { "id": "status.unmapped.refer.viewFactoryGaps", "script_id": "refer.viewFactoryGaps", "still_in_registry": true, "in_allowlist": false },
+    { "id": "status.unmapped.refer.contractModeOn", "script_id": "refer.contractModeOn", "still_in_registry": true, "in_allowlist": false },
+    { "id": "status.unmapped.refer.contractModeOff", "script_id": "refer.contractModeOff", "still_in_registry": true, "in_allowlist": false },
+    { "id": "status.unmapped.refer.contractModeToggle", "script_id": "refer.contractModeToggle", "still_in_registry": true, "in_allowlist": false },
+    { "id": "status.unmapped.npm.compile", "script_id": "npm.compile", "still_in_registry": true, "in_allowlist": false },
+    { "id": "status.unmapped.npm.test", "script_id": "npm.test", "still_in_registry": true, "in_allowlist": false },
+    { "id": "status.unmapped.npm.verify", "script_id": "npm.verify", "still_in_registry": true, "in_allowlist": false },
+    { "id": "status.unmapped.refer.authority.resolve", "script_id": "refer.authority.resolve", "still_in_registry": true, "in_allowlist": false },
+    { "id": "status.unmapped.refer.doctrine.compile", "script_id": "refer.doctrine.compile", "still_in_registry": true, "in_allowlist": false },
+    { "id": "status.unmapped.refer.scriptionary.term", "script_id": "refer.scriptionary.term", "still_in_registry": true, "in_allowlist": false },
+    { "id": "status.unmapped.npm.refer.server", "script_id": "npm.refer.server", "still_in_registry": true, "in_allowlist": false }
+  ],
+
+  "new_since_2026_04_30": [
+    { "id": "status.unmapped.npm.compile.core", "script_id": "npm.compile.core" },
+    { "id": "status.unmapped.npm.verify.core-boundary", "script_id": "npm.verify.core-boundary" },
+    { "id": "status.unmapped.npm.verify.core", "script_id": "npm.verify.core" },
+    { "id": "status.unmapped.refer.universal.source-sync", "script_id": "refer.universal.source-sync" }
+  ],
+
+  "dead_allowlist_entries": [],
+  "dead_allowlist_note": "Zero. Every one of the 16 allowlisted script_ids still exists in the registry, so the allowlist is stale by omission only, never by pointing at something gone.",
+
+  "not_proven_here": [
+    "The scanner was NOT executed. scanStatusGaps() was reproduced from source against a regex parse of scriptFactory.ts. The other six scanners in scanFactoryGaps() (terminology, registry, command, cockpit view label, scriptographer, artifact) were NOT evaluated, so the true total gap count today is 23 status gaps PLUS an unknown number from those six. The 2026-04-30 run reported 0 errors and 0 warnings, which means those six emitted nothing then; whether that is still true is unmeasured.",
+    "Whether any of these 23 scripts actually emits process events at runtime. The allowlist is the scanner's only test, and it is a hardcoded name list, not an observation. A script could be emitting events correctly and still be reported as unmapped."
+  ]
+}

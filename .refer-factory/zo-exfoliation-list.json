@@ -1,0 +1,140 @@
+{
+  "schema": "refer.hive.zo-exfoliation-list.v1",
+  "created_at": "2026-09-12T04:06:55.020Z",
+  "status": "PROPOSAL ONLY. NOTHING WAS DELETED IN THIS PASS - not a file, not a registry entry, not a line. The operator's session executes deletions after reviewing this.",
+
+  "read_this_first": {
+    "headline": "The cheapest correct move is almost certainly to delete NOTHING from inside refer-zo-bootstrap, and instead retire the directory as one unit.",
+    "why": [
+      "It is a SEPARATE GIT REPOSITORY. E:/refer-script-factory/refer-zo-bootstrap has its own .git, its own remote (github.com/lightedcandle/refer-zo-bootstrap.git), 343 tracked files, and it is fully pushed on branch build-out-hive - 0 ahead, 0 behind. Everything proposed for deletion below already exists on GitHub.",
+      "It is INVISIBLE TO THE FACTORY REPO'S GIT. `git ls-files refer-zo-bootstrap` in E:/refer-script-factory returns zero. The directory is excluded by .git/info/exclude line 7 - a local, uncommitted exclude, not in .gitignore and not present in any clone. So deleting files here removes nothing from the factory repo's history, because nothing was ever in it.",
+      "Picking files out costs more than it saves. Every candidate below has live callers INSIDE that same directory, chiefly its own `npm run check` (package.json line 12) which node --checks all of them in one command. Removing any one file turns that check red in a repo whose whole remaining value is being a readable historical record.",
+      "The savings are nil. This is roughly 100KB of .mjs in a directory nobody imports from the factory repo's own source. Deleting it frees nothing and risks a working tree going dirty in a repo no session is watching."
+    ],
+    "recommended_instead": "Mark the directory retired with a README at its root pointing at .refer-factory/zo-method-harvest.json, and leave the files. If the operator wants the disk back later, remove the WHOLE directory in one action - origin has it - rather than pruning inside it. That is one reversible action with one caller set to fix, instead of twelve."
+  },
+
+  "if_deleted_anyway_here_is_the_caller_proof": {
+    "method": "Callers were found by searching for the PATH and the file stem, never for the word 'zo' - precedent P14 records a deletion that would have broken a nightly job through a caller whose filename did not contain the word. 97 caller sites were enumerated; the ones that would BREAK are listed per item.",
+    "items": [
+      {
+        "id": "X1",
+        "path": "E:/refer-script-factory/refer-zo-bootstrap/scripts/factory/ship-contract-to-zo.mjs",
+        "verdict": "SUPERSEDED - pushes a contract file to a machine being retired.",
+        "breaks_if_removed": [
+          "E:/refer-script-factory/refer-zo-bootstrap/package.json:12 - the `check` script node --checks it; check goes red",
+          "E:/refer-script-factory/refer-zo-bootstrap/package.json:18 - npm script `tandem:ship`",
+          "E:/refer-script-factory/refer-zo-bootstrap/scripts/factory/dispatch-contract.mjs:75 - RUNTIME CALLER, dispatch-contract invokes it",
+          "E:/refer-script-factory/refer-zo-bootstrap/AGENTS.md:193 and docs/parallel-factory-orchestration.md:195 - documentation goes stale"
+        ]
+      },
+      {
+        "id": "X2",
+        "path": "E:/refer-script-factory/refer-zo-bootstrap/scripts/factory/fetch-zo-talkback.mjs",
+        "verdict": "SUPERSEDED by machines/exit-worker.cjs.",
+        "breaks_if_removed": [
+          "package.json:12 (check), package.json:19 (tandem:fetch)",
+          "scripts/factory/dispatch-contract.mjs:87 - RUNTIME CALLER",
+          "AGENTS.md:193, docs/known-limits-and-constraints.md:39, docs/parallel-factory-orchestration.md:195"
+        ]
+      },
+      {
+        "id": "X3",
+        "path": "E:/refer-script-factory/refer-zo-bootstrap/scripts/factory/sync-tandem-runtime-to-zo.mjs",
+        "verdict": "SUPERSEDED by architecture, not by a script - precedent P13's one-machine-many-cwds. Nothing to sync when nothing is copied.",
+        "breaks_if_removed": [
+          "package.json:12 (check), package.json:21 (tandem:sync-runtime)",
+          "E:/refer-script-factory/scripts/registry/domain-script-registry.mjs:236 - CROSS-REPO CALLER BY PATH. The factory repo's own script registry names this entrypoint with status 'active'. This is the caller a name-based search would have found only by luck, and it lives in a different repository from the file.",
+          "AGENTS.md:48, AGENTS.md:194, docs/known-limits-and-constraints.md:28, :83, :168, :222"
+        ],
+        "note": "This file is the HUB. Lines 26-34 and 299-305 enumerate every other script in the harvest as its sync manifest. Read it first if anyone ever needs to reconstruct what the Zo runtime consisted of."
+      },
+      {
+        "id": "X4",
+        "path": "E:/refer-script-factory/refer-zo-bootstrap/scripts/factory/contract-inbox-runner.mjs",
+        "verdict": "SUPERSEDED by machines/intake-worker.cjs.",
+        "breaks_if_removed": [
+          "package.json:12 (check), package.json:17 (contract:run-once)",
+          "E:/refer-script-factory/scripts/registry/domain-script-registry.mjs:250 - CROSS-REPO CALLER BY PATH, status 'active'",
+          "E:/refer-script-factory/scripts/hive/hive-node-deployment-pack.mjs:19 - listed in TANDEM_RUNTIME_FILES, and line 117 emits a remote verification command that node --checks it",
+          "E:/refer-script-factory/scripts/hive/hive-director.mjs:303 - BEHAVIOURAL DEPENDENCY, not just a filename. Talkback validation requires the literal token `runner:contract-inbox-runner` to be present or the dispatch is judged not ratified. Removing the file does not break this line; it makes the check permanently unsatisfiable, which is worse - a gate that can never pass.",
+          "scripts/factory/ship-contract-to-zo.mjs:130, scripts/factory/sync-tandem-runtime-to-zo.mjs:26 and :299",
+          "AGENTS.md:193, docs/file-transport-tandem.md:135, docs/known-limits-and-constraints.md:57 and :172, docs/parallel-factory-orchestration.md:154 and :195, scripts/factory/scriptionary.json:233"
+        ]
+      },
+      {
+        "id": "X5",
+        "path": "E:/refer-script-factory/refer-zo-bootstrap/scripts/factory/dispatch-contract.mjs",
+        "verdict": "SUPERSEDED by intake-worker --dispatch. It is the composite of X1 and X2.",
+        "breaks_if_removed": [
+          "package.json:12 (check), package.json:20 (dispatch:contract)",
+          "E:/refer-script-factory/scripts/registry/domain-script-registry.mjs:229 - CROSS-REPO CALLER BY PATH, status 'active'",
+          "scripts/factory/bilateral-sim.mjs:126 - RUNTIME CALLER",
+          "AGENTS.md:193, README.md:61, docs/file-transport-tandem.md:153, docs/known-limits-and-constraints.md:50, docs/parallel-factory-orchestration.md:253 and :254"
+        ]
+      },
+      {
+        "id": "X6",
+        "path": "E:/refer-script-factory/refer-zo-bootstrap/scripts/factory/inbox-automation.mjs",
+        "verdict": "SUPERSEDED by clock.cjs plus station declarations.",
+        "breaks_if_removed": [
+          "package.json:12 (check), package.json:28 and :29 (factory:automation-once, factory:automation-status)",
+          "scripts/factory/evolution-loop.mjs:32 - RUNTIME CALLER",
+          "scripts/factory/sync-tandem-runtime-to-zo.mjs:32 and :303"
+        ]
+      }
+    ]
+  },
+
+  "do_not_delete": [
+    {
+      "path": "E:/refer-script-factory/refer-zo-bootstrap/scripts/factory/registry-doctor.mjs",
+      "why": "Classified WORTH REAPPLYING. Its --repair behaviour has no counterpart in the current factory. Keep until the reapplication ships, then keep anyway as the reference.",
+      "porting_note": "It IMPORTS local-script-registry.mjs (line 13) for loadRegistry and saveNormalizedRegistry. So it cannot be copied - it has to be ported against whatever register the current factory uses. Budget for a port, not a copy."
+    },
+    {
+      "path": "E:/refer-script-factory/refer-zo-bootstrap/scripts/factory/local-script-registry.mjs",
+      "why": "Its lookup half is superseded, but scaffoldScriptGap is the source of the script-gap draft idea and registry-doctor imports it. Deleting it takes registry-doctor with it."
+    },
+    {
+      "path": "E:/refer-script-factory/refer-zo-bootstrap/scripts/factory/local-intake-runner.mjs, draft-promotion-runner.mjs, evolution-loop.mjs, node-scope.mjs",
+      "why": "All four carry WORTH REAPPLYING material. See zo-method-harvest.json."
+    },
+    {
+      "path": "E:/refer-script-factory/refer-zo-bootstrap/scripts/factory/heartbeat.log, heartbeat-state.json, datasets/evolution-log/records/, datasets/script-registry/health/",
+      "why": "THE ONLY SURVIVING PROOF OF WHAT EVER ACTUALLY RAN, and it is gitignored - it exists on this disk and nowhere else. heartbeat.log is four lines and heartbeat-state.json shows the hive heartbeat running with unsubstituted <NODE_ID> placeholders and hive_status skipped for no_hive_url. That is the evidence that separates 'ran and failed' from 'never ran', which is the distinction this whole retirement turned on. Losing it is unrecoverable."
+    },
+    {
+      "path": "any node row in E:/refer-script-factory/.refer-factory/hive-node-registry.json",
+      "why": "Already the standing recommendation on the belt, from finding hive-registry-is-fed-for-one-node-of-four: 'a registry that forgets a node it once had cannot tell you the node stopped, which is the one thing it exists to say.' All four rows were retired by marking."
+    }
+  ],
+
+  "stale_claims_to_correct_rather_than_delete": [
+    {
+      "path": "E:/refer-script-factory/scripts/registry/domain-script-registry.mjs lines 225-260",
+      "claim": "Five Zo routes are hardcoded with status: 'active' - zo.dispatch-contract, zo.sync-tandem-runtime, zo.codec-self-test, zo.contract-runner, zo.adaptive-heartbeat.",
+      "now_false": "All five point at machines retired in this pass. The register will keep asserting they are active until this literal is edited.",
+      "fix": "Change those five status values to 'retired'. Do NOT remove the entries - a register that forgets a route cannot tell you the route was withdrawn, the same argument as the node rows.",
+      "not_done_here": "scripts/ is outside this pass's write boundary."
+    },
+    {
+      "path": "E:/refer-script-factory/scripts/hive/hive-node-deployment-pack.mjs line 154",
+      "claim": "ready_to_stage: missing.length === 0 && node.status !== 'blocked'",
+      "now_false": "'retired' is not 'blocked', so a deployment pack built for any machine retired today still reports ready_to_stage: true.",
+      "fix": "Treat retired as unstageable. One clause.",
+      "not_done_here": "Outside the write boundary. Deposited on the belt as `retired-status-does-not-block-the-deployment-pack`."
+    },
+    {
+      "path": "E:/refer-script-factory/.refer-factory/doctrine-candidates/",
+      "claim": "62 files, 31 of one doctrine and 31 of another, each set byte-identical at 3430 and 3117 bytes, differing only in a timestamp in the filename. Something re-emitted the same two candidates on every run between 2026-04-30 and 2026-05-01.",
+      "assessment": "Almost certainly safe to reduce to one of each plus latest.json - but it is OUTSIDE THE ZO SCOPE of this pass and was not investigated. Recorded so it is not lost, not proposed for deletion on this evidence.",
+      "what_would_settle_it": "Read doctrine-compiler.mjs and confirm nothing indexes the timestamped filenames."
+    }
+  ],
+
+  "not_on_this_list_and_deliberately_so": {
+    "item": "ZO_COMPUTER_TELECHURCH and the Zo code paths in E:/Telechurch-e2e-v2/wrangler/src/index.ts",
+    "why": "These look like Zo retirement candidates and are NOT. They are a live production dependency on the Zo AI ask API, not on the Zo computers being retired. Removing or rotating them is a credential and product decision, never an exfoliation. Deposited on the belt as `zo-retirement-has-a-live-production-dependency`, addressed to the operator."
+  }
+}

@@ -1,0 +1,158 @@
+{
+  "schema": "refer.hive.zo-method-harvest.v1",
+  "created_at": "2026-09-12T04:06:55.020Z",
+  "created_by": "Zo retirement and method harvest pass",
+  "subject": "The twelve capabilities named in the scripts arrays of the three Zo computer rows in hive-node-registry.json, read off disk before those rows were retired.",
+
+  "where_the_method_actually_lives": {
+    "path": "E:/refer-script-factory/refer-zo-bootstrap/scripts/factory/",
+    "correction_to_the_brief": "The brief assumed that once the registry entries were gone the method would be 'only recoverable from git' - meaning the factory repo's git. That is wrong in a way that matters. `git ls-files refer-zo-bootstrap` in E:/refer-script-factory returns ZERO files: the directory is excluded by .git/info/exclude line 7, a LOCAL uncommitted exclude that is not in .gitignore and is not shared with any clone. So none of this method is in the factory repo's history at all.",
+    "but_it_is_safe": "refer-zo-bootstrap is its own git repository with its own remote, https://github.com/lightedcandle/refer-zo-bootstrap.git, currently on branch build-out-hive, 343 files tracked, 55 of them under scripts/factory, last commit 05dc525 dated 2026-09-03. The branch is fully pushed - 0 ahead, 0 behind origin/build-out-hive. The method is durably recoverable, from a different repository and a non-default branch than anyone would look in.",
+    "what_is_NOT_recoverable": "The run evidence. refer-zo-bootstrap/.gitignore excludes scripts/factory/heartbeat.log, heartbeat-state.json, datasets/evolution-log/records/ and datasets/script-registry/health/. Those local files are the only proof of what ever actually ran, and they exist on this disk only. Their contents are quoted in this document for that reason."
+  },
+
+  "worth_reapplying": [
+    {
+      "capability": "registry-doctor --repair",
+      "source": "refer-zo-bootstrap/scripts/factory/registry-doctor.mjs (3890 bytes, read in full)",
+      "what_it_did": "Walked every record in the script registry and asked one question of each: does the file this record names actually exist? Records typed `gate` or `utility` were passed as non-executable. Records flagged requires_ai were passed as warnings. A record naming a file that was not on disk was reported `missing_executable` - and with --repair, the doctor WROTE that file: a five-line stub that prints {ok:false, status:\"not_implemented\"} and exits 3.",
+      "why_it_matters": "The stub is the idea, and it is a good one. It does not pretend to implement anything - the header says so explicitly, 'it does not invent working implementations'. What it changes is the FAILURE MODE. Before repair, the registry names a path and nothing is there, so a caller gets a module-not-found from somewhere unrelated. After repair, the gap is an executable that fails loudly, at the right path, with a machine-readable reason and a distinct exit code. The gap becomes addressable instead of merely absent.",
+      "current_factory_gap": "tools/factory-census.cjs is the nearest thing and it is explicitly an INSTRUMENT, not a repairer - its own header says 'It reports and exits 0 whatever it finds.' It classifies every script REGISTERED / DRIVEABLE / CALLED / ORPHANED and names the orphans. That is the opposite direction: census asks 'which files has the register forgotten', the doctor asks 'which register entries have no file'. Neither answers the other's question, and nothing today repairs either.",
+      "what_it_would_look_like_here": "A `--repair` flag on factory-census, or a sibling machine, that takes the inverse pass: for every route in the register whose named machinery is absent from disk, write a stub at that exact path that exits non-zero with the route id in its message. Then the register cannot contain a promise nothing keeps. It must NOT be a gate - a stub appearing should never fail a build - and it must never overwrite an existing file. That last one is a real hazard: the original only writes when existsSync is false, and any reapplication has to keep that guard or it will silently blank working machinery.",
+      "confidence": "high - read the whole file, the behaviour is 100 lines and unambiguous"
+    },
+    {
+      "capability": "the script-gap draft (scaffoldScriptGap, inside local-intake-runner + local-script-registry)",
+      "source": "refer-zo-bootstrap/scripts/factory/local-intake-runner.mjs (13126 bytes), local-script-registry.mjs (8253 bytes)",
+      "what_it_did": "Took an ordinary prompt, resolved its scope, matched it against the registry, and ran the matching script if one existed. When NOTHING matched, it did not fail and it did not shrug - it wrote a durable script-gap DRAFT into datasets/script-registry/drafts/. The miss became an artifact.",
+      "why_it_matters": "This is the missing half of the register law the factory already runs on. refer.factory.md section 0 and the Telechurch CLAUDE.md both say a miss on `npm run factory -- find` is an instruction, not a dead end - author the route. But nothing writes the miss down. It relies entirely on the session that hit it choosing to act, in the same session, before it forgets. A draft on disk survives the session.",
+      "current_factory_gap": "`npm run factory -- find <words>` answers yes or no and produces nothing on a no. There is no drafts directory and no record of which searches came back empty. The register therefore cannot tell you what people keep looking for and failing to find, which is exactly the list of routes worth authoring next.",
+      "what_it_would_look_like_here": "`factory -- find` writes a one-line record on every miss: the words searched, when, and by whom. That is cheap and needs no new store - it could deposit to the belt with triggers `terminal:recorded` so it accumulates without demanding action. The register then has a demand signal, and 'what should the factory learn next' stops being a guess.",
+      "confidence": "high for what it did; medium for the shape of the reapplication, which is a design choice not a transcription"
+    },
+    {
+      "capability": "draft-promotion-runner",
+      "source": "refer-zo-bootstrap/scripts/factory/draft-promotion-runner.mjs (13350 bytes)",
+      "what_it_did": "Consumed those script-gap drafts and turned each into an executable, registered forge. Its header is candid about the quality: 'The first generated forge is intentionally generic: it canonicalizes the user's intent into a deterministic script-artifact record.' The point was not to write good code. The point was, in its own words, that 'intake no longer stalls at needs_script'.",
+      "why_it_matters": "It closes the loop the draft opens, and it makes the same bet registry-doctor makes: a deliberately weak implementation at the right address beats a correct absence. It also replayed what it generated (--no-replay to skip), so a promotion that produced something unrunnable was caught at promotion time.",
+      "current_factory_gap": "No counterpart. Authoring a route is entirely manual.",
+      "what_it_would_look_like_here": "Lower priority than the other two, and honestly stated: it only earns its place once misses are being recorded, because a promoter with nothing to promote is machinery for its own sake. Sequence it second.",
+      "confidence": "medium-high - read the header and the promote/selectDrafts path, not the generator body"
+    },
+    {
+      "capability": "node-scope - a machine declares what it is FOR, and the centre routes from that",
+      "source": "refer-zo-bootstrap/scripts/factory/node-scope.mjs (4396 bytes)",
+      "what_it_did": "A tiny self-scoping ledger. Each machine wrote its own record - scope_id, label, purpose, categories, a CONFIDENCE number, and evidence - saying what it was being used for. The registry note that came with it states the principle exactly: 'Scope is node-owned and may expand as local user purpose changes; root should route from scope evidence, not assign a permanent domain.'",
+      "why_it_matters": "That is a genuinely different idea from anything in the factory today, and it is the one most likely to be dismissed as trivial because the script is small. Today a repo's *.station.json declares WHAT IT RUNS. Nothing declares WHAT IT IS FOR. Those diverge the moment a machine is used for something its declaration did not anticipate, and the centre has no way to notice.",
+      "current_factory_gap": "Station declarations are cadence and machinery. There is no scope or purpose field anywhere, and no confidence value on any self-description in the factory.",
+      "what_it_would_look_like_here": "One optional block in *.station.json - purpose, categories, confidence - and one line in the manager that flags a station whose declared purpose has not matched its actual deposits for N cycles. With exactly one outpost on the roster this buys little today. It becomes valuable the moment there are two, which is the reason to record it now rather than rediscover it then.",
+      "confidence": "medium - read the first 60 lines and the surviving record datasets/node-scope/records/alliance-application-build.json"
+    },
+    {
+      "capability": "the evolution-loop's DEPOSIT SHAPE - specifically its `next` field and its retry vocabulary",
+      "source": "refer-zo-bootstrap/scripts/factory/evolution-loop.mjs (5861 bytes, read in full)",
+      "what_it_did": "One bounded tick. It ran inbox-automation, then draft-promotion-runner, then registry-doctor, each as a separate child process with a 90-second timeout, then wrote an evolution event and a talkback packet. Outcome was EVOLVED or RETRY_PENDING, with an explicit can_retry flag, and the talkback carried a `next` field naming what should happen after this tick - either 'ai_build_trace_then_distill_script_drafts' or 'continue_monitoring'.",
+      "honest_correction": "The brief flagged this as possibly 'something that changed the system over time'. Read in full, the loop itself changes nothing - it is a composer. All the changing is done by its two members, registry-doctor --repair and draft-promotion-runner. Calling the loop self-evolution oversells it, and the registry's own evidence line 'Alliance self-evolution automation is active' inherited that overselling. Say composer, not evolver.",
+      "what_is_genuinely_worth_taking": "Two small things. First, the `next` field: the deposit says what should happen after it, so the record is a link in a chain rather than a terminus. Second, EVOLVED / RETRY_PENDING plus can_retry: the tick distinguishes 'this finished' from 'this did not finish and trying again is reasonable', which is a distinction the belt's current terminal vocabulary does not make - a record is open or terminal, with no state for 'incomplete but retryable'.",
+      "current_factory_gap": "The belt has a `recommend` field, added 2026-09-11, which is close to `next` but is advice to a reader rather than the tick's own statement of its continuation. And there is no retryable state at all.",
+      "what_it_would_look_like_here": "Do not rebuild the loop - clock.cjs already composes stations and does it better. Take the two fields. A machine that ran but could not complete deposits with a retryable marker instead of either lying that it finished or filing a fault.",
+      "confidence": "high - read the whole file"
+    }
+  ],
+
+  "superseded": [
+    {
+      "capability": "contract-inbox-runner",
+      "what_it_did": "The Zo-side half of the file transport. Read a saved contract out of Zo Files, verified and decompressed its sx1 transport envelope, and wrote a talkback packet to the outbox. Its header names the purpose plainly: 'a cheap API lane that avoids a full Zo chat round trip'.",
+      "replaced_by": "machines/intake-worker.cjs. Strictly better on the axis that matters: intake-worker does not just read an item, it SELECTS one by an ordered policy - capacity, never touch anything addressed to the operator, prefer items carrying a recommendation, then oldest - writes a brief, and dispatches a real named agent session. And it prepares by default and dispatches only with --dispatch, which is a deliberate authority decision the Zo runner never had to make.",
+      "exfoliate": "yes, but see deletion_order"
+    },
+    {
+      "capability": "dispatch-contract",
+      "what_it_did": "Wrote a contract into the outbox addressed at a named remote node.",
+      "replaced_by": "machines/intake-worker.cjs --dispatch, which spawns an actual session in an actual worktree rather than leaving a file for something else to notice.",
+      "exfoliate": "yes, but see deletion_order"
+    },
+    {
+      "capability": "fetch-zo-talkback",
+      "what_it_did": "Pulled results back from the remote machine's talkback outbox.",
+      "replaced_by": "machines/exit-worker.cjs, and this is the clearest single upgrade in the whole comparison. fetch-zo-talkback could only report what arrived. exit-worker asks whether the agent carrying each item is still alive and separates three outcomes: still working, DELIVERED (session gone and the item was closed) and ABANDONED (session gone and it was not). The Zo lane had no way to distinguish a result that never came from a worker that quit - the two looked identical, which is precisely the confusion that let alliance and apostlej sit at status 'active' for 134 days.",
+      "exfoliate": "yes, but see deletion_order"
+    },
+    {
+      "capability": "ship-contract-to-zo",
+      "what_it_did": "Pushed a contract file to the remote over the Zo Files API.",
+      "replaced_by": "Nothing, and nothing is wanted. Its only destination is a machine being retired.",
+      "exfoliate": "yes, but see deletion_order"
+    },
+    {
+      "capability": "sync-tandem-runtime-to-zo",
+      "what_it_did": "Pushed the whole factory runtime bundle to the remote machine so the remote had a copy to run. 12666 bytes, the largest of the transport scripts, and the evidence trail shows how much work it was: repeated 'full factory gap closure bundle synced', 'portable dispatcher fix synced', 'narrow changed-file sync after full-bundle provider termination'.",
+      "replaced_by": "An architecture, not a script. Precedent P13 settled it: one machine, many working directories. Every machine resolves its subject from process.cwd() and never from __dirname, so running it against another repo means running it with a different cwd - there is no bundle to ship and therefore nothing to keep in sync. machines/README.md states the same rule as the single mistake that directory makes easy to commit. The entire class of failure this script existed to manage - four copies drifting into four behaviours - was designed out.",
+      "exfoliate": "yes, but see deletion_order",
+      "note": "This is the strongest evidence in the harvest that the current design is better rather than merely newer. A 12KB script and a dozen ratification entries went into keeping copies identical; the replacement is one sentence about cwd."
+    },
+    {
+      "capability": "local-script-registry (the lookup half)",
+      "what_it_did": "Held the registry, matched a prompt to a script, normalized the registry to disk.",
+      "replaced_by": "tools/factory-routes.cjs and `npm run factory -- find|show`. Better in one specific way worth naming: `factory -- show <id>` prints what a route does NOT prove, last and unmissably. The Zo registry had no equivalent - it could tell you a script matched, never what its result failed to establish.",
+      "exfoliate": "the lookup half yes; scaffoldScriptGap is in worth_reapplying above"
+    },
+    {
+      "capability": "inbox-automation",
+      "what_it_did": "A non-persistent tick that drained a queue directory, ran the intake runner per file, and moved each file to processed/ or errors/. Deliberately not a daemon.",
+      "replaced_by": "clock.cjs plus the station declarations, which do the same not-a-daemon thing for every machine rather than for one queue. Its one good instinct - a tick you invoke, never a process that lives - is already the factory's rule and is independently required by precedent P5.",
+      "exfoliate": "yes, but see deletion_order"
+    }
+  ],
+
+  "unrecoverable": [
+    {
+      "capability": "Whatever ran on the Zo computers themselves",
+      "plainly": "Nothing about the remote side is recoverable from this machine. Every artifact on this disk is the SENDING half. The registry evidence line 'Alliance hourly self-evolution automation is active' (2026-04-30T01:02:21Z) asserts that something was scheduled on the Alliance Zo computer, and there is no scheduler config, no crontab, no log and no talkback after 2026-05-01 to say what it was, whether it kept running, or how it was wired. Reaching the Zo accounts would settle it; reading this disk cannot.",
+      "not_reconstructed": "No design has been inferred from the filenames. The names sync-tandem-runtime-to-zo and ship-contract-to-zo describe a remote arrangement that is only visible from this end."
+    },
+    {
+      "capability": "The four hive train cars (01-dashboard, 02-spawn-worker, 03-scan-workspace, 04-hive-sync)",
+      "plainly": "These exist on disk and are readable, so the CODE is recoverable - but their run record proves they never did the thing they were named for. heartbeat.log holds exactly four lines, all on 2026-04-29 and 2026-04-30, and heartbeat-state.json shows the result: node_id '<NODE_ID>', node_name '<NODE_NAME>', node_url '<ZO_SPACE_URL>' - unsubstituted placeholders - with node_count 0, active_node_count 0, task_count 0, and hive_status {skipped: true, reason: 'no_hive_url'}. The hive heartbeat ran four times and never once contacted a hive. There is no working method here to harvest, only an intention."
+    }
+  ],
+
+  "outpost_roster": {
+    "definition": "An outpost is a separate machine that can receive work, do it, and report back. Operator, 2026-09-11.",
+    "registered": [
+      {
+        "id": "telechurch",
+        "label": "Home Desk",
+        "why": "The operator's Windows desktop. Proven by tools/factory/node-heartbeat.cjs, which beats into the registry every 15-30 minutes and reports the host's boot time and reboot-pending state, and by tools/factory/build-tracker.cjs, which reads that block and renders it."
+      }
+    ],
+    "not_registered": {
+      "id_that_would_have_been": "barbie",
+      "verdict": "NOT CREATED. Nothing on disk establishes this machine, and a fabricated outpost is worse than a missing one because the registry's entire job is to be believed.",
+      "what_was_searched": [
+        "case-insensitive 'barbie' across E:/Telechurch-e2e-v2 - zero matches",
+        "case-insensitive 'barbie' across E:/refer-script-factory - zero matches",
+        "claude-code-action / @claude / anthropics-claude across E:/Telechurch-e2e-v2/.github - zero matches; the repo's eight workflows are publish-refer-os, ready-suggest, recent-activity, tooling-garden, auto-merge, ci-pr, ci and policy, none of which is the GitHub @claude channel",
+        "workflow directories across e2e-bridge, refer.os, SovereignNode, refer-cockpit, automations, refer and refer-zo - only refer.os has any (refer-os-verify.yml), and E:/refer-script-factory has no .github at all",
+        "gh api repos/lightedcandle/telechurch-e2e/installation - refused with HTTP 401, that endpoint needs GitHub App JWT auth which is not available here, so it is inconclusive rather than negative"
+      ],
+      "what_would_settle_it": [
+        "The machine's name, as the operator calls it - the id has to be stable because readers match on it by path and by string, never on the label.",
+        "How the GitHub @claude channel actually reaches it. Concretely: is there a claude-code-action workflow in some repo not on this drive, or is it the hosted Claude GitHub App with no workflow file, or is it a self-hosted runner? These produce three different rows - the first is reachable by a file we could name, the second by a repo and an app installation, the third by a runner label.",
+        "Which repository or repositories it is installed on. That is the `instance` field.",
+        "What it is permitted to do when it answers - open a PR, comment only, run the test suite. That is the `role` field, and getting it wrong is how a registry grants an authority nobody meant to give (precedent P14).",
+        "One observation of it actually doing work and reporting back. Until that exists the row would be `planned`, not `active`, because on this registry's own history a row that starts at 'active' without a beat behind it stays 'active' for four months after it dies."
+      ],
+      "cheapest_route": "Ask the operator for the repo the @claude channel is installed on, then read that repo's .github/workflows and its issue/PR history for @claude mentions. One answer from him converts every remaining unknown into something readable."
+    }
+  },
+
+  "trap_recorded_for_the_next_pass": {
+    "id": "a-retired-row-still-reports-ready-to-stage",
+    "where": "E:/refer-script-factory/scripts/hive/hive-node-deployment-pack.mjs line 154",
+    "what": "ready_to_stage: missing.length === 0 && node.status !== 'blocked'",
+    "why_it_matters": "'retired' is not 'blocked', so every machine retired in this pass still reports ready_to_stage: true if anyone builds a deployment pack for it. The lifecycle vocabulary added to the registry header is honest; this reader does not consult it. A gate that only looks like one is worse than no gate, because it is trusted.",
+    "not_fixed_here": "scripts/ is outside this pass's write boundary. Recorded on the belt as `retired-status-does-not-block-the-deployment-pack`."
+  }
+}

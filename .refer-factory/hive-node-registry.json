@@ -1,7 +1,25 @@
 {
   "schema": "refer.hive.node-registry.v1",
-  "updated_at": "2026-05-01T13:57:27.865Z",
-  "purpose": "Track hive-capable factory and Zo computer nodes, their roles, deployment state, and ratification evidence.",
+  "updated_at": "2026-09-12T05:25:02.352Z",
+  "purpose": "Track the machines the factory can reach - outposts that receive work, do it and report back - together with their roles, lifecycle state, and ratification evidence.",
+  "purpose_original": "Track hive-capable factory and Zo computer nodes, their roles, deployment state, and ratification evidence.",
+  "vocabulary": {
+    "recorded_at": "2026-09-12T04:06:55.020Z",
+    "outpost": "A SEPARATE MACHINE that can receive work, do it, and report back. Operator's definition, 2026-09-11. Narrower than the old word 'node': a script is not an outpost, a repository is not an outpost, and a machine that can only be pushed to is only an outpost once something on it can answer.",
+    "why_not_node": "'Node' is overloaded to the point of being dangerous here. It means the Node.js runtime, it means the SovereignNode repository (a separate product, with its own unrelated 'hive'), and it means DOM/tree/graph vertices. Only the hive-machine sense becomes 'outpost'. A blind rename across the word destroys the other three senses silently.",
+    "field_note": "The `nodes` array keeps its key. Renaming the key would break every reader by path - tools/factory/node-heartbeat.cjs and tools/factory/build-tracker.cjs in the Telechurch repo both index `doc.nodes`. The concept is renamed; the wire format is not."
+  },
+  "lifecycle": {
+    "recorded_at": "2026-09-12T04:06:55.020Z",
+    "why": "The schema could say `active` and nothing else, so three completely different situations all read as one. They are separated here because only one of them is a problem.",
+    "states": {
+      "active": "Reachable and reporting.",
+      "retired": "Deliberately stood down. A decision was taken. Nothing is wrong.",
+      "stopped": "It ran and then quit. Nobody decided that, and nobody noticed at the time.",
+      "never_started": "Nothing ever fed it on its own. It only ever answered when pushed to, or it never ran at all. This is NOT the same as stopped, and calling it stopped invents a working period that never existed."
+    },
+    "reader_warning": "No reader enforces these. scripts/hive/hive-node-deployment-pack.mjs gates only on status !== 'blocked', so a retired outpost still reports ready_to_stage: true. See finding `retired-status-does-not-block-the-deployment-pack`."
+  },
   "nodes": [
     {
       "id": "alliance",
@@ -150,6 +168,10 @@
         {
           "ts": "2026-05-01T03:27:13.092Z",
           "value": "2026-05-01 Alliance moved to Zo Sites: created public site/service label alliance at https://alliance-alliance.zocomputer.io; service_doctor healthy; source under /home/workspace/Projects/Alliance-Hub/alliance."
+        },
+        {
+          "ts": "2026-09-12T04:06:55.020Z",
+          "value": "RETIREMENT EVIDENCE. Lifecycle judged STOPPED, not never-started and not merely unfed. It genuinely ran unattended at least once: evidence 2026-04-30T01:02:21Z records 'Alliance hourly self-evolution automation is active', and 2026-04-30T03:41:26Z records a live remote intake that auto-promoted qaremote-alliance-gap and replayed successfully without waiting for a heartbeat. Then it stopped: heartbeat.next_due_at was 2026-05-01T14:57:27Z and no beat ever followed, 134 days ago. What CANNOT be established from this machine is whether the Zo computer itself stopped or whether the operator simply stopped pushing to it - every last_seen_at here was written by the manual npm script hive:registry:heartbeat run on the Windows desktop, so the registry records the end of the relationship, not the death of the machine."
         }
       ],
       "notes": [
@@ -320,6 +342,10 @@
         {
           "ts": "2026-05-01T13:57:27.813Z",
           "value": "Phone polls Supabase Edge Function directly; cloud-only SMS outbox cleared without computer dispatcher or Cloudflare tunnel"
+        },
+        {
+          "ts": "2026-09-12T04:06:55.020Z",
+          "value": "RETIRED on the operator's instruction, 2026-09-11: 'we'll remove / retire the zo computers as i don't use them anymore'. Retired by marking, never by removal - a registry that forgets a machine it once had can no longer tell you that machine stopped, which is the one thing it exists to say. IMPORTANT SCOPE LIMIT: this retires the ALLIANCE ZO COMPUTER, not the Alliance project. Alliance work continued past this machine and does not depend on it - the SMS relay moved to a Supabase Edge Function plus a docked Android phone (see the 2026-05-01T13:57 note), and refer-zo-bootstrap's own git repo carries Alliance commits as recent as 2026-09-03. Do not read this row as Alliance being stood down."
         }
       ],
       "datasets": [
@@ -360,10 +386,16 @@
       ],
       "name": "Alliance Zo",
       "kind": "zo_computer",
-      "role": "multi-scope Zo hive node; current ratified scope includes Alliance application build",
+      "role": "RETIRED. Was a multi-scope Zo hive node; its ratified scope was the Alliance application build.",
       "account": "zo:alliance",
       "instance": "alliance",
-      "status": "active",
+      "status": "retired",
+      "lifecycle": "stopped",
+      "retired_at": "2026-09-12T04:06:55.020Z",
+      "retired_by": "operator instruction 2026-09-11, executed by the Zo retirement pass",
+      "retired_reason": "The operator no longer uses the Zo computers. This machine ran, then stopped on 2026-05-01, and nothing observed it stopping.",
+      "is_outpost": false,
+      "outpost_note": "Not renamed to outpost. It met the definition when it was alive - a separate machine that received work, did it and reported back - but the word is for what the factory keeps, and a retired machine should not be filed under a vocabulary that implies it is available.",
       "transport": "file_api_tandem",
       "persona": "unknown",
       "rules": "unknown",
@@ -423,6 +455,10 @@
         {
           "ts": "2026-04-30T12:15:56.209Z",
           "value": "ApostleJ received local-intake compression fix; remote syntax check and sx1 round-trip passed ratio about 0.50"
+        },
+        {
+          "ts": "2026-09-12T04:06:55.020Z",
+          "value": "RETIREMENT EVIDENCE. Lifecycle judged NEVER STARTED as an autonomous outpost, which is a different fact from stopped and is the more accurate one. All ten of its prior evidence entries span a single day, 2026-04-30T03:21Z to 12:15Z, and every one of them is the same shape: the Windows desktop pushed a bundle and got a syntax check back ('synced to ApostleJ; remote syntax check returncode=0'). Nothing here records ApostleJ initiating anything. Unlike alliance, it never earned an 'automation is active' entry and never returned an unprompted talkback. Its heartbeat was left in mode 'ratifying' with next_due_at 2026-04-30T12:30:56Z - a due time that passed 135 days ago with no beat. So it functioned as a sync target and never as a self-running machine. Stated as observed, not inferred from silence: the absence of autonomous evidence is corroborated by the presence of that evidence on alliance, which proves the record WOULD have captured it."
         }
       ],
       "notes": [
@@ -465,6 +501,10 @@
         {
           "ts": "2026-04-30T12:15:56.209Z",
           "value": "local-intake-runner and inbox-automation now match Alliance compression behavior"
+        },
+        {
+          "ts": "2026-09-12T04:06:55.020Z",
+          "value": "RETIRED on the operator's instruction, 2026-09-11. Retired by marking, never by removal. Its historical value is real and is why the row stays: this was the ORIGINAL hive deployment machine and the path by which Alliance was first deployed, so deleting it would erase the only record of where the hive came from."
         }
       ],
       "datasets": [
@@ -491,10 +531,16 @@
       ],
       "name": "ApostleJ Zo Hive",
       "kind": "zo_computer",
-      "role": "original hive deployment and distribution node; historical source for early hive files and Alliance deployment path",
+      "role": "RETIRED. Was the original hive deployment and distribution node; historical source for the early hive files and the Alliance deployment path.",
       "account": "zo:apostlej",
       "instance": "apostlej",
-      "status": "active",
+      "status": "retired",
+      "lifecycle": "never_started",
+      "retired_at": "2026-09-12T04:06:55.020Z",
+      "retired_by": "operator instruction 2026-09-11, executed by the Zo retirement pass",
+      "retired_reason": "The operator no longer uses the Zo computers. This one never ran unattended in the first place - it only ever answered when pushed to.",
+      "is_outpost": false,
+      "outpost_note": "Not an outpost, and it is worth being exact about why: it could receive work and report back, but nothing ever originated on it. Under the operator's definition an outpost does the work; a machine that only echoes a syntax check is a target, not an outpost.",
       "transport": "file_api_tandem",
       "persona": "governance-synced",
       "rules": "governance-synced",
@@ -515,10 +561,17 @@
       "id": "codex-script-factory",
       "name": "Codex Script Factory",
       "kind": "codex_factory",
-      "role": "director and provider-neutral doctrine source",
+      "role": "RETIRED CLAIM - not transferred. This row asserted 'director and provider-neutral doctrine source'. Under precedent P14 a rename may move a duty but must never move a privilege, so the directorship is retired here rather than reassigned to Claude or to anything else. Nothing inherits it.",
+      "role_original": "director and provider-neutral doctrine source",
       "account": "lightedcandle2018@gmail.com",
       "instance": "refer-script-factory",
-      "status": "active",
+      "status": "retired",
+      "lifecycle": "never_started",
+      "retired_at": "2026-09-12T04:06:55.020Z",
+      "retired_by": "Codex was retired 2026-09-11 (precedent P14); this row is stood down with it",
+      "retired_reason": "The provider this row was named for no longer exists here, and the authority it claimed is retired rather than inherited.",
+      "is_outpost": false,
+      "outpost_note": "NOT AN OUTPOST, and this is the point worth keeping. `instance` is refer-script-factory - the factory repository itself, on the operator's own account, running local_scripts. An outpost is a SEPARATE MACHINE. A repo running scripts on the machine you are already sitting at is not one, so this row was never describing an outpost even when it was written. Under precedent P13 it is a place where machines and scripts live, not a machine that reports back.",
       "transport": "local_scripts",
       "persona": "AGENTS.md",
       "rules": "unscripted-laws/REFER.OS",
@@ -540,6 +593,10 @@
         {
           "ts": "2026-04-29T17:09:16.543Z",
           "value": "Promote provider-neutral lessons from Zo back into this repo."
+        },
+        {
+          "ts": "2026-09-12T04:06:55.020Z",
+          "value": "RETIREMENT NOTE. Lifecycle NEVER STARTED as a reporting entity: its single evidence entry is from the minute it was created, 2026-04-29T17:09:16Z, and nothing was ever added. It was a description of the repo, not a machine that ever reported. Its one standing instruction - 'Promote provider-neutral lessons from Zo back into this repo' - is DISCHARGED by the same pass that retired it: the Zo method was read off disk and classified before the machines were stood down, and the result is .refer-factory/zo-method-harvest.json. That is the note being closed on purpose rather than dropped with the row."
         }
       ],
       "created_at": "2026-04-29T17:09:16.543Z",
@@ -558,13 +615,23 @@
     },
     {
       "id": "telechurch",
-      "name": "Telechurch Zo",
-      "kind": "zo_computer",
-      "role": "first hive proving node",
-      "account": "zo:telechurch",
+      "name": "Home Desk",
+      "name_original": "Telechurch Zo",
+      "kind": "outpost",
+      "kind_original": "zo_computer",
+      "role": "The operator's own Windows desktop - the machine the Living Factory actually runs on. It is the first and currently the only outpost.",
+      "role_original": "first hive proving node",
+      "account": "local:windows-desktop",
+      "account_original": "zo:telechurch",
       "instance": "telechurch",
       "status": "active",
-      "transport": "file_api_tandem",
+      "lifecycle": "active",
+      "is_outpost": true,
+      "refounded_at": "2026-09-12T04:06:55.020Z",
+      "refounded_why": "THIS ROW WAS NEVER A ZO COMPUTER, whatever it said. The thing writing its heartbeat is tools/factory/node-heartbeat.cjs in the Telechurch repo, running on the operator's Windows desktop with NODE_ID hardcoded to 'telechurch', and the extra data it reports is that PC's boot time and reboot-pending state. Its beat proves the desktop is running. Nothing in that path asks any Zo computer anything, and no Zo credential is involved. So retiring the Zo computers must not retire this row - it is the machine everything else runs on, and it is the honest first entry in an outpost register.",
+      "id_is_load_bearing": "The id stays 'telechurch' even though the name changed. tools/factory/node-heartbeat.cjs matches on n.id === 'telechurch' and tools/factory/build-tracker.cjs finds this row the same way to render the board's host panel. Renaming the id would silently blank the board's host display and stop the heartbeat writing. Rename the label, never the key.",
+      "transport": "local_station",
+      "transport_original": "file_api_tandem",
       "persona": "unknown",
       "rules": "unknown",
       "datasets": [
@@ -677,6 +744,10 @@
         {
           "ts": "2026-04-30T12:15:55.355Z",
           "value": "Telechurch received local-intake compression fix; remote syntax check and sx1 round-trip passed ratio about 0.50"
+        },
+        {
+          "ts": "2026-09-12T04:06:55.020Z",
+          "value": "RE-FOUNDED AS AN OUTPOST, not retired. Verified rather than assumed. WRITER: tools/factory/node-heartbeat.cjs, a registered station with its own trigger json, hardcodes NODE_ID='telechurch', reads os.uptime() and the Windows RebootPending / WindowsUpdate registry keys, and writes last_seen_at, updated_at, an adaptive heartbeat and a host block. It contacts nothing remote. READER: tools/factory/build-tracker.cjs line 877 finds this exact row by id and renders node.host on the board - so blanking this entry would have broken the board's host panel, which is why it was not blanked. All evidence above this line, dated 2026-04-29 to 2026-04-30, IS genuine Zo tandem history and is kept as history; the live beat is a different mechanism that reused the row."
         }
       ],
       "notes": [
@@ -723,20 +794,39 @@
         {
           "ts": "2026-04-30T12:15:55.355Z",
           "value": "local-intake-runner and inbox-automation now match Alliance compression behavior"
+        },
+        {
+          "ts": "2026-09-12T04:06:55.020Z",
+          "value": "OUTPOST ROSTER, as of this pass: one. This is it. alliance, apostlej and codex-script-factory are all retired above, and the machine reached through the GitHub @claude channel could not be registered because nothing on disk establishes it - no @claude workflow exists in any repo on this drive. See .refer-factory/zo-method-harvest.json, section `outpost_roster`, for exactly what would be needed to add it. An honest roster of one beats a roster of two where one is invented."
         }
       ],
       "created_at": "2026-04-29T17:09:16.543Z",
-      "updated_at": "2026-04-30T12:15:55.355Z",
-      "last_seen_at": "2026-04-30T12:15:55.355Z",
+      "updated_at": "2026-09-12T05:25:02.352Z",
+      "last_seen_at": "2026-09-12T05:25:02.352Z",
       "heartbeat": {
         "policy": "adaptive",
-        "mode": "ratifying",
-        "activity": "ratifying",
+        "mode": "living-factory",
+        "activity": "idle",
         "interval_ms": 900000,
         "interval_label": "15m",
         "max_interval_ms": 86400000,
         "max_interval_label": "24h",
-        "next_due_at": "2026-04-30T12:30:55.357Z"
+        "next_due_at": "2026-09-12T07:25:02.352Z",
+        "current_interval_ms": 7200000,
+        "current_interval_label": "2h",
+        "last_beat_at": "2026-09-12T05:25:02.352Z"
+      },
+      "host": {
+        "platform": "win32",
+        "booted_at": "2026-09-11T06:33:36.326Z",
+        "uptime_hours": 22.9,
+        "reboot_pending": false,
+        "reboot_pending_reasons": [],
+        "restart_window": {
+          "from": 0,
+          "to": 6
+        },
+        "checked_at": "2026-09-12T05:25:02.352Z"
       }
     }
   ]

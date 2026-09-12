@@ -1,0 +1,204 @@
+{
+  "schema": "refer.hive.node-to-outpost-map.v1",
+  "created_at": "2026-09-12T04:06:55.020Z",
+  "status": "MAP ONLY - NOT APPLIED. Applying it is a separate pass, once tools/factory/** and machines/** are free of the other sessions that were editing them during this one.",
+
+  "the_rule_this_map_exists_to_enforce": {
+    "rename": "Only the HIVE MACHINE sense of the word 'node' becomes 'outpost'.",
+    "never_rename": [
+      "Node.js - the runtime. `node script.cjs`, node_modules, .nvmrc, engines.node, every shebang.",
+      "E:/SovereignNode - a real repository name and a separate product. It also carries its own unrelated 'hive' (cadis-hive, hive-enrollment, hive-synthetic-canary), a Cloudflare enrollment system that shares a word and has zero references to this registry.",
+      "DOM nodes, tree nodes, graph nodes, chart nodes - ordinary programming vocabulary."
+    ],
+    "when_unsure": "It is not a rename candidate. Two sites below are recorded as refused rather than guessed."
+  },
+
+  "counts": {
+    "sites_examined": 41,
+    "confident_rename": 9,
+    "must_not_rename_load_bearing": 8,
+    "must_not_rename_wrong_sense": 5,
+    "refused_unclassified": 2,
+    "note": "Counted as SITES (a file plus a line or a field), not as occurrences of the string. A single comment paragraph using the word four times is one site. Counting occurrences would inflate the number and make the map look larger than the work."
+  },
+
+  "confident_rename": [
+    {
+      "id": "R1",
+      "file": "E:/refer-script-factory/.refer-factory/hive-node-registry.json",
+      "site": "the `purpose` string",
+      "was": "Track hive-capable factory and Zo computer nodes...",
+      "now": "Track the machines the factory can reach - outposts that receive work, do it and report back...",
+      "confidence": "certain",
+      "applied": true,
+      "note": "Already done in this pass, with the original kept as `purpose_original`."
+    },
+    {
+      "id": "R2",
+      "file": "E:/refer-script-factory/.refer-factory/hive-node-registry.json",
+      "site": "node `telechurch`, field `kind`",
+      "was": "zo_computer",
+      "now": "outpost",
+      "confidence": "certain",
+      "applied": true
+    },
+    {
+      "id": "R3",
+      "file": "E:/Telechurch-e2e-v2/tools/factory/node-heartbeat.cjs",
+      "site": "line 3, the header title",
+      "was": "NODE HEARTBEAT - tells the hive registry this machine is still breathing.",
+      "propose": "OUTPOST HEARTBEAT - tells the outpost registry this machine is still breathing.",
+      "confidence": "high",
+      "scope": "comment only, no behaviour"
+    },
+    {
+      "id": "R4",
+      "file": "E:/Telechurch-e2e-v2/tools/factory/node-heartbeat.cjs",
+      "site": "lines 8, 14, 22, 63, 65, 145, 183, 200 - prose uses of 'the node' meaning this machine",
+      "propose": "'the outpost' throughout; line 63's error string 'hive node registry not found' becomes 'outpost registry not found'",
+      "confidence": "high",
+      "scope": "comments and one error message. The error message is user-facing text, not a key.",
+      "one_site": "Counted as one site because it is one document's voice; apply as one edit."
+    },
+    {
+      "id": "R5",
+      "file": "E:/Telechurch-e2e-v2/tools/factory/node-heartbeat.trigger.json",
+      "site": "the `why` field",
+      "was": "Tells the hive node registry this machine is still breathing...",
+      "propose": "Tells the outpost registry this machine is still breathing...",
+      "confidence": "high",
+      "scope": "prose field, rendered on the board's station strip. Not a key."
+    },
+    {
+      "id": "R6",
+      "file": "E:/Telechurch-e2e-v2/tools/factory/build-tracker.cjs",
+      "site": "line 872, comment: 'from the node registry rather than probed again here'",
+      "propose": "'from the outpost registry'",
+      "confidence": "high",
+      "scope": "comment only"
+    },
+    {
+      "id": "R7",
+      "file": "E:/Telechurch-e2e-v2/tools/factory/schedule.cjs",
+      "site": "line 356, comment: 'the same adaptive policy the hive node registry declared in April'",
+      "propose": "'the outpost registry'",
+      "confidence": "high",
+      "scope": "comment only"
+    },
+    {
+      "id": "R8",
+      "file": "E:/Telechurch-e2e-v2/refer.app/plan/refer.living-factory.plan.md",
+      "site": "lines 975-986 and the table row at 1006 - the assimilation section that reads the registry as '4 nodes' and says 'that computer is a node'",
+      "propose": "'4 outposts', 'that computer is an outpost'. This paragraph is where the concept is explained, so it is the highest-value prose site in the map and the one most likely to teach the next cold session the wrong word if left.",
+      "confidence": "high",
+      "scope": "plan prose. The plan is law-adjacent - amend, do not rewrite, and keep the filename hive-node-registry.json literal wherever it names the file."
+    },
+    {
+      "id": "R9",
+      "file": "E:/refer-script-factory/machines/README.md",
+      "site": "no occurrence today - this is an ADDITION, not a substitution",
+      "propose": "One line in the vocabulary sense: the machines run in a repo, on an outpost. The README currently explains machine-vs-repo and never names the machine the whole thing runs on. Recorded here because a rename pass that only substitutes words leaves the new word undefined at its home.",
+      "confidence": "medium - this is a judgement about where the definition belongs, not a mechanical rename"
+    }
+  ],
+
+  "must_not_rename_load_bearing": [
+    {
+      "id": "K1",
+      "file": "E:/refer-script-factory/.refer-factory/hive-node-registry.json",
+      "site": "the top-level `nodes` array key",
+      "why": "Read by path in two live readers: tools/factory/node-heartbeat.cjs lines 79 and 81 (doc.nodes) and tools/factory/build-tracker.cjs line 882 (readJson(p).nodes). Renaming the key blanks the board's host panel and stops the heartbeat, both silently."
+    },
+    {
+      "id": "K2",
+      "file": "E:/refer-script-factory/.refer-factory/hive-node-registry.json",
+      "site": "node id `telechurch`",
+      "why": "Matched as a literal string in node-heartbeat.cjs line 43 (NODE_ID) and build-tracker.cjs line 882 (n.id === 'telechurch'). The label was renamed to 'Home Desk'; the key was not. Rename the label, never the key."
+    },
+    {
+      "id": "K3",
+      "file": "E:/refer-script-factory/.refer-factory/hive-node-registry.json",
+      "site": "the filename itself",
+      "why": "Hardcoded in five places across two repos: node-heartbeat.cjs lines 47, 48, 49 and build-tracker.cjs lines 877, 878, plus scripts/hive/hive-node-registry.mjs line 12 and hive-node-deployment-pack.mjs line 13 in the factory repo. Renaming the file is a five-caller change and buys nothing the `purpose` field has not already bought."
+    },
+    {
+      "id": "K4",
+      "file": "E:/Telechurch-e2e-v2/tools/factory/node-heartbeat.cjs",
+      "site": "the filename, and the station id `node-heartbeat`",
+      "why": "The station id is the schedule's key. The factory has already learned this once: machines/manager.cjs was renamed from board-critic on 2026-09-12 and its header records that the schedule had to carry its history across the rename 'so it does not read as NEVER RUN for a cycle'. A silent id change makes a healthy station report NEVER RUN. If this is renamed later, migrate the schedule entry in the same commit.",
+      "if_renamed_anyway": "outpost-heartbeat.cjs, station id outpost-heartbeat, plus the schedule history migration, plus the `run` field in node-heartbeat.trigger.json, plus mind-watch.station.json if it references it."
+    },
+    {
+      "id": "K5",
+      "file": "E:/refer-script-factory/scripts/hive/hive-node-registry.mjs",
+      "site": "the filename and the npm script names hive:registry, hive:registry:init, hive:registry:upsert, hive:registry:heartbeat",
+      "why": "package.json lines 266-269 name the file by path. Low value in renaming: this writer is now only used by hand and the machines it fed are retired."
+    },
+    {
+      "id": "K6",
+      "file": "E:/Telechurch-e2e-v2/wrangler/src/index.ts line 48, and everywhere it is read",
+      "site": "the binding name ZO_COMPUTER_TELECHURCH",
+      "why": "A LIVE PRODUCTION SECRET NAME. Renaming a binding renames the secret, and the code would read undefined and fail closed at runtime. Credential changes are never autonomous at any maturity. Out of scope for a vocabulary pass entirely - and see the belt finding `zo-retirement-has-a-live-production-dependency`, because this binding matters for a much larger reason than its name."
+    },
+    {
+      "id": "K7",
+      "file": "E:/refer-script-factory/refer-zo-bootstrap/**",
+      "site": "every use of node/NODE_ID/nodes.json inside the Zo bootstrap package",
+      "why": "This is a separate git repository (github.com/lightedcandle/refer-zo-bootstrap, branch build-out-hive) describing machines that are being retired. Renaming vocabulary inside a retired subsystem is work with no reader. Leave it as the historical record it now is."
+    },
+    {
+      "id": "K8",
+      "file": "E:/refer-script-factory/.refer-factory/hive-backlog.json, hive-validations/**, hive-contracts/**, hive-deployment-packs/**, chat-surface/token-useage.jsonl",
+      "site": "roughly 300 occurrences across dated evidence artifacts",
+      "why": "These are RECORDS OF WHAT WAS SAID AT THE TIME. Rewriting the vocabulary inside a dated evidence file falsifies the evidence. The largest single count in the whole sweep - 239 occurrences in token-useage.jsonl - is here, which is why a term count is not a workload estimate."
+    }
+  ],
+
+  "must_not_rename_wrong_sense": [
+    {
+      "id": "W1",
+      "file": "E:/Telechurch-e2e-v2/tools/factory/build-tracker.cjs",
+      "sites": "lines 2068, 3122, 3137 - 'clicking a node', 'Click a node to read its value', 'Under the node when the band has room beneath it'",
+      "sense": "CHART VERTEX. These are data points on the board's own graphs. Renaming them to 'outpost' would be nonsense, and in the same file as R6, which is exactly how a blind sweep does its damage - two senses of one word, forty lines and two thousand lines apart, in one file."
+    },
+    {
+      "id": "W2",
+      "file": "E:/Telechurch-e2e-v2/tools/factory/work/presentation-console/members.ts",
+      "sites": "lines 1832, 2622 - 'the Node grants', \"the node's publish endpoint is unauthenticated\"",
+      "sense": "SOVEREIGN NODE, the separate product at E:/SovereignNode. Capital N in one, lowercase in the other, so case is not a safe discriminator here."
+    },
+    {
+      "id": "W3",
+      "file": "E:/refer-script-factory/src/integrations/sovereign-node/**",
+      "sites": "client.ts, errors.ts, index.ts, types.ts, validation.ts - the directory name and every symbol in it",
+      "sense": "SOVEREIGN NODE again, as an integration. Off limits entirely."
+    },
+    {
+      "id": "W4",
+      "file": "every repo",
+      "sites": "engines.node, node_modules, .nvmrc, `node <script>` in npm scripts, #!/usr/bin/env node",
+      "sense": "NODE.JS RUNTIME. The single largest source of the word by raw count and not one of them is a candidate."
+    },
+    {
+      "id": "W5",
+      "file": "E:/SovereignNode/**",
+      "sites": "the whole tree, including its cadis-hive, hive-enrollment and hive-synthetic-canary",
+      "sense": "A DIFFERENT HIVE. Confirmed unrelated - zero references to hive-node-registry.json, to zo_computer or to refer.hive. It shares one word. Leave it entirely alone."
+    }
+  ],
+
+  "refused_unclassified": [
+    {
+      "id": "U1",
+      "file": "E:/Telechurch-e2e-v2/apps/telechurch/blueprint/features/instant_church.md",
+      "why_refused": "Matched the sweep, but this is a product feature blueprint and the word appears in a product-design context. Whether it means a hive machine, a graph vertex or something in the feature's own model was not established, and the blueprint is dated 2026-02-01 - old enough that its vocabulary may predate all three senses. Guessing here would edit a product document on a hunch.",
+      "what_would_settle_it": "Read the surrounding section and decide whether the feature has any relationship to the hive at all. Two minutes of reading, deliberately not spent on a guess."
+    },
+    {
+      "id": "U2",
+      "file": "E:/refer-script-factory/docs/hive-build-plan.md and docs/factory-topology.md",
+      "why_refused": "16 occurrences in hive-build-plan.md alone, and the document mixes senses: it plans the hive machines AND describes the script topology that runs on them. Some of its 'node' uses are the machine, some are a position in the factory graph. Separating them needs the document read end to end, which is a job of its own and was not in this pass's scope.",
+      "what_would_settle_it": "Read both documents in full and mark each occurrence. Do NOT run a substitution across either file - this is the exact shape of the mistake the map exists to prevent."
+    }
+  ]
+}
