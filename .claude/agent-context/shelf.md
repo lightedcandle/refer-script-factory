@@ -117,6 +117,57 @@ a duty of a product repo's clock.
 reporting `enabled`. Only then should the pulse get a driver, and it must be a
 separate routine whose working folder is the factory.
 
+**Closed 2026-09-13.** The condition was met overnight: `totalRuns` 254 → 350,
+every five-minute run succeeding. The operator then directed the routine itself to
+move to this folder, which is recorded below.
+
+### The moved pulse routine is parked on a permission prompt — 2026-09-13
+
+**What was done.** `living-factory-pulse` was deleted and recreated from this
+folder, because no tool can change a routine's folder — it lives as `cwd` inside
+the desktop app's own `scheduled-tasks.json`, which the app rewrites on every
+run, so hand-editing it would race the app. Verified afterwards:
+`"cwd": "E:\\refer-script-factory"`. It runs one command, `npm run pulse`.
+
+**Telechurch lost nothing.** The Windows task `LivingFactory-Schedule` runs the
+identical command the routine used to run — `node tools/factory/schedule.cjs` in
+Telechurch — with 0 missed runs. Its clock had been double-driven all along.
+
+**A claim this falsified, left for Telechurch's own process.**
+`E:/Telechurch-e2e-v2/tools/factory/pulse.trigger.json` still says the tick is
+`drivenBy: claude-routine:living-factory-pulse` and that it runs `npm run clock`.
+Both are now false; its driver is `LivingFactory-Schedule`. Not edited from here:
+Telechurch requires a ratified Execution Contract for any change.
+
+**The blocker.** The recreated routine's runs park on their first tool call.
+The run's own CLI transcript ends at `tool_use[PowerShell] npm run pulse` with no
+result and no denial, under `permissionMode: default`. Two causes found:
+
+1. **Tool approvals are stored on the task, and deleting the task discarded
+   them.** A routine recreated to change one property starts with no approvals
+   at all. That is the whole reason today's first run hung.
+2. **The allow rule written to fix it is not being applied.**
+   `.claude/settings.json` allows exactly `PowerShell(npm run pulse)`, which is
+   exactly what the run issues, and a run started after the file existed still
+   parked. `~/.claude.json` holds two entries for this folder that disagree:
+   `E:\refer-script-factory` has trust accepted, `E:/refer-script-factory` does
+   not. Project permission rules are not honoured from an untrusted folder, so if
+   the scheduled run resolves the forward-slash key the rule is ignored. Strongly
+   supported, not proven. The identical split exists for `alliance-hub`.
+
+Not fixed by hand, on purpose: accepting trust is a security boundary the
+operator clicks through, and `~/.claude.json` is rewritten live by the app.
+
+**The rule that did not exist, and now does:** never delete and recreate a
+scheduled task to change one of its properties. Its stored approvals go with it,
+silently, and the replacement's first run waits for an answer nobody is there to
+give.
+
+**Revival condition — a routine run that writes a card**, evidenced by
+`.refer-factory/pulse-belt.jsonl` gaining a new `seq` with
+`drivenFrom: refer-script-factory` within one tick. Not a run reporting
+`succeeded`: on 2026-09-13 runs reported succeeded while writing nothing.
+
 ### There are two REFER.OS installers and they disagree
 
 Found 2026-09-12 while planning the installed runtime
