@@ -295,6 +295,31 @@ keeper still works after. Related: [[seven-machines-pending-move]], whose
 `serve-tracker.cjs` section already says this line must change in the same commit
 that moves the file. The file has not moved, and the defect is live regardless.
 
+### Two Telechurch files still say the board is on 4399 — 2026-09-13
+
+The board moved to 47390 on 2026-09-13 (PR #4 here). The 09-11 decision to move
+it had been written into `serve-tracker.cjs` as the default and never ran,
+because `board-port.txt` said 4399 and the keeper passed the file's port through
+on every revive — the file resurrected the port the code had abandoned. Deleting
+the file and letting the machine revive was the whole move.
+
+Two references in `E:/Telechurch-e2e-v2` still carry the old port and were
+**not edited**, because that tree was on a detached HEAD with five modified and
+two untracked files this session did not author:
+
+- `.claude/launch.json` — the `factory-tracker` entry passes `--port 4399`
+  explicitly. Anyone who starts the board from that launch config forces it
+  back onto 4399, and `ngserve-benchmark.cjs` defaults to the same port. Fix:
+  drop the `--port` argument so the server's default rules, set `port` to
+  47390.
+- `tools/factory/serve-tracker.cjs:13` — the usage example in the header
+  still reads `[--port 4399]`. Fix: 47390.
+
+**Revival condition:** the Telechurch tree is on a branch with a clean status,
+or its owner says the uncommitted work there is safe to carry. Then it is one
+two-line commit in that repo. Until then the tick is unaffected — it reads the
+port file, and the file says 47390.
+
 ### App material still in the provider-neutral repo
 
 `alliance-android-sms-bridge/` (25 files, a Java/Gradle Android app) and
