@@ -20,8 +20,12 @@
  *
  *   CHAT    a transcript in the repo's own project directory
  *           ~/.claude/projects/<token>/<uuid>.jsonl
+ *   AUTO    a chat whose title is a routine's (see .refer-factory/routines.json)
  *   SPAWN   a transcript in one of the repo's worktree project directories
  *           ~/.claude/projects/<token>--claude-worktrees-<name>/<uuid>.jsonl
+ *           - OR, because a worker spawned with worktree isolation writes no
+ *           transcript at all (session-life.cjs measured it), a worktree under
+ *           <repo>/.claude/worktrees/<name> with a fresh write inside it
  *
  *   ALIVE   written inside the belt's window (30m) - has this agent walked away?
  *   ACTIVE  written inside one beat - is somebody working right now?
@@ -50,7 +54,7 @@
  */
 const fs = require("fs");
 const path = require("path");
-const { tokenize, repoRootOf, PROJECTS } = require("./session-life.cjs");
+const { tokenize, repoRootOf, PROJECTS, newestWrite } = require("./session-life.cjs");
 const { discoverTriggers } = require("./triggers.cjs");
 
 const ROOT = process.cwd();
@@ -197,6 +201,46 @@ try {
   if (!expectedFsError(err)) throw err;
   seen = false;
 }
+// SPAWNED WORKERS WRITE NO TRANSCRIPT. session-life.cjs measured it: an agent
+// spawned with worktree isolation leaves nothing under ~/.claude/projects, so
+// the scan above cannot see it - and on 2026-09-14 four such agents were
+// working in this repo while the belt showed one chat. Its evidence is the
+// one session-life accepts as source 3: anything written inside the worktree
+// recently. So every worktree under <repo>/.claude/worktrees that a
+// transcript has not already claimed is asked that question with the same
+// helper, and a fresh write makes it a live spawn. The id is the worktree's
+// name, which is what a dispatch names too, so a card here and a dispatched
+// card can be matched by eye.
+const WORKTREES = path.join(repoRootOf(ROOT), ".claude", "worktrees");
+const claimed = new Set(sessions.filter((s) => s.worktree).map((s) => s.worktree));
+try {
+  for (const d of fs.readdirSync(WORKTREES, { withFileTypes: true })) {
+    if (!d.isDirectory() || claimed.has(d.name)) continue;
+    const dir = path.join(WORKTREES, d.name);
+    const w = newestWrite(dir, now - ALIVE_MS);
+    if (!w || !w.at || now - w.at >= ALIVE_MS) continue;
+    const age = now - w.at;
+    sessions.push({
+      id: `worktree:${d.name}`,
+      short: d.name.replace(/^agent-/, "").slice(0, 8),
+      kind: "spawn",
+      role: null,
+      routine: null,
+      worktree: d.name,
+      title: null,
+      lastWrite: new Date(w.at).toISOString(),
+      ageMs: Math.round(age),
+      active: age < ACTIVE_MS,
+      bytes: null,
+      transcript: null,
+      evidence: `newest write inside the worktree: ${String(w.file || "").replace(/\\/g, "/")}`,
+    });
+  }
+} catch (err) {
+  if (!expectedFsError(err)) throw err;
+  /* no worktree directory: this repo has spawned nothing */
+}
+
 sessions.sort((a, b) => a.ageMs - b.ageMs);
 
 const counts = {
