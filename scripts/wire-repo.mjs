@@ -53,6 +53,11 @@ const ROOT = path.resolve(target);
 const NAME = path.basename(ROOT);
 const BUILDER = "E:/Telechurch-e2e-v2/tools/factory/build-tracker.cjs";
 const ROOT_FWD = ROOT.replace(/\\/g, "/");
+// A path with a space in it must be quoted in a `run` command: the scheduler
+// splits the command on whitespace before handing it to a shell, and the shell
+// re-joins quoted spans. Found 2026-09-14 on "E:/omb puppet", whose builder
+// exited 1 on its first beat because --root arrived as E:/omb.
+const ROOT_ARG = /\s/.test(ROOT_FWD) ? `"${ROOT_FWD}"` : ROOT_FWD;
 
 const TRIGGERS = {
   "pulse.trigger.json": {
@@ -103,7 +108,7 @@ const TRIGGERS = {
   },
   "build-tracker.trigger.json": {
     id: "build-tracker",
-    run: `node ${BUILDER} --root ${ROOT_FWD}`,
+    run: `node ${BUILDER} --root ${ROOT_ARG}`,
     every: "1h",
     floor: "5m",
     why: "Builds this repo's data board - .claude/agent-context/factory-tracker.html - for the board server to serve at ?repo=<id>. The builder still lives in Telechurch and is named by absolute path: a command that crosses repos is honest about it. Written by <factory>/scripts/wire-repo.mjs.",
