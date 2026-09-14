@@ -142,7 +142,20 @@ const beltReport = {
 // without `triggers` is a leak, and a leak is the only way this system dies
 // quietly. Checking it here costs nothing and catches a malformed deposit the
 // night it lands rather than a month later.
-const leaks = good.filter((r) => !r.triggers || !String(r.triggers).trim()).map((r) => r.id || "(no id)");
+//
+// A LEAK SOMEBODY LATER NAMED IS NOT A LEAK. The belt is append-only, so a
+// record deposited without `triggers` can never be removed; what can happen is
+// that a later record names it as its subject - "withdrawn: appended without a
+// triggers field" - which is exactly somebody noticing. A leak is the way this
+// system dies QUIETLY; a record with a closer pointing at it has not died
+// quietly. Found 2026-09-14: two records withdrawn on the 12th kept Telechurch's
+// pulse-check at exit 1 for two days, and its interval tightened to poll a fault
+// that could never clear - a check that cannot pass is worth exactly as much as
+// one that cannot fail.
+const namedLater = new Set(good.map((r) => r.subject && String(r.subject)).filter(Boolean));
+const leaks = good
+  .filter((r) => (!r.triggers || !String(r.triggers).trim()) && !namedLater.has(String(r.id)))
+  .map((r) => r.id || "(no id)");
 
 const open = good.filter((r) => /^(contract:|seer$|operator$)/.test(String(r.triggers || ""))).length;
 const terminal = good.length - open - leaks.length;

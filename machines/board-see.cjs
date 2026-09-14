@@ -97,7 +97,28 @@ const port = (() => {
 // still taken, because the picture of the failure is the proof.
 const urlArg = process.argv.indexOf("--url");
 const PROBE = urlArg >= 0;
-const URL = PROBE ? process.argv[urlArg + 1] : `http://127.0.0.1:${port}/`;
+
+// THE SEER MUST NAME ITS SUBJECT. Since 2026-09-14 one server serves one board
+// per repo, keyed by ?repo=<id>, and the bare path is the factory's board. A
+// seer that opened the bare path from Telechurch's cwd photographed the
+// factory and judged Telechurch by it - the manager then reported "the board
+// built 74 rows and the seer counted 0", which was true of two different
+// boards. The id is the ecosystem map's, found by this repo's path, the same
+// way the builder and the server find it. No map, or a repo not in it: the
+// bare path, which is the one-board world this file was written in.
+const REPO_ID = (() => {
+  const mapPath = [process.env.REFER_ECOSYSTEM_MAP, "E:/e2e-bridge/governance/ecosystem-map.json"].filter(Boolean).find((p) => fs.existsSync(p));
+  if (!mapPath) return null;
+  try {
+    const norm = (p) => path.resolve(p).replace(/\\/g, "/").toLowerCase();
+    const repos = JSON.parse(fs.readFileSync(mapPath, "utf8")).repos || [];
+    const hit = repos.find((r) => r && r.path && norm(r.path) === norm(ROOT));
+    return hit ? String(hit.repo_id) : null;
+  } catch {
+    return null;
+  }
+})();
+const URL = PROBE ? process.argv[urlArg + 1] : `http://127.0.0.1:${port}/${REPO_ID ? `?repo=${encodeURIComponent(REPO_ID)}` : ""}`;
 
 const findings = [];
 const say = (key, claim, evidence, triggers = "contract:body", owner = "body", dimension = "body") =>
