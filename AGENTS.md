@@ -89,6 +89,32 @@ file with the editor, which is one habit rather than one more check.
 - Do not import the Telechurch branch-lineage convention. This repo has no
   concurrent lanes and no release path, and that machinery would be ceremony.
 
+### A default that a state file overrides is not a default
+
+Several machines write down what they chose — the board server writes the port
+it took to `board-port.txt`, the keeper reads it back on every revive — so that
+nothing has to guess. The cost is that the file outlives the decision it
+records. On 2026-09-11 the board's default port was changed in source from 4399
+to 47390, with a comment saying why. It never ran: the file still said 4399,
+the keeper passed it through, the server obeyed and wrote 4399 back. Two days
+of restarts, every one on the abandoned port, and the source said 47390 the
+whole time. Found on 2026-09-13 only because somebody asked whether the port
+was locked.
+
+The symptom is a change to a default that produces no change in behaviour and
+no error. When that happens, look for the file that remembers the old answer.
+
+- **Moving a recorded default means moving the record.** Change the source,
+  then delete or rewrite the state file, then let the machine that writes it
+  run. All three, in the same pass. Two of the three is the 09-11 state.
+- **A reader that follows a file must not also be the only thing that seeds
+  it.** If nothing ever starts the writer with the *new* default, the file is
+  self-perpetuating. Every `keeper reads file → passes to writer → writer
+  writes file` loop needs an entry that does not go through the file.
+- When adding a state file, name in its writer's comment what a person must do
+  to move the value it records. If the answer is "delete the file", say so
+  there — that is where the next session will be looking.
+
 ## Sibling Zo Factory
 
 `refer-zo-bootstrap` is the Zo-scoped sibling factory. It owns Zo computer bootstrapping, Zo Files transfer, Zo personas/rules, hive node deployment, dispatch, talkback, heartbeat, datasets, and the Telechurch Zo proving instance.
