@@ -3,8 +3,8 @@
   "configurations": [
     {
       "name": "factory-tracker",
-      "url": "http://127.0.0.1:4399",
-      "port": 4399
+      "url": "http://127.0.0.1:47390",
+      "port": 47390
     }
   ]
 }
