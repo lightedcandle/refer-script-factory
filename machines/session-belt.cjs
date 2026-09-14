@@ -115,6 +115,30 @@ function titleOf(file) {
   return title.replace(/\s+/g, " ").trim().slice(0, 120) || null;
 }
 
+// WHICH SESSIONS ARE ROUTINES, NOT PEOPLE. Operator, 2026-09-14: "if the
+// living factory pulse is what it is then it's showing a chat icon, not the
+// pulse icon." A routine's run is stamped in its transcript exactly like a
+// human chat - origin human, entrypoint claude-desktop - so the only honest
+// key is the title the app gives the run, which is the task's title verbatim.
+// Those titles are in <factory>/.refer-factory/routines.json; a session whose
+// title matches one is the factory's own hand (kind "auto"), and a routine of
+// kind "pulse" makes its run the pulse. No file, no routines: every session
+// reads as what its transcript says, a chat.
+const ROUTINES = (() => {
+  try {
+    const p = path.resolve(__dirname, "..", ".refer-factory", "routines.json");
+    // A BOM is stripped by code point, not by a regex literal: the gate forbids
+    // the literal character in a parsed file, and the escape form was written
+    // as the character itself the first time. This needs neither.
+    const raw = fs.readFileSync(p, "utf8");
+    const j = JSON.parse(raw.charCodeAt(0) === 0xfeff ? raw.slice(1) : raw);
+    return Array.isArray(j.routines) ? j.routines.filter((r) => r && r.title) : [];
+  } catch {
+    return [];
+  }
+})();
+const routineOf = (title) => (title ? ROUTINES.find((r) => r.title === title) || null : null);
+
 const now = Date.now();
 const base = tokenize(repoRootOf(ROOT));
 const sessions = [];
@@ -150,12 +174,17 @@ try {
       const age = now - st.mtimeMs;
       if (age >= ALIVE_MS) continue;
       const id = f.slice(0, -".jsonl".length);
+      const title = titleOf(path.join(PROJECTS, d.name, f));
+      const routine = kind === "chat" ? routineOf(title) : null;
       sessions.push({
         id,
         short: id.slice(0, 8),
-        kind,
+        // A routine's run is the factory's own hand, not a person: auto.
+        kind: routine ? "auto" : kind,
+        role: routine && routine.kind === "pulse" ? "pulse" : null,
+        routine: routine ? routine.id : null,
         worktree,
-        title: titleOf(path.join(PROJECTS, d.name, f)),
+        title,
         lastWrite: new Date(st.mtimeMs).toISOString(),
         ageMs: Math.round(age),
         active: age < ACTIVE_MS,
@@ -172,6 +201,7 @@ sessions.sort((a, b) => a.ageMs - b.ageMs);
 
 const counts = {
   chat: sessions.filter((s) => s.kind === "chat").length,
+  auto: sessions.filter((s) => s.kind === "auto").length,
   spawn: sessions.filter((s) => s.kind === "spawn").length,
   active: sessions.filter((s) => s.active).length,
 };
@@ -206,10 +236,10 @@ if (!DRY) {
 if (JSON_OUT) {
   console.log(JSON.stringify({ ...report, writeError }, null, 2));
 } else {
-  console.log(`session-belt: ${sessions.length} alive in ${report.repo} (${counts.chat} chat, ${counts.spawn} spawn; ${counts.active} active inside ${ACTIVE_MS / MS.m}m)${seen ? "" : " - transcript store not readable"}`);
+  console.log(`session-belt: ${sessions.length} alive in ${report.repo} (${counts.chat} chat, ${counts.auto} routine, ${counts.spawn} spawn; ${counts.active} active inside ${ACTIVE_MS / MS.m}m)${seen ? "" : " - transcript store not readable"}`);
   for (const s of sessions) {
     const age = Math.round(s.ageMs / MS.m);
-    console.log(`  ${s.kind.padEnd(5)} ${s.short}  ${age}m ago${s.active ? "  ACTIVE" : ""}${s.worktree ? `  (${s.worktree})` : ""}`);
+    console.log(`  ${s.kind.padEnd(5)} ${s.short}  ${age}m ago${s.active ? "  ACTIVE" : ""}${s.role === "pulse" ? "  PULSE" : ""}${s.routine ? `  routine:${s.routine}` : ""}${s.worktree ? `  (${s.worktree})` : ""}${s.title ? `  "${s.title}"` : ""}`);
   }
   if (!DRY && !writeError) console.log(`  wrote ${path.relative(ROOT, OUT).replace(/\\/g, "/")}`);
   if (DRY) console.log("  (--dry: nothing written)");
