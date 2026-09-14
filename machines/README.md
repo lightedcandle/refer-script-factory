@@ -129,10 +129,10 @@ Operator, 2026-09-14: *"this chat needs to be on the belt, it's the timer's job 
 
 **IT DEPOSITS NOTHING.** Not to the belt, not on a gap, not ever — same rule as the pulse belt, for the same reason: at one record per beat per session the belt would be a session log inside a week. It writes one file it owns, `<repo>/.claude/agent-context/sessions.json`.
 
-Three kinds, from where the transcript lives:
+Three kinds, from where the evidence lives:
 
 - **CHAT** — a transcript in the repo's own project directory, `~/.claude/projects/<token>/<uuid>.jsonl`.
-- **SPAWN** — a transcript in one of the repo's worktree project directories, `~/.claude/projects/<token>--claude-worktrees-<name>/<uuid>.jsonl`.
+- **SPAWN** — a transcript in one of the repo's worktree project directories, `~/.claude/projects/<token>--claude-worktrees-<name>/<uuid>.jsonl` — **or**, because a worker spawned with worktree isolation writes no transcript at all (`session-life.cjs` measured it), a worktree under `<repo>/.claude/worktrees/<name>` with a fresh write inside it, judged with the same `newestWrite` helper the belt uses for dispatched agents. Measured on the first grand run, 2026-09-14: four workers, four `SP` cards, none of them with a transcript.
 - **AUTO** — a session whose title matches a routine's title in `.refer-factory/routines.json`; the factory's own hand, not a person. A routine of kind `pulse` also sets that session's `role` to `pulse`.
 
 Two windows, both borrowed from `session-life.cjs` so this can never disagree with the check that decides whether a dispatched card stays on the belt: **ALIVE** (30m) — has this agent walked away? — and **ACTIVE** (one beat, the repo's own pulse cadence, or 5m if none is declared) — is somebody working right now?
