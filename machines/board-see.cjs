@@ -1147,6 +1147,91 @@ if (!chromium) {
     }
   }
 
+  // ---- T4i  the repo picker must open BY BEING CLICKED, not read off the DOM
+  //
+  // Operator, 2026-09-14: the picker was a native <select>. Verified from the
+  // inside it existed, was enabled, and carried the right options - and it
+  // would not open for the operator, because it sat inside the CSS-scaled
+  // #stage. Verified from the inside, failed for a person. This test clicks.
+  {
+    const toggle = await page.$("[data-repo-toggle]");
+    if (!toggle) {
+      vacuous.push("repo-picker-opens-on-click: no repo picker on this board");
+    } else {
+      const measure = () =>
+        page.evaluate(() => {
+          const m = document.querySelector("[data-repo-menu]");
+          if (!m) return null;
+          const r = m.getBoundingClientRect();
+          return {
+            hidden: !(r.height > 0 && r.width > 0 && getComputedStyle(m).visibility !== "hidden"),
+            box: { l: r.left, t: r.top, r: r.right, b: r.bottom },
+          };
+        });
+
+      // (1) the menu is hidden before anything is touched.
+      const before = await measure();
+      if (!before || !before.hidden) {
+        const bad = await shot("repo-picker-not-hidden-FAILED");
+        say(
+          "repo-picker-not-hidden-before-click",
+          `Step 1 (menu hidden before click) failed: the repo menu is ${before ? "already showing" : "missing"} before the toggle is touched.`,
+          `Measured as rendered geometry before any click: ${before ? JSON.stringify(before) : "[data-repo-menu] not found on the page"}. Snapshot: ${path.relative(ROOT, bad)}`,
+        );
+      } else {
+        // (2)+(3) a real click opens it, inside the viewport a person is looking at.
+        await toggle.click();
+        await page.evaluate(settle);
+        const opened = await measure();
+        const vw = seen.innerWidth;
+        const vh = await page.evaluate(() => window.innerHeight);
+        const inViewport =
+          opened && !opened.hidden && opened.box.l >= 0 && opened.box.t >= 0 && opened.box.r <= vw && opened.box.b <= vh;
+
+        if (!inViewport) {
+          const bad = await shot("repo-picker-does-not-open-FAILED");
+          say(
+            "repo-picker-does-not-open",
+            `Step 2-3 (click opens the menu inside the viewport) failed: after a real click on the toggle, the menu is ${!opened || opened.hidden ? "still hidden" : "open but off-screen"}.`,
+            `Measured as rendered geometry after a real click, at ${vw}x${vh}: ${opened ? JSON.stringify(opened.box) : "[data-repo-menu] not found"}. This is the exact failure mode from 2026-09-14 - open in the DOM, unreachable on screen.`,
+          );
+        } else {
+          // (4) at least one repo link inside it is actually there to click.
+          const linkBox = await page.evaluate(() => {
+            const links = [...document.querySelectorAll('[data-repo-menu] a[href^="/?repo="]')];
+            for (const l of links) {
+              const r = l.getBoundingClientRect();
+              if (r.width > 0 && r.height > 0) return { width: r.width, height: r.height };
+            }
+            return null;
+          });
+          if (!linkBox) {
+            const bad = await shot("repo-picker-links-not-visible-FAILED");
+            say(
+              "repo-picker-links-not-visible",
+              "Step 4 (a repo link is actually visible) failed: the menu opened but none of its repo links have a non-zero bounding box.",
+              `Measured as rendered geometry on every a[href^="/?repo="] inside [data-repo-menu]. A menu with nothing clickable inside it is open in name only. Snapshot: ${path.relative(ROOT, bad)}`,
+            );
+          }
+
+          // (5) and it must let go. Escape, never a click on a link - a link
+          // click navigates away and would take every test after this one with it.
+          await page.keyboard.press("Escape");
+          await page.evaluate(settle);
+          const closed = await measure();
+          if (!closed || !closed.hidden) {
+            const bad = await shot("repo-picker-does-not-close-FAILED");
+            say(
+              "repo-picker-does-not-close-on-escape",
+              "Step 5 (Escape closes the menu) failed: after pressing Escape, the repo menu is still showing.",
+              `Measured as rendered geometry after a real key press: ${closed ? JSON.stringify(closed) : "[data-repo-menu] not found"}. A menu that will not close stays over whatever is behind it. Snapshot: ${path.relative(ROOT, bad)}`,
+            );
+          }
+        }
+      }
+    }
+  }
+
   // ---- T5  the board must not pretend --------------------------------------
   if (seen.bannerShowing) {
     say(
