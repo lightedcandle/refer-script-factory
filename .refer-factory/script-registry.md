@@ -1,6 +1,6 @@
 # Domain Script Registry
 
-Updated: 2026-09-12T16:28:23.873Z
+Updated: 2026-09-14T23:35:18.675Z
 
 Before direct work, identify the domain and check that domain's registry/check_first surfaces for an existing script.
 
@@ -25,6 +25,8 @@ Before direct work, identify the domain and check that domain's registry/check_f
 
 Package scripts discovered in this domain:
 
+- `pulse`: `node machines/pulse-belt.cjs`
+- `pulse:list`: `node machines/pulse-belt.cjs --list`
 - `gate:machines`: `node scripts/ci/machines-gate.mjs`
 - `gate:prove`: `node scripts/ci/prove-gate-bites.mjs`
 - `gate:pulse-belt`: `node scripts/ci/pulse-belt-cycle.mjs`
@@ -137,6 +139,7 @@ Package scripts discovered in this domain:
 - `start:local`: `wrangler pages dev public --port 8788`
 - `deploy`: `node tools/deploy.mjs --deploy`
 - `deploy:dry`: `node tools/deploy.mjs`
+- `deploy:oauth`: `node tools/deploy.mjs --deploy --oauth`
 - `supabase:push`: `node tools/supabase-push.mjs`
 - `supabase:push:dry`: `node tools/supabase-push.mjs --dry-run`
 - `formula:benchmark`: `node tools/formula-contract-benchmark.mjs`
@@ -146,6 +149,9 @@ Package scripts discovered in this domain:
 - `sms:route`: `node tools/sms-script-factory.mjs route`
 - `sms:validate`: `node tools/sms-script-factory.mjs validate`
 - `sms:regex`: `node tools/sms-script-factory.mjs regex`
+- `alliance:reset:dry`: `node tools/alliance-reset.mjs`
+- `alliance:reset`: `node tools/alliance-reset.mjs --apply`
+- `alliance:reset:restore`: `node tools/alliance-reset.mjs --restore`
 
 ### REFER Zo Bootstrap
 

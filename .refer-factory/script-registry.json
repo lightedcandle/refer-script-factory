@@ -1,6 +1,6 @@
 {
   "schema": "refer.domain-script-registry.v1",
-  "updated_at": "2026-09-12T16:28:23.873Z",
+  "updated_at": "2026-09-14T23:35:18.675Z",
   "rule": "Before direct work, identify the domain and check that domain's registry/check_first surfaces for an existing script.",
   "domains": [
     {
@@ -23,6 +23,14 @@
         }
       ],
       "discovered_package_scripts": [
+        {
+          "name": "pulse",
+          "command": "node machines/pulse-belt.cjs"
+        },
+        {
+          "name": "pulse:list",
+          "command": "node machines/pulse-belt.cjs --list"
+        },
         {
           "name": "gate:machines",
           "command": "node scripts/ci/machines-gate.mjs"
@@ -518,6 +526,10 @@
           "command": "node tools/deploy.mjs"
         },
         {
+          "name": "deploy:oauth",
+          "command": "node tools/deploy.mjs --deploy --oauth"
+        },
+        {
           "name": "supabase:push",
           "command": "node tools/supabase-push.mjs"
         },
@@ -552,6 +564,18 @@
         {
           "name": "sms:regex",
           "command": "node tools/sms-script-factory.mjs regex"
+        },
+        {
+          "name": "alliance:reset:dry",
+          "command": "node tools/alliance-reset.mjs"
+        },
+        {
+          "name": "alliance:reset",
+          "command": "node tools/alliance-reset.mjs --apply"
+        },
+        {
+          "name": "alliance:reset:restore",
+          "command": "node tools/alliance-reset.mjs --restore"
         }
       ]
     },
