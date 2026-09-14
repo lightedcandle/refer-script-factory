@@ -1,0 +1,8 @@
+{
+  "id": "session-belt",
+  "run": "factory:session-belt",
+  "every": "5m",
+  "floor": "5m",
+  "owns": "architecture",
+  "why": "The timer puts live sessions on the belt. Operator, 2026-09-14: 'this chat needs to be on the belt, it's the timer's job to put it there (also driven by the pulse), and set the watcher to watch. same for the spawn.' Every beat, session-belt lists the sessions alive in this repo from their transcripts - chat in the repo's project directory, spawn in its worktree directories - and writes sessions.json, which the board draws as one card per session and the watcher reads to say who is here. Every 5m because it is the beat's shadow: a session that appears is on the belt within one beat of its first word. It deposits nothing and writes one small file it owns, so this cadence is safe forever."
+}

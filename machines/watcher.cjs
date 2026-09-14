@@ -1751,6 +1751,29 @@ function main(lockState) {
     evidenceDoor("chat", PROJECTS, "the session transcript store");
     evidenceDoor("spawn", path.join(ROOT, ".claude", "worktrees"), "the worktree directory");
 
+    // ---- WHO IS HERE: the sessions the timer put on the belt -----------------
+    //
+    // Operator, 2026-09-14: "this chat needs to be on the belt, it's the
+    // timer's job to put it there, and set the watcher to watch." session-belt
+    // writes sessions.json every beat; this reads it and says whether anybody
+    // is working in this repo right now, and whether the timer is still putting
+    // them there. Absent and stale are different from empty: absent means the
+    // timer never ran the machine here, stale means it stopped, empty means it
+    // looked and nobody is here - which is a fact, not a fault.
+    {
+      const rep = readReport(path.join(CTX, "sessions.json"), DOOR_STALE);
+      const driven = declaredIds.has("session-belt");
+      const common = { door: "sessions", report: "sessions.json", reportState: rep.state, observedAt: rep.at ? new Date(rep.at).toISOString() : null, drivenByARhythm: driven };
+      if (rep.state === "absent") rows.push({ ...common, outcome: "NEVER OBSERVED", why: `sessions.json has never been written here. The timer has not put a single session on this repo's belt; nothing here can say who is working in it.` });
+      else if (rep.state === "unreadable") rows.push({ ...common, outcome: "UNREADABLE", why: `sessions.json ${rep.why}.` });
+      else if (!driven) rows.push({ ...common, outcome: "UNDRIVEN", why: `sessions.json was ${rep.why}, and no trigger in this repo declares session-belt - the sessions on the belt are as old as the last time somebody ran it by hand.` });
+      else if (rep.state === "stale" || rep.state === "undated") rows.push({ ...common, outcome: "STALE", why: `sessions.json ${rep.why} even though a rhythm declares it, so the timer is not landing.` });
+      else {
+        const c = (rep.json && rep.json.counts) || { chat: 0, spawn: 0, active: 0 };
+        rows.push({ ...common, outcome: "OPEN", why: `observed ${humanMs(now - rep.at)} ago: ${c.chat} chat and ${c.spawn} spawned session(s) alive in this repo, ${c.active} active inside the last beat.` });
+      }
+    }
+
     // ---- EXIT: the way finished work leaves --------------------------------
     //
     // Counted as a door because it is one, and because a factory whose exit is
@@ -1772,7 +1795,7 @@ function main(lockState) {
       counts,
       rows,
       silent: ["OPEN"],
-      coverage: `4 doors: auto, chat, spawn and exit. Auto and exit are judged from their own reports; chat and spawn from whether their evidence stores exist on this host. Only AUTO can be OFF, and only when its report exists and says so.`,
+      coverage: `4 doors: auto, chat, spawn and exit, plus the sessions the timer put on the belt. Auto, exit and sessions are judged from their own reports; chat and spawn from whether their evidence stores exist on this host. Only AUTO can be OFF, and only when its report exists and says so.`,
       cannotSee: "how many arrivals came through chat or spawn - that is counted from dispatch records on the belt and belongs to the board, not here; and whether a door that looks open would actually admit anything, which only an arrival proves.",
     };
   }

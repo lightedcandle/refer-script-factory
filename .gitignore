@@ -58,6 +58,7 @@ debug.log
 # rewritten every run - the same list Telechurch ignores, for the same reason:
 # "dirty has to mean something".
 .claude/agent-context/schedule-state.json
+.claude/agent-context/sessions.json
 .claude/agent-context/clock-state.json
 .claude/agent-context/pulse.json
 .claude/agent-context/autonomy.json
