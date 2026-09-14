@@ -280,6 +280,19 @@ decision as the shelved thread above — whether the factory becomes an installe
 versioned runtime — because `schedule.cjs` is an engine rather than a machine,
 and moving an engine is a decision about where authority over cadence lives.
 
+**Advanced 2026-09-14, not closed.** The engine now takes a subject: `schedule.cjs
+--root <repo>`, and the primary tick fans out one child tick per wired repo in
+the ecosystem map (telechurch-e2e #525). The board's builder and server take
+the subject too, so one server serves one board per repo and this repo is the
+default. This repo declares six rhythms in `scripts/` and is ticked; its
+`build-tracker.trigger.json` calls the builder **by absolute path into
+Telechurch** — honest about the crossing rather than pretending the builder is
+local. That absolute path is the live marker of this thread: the engine, the
+builder and the server still live in the product repo and are reached across
+it. The move is still the decision above. What changed is that the factory no
+longer *needs* the move to observe itself, which lowers the pressure and
+should not be mistaken for the move having happened.
+
 ### `board-serve-check.cjs` passes silently in every repo but Telechurch
 
 A universal machine with a product-shaped path baked in:
