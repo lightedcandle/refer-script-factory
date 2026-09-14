@@ -49,7 +49,15 @@ if (!target || !fs.existsSync(target) || !fs.statSync(target).isDirectory()) {
   console.error("wire-repo: give a repo directory");
   process.exit(2);
 }
-const ROOT = path.resolve(target);
+// THE FILES GO WHERE YOU POINT; THE ROOT THEY DECLARE IS THE REPO. Run inside a
+// git worktree - <repo>/.claude/worktrees/<name> - the files are written there
+// (that is how a branch is made), but the build-tracker declaration must name
+// the repo the board is ABOUT, which is three levels up. session-life.cjs
+// applies the same rule (repoRootOf). Found 2026-09-14: workers wired six repos
+// from inside their worktrees and every committed declaration named a path
+// that vanished when the worktrees were removed.
+const TARGET = path.resolve(target);
+const ROOT = /[\\/]\.claude[\\/]worktrees[\\/][^\\/]+$/.test(TARGET) ? path.resolve(TARGET, "../../..") : TARGET;
 const NAME = path.basename(ROOT);
 const BUILDER = "E:/Telechurch-e2e-v2/tools/factory/build-tracker.cjs";
 const ROOT_FWD = ROOT.replace(/\\/g, "/");

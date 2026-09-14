@@ -1,6 +1,6 @@
 # Domain Script Registry
 
-Updated: 2026-09-14T23:40:00.396Z
+Updated: 2026-09-14T23:48:04.610Z
 
 Before direct work, identify the domain and check that domain's registry/check_first surfaces for an existing script.
 
