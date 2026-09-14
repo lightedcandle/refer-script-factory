@@ -30,7 +30,7 @@
  * during that cycle the display must not pretend. And this machine cannot help
  * at all if the whole host is down - only the page can be honest about that.
  *
- *   node <factory>/machines/board-serve-check.cjs [--port 4399]
+ *   node <factory>/machines/board-serve-check.cjs [--port 47390]
  */
 const fs = require("fs");
 const path = require("path");
@@ -77,9 +77,9 @@ const PORT =
 //
 // The server reports its own file's modification time. If the file on disk is
 // newer than what is running, the running one is replaced.
-const listening = () =>
+const listening = (port) =>
   new Promise((resolve) => {
-    const req = http.get({ host: "127.0.0.1", port: PORT, path: "/stamp", timeout: 1500 }, (res) => {
+    const req = http.get({ host: "127.0.0.1", port, path: "/stamp", timeout: 1500 }, (res) => {
       const ours = res.headers["x-living-factory"] === "board";
       const running = Number(res.headers["x-board-version"] || 0);
       res.resume();
@@ -107,22 +107,24 @@ const listening = () =>
     process.exit(0);
   }
 
-  const up = await listening();
+  const up = await listening(PORT);
   if (up === true) {
     console.log(`board-serve-check: board server is listening on ${PORT}`);
     process.exit(0);
   }
   if (up === "foreign") {
-    // Something else owns the address. Starting another server here would just
-    // lose the race again, so this reports rather than fights - and the server
-    // itself will pick the next free port when it is next started.
-    console.error(
-      `board-serve-check: port ${PORT} is held by something that is NOT the board server.\n` +
-        `  Not starting a second one - it would lose the same race. The board server\n` +
-        `  falls back to the next free port on its next start and writes the choice to\n` +
-        `  .claude/agent-context/board-port.txt.`,
-    );
-    process.exit(1);
+    // Something else owns the address. The first version stopped here and said
+    // "the server will pick the next free port when it is next started" - and
+    // nothing ever started it, because this is the thing that starts it. A
+    // board with its port taken stayed dead until a person noticed, inside the
+    // one machine that exists so nobody has to. Verified 2026-09-13 while moving
+    // the board off 4399: `tools/ngserve-benchmark.cjs` defaults to that same
+    // port, so the collision was not hypothetical.
+    //
+    // The server already knows how to lose this race: it tries the next port,
+    // up to ten, and writes the winner to board-port.txt. So start it, and read
+    // the file afterwards rather than assuming the port we asked for.
+    console.log(`board-serve-check: port ${PORT} is held by something that is NOT the board server - starting ours on the next free port`);
   }
 
   if (up === "stale") {
@@ -138,7 +140,7 @@ const listening = () =>
       console.error("  could not stop the old server; it will keep serving stale code");
     }
     await new Promise((r) => setTimeout(r, 800));
-  } else {
+  } else if (up !== "foreign") {
     console.log(`board-serve-check: NOT listening on ${PORT} - reviving`);
   }
   // detached + unref so the server outlives this station's process. A child that
@@ -152,8 +154,19 @@ const listening = () =>
   child.unref();
 
   await new Promise((r) => setTimeout(r, 2500));
-  const back = await listening();
-  console.log(`board-serve-check: ${back ? "revived" : "REVIVE FAILED"}`);
+  // The port the server actually took, which is only the one we asked for when
+  // nothing else was there. The file is written by the server on listen.
+  let took = PORT;
+  try {
+    took = Number(fs.readFileSync(PORTFILE, "utf8").trim()) || PORT;
+  } catch {
+    /* no file yet; the requested port is the best guess */
+  }
+  // `=== true`, not truthy: listening() also answers "foreign" and "stale", and
+  // either of those reported as "revived" is the check passing for the wrong
+  // reason.
+  const back = (await listening(took)) === true;
+  console.log(`board-serve-check: ${back ? `revived on ${took}` : "REVIVE FAILED"}`);
 
   // Deposit once per outage, keyed to the day so a server that dies repeatedly
   // earns one record a day rather than one per cycle - the flooding rule.
@@ -168,7 +181,7 @@ const listening = () =>
         driver: "I6",
         tier: 6,
         dimension: "hive",
-        subject: `board server on port ${PORT}`,
+        subject: `board server on port ${took}`,
         claim: back
           ? "The board server was not running and was revived. Anything watching the wall display was looking at a frozen page until then."
           : "The board server was not running and could NOT be revived. The wall display is showing stale data.",
