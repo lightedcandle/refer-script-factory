@@ -81,6 +81,40 @@ const ACTIVE_MS = (() => {
 
 const expectedFsError = (err) => !!err && ["ENOENT", "ENOTDIR", "EACCES", "EPERM", "EBUSY", "EMFILE", "ELOOP", "ENAMETOOLONG"].includes(err.code);
 
+// WHAT THE SESSION IS CALLED. Operator, 2026-09-14: "I need a better name for
+// the chat in the details of the processing, as nothing shows me this chat id.
+// I need the chat title to be included in the processing so I can tell."
+//
+// The app writes the title it shows into the transcript as a `custom-title`
+// line, and rewrites it when it changes - so the LAST one is the current name.
+// A session never titled falls back to its first user message, which is what
+// a person would call it anyway ("start the server"). Read as text and
+// scanned, not parsed line by line: a transcript can be several megabytes and
+// this runs every beat, so it looks for the two markers it needs and stops.
+function titleOf(file) {
+  let text;
+  try {
+    text = fs.readFileSync(file, "utf8");
+  } catch {
+    return null;
+  }
+  let title = null;
+  const re = /"type":"custom-title"[^\n]*?"customTitle":"((?:[^"\\]|\\.)*)"/g;
+  let m;
+  while ((m = re.exec(text))) title = m[1];
+  if (!title) {
+    const u = /"type":"user","message":\{"role":"user","content":(?:"((?:[^"\\]|\\.)*)"|\[\{"type":"text","text":"((?:[^"\\]|\\.)*)")/.exec(text);
+    if (u) title = u[1] || u[2] || null;
+  }
+  if (!title) return null;
+  try {
+    title = JSON.parse(`"${title}"`);
+  } catch {
+    /* keep the raw text */
+  }
+  return title.replace(/\s+/g, " ").trim().slice(0, 120) || null;
+}
+
 const now = Date.now();
 const base = tokenize(repoRootOf(ROOT));
 const sessions = [];
@@ -121,6 +155,7 @@ try {
         short: id.slice(0, 8),
         kind,
         worktree,
+        title: titleOf(path.join(PROJECTS, d.name, f)),
         lastWrite: new Date(st.mtimeMs).toISOString(),
         ageMs: Math.round(age),
         active: age < ACTIVE_MS,
