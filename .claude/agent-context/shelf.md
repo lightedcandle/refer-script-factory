@@ -180,6 +180,23 @@ What would close it: approving a parked run with "always allow", which stores
 the approval on the task, or accepting trust for `E:/refer-script-factory`, which
 lets the committed allow rule apply. Both are the operator's to click.
 
+**Superseded 2026-09-14 — the routine no longer has a job.** Operator: *"make
+sure it's triggered by the pulse itself, not something else."* The pulse is the
+Windows task's `schedule.cjs`, and since telechurch-e2e #521 it writes the pulse
+card in the same breath as its own stamp — child process, ten-second ceiling,
+own try/catch, no say in the exit code. Proven: beats 4, 5, 6 at 10:30:02,
+10:35:02, 10:40:02, each writing its card the same second, drawn on the board in
+three states. So `npm run pulse` from a Claude routine is a second, slower hand
+on a bell that already rings itself, and the permission prompt it parks on is
+moot. Closed by pausing the routine rather than deleting it — a paused routine
+keeps its approvals and its history, which is the lesson this thread wrote.
+
+The stale-claim paragraph above is also closed: `pulse.trigger.json` now names
+`windows-task:LivingFactory-Schedule`. And the "Telechurch requires a ratified
+Execution Contract" caution was reading the pre-09-11 rule; Telechurch's
+`AGENTS.md` line 488 says an explicit operator instruction in the live thread is
+the ratification signal, which every change there today had.
+
 ### A paused Telechurch copy of the original tick is standing by — 2026-09-14
 
 The operator asked for the original tick to be duplicated and paused in
