@@ -1,0 +1,9 @@
+{
+  "why": "Sessions started by a Claude routine are stamped in their transcripts exactly like a person's chat - origin human, entrypoint claude-desktop - so nothing on disk says a run was automated. The one signal is the title: the app names a run after its task, verbatim. session-belt reads this file and files a session whose title matches a routine here as the factory's own hand (auto), and the pulse routine's run as the pulse. Operator, 2026-09-14: 'if the living factory pulse is what it is then it's showing a chat icon, not the pulse icon. it needs to show the pulse icon, unless it's specifically a chat about the pulse.' Titles here must match the app's task titles exactly; when a routine is renamed, rename it here or its runs go back to reading as chats.",
+  "routines": [
+    { "id": "living-factory-pulse", "title": "Living Factory — pulse (5 min)", "kind": "pulse", "enabled": false, "note": "paused 2026-09-14; the Windows tick writes the pulse card itself" },
+    { "id": "living-factory-pulse-telechurch", "title": "Living Factory — Telechurch clock (5 min, standby)", "kind": "pulse", "enabled": false, "note": "standby copy, paused" },
+    { "id": "telechurch-drift-watch", "title": "Living Factory — nightly cycle", "kind": "auto", "enabled": true },
+    { "id": "resume-held-work-after-live-service", "title": "Resume held work at 1pm (after live service)", "kind": "auto", "enabled": false, "note": "one-time, ran 2026-09-06" }
+  ]
+}
