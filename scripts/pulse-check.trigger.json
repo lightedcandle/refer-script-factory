@@ -1,0 +1,8 @@
+{
+  "id": "pulse-check",
+  "run": "factory:pulse-check",
+  "every": "1h",
+  "floor": "5m",
+  "owns": "architecture",
+  "why": "Liveness of this repo's rhythms, judged from the schedule state the child tick writes here. Same machine and cadence as Telechurch's."
+}

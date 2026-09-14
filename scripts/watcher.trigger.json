@@ -1,0 +1,8 @@
+{
+  "id": "watcher",
+  "run": "factory:watcher",
+  "every": "30m",
+  "floor": "5m",
+  "owns": "architecture",
+  "why": "The factory watching itself. Same universal machine Telechurch declares, same cadence, one difference: unarmed. Telechurch runs --arm --arm-limit 3 so zone 1 may accept work; here the watcher reports and does not act until this repo has watched itself for long enough to know what its findings look like. Arming is a decision about authority, taken in this file when it is taken. Operator, 2026-09-14: 'at the very least it should be able to monitor itself.'"
+}

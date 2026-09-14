@@ -1,0 +1,7 @@
+{
+  "id": "autonomy",
+  "run": "factory:autonomy-check",
+  "every": "6h",
+  "floor": "30m",
+  "why": "The eight conditions of an autonomous factory, asked of this repo. Same machine and cadence as Telechurch's. Its 'something other than a person keeps the schedule' condition reads the Windows task and this repo's own schedule state, so it can tell a factory that is ticked from one that is merely declared."
+}

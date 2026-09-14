@@ -52,3 +52,34 @@ usage/*.jsonl
 # Chromium crash noise from an Electron host, 316 bytes of it, tracked since
 # April. npm-debug.log* above did not match the name.
 debug.log
+# THE FACTORY IS TICKED AND HAS A BOARD OF ITS OWN, since 2026-09-14. The belt
+# (findings.jsonl) and the ledger are tracked, as Telechurch tracks them: they
+# are the record. Everything else under agent-context is a machine's own output,
+# rewritten every run - the same list Telechurch ignores, for the same reason:
+# "dirty has to mean something".
+.claude/agent-context/schedule-state.json
+.claude/agent-context/clock-state.json
+.claude/agent-context/pulse.json
+.claude/agent-context/autonomy.json
+.claude/agent-context/manager.json
+.claude/agent-context/watcher-queue.json
+.claude/agent-context/handles.json
+.claude/agent-context/board-counts.json
+.claude/agent-context/board-read.json
+.claude/agent-context/board-port.txt
+.claude/agent-context/board-snaps/
+.claude/agent-context/board-see.json
+.claude/agent-context/board-see-detail.json
+.claude/agent-context/factory-tracker.html
+.claude/agent-context/exit-worker.json
+.claude/agent-context/intake-worker.json
+.claude/agent-context/intake-brief.txt
+.claude/agent-context/provider-watch.json
+.claude/agent-context/mind-watch.json
+.claude/agent-context/mind-baseline.json
+.claude/agent-context/composition-watch.json
+.claude/agent-context/composition-baseline.json
+.claude/agent-context/host-restart.json
+.claude/agent-context/night-report.txt
+.claude/agent-context/night-watch.json
+.claude/agent-context/night-watch.mark.json

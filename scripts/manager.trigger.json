@@ -1,0 +1,8 @@
+{
+  "id": "manager",
+  "run": "factory:manager",
+  "every": "2h",
+  "floor": "15m",
+  "owns": "architecture",
+  "why": "Reads this repo's whole board and asks why nothing moved - stale open items, unwatched domains, repeats, counts that disagree. Same machine and cadence as Telechurch's. Without it the factory's belt would be written and never read, which is the leak the manager was built to close."
+}

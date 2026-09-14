@@ -1,0 +1,7 @@
+{
+  "id": "build-tracker",
+  "run": "node E:/Telechurch-e2e-v2/tools/factory/build-tracker.cjs --root E:/refer-script-factory",
+  "every": "1h",
+  "floor": "5m",
+  "why": "Builds this repo's data board - .claude/agent-context/factory-tracker.html - against this repo's belt, schedule and triggers, for the board server to serve at ?repo=refer-script-factory. The builder still lives in Telechurch and is named by absolute path: the board is one of the seven machines still in the product repo (see the factory shelf), and moving it is its own thread. A command that crosses repos is honest about it here rather than pretending the builder is local. The child tick runs this with its working directory in this repo, so everything relative resolves here."
+}
