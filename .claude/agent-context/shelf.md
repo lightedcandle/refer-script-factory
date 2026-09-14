@@ -315,10 +315,12 @@ two untracked files this session did not author:
 - `tools/factory/serve-tracker.cjs:13` — the usage example in the header
   still reads `[--port 4399]`. Fix: 47390.
 
-**Revival condition:** the Telechurch tree is on a branch with a clean status,
-or its owner says the uncommitted work there is safe to carry. Then it is one
-two-line commit in that repo. Until then the tick is unaffected — it reads the
-port file, and the file says 47390.
+**Closed 2026-09-13, same night.** A later thread (the scheduler's grid fix and
+the live rail) needed a Telechurch branch anyway; opened via `branch:start` from
+`origin/main`, which the detached HEAD already pointed at, touching none of the
+foreign files. The two edits rode in that PR: `launch.json` passes no port so the
+server's default rules, the usage line says 47390. The tree was returned to
+detached-at-`origin/main`, advanced.
 
 ### App material still in the provider-neutral repo
 
