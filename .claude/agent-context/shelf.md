@@ -163,10 +163,48 @@ scheduled task to change one of its properties. Its stored approvals go with it,
 silently, and the replacement's first run waits for an answer nobody is there to
 give.
 
-**Revival condition — a routine run that writes a card**, evidenced by
-`.refer-factory/pulse-belt.jsonl` gaining a new `seq` with
-`drivenFrom: refer-script-factory` within one tick. Not a run reporting
-`succeeded`: on 2026-09-13 runs reported succeeded while writing nothing.
+**Revival condition — two consecutive routine runs that finish without
+parking**, each either writing a card or reporting "already beat this stage".
+Not one card, and not a run reporting `succeeded`.
+
+The condition used to be "a routine run that writes a card", and it was met on
+2026-09-14 without closing anything, which is why it was rewritten. The operator
+approved the parked run; it executed and wrote seq 3 at 01:40:05 with
+`drivenFrom: refer-script-factory`. The very next run, at 01:42, parked the same
+way. Its CLI transcript ends at `tool_use[PowerShell] npm run pulse` with no
+result. The approval covered one run and was not stored, and
+`E:/refer-script-factory` still reads `hasTrustDialogAccepted: false`. One card
+proved the machine and the folder; it did not prove the tick.
+
+What would close it: approving a parked run with "always allow", which stores
+the approval on the task, or accepting trust for `E:/refer-script-factory`, which
+lets the committed allow rule apply. Both are the operator's to click.
+
+### A paused Telechurch copy of the original tick is standing by — 2026-09-14
+
+The operator asked for the original tick to be duplicated and paused in
+Telechurch. `living-factory-pulse-telechurch` runs `npm run clock` in
+`E:\Telechurch-e2e-v2`, every 5 minutes, and is **paused**. Both facts were
+verified in the app's own records, not taken from the tool's reply:
+`"cwd": "E:\\Telechurch-e2e-v2"` and `"enabled": false`.
+
+It was created with no schedule first and given its schedule and its pause in a
+single update, so it never had a window in which it could fire.
+
+Resuming it would drive Telechurch's clock twice, alongside
+`LivingFactory-Schedule`. That is harmless and is how the clock ran for months.
+Like any new routine it starts with no stored approvals, so its first run after
+resuming may ask once. Telechurch's trust entries are accepted under all three
+spellings of its path, so it will not hit the trust split that blocks the
+factory routine.
+
+It does not fix the stale claim above: Telechurch's `pulse.trigger.json` names
+`living-factory-pulse` as its driver, and this copy has a different id.
+
+**Revival condition** — nothing needs to become true for it to exist. It exists
+to be resumed if the factory routine has to be abandoned. If the factory routine
+passes its own revival condition above, delete this copy rather than leaving a
+second switch for the same clock.
 
 ### There are two REFER.OS installers and they disagree
 
