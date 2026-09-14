@@ -500,3 +500,47 @@ Update this file whenever a tool, provider, transport path, script, runner, or p
 - Mitigation: use the read-only `classifyAutomaticInheritance(..., ignoreDirty: true)` path to obtain the exact two-file Harmony plan, apply only those declared binding values inside the active contract, commit the scoped compatibility result, then rerun normal `apply-safe` and require `no_change`
 - Script/doc now encoding mitigation: this ledger and the governed Harmony classifier
 - Verification: the classifier returned `safe-binding-drift` with exactly `.refer/source.json` and `.refer/generated/universal-agent.md`; final normal no-change verification is required before queue admission
+
+### A Backtick Anywhere In build-tracker.cjs's Page Script Region Closes The Page
+
+- Date: 2026-09-14
+- Domain/provider: Node / `build-tracker.cjs` (Telechurch board)
+- Operation: editing the page script region of `build-tracker.cjs`, including a comment inside it
+- Symptom: `SyntaxError: Unexpected identifier` pointing into a comment
+- Likely cause: the whole page lives inside one JavaScript template literal, so a backtick anywhere in that region — even inside a comment — closes the template literal early
+- Mitigation: never write a literal backtick inside the page script region, comments included; use a different quoting style or escape it
+- Script/doc now encoding mitigation: this ledger
+- Verification: not stated in source
+
+### Interpolating A Computed Font-family Into A Style Attribute Breaks It
+
+- Date: 2026-09-14
+- Domain/provider: DOM style-attribute interpolation / SVG rendering
+- Operation: interpolating a computed CSS `font-family` value — `"JetBrains Mono", ui-monospace, monospace` — into an element's `style` attribute
+- Symptom: the double quotes inside the font-family value split the attribute; SVG text then inherits `fill:none` and disappears
+- Likely cause: the computed value carries its own double quotes, which close the (double-quoted) `style` attribute early when interpolated directly into markup
+- Mitigation: never interpolate computed styles into markup; use a class instead, or replace the value's double quotes with single quotes before interpolating
+- Script/doc now encoding mitigation: this ledger
+- Verification: not stated in source
+
+### The ﻿ Escape Can Be Saved As A Literal BOM
+
+- Date: 2026-09-14
+- Domain/provider: Node source editing / machines gate (`gate:machines`, bom check)
+- Operation: writing a BOM-stripping `﻿` escape sequence into a source file edit
+- Symptom: the escape can be saved as the literal U+FEFF character instead of the four-character escape text
+- Likely cause: an edit path that writes the character itself rather than the escape sequence
+- Mitigation: strip BOMs by code point (`charCodeAt(0) === 0xfeff`) or build the RegExp from `String.fromCharCode(0xfeff)`; never write the literal character. The machines gate (bom check) catches a literal BOM in this factory; Telechurch has no such gate
+- Script/doc now encoding mitigation: this ledger, `machines/session-belt.cjs` (BOM-by-code-point pattern)
+- Verification: not stated in source
+
+### Native select Inside A Scaled Stage May Not Open In Chromium/Electron
+
+- Date: 2026-09-14
+- Domain/provider: Chromium/Electron rendering / CSS transform
+- Operation: opening a native `<select>` inside a CSS-transformed container (`#stage`, scaled to fit the screen)
+- Symptom: the click lands, but nothing happens — the native dropdown does not open
+- Likely cause: native `<select>` popup positioning does not reliably work inside a CSS-transformed (scaled) ancestor in Chromium/Electron
+- Mitigation: use a button plus a list of links instead of a native `<select>`; verify pickers by clicking them in a scaled stage, not by reading their DOM
+- Script/doc now encoding mitigation: this ledger
+- Verification: not stated in source
