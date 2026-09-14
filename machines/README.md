@@ -84,6 +84,7 @@ It lives in `.claude/agent-context/board-read.json`, keyed by record id with the
 | `pulse-check.cjs` | Did every station that should have deposited, deposit — and is the belt still sound? Derives its expectations from the repo's own station declarations. |
 | `pulse-belt.cjs` | The tick, made visible: one card incoming, one on the belt, one just resolved, removed after three stages. **Universal state, not per repo** — see below. |
 | `provider-watch.cjs` | The WORLD tier. Covers Docker fully; names Supabase and Cloudflare as session-only rather than omitting them, because an absent provider reads as fine and "nobody looked" is a different fact from "nothing wrong". |
+| `session-belt.cjs` | Which sessions are alive in the subject repo right now, from the transcripts already on disk. Writes `<repo>/.claude/agent-context/sessions.json`; deposits nothing to the belt. See below. |
 
 ## The watcher, and the four zones it does not cover
 
@@ -117,6 +118,28 @@ Yes — and the first version of `pulse-belt.cjs` got this wrong by copying the 
 **What goes wrong if you get it backwards.** There is one scheduler and one `living-factory-pulse` routine, so one heartbeat. A per-repo pulse belt gives N beat counters for that one heartbeat — and, worse, its gap detection reports a hole in every repo the scheduler did not happen to tick that round. It announces death in a perfectly alive factory, which is the failure class this whole directory exists to remove.
 
 **A machine writing universal state must refuse a wrong `REFER_FACTORY_ROOT` rather than fall back.** `pulse-belt.cjs` lives in the factory, so it can always find it via `__dirname` and never needs to search — the override exists only so a test can write into a fixture. A bogus override that silently fell back to the real factory would write **live** cards during a test run. That is not hypothetical: it happened once on 2026-09-12 and left two real files behind, which is why the check exists and why `pulse-belt-cycle.mjs` case J asserts it.
+
+## The session belt: who is alive, without deposits
+
+Operator, 2026-09-14: *"this chat needs to be on the belt, it's the timer's job to put it there (also driven by the pulse), and set the watcher to watch (also driven by the pulse). same for the spawn (subagent) - need to be placed on the belt."*
+
+`session-belt.cjs` asks one question every beat — which sessions are alive in the subject repo, from transcripts under `~/.claude/projects` — and writes down the answer. From the machine's own header:
+
+> Until today the board knew a session only through a deposit that NAMED it - a contract with a dispatch record. A chat working in this repo with no such deposit was invisible, and the operator's own session, the most active thing on the host, was the case in point. But a live session IS work in the system, whatever the belt has been told about it, and the belt's single structural rule already says how liveness is known: from disk, from the transcript the session was going to write anyway.
+
+**IT DEPOSITS NOTHING.** Not to the belt, not on a gap, not ever — same rule as the pulse belt, for the same reason: at one record per beat per session the belt would be a session log inside a week. It writes one file it owns, `<repo>/.claude/agent-context/sessions.json`.
+
+Three kinds, from where the transcript lives:
+
+- **CHAT** — a transcript in the repo's own project directory, `~/.claude/projects/<token>/<uuid>.jsonl`.
+- **SPAWN** — a transcript in one of the repo's worktree project directories, `~/.claude/projects/<token>--claude-worktrees-<name>/<uuid>.jsonl`.
+- **AUTO** — a session whose title matches a routine's title in `.refer-factory/routines.json`; the factory's own hand, not a person. A routine of kind `pulse` also sets that session's `role` to `pulse`.
+
+Two windows, both borrowed from `session-life.cjs` so this can never disagree with the check that decides whether a dispatched card stays on the belt: **ALIVE** (30m) — has this agent walked away? — and **ACTIVE** (one beat, the repo's own pulse cadence, or 5m if none is declared) — is somebody working right now?
+
+`.refer-factory/routines.json` names the trap in its own `why`: a routine's run is stamped in its transcript exactly like a person's chat — origin human, entrypoint claude-desktop — so nothing on disk says a run was automated, and the title is the only signal. **Titles here must match the app's task titles exactly; when a routine is renamed, rename it here or its runs go back to reading as chats.**
+
+Two readers, and only two: the board (`build-tracker.cjs`, in Telechurch) draws one card per live session from `sessions.json`, and `watcher.cjs`'s own "sessions" door reports whether the timer is still landing it — absent, unreadable, undriven, stale, or open with counts, the same evidence-door shape as the other four zones above.
 
 ## What is not here, and why
 
