@@ -293,6 +293,18 @@ it. The move is still the decision above. What changed is that the factory no
 longer *needs* the move to observe itself, which lowers the pressure and
 should not be mistaken for the move having happened.
 
+**Same day, later: eleven repos.** The operator's "grand run" meant wire every
+repo at once. `scripts/wire-repo.mjs` writes the seven declarations, an empty
+belt and the ignore block idempotently; run against nine repos, landed in each
+by a worker under that repo's own law. The 19:35 beat fanned out to all eleven
+wired repos in 45 seconds, serial, Telechurch first and omb-puppet last — a
+cost that grows with the count and is worth watching against the five-minute
+beat. `?repo=__all` is a served display page, one tile per repo, filled live
+from each repo's own endpoints (telechurch-e2e #533). The engine still lives in
+Telechurch and reaches every repo across it; the pressure on the move is lower
+again, and the marker is the same absolute path in every repo's
+`build-tracker.trigger.json`.
+
 ### `board-serve-check.cjs` passes silently in every repo but Telechurch
 
 A universal machine with a product-shaped path baked in:
