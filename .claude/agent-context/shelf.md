@@ -75,6 +75,22 @@ have fixed it.
 
 ## OPEN
 
+### The family — PLAN-REFER-FAMILY-001, registered 2026-09-15
+
+Operator: HQ, outposts, our own channels, one declared root. Registered in
+[`docs/PLAN-REFER-FAMILY-001.md`](../../docs/PLAN-REFER-FAMILY-001.md) with
+six stages and a stage 0 (repo discipline: host-root declaration, the `Dev`
+convention, a `repo-scout` machine, the physical move deferred). Nothing has
+started. Stage 0 needs nothing decided and is next; stage 1 (self-enrolment
+in SovereignNode) follows it. Six decisions are listed in the plan as the
+operator's — visibility of a stranger's first deposits, deposit-only vs.
+contract for known members, pricing, the family's name, which generation of
+law is served, and the word that removes the Codex-era worktrees.
+
+**Revival condition — none needed; it is open.** It leaves this register
+when stage 0 closes: the root file exists on this host, the map reads
+through it, and the scout's first beat deposits nothing.
+
 ### I stopped the primordial tick by adding a duty to it — 2026-09-12
 
 **This is a discipline failure, not a missing rule, and it is recorded as one.**
