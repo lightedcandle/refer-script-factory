@@ -32,7 +32,7 @@
  * page; the data is true as of the last build, and the board says so.
  *
  * WHERE THIS FILE LIVES, since 2026-09-14: `<factory>/machines/build-tracker.cjs`.
- * It was `E:/Telechurch-e2e-v2/machines/build-tracker.cjs` until then, and
+ * It was `E:/Telechurch-e2e-v2/tools/factory/build-tracker.cjs` until then, and
  * it is a MACHINE by P13 - it asks what is true in the repo it is pointed at and
  * renders the answer - so one copy now serves every repo, resolving its subject
  * from `--root` or the working directory like every other machine here.
