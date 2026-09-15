@@ -749,8 +749,27 @@ for (const st of due) {
   if (s.lockedAt) {
     console.log(`  ${st.id}: clearing a stale lock from ${human(s.lockedAt)} (a run was killed mid-flight)`);
   }
+  // A DRY RUN THAT PRINTS THE DECLARATION ANSWERS THE WRONG QUESTION.
+  //
+  // It used to print `st.run` verbatim, so a station declared
+  // `factory:build-tracker` reported exactly that - which is the one thing
+  // nobody needs a dry run to find out, it is in the file. What a dry run is
+  // FOR is the part that is not in the file: which factory that name resolved
+  // against. That mattered the moment the engine moved out of the repo it
+  // drives (2026-09-14): a tick run from the wrong checkout would resolve every
+  // universal machine to the wrong copy and say nothing about it.
+  //
+  // Resolution is read-only - it checks a path exists - so it is safe here, and
+  // a failure to resolve is printed rather than thrown, because a dry run that
+  // dies on the first unresolvable station stops reporting the other fourteen.
   if (DRY) {
-    console.log(`  ${st.id}: would run  ${st.run}`);
+    let shown;
+    try {
+      shown = resolveRun(st);
+    } catch (err) {
+      shown = `${st.run}  -- WOULD NOT RESOLVE: ${err.message.split("\n")[0]}`;
+    }
+    console.log(`  ${st.id}: would run  ${shown === st.run ? shown : `${st.run}  ->  ${shown}`}`);
     continue;
   }
 
