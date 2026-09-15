@@ -77,7 +77,7 @@ and the wrong one for a family. The family inverts every property:
 ## Stages
 
 Each stage is its own plan branch in its owning repo. Order is load-bearing:
-the app is last because it is the face of 1–2, and a beautiful installer for
+the app is last because it is the face of 1–3, and a beautiful installer for
 something that cannot connect is the wrong first artifact.
 
 ### 0. Repo discipline: one declared root, and a scout that sees it
@@ -117,7 +117,53 @@ have a cleaner surface."*
 Owner: factory (scout, convention, root reader in engine/machines);
 e2e-bridge (map shape). Ready to start now; needs nothing decided.
 
-### 1. Enrolment: install is the intent
+### 1. HQ: a home at a name
+
+Operator, 2026-09-15: *"before we build the app we need to build a refer os
+platform that will become the hq ... this way outposts can have a home"*, and
+then: *"place hq in a separate mini pc box."*
+
+- **refer.os is not converted into a codebase.** It is law and stays law; HQ
+  *serves* it. Once served, the vendored copies stop being necessary and the
+  three-way fork ends by attrition.
+- **Which codebase is which.** The platform (identity, roster, event intake,
+  realtime, public reach) is **SovereignNode** — its charter is "shared
+  operating core, local-first control plane", and it already has Postgres,
+  Redis, a realtime broker, self-hosted Supabase, a Sentinel queue for
+  tenant-scoped event intake, and `wan-bridge`, a Cloudflare Tunnel public at
+  `node.cadis.us`. The runtime is the **factory**, running inside HQ as it runs
+  on the workstation today. The law is **refer.os**, served: `refer-mcp` as a
+  remote MCP endpoint over HTTPS plus `/law/*` from the release manifest,
+  content-hashed so an outpost can prove which law it holds. Fronted by
+  Cloudflare the way `alliance-hub` already deploys.
+- **Two tiers.** An **edge** that is always on — enrolment, roster reads, law
+  — on Cloudflare (Worker + KV/R2 synced from the release manifest). A **home**
+  — the factory, the belts, the driver host — behind the tunnel. Outposts talk
+  to the edge; the edge talks to home. Home moving changes nothing an outpost
+  sees.
+- **Home is a separate mini PC**, always on, not the workstation. Its first
+  session clones `refer-script-factory`, `refer.os` and `SovereignNode`,
+  inventories the box (OS, drives, Node, git, Docker, `claude`, stays logged
+  in, on the LAN, reaches `node.cadis.us`), writes its host-root declaration
+  (stage 0), reports, and stops. Whether SovereignNode's Docker stack comes up
+  there decides whether home is "the factory plus a tunnel" or the full
+  platform.
+- **Minimum reachable HQ**, buildable before a name exists and re-pointed by
+  one CNAME: `POST /enrol` + roster + heartbeat (SovereignNode `api`);
+  `/mcp` and `/law/*` (refer.os served); `POST /deposit` → Sentinel queue →
+  HQ belt as append-only events, DEPOSIT only, never-autonomous refused here;
+  and HQ's own face — the ALL REPOS board, read-only at the name.
+- **The name is the operator's.** `refer.os.dev` is a subdomain of `os.dev`
+  and not registrable; the shapes available are like `referos.dev`,
+  `refer-os.dev`, `scriptfactory.com`. Recommendation, not decision: the
+  outpost's home carries the family's name, and the family is REFER; the
+  factory is a component inside it.
+
+Owner: SovereignNode (platform), factory (runtime), refer.os (served law).
+Starts with the mini PC inventory; then the two pieces that need no name —
+`refer-mcp` as a remote endpoint behind the existing tunnel, and `/enrol`.
+
+### 2. Enrolment: install is the intent
 
 - The app carries the family's rendezvous — HQ's hostname baked in, the way
   Claude's app carries Claude's endpoint. No key is entered.
@@ -136,10 +182,10 @@ e2e-bridge (map shape). Ready to start now; needs nothing decided.
 - Abuse handled the boring way: per-outpost quotas; HQ can quarantine a
   member.
 
-Owner: SovereignNode (identity, roster served, channel). First stage to build
-after 0.
+Owner: SovereignNode (identity, roster served, channel). Builds on the HQ of
+stage 1; nothing to enrol into before that.
 
-### 2. Law down, heartbeat up
+### 3. Law down, heartbeat up
 
 `refer-mcp` served from HQ over the channel; the outpost's Claude binds to
 it. Heartbeat and roster served by HQ instead of a file. An outpost is now a
@@ -151,7 +197,7 @@ distilled law vs. long-form) decided by the operator.
 
 Owner: refer.os (serving, binding promotion), SovereignNode (transport).
 
-### 3. Deposits up
+### 4. Deposits up
 
 An outpost's belt records replicate to HQ as events — append-only, DEPOSIT
 only, judgement only. HQ's factory watches, triages and builds against them.
@@ -161,14 +207,14 @@ factory working every outpost's findings.
 Owner: SovereignNode (event store, receiving endpoint that accepts DEPOSIT and
 refuses everything else), factory (belt replication machine).
 
-### 4. Knowledge both ways
+### 5. Knowledge both ways
 
 Resolved records, methods and receipts published by HQ; absorbed by outposts
 through harmony with receipts. Learn once, everyone has it.
 
 Owner: refer.os (harmony under Claude), factory.
 
-### 5. Chat relay
+### 6. Chat relay
 
 A message channel keyed by outpost and session. A chat posts; a chat on
 another machine picks it up on its next look. `session-belt` already knows
@@ -177,7 +223,7 @@ cannot serve; none is expected.
 
 Owner: SovereignNode.
 
-### 6. The outpost app
+### 7. The outpost app
 
 The Electron shell: bundled Node, first run writes the host root and enrols,
 registers the beat through `engine/install-schedule.ps1` (the app **never

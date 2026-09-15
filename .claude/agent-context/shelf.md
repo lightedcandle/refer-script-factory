@@ -79,10 +79,12 @@ have fixed it.
 
 Operator: HQ, outposts, our own channels, one declared root. Registered in
 [`docs/PLAN-REFER-FAMILY-001.md`](../../docs/PLAN-REFER-FAMILY-001.md) with
-six stages and a stage 0 (repo discipline: host-root declaration, the `Dev`
+seven stages and a stage 0 (repo discipline: host-root declaration, the `Dev`
 convention, a `repo-scout` machine, the physical move deferred). Nothing has
-started. Stage 0 needs nothing decided and is next; stage 1 (self-enrolment
-in SovereignNode) follows it. Six decisions are listed in the plan as the
+started. Stage 1 is **HQ: a home at a name** — home tier on a separate
+always-on mini PC the operator is setting up (its first session: clone the
+three repos, inventory the box, write its host root, report, stop); edge tier
+on Cloudflare; law served, never copied. Stage 0 needs nothing decided. Six decisions are listed in the plan as the
 operator's — visibility of a stranger's first deposits, deposit-only vs.
 contract for known members, pricing, the family's name, which generation of
 law is served, and the word that removes the Codex-era worktrees.
