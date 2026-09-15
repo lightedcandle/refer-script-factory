@@ -544,3 +544,14 @@ Update this file whenever a tool, provider, transport path, script, runner, or p
 - Mitigation: use a button plus a list of links instead of a native `<select>`; verify pickers by clicking them in a scaled stage, not by reading their DOM
 - Script/doc now encoding mitigation: this ledger
 - Verification: not stated in source
+
+### powershell.exe -File Flattens An Array Argument Into One String
+
+- Date: 2026-09-15
+- Domain/provider: Windows PowerShell 5.1 / `powershell.exe -File <script> -Param 'a','b'`
+- Operation: running a script with a `[string[]]` parameter through a child `powershell.exe -File` (as the harness's tool does when told to run a script file)
+- Symptom: the script received the single string `E:\a,E:\b,...` and did its per-item work against a path that does not exist; every `git -C` said "cannot change to ... Invalid argument" and the run still exited 0
+- Likely cause: `-File` passes arguments as literal strings; a comma-separated list is not re-parsed as an array in the child
+- Mitigation: invoke the script in-process (`& .\script.ps1 -Repos @('a','b')`) so the array survives, and make per-repo scripts fail loudly when a repo path is not a directory
+- Script/doc now encoding mitigation: this ledger
+- Verification: the seven-repo builder repoint on 2026-09-15 did nothing under `-File` and landed in all seven when re-run in-process
