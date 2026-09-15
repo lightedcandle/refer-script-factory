@@ -79,7 +79,13 @@ param(
   # above this file - so the beat stamps where the engine lives and no product
   # repo is load-bearing for the factory's heartbeat. Telechurch is a child like
   # every other wired repo.
-  [string]$Subject = (Split-Path -Parent $PSScriptRoot)
+  [string]$Subject = (Split-Path -Parent $PSScriptRoot),
+  # THE REPO WITH A MORNING REPORT. night-report.cjs is Telechurch's own tool; it
+  # never moved. Until 2026-09-15 the report was registered against the primary
+  # subject, which worked only while the primary happened to be Telechurch. Now
+  # that the factory is primary the two are separate questions, and this one has
+  # its own parameter so the report keeps its home when the beat moves.
+  [string]$ReportSubject = "E:\Telechurch-e2e-v2"
 )
 
 $ErrorActionPreference = "Stop"
@@ -183,13 +189,13 @@ Write-Output "registered $TaskName - every 5 minutes, renewed daily, engine $Eng
 # uses the scheduler that already knows about mornings.
 #
 # night-report.cjs is Telechurch's own tool - it did not move with the engine,
-# because it reports on one repo's night. It is registered only when the subject
-# has it; a subject without one simply has no morning report, and an already
-# registered report task is left exactly as it is (this block only ever
-# CREATE_OR_UPDATEs, never removes). With the factory as primary, Telechurch's
-# report task keeps running in Telechurch untouched.
+# because it reports on one repo's night. It is registered for -ReportSubject,
+# only when that repo has it; a repo without one simply has no morning report,
+# and an already registered report task is left exactly as it is (this block
+# only ever CREATE_OR_UPDATEs, never removes). It runs through the same hidden
+# launcher as the beat, so the 07:00 report does not flash a window either.
 $ReportTask = "LivingFactory-NightReport"
-$Report = Join-Path $Subject "tools\factory\night-report.cjs"
+$Report = Join-Path $ReportSubject "tools\factory\night-report.cjs"
 if (Test-Path -LiteralPath $Report) {
   $rdef = $svc.NewTask(0)
   $rdef.RegistrationInfo.Description = "Writes what the Living Factory did overnight, then re-marks the baseline for the next night."
@@ -203,7 +209,7 @@ if (Test-Path -LiteralPath $Report) {
   $ra = $rdef.Actions.Create(0)
   $ra.Path = $WScript
   $ra.Arguments = "//B //Nologo ""$Launcher"" ""$Node"" ""$Report"""
-  $ra.WorkingDirectory = $Subject
+  $ra.WorkingDirectory = $ReportSubject
 
   $rdef.Settings.Enabled = $true
   $rdef.Settings.StartWhenAvailable = $true   # slept past 07:00? report on wake
@@ -213,9 +219,9 @@ if (Test-Path -LiteralPath $Report) {
   $rdef.Settings.ExecutionTimeLimit = "PT10M"
 
   $folder.RegisterTaskDefinition($ReportTask, $rdef, 6, $null, $null, 3) | Out-Null
-  Write-Output "registered $ReportTask - daily at 07:00, in $Subject"
+  Write-Output "registered $ReportTask - daily at 07:00, in $ReportSubject, no window"
 } else {
-  Write-Output "no $Report - $ReportTask not registered; the subject has no night report"
+  Write-Output "no $Report - $ReportTask not registered; $ReportSubject has no night report"
 }
 
 $t = Get-ScheduledTask -TaskName $TaskName
