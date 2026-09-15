@@ -119,10 +119,22 @@ $trigger.Repetition.Interval = "PT5M"
 $trigger.Repetition.Duration = "PT23H59M"
 $trigger.Repetition.StopAtDurationEnd = $false
 
+# NO WINDOW. Operator, 2026-09-15: "the node pulse pop-up window is intrusive,
+# can it run in background or stay in system tray." A console program started
+# in an interactive session always gets a console window, so node.exe flashed
+# one every five minutes. The task runs wscript.exe instead - it has no window -
+# and run-hidden.vbs (a sibling) starts node with window style 0, waits, and
+# exits with node's exit code, so Task Scheduler still sees the engine's result.
+# //B suppresses script error dialogs: a launcher that can pop a dialog nobody
+# is there to dismiss is the permission-prompt failure in a new costume.
+$Launcher = Join-Path $PSScriptRoot "run-hidden.vbs"
+if (-not (Test-Path -LiteralPath $Launcher)) { throw "no launcher at $Launcher - it must sit beside this installer" }
+$WScript = Join-Path $env:SystemRoot "System32\wscript.exe"
+
 # TASK_ACTION_EXEC = 0
 $action = $def.Actions.Create(0)
-$action.Path = $Node
-$action.Arguments = $Engine
+$action.Path = $WScript
+$action.Arguments = "//B //Nologo ""$Launcher"" ""$Node"" ""$Engine"""
 # The engine resolves its subject from the CURRENT DIRECTORY, never from its own
 # location - that is the one rule the universal machines keep, so a single
 # factory can serve many repos. Since 2026-09-14 the engine's own ROOT line is
@@ -153,7 +165,7 @@ $def.Settings.WakeToRun = $true
 # TASK_CREATE_OR_UPDATE = 6, TASK_LOGON_INTERACTIVE_TOKEN = 3
 $folder.RegisterTaskDefinition($TaskName, $def, 6, $null, $null, 3) | Out-Null
 
-Write-Output "registered $TaskName - every 5 minutes, renewed daily, engine $Engine, working dir $Subject"
+Write-Output "registered $TaskName - every 5 minutes, renewed daily, engine $Engine, working dir $Subject, no window (via $Launcher)"
 
 # ---------------------------------------------------------------------------
 # THE MORNING REPORT, on the same mechanism.
@@ -189,8 +201,8 @@ if (Test-Path -LiteralPath $Report) {
   $rt.Enabled = $true
 
   $ra = $rdef.Actions.Create(0)
-  $ra.Path = $Node
-  $ra.Arguments = "tools\factory\night-report.cjs"
+  $ra.Path = $WScript
+  $ra.Arguments = "//B //Nologo ""$Launcher"" ""$Node"" ""$Report"""
   $ra.WorkingDirectory = $Subject
 
   $rdef.Settings.Enabled = $true
