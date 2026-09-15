@@ -34,6 +34,14 @@ off disk at the moment it fires — every five minutes, against a live board —
 **the moment a machine is saved, that is the version that runs.** Main is
 production and the only rollback is another commit.
 
+**`engine/` is inside this law, and has no guard of its own.** Since 2026-09-14
+it holds `schedule.cjs` — the scheduler this section describes, read off disk by
+the Windows task at fire time — and `serve-tracker.cjs`, the one board server,
+restarted from disk whenever its file is newer than the running process. Neither
+is a machine, so the mid-edit guard below does not cover them; the gate parses
+them, and everything else here applies unchanged. `machines/README.md` carries
+the machine/script/engine distinction and what each engine file does.
+
 Measured 2026-09-12: a worker was midway through editing `watcher.cjs` when the
 12:50 tick fired, ran the half-written file, and armed eight annotations onto the
 live belt.

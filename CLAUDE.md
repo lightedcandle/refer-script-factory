@@ -5,9 +5,11 @@ Read `AGENTS.md` before doing substantive work here — it is the binding law fo
 **Role:** factory-repo (`repo_id: refer-script-factory` in the ecosystem map)
 **Purpose:** seed implementation and doctrine source for the REFER Script Factory — the provider-neutral system that converts ratified REFER Execution Contracts and verified methods into bounded script plans, artifacts, verification evidence, and reusable registrations. CLI/HTTP/MCP are adapters around it, not the product identity.
 
-## Read this before editing anything in `machines/`
+## Read this before editing anything in `machines/` or `engine/`
 
 **There is no deploy step. Saving a file is deploying it.** A scheduler reads `machines/*.cjs` off disk at the moment it fires, every five minutes, against a live board. Main is production; the only rollback is another commit. A half-edited machine does not run at all, so a file left part-written silently stops the rhythm it drives.
+
+`engine/` is under the same law and has no guard of its own: `engine/schedule.cjs` **is** that scheduler, read off disk by the Windows task at fire time, and `engine/serve-tracker.cjs` is the one board server, restarted from disk whenever its file is newer than the running process. Neither is a machine — see `machines/README.md`, *`engine/` is next door*.
 
 Run `npm run gate:machines` before the save, not after the push.
 
@@ -69,6 +71,7 @@ hand-editing: `npm run scripts:registry`.
 ## Repo-specific notes
 
 - `machines/` holds the universal machines of the Living Factory — one copy, every repo. Every machine resolves its subject from `process.cwd()` and never from `__dirname` (precedent P13). `machines/README.md` is the working doc; `machines/kind.cjs` is the belt's only vocabulary.
+- `engine/` holds the two things that are **not** machines: `schedule.cjs` (the clock that runs machines) and `serve-tracker.cjs` (the one board server for every repo). They came home from `Telechurch-e2e-v2/tools/factory/` on 2026-09-14; `docs/seven-machines-pending-move.md` is the record of what moved, what retired and what stayed. Unlike a machine, an engine may resolve its own siblings from `__dirname` — and only its siblings.
 - The belt (`.claude/agent-context/findings.jsonl`) is **per consuming repo and never in this one**. Findings are about a repo; a shared belt would merge several repos' work into one unreadable stream.
 - Provider-neutral core lives under `src/core/**` (no VS Code APIs or host adapters). The rule is machine-checked, not honour-system: `scripts/verify/core-boundary.mjs` walks every import, export, `require` and dynamic import in the AST and fails on `vscode` or on any relative path escaping `src/core`. `src/core/index.ts` is the intentional public API.
 - **`src/chat/` and `src/contracts/` are MIXED, and this is the trap here.** Some files are one-line `export * from "../core/..."` re-exports; others are real modules that re-export the core contract *and* add the `node:fs` side the provider-neutral core is not allowed to have — `referIntake.ts` adds `writeReferIntakeRecord`, `scriptLegend.ts` adds `writeScriptLegend`, and `codebaseTree.ts`, `factoryGaps.ts` and `scriptographer.ts` are several hundred lines of real implementation. Open the file before assuming. Editing a re-export is lost work; moving a filesystem function into `src/core/**` breaks the boundary check.

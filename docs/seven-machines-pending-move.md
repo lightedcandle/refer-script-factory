@@ -1,19 +1,57 @@
-# The seven still living in the product repo
+# The seven: what moved on 2026-09-14, what retired, and what stays
 
-Seven files in `E:/Telechurch-e2e-v2/tools/factory/` pass P13's test for a
-machine and belong in this repo. **None of them moved on 2026-09-12, deliberately**,
-and this records what each move would actually cost so that whoever does it is
-not discovering it at the keyboard.
+Seven files in `E:/Telechurch-e2e-v2/tools/factory/` were examined against P13
+on 2026-09-12. **None moved then, deliberately.** Three moved on 2026-09-14, one
+retired, and three are staying where they are — and the reason each one landed
+where it did is the analysis kept below, which is why that analysis is preserved
+rather than replaced.
 
-Two reasons nothing moved:
+## The disposition
 
-1. All seven resolve their subject from `__dirname`. Moving them is not a file
-   move, it is rewriting how each one finds the repo it acts on — and one of
-   them is the scheduler that runs everything else.
-2. The operator is mid-decision on whether REFER.OS and this factory become one
-   portable runtime, installed and versioned rather than read off a working
-   tree. If they do, moving files between two working trees now is the wrong
-   shape of work.
+| File | Where it is now | Why |
+| ---- | --------------- | --- |
+| `schedule.cjs` | `<factory>/engine/schedule.cjs` | Not a machine: it **invokes**. P13 gained a third category for it — ENGINE — and an engine's location is its configuration, which is exactly what made the move a decision rather than a file copy. Its subject is `--root`, or `process.cwd()`. |
+| `serve-tracker.cjs` | `<factory>/engine/serve-tracker.cjs` | Also not a machine: one process for **all** repos, every request naming its subject with `?repo=`. Its `ROOT` is its own home — the port file and the pulse belt — never a subject. |
+| `build-tracker.cjs` | `<factory>/machines/build-tracker.cjs` | A machine by P13: it asks what is true in the repo it is pointed at and renders the answer. Subject from `--root` or `process.cwd()`. |
+| `clock.cjs` | **retired, not moved** | A pure delegation shim for the `clock` → `schedule` rename. Nothing references it any more, and its own header said to delete it once nothing did. Copying it would have carried a shim for a rename into a repo that never had the old name. |
+| `gate-style-coverage.cjs` + its baseline | stays in Telechurch | Stack-specific tooling with per-repo data stored beside the machine. Universal to Angular repos, of which there is one. |
+| `node-heartbeat.cjs` | stays in Telechurch | Its subject is the repo it runs in; its output already lands in this factory's registry. Moving the file moves nothing that was wrong. |
+| `host-restart.cjs` | stays in Telechurch | Its subject is the **host**, not a repository. `cwd`-resolving it would make two repos on one machine into two things deciding to reboot the same computer. A different category wearing the same extension. |
+
+The last three are **Telechurch's own tooling running on the shared clock**, not
+universal machines that happen to be misfiled. The clock is what is universal;
+what it fires need not be.
+
+## What that commit had to change, beyond the file move
+
+- Every `factory:<name>` declaration now resolves against `engine/schedule.cjs`'s
+  own directory instead of a hardcoded `E:/refer-script-factory` and a guess at a
+  sibling of the subject. Those three candidates existed only because the engine
+  lived in a different repo from the machines.
+- `machines/board-serve-check.cjs` pointed at
+  `<subject>/tools/factory/serve-tracker.cjs` — a universal machine reaching into
+  one product repo. It now points at its sibling `../engine/serve-tracker.cjs`,
+  reads the **factory's** `board-port.txt` (the file the one server actually
+  writes), starts the server with `cwd` in the factory, and treats a missing
+  server as a **fault** rather than exiting clean with "nothing to keep alive".
+  That clean exit was correct while most repos had no server; after the move it
+  would be a check passing for the wrong reason.
+- `scripts/wire-repo.mjs` declared the builder as
+  `node E:/Telechurch-e2e-v2/tools/factory/build-tracker.cjs --root <repo>`. It
+  declares `factory:build-tracker` now — no path, no `--root`. **Both traps found
+  on 2026-09-14 were traps about a path in a declaration**: worktree roots that
+  vanished, and `E:/omb puppet` needing its space quoted. A path-free declaration
+  dissolves both at the source instead of handling them.
+- `scripts/ci/machines-gate.mjs` gained a manifest entry for `build-tracker.cjs`
+  that runs it against the throwaway fixture and then opens the board it wrote,
+  and now parses `engine/*.cjs` as well.
+
+**The Windows task repoint and the Telechurch-side deletions are done by the
+orchestrator in the same pass** — the task must be re-registered on
+`E:\refer-script-factory\engine\schedule.cjs` with its working directory left at
+`E:\Telechurch-e2e-v2`, which is what keeps Telechurch the primary subject, and
+the four files removed from `Telechurch-e2e-v2/tools/factory/`. Until both
+happen the old copies are still the ones running.
 
 ## The one-line pattern is not the work
 
@@ -38,7 +76,13 @@ A sweep that mechanically replaced `__dirname` with `process.cwd()` would break
 
 ## Per machine
 
-### `schedule.cjs` — 30 KB — **the engine. Move this last, or not at all.**
+**Everything from here down is the 2026-09-12 analysis, kept as written.** It is
+history now, not instruction: read it for *why* each file landed where the table
+above says it did. Where it says "to `cwd`-resolve: one line", that line has been
+written; where it names a dependant, check the dependant rather than trusting the
+list. The headings still carry their original verdicts.
+
+### `schedule.cjs` — 30 KB — **the engine. Move this last, or not at all.** (MOVED)
 
 Reads the repo's `*.trigger.json` declarations, resolves `factory:<name>` to
 `<factoryRoot>/machines/<name>.cjs`, and spawns each with `cwd: ROOT`. **It is
@@ -61,7 +105,7 @@ guard that refuses to run a file with uncommitted changes.
   adjacent to its subject* to *one engine, told which repo to drive*. That is
   the same architecture decision as the multi-host question, not a smaller one.
 
-### `clock.cjs` — 1.6 KB — **delete, do not move**
+### `clock.cjs` — 1.6 KB — **delete, do not move** (RETIRED)
 
 A pure delegation shim from the `clock` → `schedule` rename, so a Windows task
 still asking for the old filename does not kill the heartbeat. Its own header
@@ -72,7 +116,7 @@ says it is removed once nothing asks for it.
 - **Depends on it:** the Windows Scheduled Task, if it has not yet been
   re-registered on `schedule.cjs`. Check that before deleting.
 
-### `build-tracker.cjs` — 282 KB — **closest to ready**
+### `build-tracker.cjs` — 282 KB — **closest to ready** (MOVED)
 
 Renders the board from the repo's own state. Already resolves `machines/kind.cjs`
 and the hive registry through `REFER_FACTORY_ROOT` → known path → sibling, which
@@ -88,7 +132,7 @@ is the pattern every other machine is told to copy.
   "rolls them up" across repos — that roll-up does not exist. Moving the file
   does not create it, but wanting it is the reason to move the file.
 
-### `serve-tracker.cjs` — 15 KB — **easy, but it has a live cross-repo coupling**
+### `serve-tracker.cjs` — 15 KB — **easy, but it has a live cross-repo coupling** (MOVED)
 
 Serves the built board over http, and serves `/stamp` (the board file's mtime)
 so the page reloads only on a real change.
@@ -102,7 +146,7 @@ so the page reloads only on a real change.
   server loses its keeper silently: `board-serve-check` reports "no server
   script — nothing to keep alive" and exits clean, which reads as healthy.
 
-### `node-heartbeat.cjs` — 12 KB — **already half-moved**
+### `node-heartbeat.cjs` — 12 KB — **already half-moved** (STAYS — Telechurch's own)
 
 Writes `last_seen_at` and the adaptive heartbeat policy onto this repo's
 `.refer-factory/hive-node-registry.json`.
@@ -114,7 +158,7 @@ Writes `last_seen_at` and the adaptive heartbeat policy onto this repo's
 - **Care:** that registry is written live. It was modified in the working tree
   while this was being read.
 
-### `host-restart.cjs` — 13 KB — **not a `cwd` problem at all**
+### `host-restart.cjs` — 13 KB — **not a `cwd` problem at all** (STAYS — Telechurch's own)
 
 Decides whether the host machine may be restarted, against the same
 four-condition test the deploy authority uses.
@@ -128,7 +172,7 @@ four-condition test the deploy authority uses.
 - **Do not move this one by analogy with the others.** It is a different
   category wearing the same file extension.
 
-### `gate-style-coverage.cjs` — 12 KB — **the baseline is the blocker**
+### `gate-style-coverage.cjs` — 12 KB — **the baseline is the blocker** (STAYS — Telechurch's own, baseline included)
 
 Sweeps an Angular style fault across every component and refuses it at commit
 time.
@@ -163,7 +207,9 @@ is why this move has stalled since 2026-09-11. P13's consequence paragraph lists
 six files and calls them all machines; the seventh, the one everything depends
 on, does not fit the sentence that was supposed to justify moving it.
 
-**P13 needs a third category: ENGINE.**
+**P13 needs a third category: ENGINE.** It has one in practice as of 2026-09-14
+— `<factory>/engine/` — and the precedent file in Telechurch should be amended to
+say so; that amendment is not this repo's to write.
 
 > **It invokes → it is an ENGINE.** It runs machines and scripts, owns the
 > working directory it hands them, and is the only component for which
