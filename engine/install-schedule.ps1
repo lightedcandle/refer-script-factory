@@ -73,7 +73,7 @@
 param(
   # THE PRIMARY SUBJECT. The engine ticks the repo it is started in, writes the
   # pulse card, and then fans out one child tick per wired repo in the ecosystem
-  # map. Telechurch was the primary from the first beat until 2026-09-15 00:30,
+  # map. Telechurch was the primary from the first beat until 2026-09-15 01:37,
   # because the engine was born there. Operator, 2026-09-15: "make the factory
   # the primary subject." The default is now the factory itself - the directory
   # above this file - so the beat stamps where the engine lives and no product
