@@ -20,6 +20,9 @@
   "scripts": {
     "pulse": "node machines/pulse-belt.cjs",
     "pulse:list": "node machines/pulse-belt.cjs --list",
+    "schedule": "node engine/schedule.cjs",
+    "schedule:list": "node engine/schedule.cjs --list",
+    "schedule:dry": "node engine/schedule.cjs --dry",
     "gate:machines": "node scripts/ci/machines-gate.mjs",
     "gate:prove": "node scripts/ci/prove-gate-bites.mjs",
     "gate:pulse-belt": "node scripts/ci/pulse-belt-cycle.mjs",

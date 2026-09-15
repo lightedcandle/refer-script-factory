@@ -73,9 +73,13 @@
 param(
   # THE PRIMARY SUBJECT. The engine ticks the repo it is started in, writes the
   # pulse card, and then fans out one child tick per wired repo in the ecosystem
-  # map. Telechurch has been the primary since the first beat and stays so; the
-  # move of the engine's files is not a decision about where the beat stamps.
-  [string]$Subject = "E:\Telechurch-e2e-v2"
+  # map. Telechurch was the primary from the first beat until 2026-09-15 00:30,
+  # because the engine was born there. Operator, 2026-09-15: "make the factory
+  # the primary subject." The default is now the factory itself - the directory
+  # above this file - so the beat stamps where the engine lives and no product
+  # repo is load-bearing for the factory's heartbeat. Telechurch is a child like
+  # every other wired repo.
+  [string]$Subject = (Split-Path -Parent $PSScriptRoot)
 )
 
 $ErrorActionPreference = "Stop"
@@ -166,9 +170,12 @@ Write-Output "registered $TaskName - every 5 minutes, renewed daily, engine $Eng
 # concept of a time of day; rather than teach it one for a single caller, this
 # uses the scheduler that already knows about mornings.
 #
-# night-report.cjs is the primary subject's own tool - it did not move with the
-# engine, because it reports on one repo's night. It is registered only when the
-# subject has it; a subject without one simply has no morning report.
+# night-report.cjs is Telechurch's own tool - it did not move with the engine,
+# because it reports on one repo's night. It is registered only when the subject
+# has it; a subject without one simply has no morning report, and an already
+# registered report task is left exactly as it is (this block only ever
+# CREATE_OR_UPDATEs, never removes). With the factory as primary, Telechurch's
+# report task keeps running in Telechurch untouched.
 $ReportTask = "LivingFactory-NightReport"
 $Report = Join-Path $Subject "tools\factory\night-report.cjs"
 if (Test-Path -LiteralPath $Report) {
