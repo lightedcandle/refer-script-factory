@@ -61,11 +61,19 @@
 import { spawnSync } from "node:child_process";
 import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync, readdirSync, statSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join, dirname, resolve } from "node:path";
+import { join, dirname, resolve, basename } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const MACHINES = join(REPO, "machines");
+// engine/ arrived 2026-09-14 with schedule.cjs and serve-tracker.cjs. They are
+// not machines - one runs machines, the other serves their board - so they get
+// no manifest entry and no smoke run: the scheduler cannot be ticked against a
+// fixture without firing real stations, and the server does not exit. But they
+// are read off disk by the Windows task at the moment it fires, exactly like a
+// machine, so the check that would have caught the half-written watcher has to
+// cover them too. Parsing is cheap and it is the whole of what it claims.
+const ENGINE = join(REPO, "engine");
 const VERBOSE = process.argv.includes("--verbose");
 
 const failures = [];
@@ -109,11 +117,21 @@ function buildFixture() {
 // ---------------------------------------------------------------------------
 //
 //   args   the read-only invocation. [] means the file is a library: it is
-//          `require`d, which proves it loads and its top level does not throw.
+//          `require`d, which proves it loads and its top level does not throw -
+//          unless `run` says otherwise.
+//   run    true when [] means "run it with no arguments" rather than "it is a
+//          library". Without this the two are indistinguishable in the manifest,
+//          and a machine whose read-only form takes no flags would be proved
+//          only to LOAD, which for build-tracker is nearly nothing: loading it
+//          is the part that cannot fail interestingly.
 //   exit   what that invocation returns against the fixture above. A number, or
 //          a set with a reason when the answer is not a property of this repo.
 //   writes true when the run appends to the fixture belt. Recorded so nobody
 //          ever points the smoke at a real repo believing it to be inert.
+//   expect (stdout, root) => boolean. The exit code says a machine finished; this
+//          says it finished having done the thing it claims to do. It is given
+//          the fixture root so a machine whose product is a FILE can be checked
+//          on the file rather than on what it printed about the file.
 //   none   a reason this machine has no path that can be run here. It still gets
 //          parsed and BOM-checked; it just cannot be exercised.
 
@@ -121,6 +139,27 @@ const MANIFEST = {
   "autonomy-check.cjs": { args: ["--json"], exit: 1, why: "eight conditions, and a fixture meets one - exit 1 is the honest answer" },
   "board-see.cjs": { none: "drives a real browser against a served board; needs puppeteer and a listening server, neither of which exists in a fixture" },
   "board-serve-check.cjs": { none: "its whole purpose is to REVIVE a dead server - it spawns a long-lived process, so there is no read-only form of it" },
+  // NOT read-only, and the fixture is the only reason that is acceptable. It
+  // writes the board and four small state files into the subject's
+  // .claude/agent-context. `writes` above says "appends to the fixture belt";
+  // this one does not touch the belt, it writes beside it, and the exit code is
+  // not what is being proved here. THE BOARD IS: a builder that exits 0 having
+  // rendered nothing, or having rendered the wrong repo, is exactly the failure
+  // the move could introduce and is invisible in a status code. So `expect`
+  // opens the file and looks for the subject's own identity in it - the board
+  // stamps `data-scope="<repo basename>"` on its scope chart - which is a
+  // string only a board built FOR this fixture can carry.
+  "build-tracker.cjs": {
+    args: [],
+    run: true,
+    exit: 0,
+    why: "renders the whole board from the fixture's belt, schedule and trigger declarations; five records of all four kinds is a real build, not a not-applicable branch",
+    expect: (out, root) => {
+      const board = join(root, ".claude/agent-context/factory-tracker.html");
+      const html = readFileSync(board, "utf8");
+      return html.includes(`data-scope="${basename(root)}"`);
+    },
+  },
   "composition-watch.cjs": { args: ["--dry", "--json"], exit: 0, why: "no src/app in the fixture, so it reports NOT APPLICABLE and exits clean - which is the behaviour P13 requires of a machine whose subject is absent" },
   "deposit.cjs": { args: ["--open"], exit: 0, why: "three open records, listed by handle" },
   "exit-worker.cjs": { args: ["--dry", "--json"], exit: 0, why: "nothing is held by a live session, so nothing was abandoned" },
@@ -143,12 +182,17 @@ const MANIFEST = {
 // CHECK 1 - every machine parses.
 // ---------------------------------------------------------------------------
 
-function checkParse(files) {
+function checkParse(files, engineFiles) {
   console.log("  parse");
   for (const f of files) {
     const r = spawnSync(process.execPath, ["--check", join(MACHINES, f)], { encoding: "utf8" });
     if (r.status !== 0) fail("parse", `${f}\n${(r.stderr || "").trim()}`);
     else note(`ok  ${f}`);
+  }
+  for (const f of engineFiles) {
+    const r = spawnSync(process.execPath, ["--check", join(ENGINE, f)], { encoding: "utf8" });
+    if (r.status !== 0) fail("parse", `engine/${f}\n${(r.stderr || "").trim()}`);
+    else note(`ok  engine/${f}`);
   }
 }
 
@@ -268,7 +312,7 @@ function checkSmoke(files) {
     try {
       // A library is proved by loading it. `require` and not `import`, because
       // these are .cjs and loading them is exactly what a machine does.
-      const argv = m.args.length ? [join(MACHINES, f), ...m.args] : ["-e", `require(${JSON.stringify(join(MACHINES, f))})`];
+      const argv = m.args.length || m.run ? [join(MACHINES, f), ...m.args] : ["-e", `require(${JSON.stringify(join(MACHINES, f))})`];
       const r = spawnSync(process.execPath, argv, {
         cwd: root,
         encoding: "utf8",
@@ -300,7 +344,7 @@ function checkSmoke(files) {
 
       if (m.expect) {
         try {
-          if (!m.expect(r.stdout)) {
+          if (!m.expect(r.stdout, root)) {
             fail("smoke", `${label} exited ${r.status} but its output did not carry what it promises (${m.why})`);
             continue;
           }
@@ -320,15 +364,23 @@ function checkSmoke(files) {
 // ---------------------------------------------------------------------------
 
 const files = readdirSync(MACHINES).filter((f) => f.endsWith(".cjs")).sort();
-console.log(`machines gate - ${files.length} machines in ${MACHINES}\n`);
+let engineFiles = [];
+try {
+  engineFiles = readdirSync(ENGINE).filter((f) => f.endsWith(".cjs")).sort();
+} catch {
+  /* no engine/ in this checkout: the machines are still the whole of it */
+}
+console.log(`machines gate - ${files.length} machines in ${MACHINES}, ${engineFiles.length} engine file(s) in ${ENGINE}\n`);
 
-checkParse(files);
+checkParse(files, engineFiles);
+// The BOM check already walks every tracked and untracked-not-ignored file in
+// the repo, so engine/ is covered by construction rather than by a second pass.
 checkNoBom();
 checkSmoke(files);
 
 console.log("");
 if (!failures.length) {
-  console.log(`PASS - ${files.length} machines parse, no literal U+FEFF in any parsed file, every declared read-only path returned what it should.`);
+  console.log(`PASS - ${files.length} machines and ${engineFiles.length} engine file(s) parse, no literal U+FEFF in any parsed file, every declared read-only path returned what it should.`);
   process.exit(0);
 }
 

@@ -1,7 +1,7 @@
 {
   "id": "build-tracker",
-  "run": "node E:/Telechurch-e2e-v2/tools/factory/build-tracker.cjs --root E:/refer-script-factory",
+  "run": "factory:build-tracker",
   "every": "1h",
   "floor": "5m",
-  "why": "Builds this repo's data board - .claude/agent-context/factory-tracker.html - against this repo's belt, schedule and triggers, for the board server to serve at ?repo=refer-script-factory. The builder still lives in Telechurch and is named by absolute path: the board is one of the seven machines still in the product repo (see the factory shelf), and moving it is its own thread. A command that crosses repos is honest about it here rather than pretending the builder is local. The child tick runs this with its working directory in this repo, so everything relative resolves here."
+  "why": "Builds this repo's data board - .claude/agent-context/factory-tracker.html - against this repo's belt, schedule and triggers, for the board server to serve at ?repo=refer-script-factory. Named, not pathed: the builder came home from Telechurch's tools/factory on 2026-09-14 and is machines/build-tracker.cjs here, so the declaration that used to carry an absolute cross-repo path and a --root now carries neither. The child tick runs this with its working directory in this repo, so the subject resolves here."
 }
