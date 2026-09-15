@@ -305,6 +305,54 @@ Telechurch and reaches every repo across it; the pressure on the move is lower
 again, and the marker is the same absolute path in every repo's
 `build-tracker.trigger.json`.
 
+**Closed 2026-09-15, 00:10.** Operator: *"Ok i'm ready, lets get it done."*
+Plan registered on main first (`docs/PLAN-LIVING-FACTORY-ENGINE-HOME-001.md`),
+then landed in this order so the beat never stopped: factory #10 (`engine/`
+schedule + serve-tracker, `machines/build-tracker.cjs`, keeper and
+`wire-repo.mjs` repointed, gate manifest, `engine/install-schedule.ps1`);
+Windows task repointed at 00:02 by re-running that installer; 00:05 beat proven
+from the new path with the keeper cutting the server over to `engine/`;
+telechurch-e2e #535 merged and its checkout advanced only after that proof,
+deleting the old engine; eleven declarations turned into `factory:build-tracker`
+(e2e-bridge #4, e2e-governance #5, jamaicaeats #3, medialab #3, omb-puppet #3,
+sovereign-node #5, Dueprocess and Developer local, alliance-hub on its session
+branch, this repo and Telechurch in their PRs). The 00:10 beat — first with the
+old files gone — returned 0 and fanned out to all ten repos in six seconds.
+`clock.cjs` retired. Telechurch keeps `gate-style-coverage`, `node-heartbeat`,
+`host-restart`, `night-report`: its own tooling on the shared clock. The marker
+is gone: no declaration anywhere names a path into another repo.
+
+**Left honest, not hidden:** the task's return code is any station's fault —
+`autonomy` (5/8), `pulse-check` in every belt-less repo ("never deposited to"),
+`manager` when something is unacted-on — so the beat read 1 at 00:05 and 0 at
+00:10 with nothing about the engine differing. It read 1 at 23:50 under the old
+engine for the same reason. A beat's health is its stamp, not its exit code.
+
+### Factory host scripts were living in SovereignNode, unmerged and untracked — 2026-09-15
+
+Found while repointing the task: the installer that owns `LivingFactory-Schedule`
+(`scripts/install-factory-schedule.ps1`) sat only on SovereignNode's
+`recovery/PLAN-NODE-DETACHED-WORK-RECOVERY-AND-CLEAN-001--codex--I9` branch,
+never on main; `factory-board-host.ps1`, `install-factory-board-autostart.ps1`,
+`factory-resume.ps1`, `install-factory-resume-autostart.ps1` and all seven
+trigger declarations are **untracked** in that checkout. The Startup-folder
+launcher `sovereign-factory-board.cmd` ran the board host on port 4399 against
+Telechurch's copy of the server — it would have opened a kiosk on a dead port at
+the next logon.
+
+Ported home as siblings of what they install: `engine/install-schedule.ps1`,
+`engine/board-host.ps1` (47390, factory server), `engine/install-board-autostart.ps1`
+(rewrites the launcher). `factory-resume.ps1` is host-level (Docker, browsers)
+and not the factory's; it stays where it is. SovereignNode's on-disk declaration
+was repointed in place because the engine reads the disk and the file is
+untracked there — its main carries the same change via sovereign-node #5.
+
+**Revival condition — the SovereignNode copies are deleted.** They are stale
+the moment this lands, and a stale installer re-run would point the task back at
+a file that no longer exists (its own guard would refuse, which is the one
+mercy). They are untracked files and a recovery branch this session did not
+author, so deleting them is the operator's act, not a PR.
+
 ### `board-serve-check.cjs` passes silently in every repo but Telechurch
 
 A universal machine with a product-shaped path baked in:
@@ -336,6 +384,15 @@ with `npm run gate:machines` before the save and a check that Telechurch's board
 keeper still works after. Related: [[seven-machines-pending-move]], whose
 `serve-tracker.cjs` section already says this line must change in the same commit
 that moves the file. The file has not moved, and the defect is live regardless.
+
+**Closed 2026-09-15 with the move (factory #10).** The server is now a sibling
+— `path.resolve(__dirname, "../engine/serve-tracker.cjs")` — so every repo's
+keeper checks the same file, reads the factory's `board-port.txt`, and spawns
+with the factory as cwd. The absent-file branch is a fault (exit 2), not a pass.
+Proven live at 00:05: Telechurch's keeper found the new file newer than the
+running server, replaced it, deposited once (`board-server-down-2026-09-15`),
+and the factory's port file appeared. The 00:10 beat found it healthy for the
+right reason.
 
 ### Two Telechurch files still say the board is on 4399 — 2026-09-13
 

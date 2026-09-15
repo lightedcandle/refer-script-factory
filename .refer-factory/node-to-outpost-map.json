@@ -71,7 +71,7 @@
     },
     {
       "id": "R6",
-      "file": "E:/Telechurch-e2e-v2/tools/factory/build-tracker.cjs",
+      "file": "E:/refer-script-factory/machines/build-tracker.cjs (was E:/Telechurch-e2e-v2/tools/factory/build-tracker.cjs until 2026-09-15)",
       "site": "line 872, comment: 'from the node registry rather than probed again here'",
       "propose": "'from the outpost registry'",
       "confidence": "high",
@@ -79,7 +79,7 @@
     },
     {
       "id": "R7",
-      "file": "E:/Telechurch-e2e-v2/tools/factory/schedule.cjs",
+      "file": "E:/refer-script-factory/engine/schedule.cjs (was E:/Telechurch-e2e-v2/tools/factory/schedule.cjs until 2026-09-15)",
       "site": "line 356, comment: 'the same adaptive policy the hive node registry declared in April'",
       "propose": "'the outpost registry'",
       "confidence": "high",
@@ -107,13 +107,13 @@
       "id": "K1",
       "file": "E:/refer-script-factory/.refer-factory/hive-node-registry.json",
       "site": "the top-level `nodes` array key",
-      "why": "Read by path in two live readers: tools/factory/node-heartbeat.cjs lines 79 and 81 (doc.nodes) and tools/factory/build-tracker.cjs line 882 (readJson(p).nodes). Renaming the key blanks the board's host panel and stops the heartbeat, both silently."
+      "why": "Read by path in two live readers: Telechurch's tools/factory/node-heartbeat.cjs lines 79 and 81 (doc.nodes) and the factory's machines/build-tracker.cjs (readJson(p).nodes; it lived in Telechurch's tools/factory until 2026-09-15). Renaming the key blanks the board's host panel and stops the heartbeat, both silently."
     },
     {
       "id": "K2",
       "file": "E:/refer-script-factory/.refer-factory/hive-node-registry.json",
       "site": "node id `telechurch`",
-      "why": "Matched as a literal string in node-heartbeat.cjs line 43 (NODE_ID) and build-tracker.cjs line 882 (n.id === 'telechurch'). The label was renamed to 'Home Desk'; the key was not. Rename the label, never the key."
+      "why": "Matched as a literal string in Telechurch's node-heartbeat.cjs line 43 (NODE_ID) and the factory's machines/build-tracker.cjs (n.id === 'telechurch'). The label was renamed to 'Home Desk'; the key was not. Rename the label, never the key."
     },
     {
       "id": "K3",
@@ -157,7 +157,7 @@
   "must_not_rename_wrong_sense": [
     {
       "id": "W1",
-      "file": "E:/Telechurch-e2e-v2/tools/factory/build-tracker.cjs",
+      "file": "E:/refer-script-factory/machines/build-tracker.cjs (was E:/Telechurch-e2e-v2/tools/factory/build-tracker.cjs until 2026-09-15)",
       "sites": "lines 2068, 3122, 3137 - 'clicking a node', 'Click a node to read its value', 'Under the node when the band has room beneath it'",
       "sense": "CHART VERTEX. These are data points on the board's own graphs. Renaming them to 'outpost' would be nonsense, and in the same file as R6, which is exactly how a blind sweep does its damage - two senses of one word, forty lines and two thousand lines apart, in one file."
     },
