@@ -35,6 +35,12 @@ disappears.
   directory; only the script path changes. Making the factory the primary is a
   separate change with its own observable (where the beat stamps), and it
   does not ride on a file move.
+  **Done as its own step, 2026-09-15 00:30.** Operator: *"make the factory the
+  primary subject."* The installer's default subject became the factory root
+  and was re-run; the observable is the pulse card's `drivenFrom` reading
+  `refer-script-factory` and the factory's stamp landing first on the beat,
+  with Telechurch stamped as a child. Telechurch's night-report task was not
+  touched — it is Telechurch's own and stays registered as it was.
 - **`__dirname` is classified, not swept.** Subject → `process.cwd()`; sibling →
   `__dirname` re-pointed to the new layout; factory root → `__dirname/..` with
   `REFER_FACTORY_ROOT` as the override. The per-line table is in

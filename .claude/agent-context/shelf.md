@@ -322,6 +322,16 @@ old files gone — returned 0 and fanned out to all ten repos in six seconds.
 `host-restart`, `night-report`: its own tooling on the shared clock. The marker
 is gone: no declaration anywhere names a path into another repo.
 
+**And then the primary moved, 00:30 the same night.** Operator: *"make the
+factory the primary subject."* One parameter — the installer's default subject
+is now the factory root — re-run once. The pulse card's `drivenFrom` reads
+`refer-script-factory`; Telechurch is a child like the other ten. Nothing in a
+product repo is load-bearing for the factory's heartbeat any more. The two
+paused standby routines were re-described to match: the factory one is the true
+standby for the whole beat (still blocked on the trust split recorded above);
+the Telechurch one is a child tick for Telechurch's stations only, because a
+second primary would write pulse cards twice.
+
 **Left honest, not hidden:** the task's return code is any station's fault —
 `autonomy` (5/8), `pulse-check` in every belt-less repo ("never deposited to"),
 `manager` when something is unacted-on — so the beat read 1 at 00:05 and 0 at
