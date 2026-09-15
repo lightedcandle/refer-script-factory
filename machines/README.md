@@ -18,9 +18,22 @@ The repo declares **which** machines it runs and **how often**, beside its own m
 }
 ```
 
-`factory:<name>` resolves to `<factory root>/machines/<name>.cjs`. The root is discovered — `REFER_FACTORY_ROOT`, then the known path, then a sibling directory — and a factory that cannot be found is reported **as a missing factory**, never as a station that simply failed. Those are different problems with different fixes.
+`factory:<name>` resolves to `<factory root>/machines/<name>.cjs`. Since the engine moved in here (2026-09-14) the root is the directory above `engine/schedule.cjs` — its own — with `REFER_FACTORY_ROOT` kept ahead of it for a second checkout. A factory that cannot be found is reported **as a missing factory**, never as a station that simply failed. Those are different problems with different fixes.
 
 That split is deliberate and it is the same one the station files already make: **the machine is universal, the cadence is local.** A repo that wants the pulse hourly and a repo that wants it daily share the machine and disagree only in their own declaration.
+
+## `engine/` is next door, and it is not machines
+
+Two files live in `<factory>/engine/`, and neither is a machine:
+
+| | |
+| --- | --- |
+| `schedule.cjs` | **The clock that runs the machines.** It reads every `*.trigger.json` in the subject's `tools/`, `tools/factory/` and `scripts/`, fires what is due with `cwd` set to the subject, and — on the primary tick — fans out one isolated child tick per wired repo in the ecosystem map. |
+| `serve-tracker.cjs` | **The one board server.** One process for every repo, on port 47390; each request names its subject with `?repo=<id>`. It serves `build-tracker.cjs`'s output and the live endpoints the page polls between builds. |
+
+The distinction is worth keeping straight, because it is what decides where a new file goes: **a machine asks what is true here, a script makes something here, an engine decides what runs here and when.** Only the third has a legitimate claim on knowing where it lives — which is why these two resolve their own siblings from `__dirname` while every machine resolves its subject from `process.cwd()`.
+
+**The same saving-is-deploying law applies to them.** The Windows task reads `engine/schedule.cjs` off disk at the moment it fires, and that scheduler is what reads every machine off disk in turn; the board server is restarted from disk by `board-serve-check.cjs` the moment its file is newer than the running process. There is no build and no deploy for either. `npm run gate:machines` parses them along with the machines, and the BOM check already covers the whole repo.
 
 ## The one rule for writing a machine here
 
@@ -85,6 +98,7 @@ It lives in `.claude/agent-context/board-read.json`, keyed by record id with the
 | `pulse-belt.cjs` | The tick, made visible: one card incoming, one on the belt, one just resolved, removed after three stages. **Universal state, not per repo** — see below. |
 | `provider-watch.cjs` | The WORLD tier. Covers Docker fully; names Supabase and Cloudflare as session-only rather than omitting them, because an absent provider reads as fine and "nobody looked" is a different fact from "nothing wrong". |
 | `session-belt.cjs` | Which sessions are alive in the subject repo right now, from the transcripts already on disk. Writes `<repo>/.claude/agent-context/sessions.json`; deposits nothing to the belt. See below. |
+| `build-tracker.cjs` | **What does this repo's factory look like right now?** Renders the whole board for one subject — the belt by kind, the rail of declared triggers and when each last fired, the four workers' in-trays, the pulse cards, the sessions, the host block — and writes it to `<repo>/.claude/agent-context/factory-tracker.html`, plus `board-counts.json`, `handles.json` and `factory-ledger.json` beside it. Deposits nothing: it is the board, not a finding about the board. Reads the factory's own `.refer-factory/hive-node-registry.json` and `pulse-belt.jsonl` for the two universal blocks. Came home from `Telechurch-e2e-v2/tools/factory/` on 2026-09-14; before that every wired repo declared it by absolute cross-repo path. |
 
 ## The watcher, and the four zones it does not cover
 

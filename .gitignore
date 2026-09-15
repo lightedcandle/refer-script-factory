@@ -57,6 +57,14 @@ debug.log
 # are the record. Everything else under agent-context is a machine's own output,
 # rewritten every run - the same list Telechurch ignores, for the same reason:
 # "dirty has to mean something".
+#
+# SINCE THE ENGINE AND THE BOARD CAME HOME (2026-09-14) TWO OF THESE MEAN MORE
+# THAN THEY DID. board-port.txt is no longer this repo's copy of a per-repo
+# fact: there is ONE board server for every repo, it lives in engine/, and this
+# is the one file it writes its chosen port to - board-serve-check.cjs reads
+# exactly this path. factory-tracker.html is this repo's own board, built here
+# by machines/build-tracker.cjs like any other subject's. Both are still output
+# and both stay ignored; they are just universal output now, not local.
 .claude/agent-context/schedule-state.json
 .claude/agent-context/sessions.json
 .claude/agent-context/clock-state.json

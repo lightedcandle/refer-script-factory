@@ -134,6 +134,15 @@ section argues that asymmetry is correct.
 
 ## Position: the engine does not move, and it is not installed
 
+> **Superseded 2026-09-14 by PLAN-LIVING-FACTORY-ENGINE-HOME-001.** The
+> engine moved to `engine/schedule.cjs` in this repo and takes its subject
+> from `--root` or the working directory; one engine drives every wired repo
+> by fan-out. The premise below — "one per thing being driven" — was true
+> when there was one thing being driven. The second half of the position
+> stands: nothing here is *installed*; the engine is read off this working
+> tree by the Windows task, and this draft's installed-runtime question is
+> still open and still unratified.
+
 **`schedule.cjs` stays where it is, one per thing being driven. What becomes
 installed and versioned is what the engine consumes, never the engine.**
 

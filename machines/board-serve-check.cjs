@@ -2,7 +2,14 @@
 /**
  * BOARD SERVE CHECK - the watcher for the thing that shows the watchers.
  *
- * UNIVERSAL MACHINE. Runs against the repo it is invoked in (process.cwd()).
+ * UNIVERSAL MACHINE. Its DEPOSIT is about the repo it is invoked in
+ * (process.cwd()); everything else it touches belongs to the factory, because
+ * there is exactly ONE board server for ALL repos and it serves each subject at
+ * ?repo=<id>. So the server it revives is its sibling
+ * `<factory>/engine/serve-tracker.cjs`, the port file it reads is the one that
+ * server writes under `<factory>/.claude/agent-context/`, and it starts the
+ * server with its working directory in the factory. Before 2026-09-14 the
+ * server lived in the product repo and this reached across for it by path.
  *
  * Operator, 2026-09-11: "So who manages the factory page server and makes sure
  * it's always running? Is there a watcher and resolution for that?"
@@ -40,12 +47,25 @@ const { spawn } = require("child_process");
 const ROOT = process.cwd();
 const CTX = path.join(ROOT, ".claude/agent-context");
 const BELT = path.join(CTX, "findings.jsonl");
-const SERVER = path.join(ROOT, "tools/factory/serve-tracker.cjs");
+
+// THE FACTORY, AND THE SERVER INSIDE IT. This was
+// `path.join(ROOT, "tools/factory/serve-tracker.cjs")` - a universal machine
+// reaching for a path inside one product repo, which meant that in every OTHER
+// repo the file was absent and this check reported "nothing to keep alive" and
+// exited clean. The server ships beside this machine now, so the path is a
+// sibling and its absence is a fault rather than a shrug.
+const FACTORY = path.resolve(__dirname, "..");
+const SERVER = path.resolve(__dirname, "../engine/serve-tracker.cjs");
 
 // The server writes down which port it actually took, because a port it had to
-// fall back from is one nothing else would guess. Read that first; the flag and
-// the default are only fallbacks.
-const PORTFILE = path.join(CTX, "board-port.txt");
+// fall back from is one nothing else would guess. IT MUST BE THE SAME FILE THE
+// SERVER WRITES: one server means one port file, and it lives in the factory
+// beside the server, not under whichever repo this check happens to be running
+// in. Reading a per-repo copy would have meant ten repos each falling back to
+// the default while the server sat on a port it had written down somewhere
+// else - the 09-11 abandoned-port failure, one level up. Read that first; the
+// flag and the default are only fallbacks.
+const PORTFILE = path.join(FACTORY, ".claude/agent-context/board-port.txt");
 const i = process.argv.indexOf("--port");
 const PORT =
   i >= 0
@@ -102,9 +122,20 @@ const listening = (port) =>
   });
 
 (async () => {
+  // A MISSING SERVER IS A FAULT, NOT A NO-OP.
+  //
+  // This exited 0 with "nothing to keep alive" while the server lived in the
+  // product repo, and that was right then: most repos genuinely had no server
+  // to keep alive. It is wrong now. The server ships beside this file, so the
+  // only way it can be missing is a broken or partial factory install - and
+  // reporting that as clean is the precise failure this machine exists to
+  // prevent, applied to itself: a check that passes for the wrong reason,
+  // trusted, while the wall display sits frozen.
   if (!fs.existsSync(SERVER)) {
-    console.log(`board-serve-check: no server script at ${path.relative(ROOT, SERVER)} - nothing to keep alive`);
-    process.exit(0);
+    console.error(`board-serve-check: FAULT - the board server is not at ${SERVER.replace(/\\/g, "/")}.`);
+    console.error("  It ships beside this machine in the factory, so its absence means a broken factory install,");
+    console.error("  not a repo without a board. Nothing is keeping the board server alive until this is fixed.");
+    process.exit(2);
   }
 
   const up = await listening(PORT);
@@ -146,8 +177,12 @@ const listening = (port) =>
   // detached + unref so the server outlives this station's process. A child that
   // dies with its parent would come back for exactly as long as the check runs,
   // which is a revival that revives nothing.
+  // cwd IS THE FACTORY, NOT THE SUBJECT. The server is universal: it resolves
+  // every repo's files from the ecosystem map and uses its own root only for
+  // the port file and the pulse belt. Starting it inside whichever repo
+  // happened to run this check would make its home depend on who revived it.
   const child = spawn(process.execPath, [SERVER, "--port", String(PORT)], {
-    cwd: ROOT,
+    cwd: FACTORY,
     detached: true,
     stdio: "ignore",
   });

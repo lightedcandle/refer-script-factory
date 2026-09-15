@@ -30,9 +30,12 @@
  * lands, and this script does not read law. It writes files and reports; the
  * caller commits the way that repo commits.
  *
- * The builder is named by absolute path into Telechurch, because the board
- * builder is one of the seven machines still in the product repo. A command
- * that crosses repos says so rather than pretending the builder is local.
+ * THE BUILDER IS DECLARED BY NAME, NOT BY PATH. It was
+ * `node E:/Telechurch-e2e-v2/tools/factory/build-tracker.cjs --root <repo>`
+ * while the board builder was one of the machines still in the product repo.
+ * It came home on 2026-09-14, so the declaration is `factory:build-tracker`
+ * like every other one here - the scheduler resolves the name against its own
+ * factory and runs the station with its working directory set to the subject.
  *
  *   node <factory>/scripts/wire-repo.mjs <repo-path> [--dry]
  *
@@ -49,23 +52,31 @@ if (!target || !fs.existsSync(target) || !fs.statSync(target).isDirectory()) {
   console.error("wire-repo: give a repo directory");
   process.exit(2);
 }
-// THE FILES GO WHERE YOU POINT; THE ROOT THEY DECLARE IS THE REPO. Run inside a
-// git worktree - <repo>/.claude/worktrees/<name> - the files are written there
-// (that is how a branch is made), but the build-tracker declaration must name
-// the repo the board is ABOUT, which is three levels up. session-life.cjs
-// applies the same rule (repoRootOf). Found 2026-09-14: workers wired six repos
-// from inside their worktrees and every committed declaration named a path
-// that vanished when the worktrees were removed.
+// POINTED AT A WORKTREE, WIRE THE REPO. Run inside a git worktree -
+// <repo>/.claude/worktrees/<name> - the declarations still belong to the repo
+// itself, three levels up, not to a directory that disappears when the worktree
+// is removed. session-life.cjs applies the same rule (repoRootOf).
+//
+// TWO TRAPS FOUND 2026-09-14 ARE NOW DISSOLVED AT THE SOURCE RATHER THAN
+// HANDLED HERE, AND BOTH HAD THE SAME CAUSE: a declaration that carried a path.
+//
+//   Workers wired six repos from inside their worktrees, and every committed
+//   build-tracker declaration named `--root <repo>/.claude/worktrees/...`, a
+//   path that vanished with the worktree.
+//
+//   A root with a space in it - "E:/omb puppet" - had to be quoted, because the
+//   scheduler splits a `run` command on whitespace before handing it to a
+//   shell. Its builder exited 1 on its first beat, having received `E:/omb`.
+//
+// The build-tracker declaration is `factory:build-tracker` now: no path, no
+// --root, nothing to get wrong. The scheduler resolves the name against its own
+// factory and runs every station with its working directory set to the subject,
+// so the subject is carried by the tick rather than written into eleven files.
+// ROOT is still resolved below, because it decides WHERE the files are written.
 const TARGET = path.resolve(target);
 const ROOT = /[\\/]\.claude[\\/]worktrees[\\/][^\\/]+$/.test(TARGET) ? path.resolve(TARGET, "../../..") : TARGET;
 const NAME = path.basename(ROOT);
-const BUILDER = "E:/Telechurch-e2e-v2/tools/factory/build-tracker.cjs";
 const ROOT_FWD = ROOT.replace(/\\/g, "/");
-// A path with a space in it must be quoted in a `run` command: the scheduler
-// splits the command on whitespace before handing it to a shell, and the shell
-// re-joins quoted spans. Found 2026-09-14 on "E:/omb puppet", whose builder
-// exited 1 on its first beat because --root arrived as E:/omb.
-const ROOT_ARG = /\s/.test(ROOT_FWD) ? `"${ROOT_FWD}"` : ROOT_FWD;
 
 const TRIGGERS = {
   "pulse.trigger.json": {
@@ -73,7 +84,7 @@ const TRIGGERS = {
     drivenBy: "windows-task:LivingFactory-Schedule",
     every: "5m",
     owns: "architecture",
-    why: `The beat, so the rail can draw it and the pulse belt can read its stage length from it. The Windows task LivingFactory-Schedule runs Telechurch's schedule.cjs, which fans out one child tick per wired repo every five minutes - this one included since ${new Date().toISOString().slice(0, 10)}. drivenBy rather than run because an external clock drives this and no scheduler may fire it as well. Written by <factory>/scripts/wire-repo.mjs.`,
+    why: `The beat, so the rail can draw it and the pulse belt can read its stage length from it. The Windows task LivingFactory-Schedule runs the factory's engine/schedule.cjs with its working directory in the primary subject, and that primary tick fans out one child tick per wired repo every five minutes - this one included since ${new Date().toISOString().slice(0, 10)}. drivenBy rather than run because an external clock drives this and no scheduler may fire it as well. Written by <factory>/scripts/wire-repo.mjs.`,
   },
   "session-belt.trigger.json": {
     id: "session-belt",
@@ -116,10 +127,10 @@ const TRIGGERS = {
   },
   "build-tracker.trigger.json": {
     id: "build-tracker",
-    run: `node ${BUILDER} --root ${ROOT_ARG}`,
+    run: "factory:build-tracker",
     every: "1h",
     floor: "5m",
-    why: "Builds this repo's data board - .claude/agent-context/factory-tracker.html - for the board server to serve at ?repo=<id>. The builder still lives in Telechurch and is named by absolute path: a command that crosses repos is honest about it. Written by <factory>/scripts/wire-repo.mjs.",
+    why: "Builds this repo's data board - .claude/agent-context/factory-tracker.html - for the board server to serve at ?repo=<id>. Named, not pathed: the builder came home to the factory on 2026-09-14, and the child tick runs it with its working directory set to this repo, so the declaration carries no path to go stale. Written by <factory>/scripts/wire-repo.mjs.",
   },
 };
 
