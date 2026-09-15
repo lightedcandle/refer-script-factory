@@ -322,7 +322,7 @@ old files gone — returned 0 and fanned out to all ten repos in six seconds.
 `host-restart`, `night-report`: its own tooling on the shared clock. The marker
 is gone: no declaration anywhere names a path into another repo.
 
-**And then the primary moved, 00:30 the same night.** Operator: *"make the
+**And then the primary moved, 01:37 the same night.** Operator: *"make the
 factory the primary subject."* One parameter — the installer's default subject
 is now the factory root — re-run once. The pulse card's `drivenFrom` reads
 `refer-script-factory`; Telechurch is a child like the other ten. Nothing in a
