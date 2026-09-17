@@ -285,8 +285,20 @@ const server = http
         // Detached and unref'd: the window this request came from is about to
         // be closed by the very process this starts, so nothing here waits on
         // it. The reply may never be read; that is the expected outcome.
+        //
+        // THROUGH wscript AND run-hidden.vbs, NOT powershell.exe DIRECTLY. A
+        // powershell.exe started by Node with detached:true and no stdio has no
+        // console at all, and it exits 0 having run nothing - proven
+        // 2026-09-16: three launches, zero log lines, exit 0 each time. Given a
+        // hidden console by WScript.Shell.Run it runs normally. Same launcher
+        // the Windows task and the desktop icon already use.
         try {
-          const child = spawn("powershell.exe", ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", path.join(__dirname, "board-host.ps1"), "-Monitor", String(n), "-Keep"], { cwd: ROOT, detached: true, stdio: "ignore", windowsHide: true });
+          const sys32 = path.join(process.env.SystemRoot || "C:\\Windows", "System32");
+          const child = spawn(
+            path.join(sys32, "wscript.exe"),
+            ["//B", "//Nologo", path.join(__dirname, "run-hidden.vbs"), path.join(sys32, "WindowsPowerShell", "v1.0", "powershell.exe"), "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", path.join(__dirname, "board-host.ps1"), "-Monitor", String(n), "-Keep"],
+            { cwd: ROOT, detached: true, stdio: "ignore", windowsHide: true },
+          );
           child.unref();
         } catch (err) {
           res.writeHead(500, { "content-type": "application/json", "cache-control": "no-store" });

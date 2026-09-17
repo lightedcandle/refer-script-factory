@@ -555,3 +555,14 @@ Update this file whenever a tool, provider, transport path, script, runner, or p
 - Mitigation: invoke the script in-process (`& .\script.ps1 -Repos @('a','b')`) so the array survives, and make per-repo scripts fail loudly when a repo path is not a directory
 - Script/doc now encoding mitigation: this ledger
 - Verification: the seven-repo builder repoint on 2026-09-15 did nothing under `-File` and landed in all seven when re-run in-process
+
+### powershell.exe Started Detached And Console-less From Node Exits 0 Without Running
+
+- Date: 2026-09-16
+- Domain/provider: Windows PowerShell 5.1 / Node `child_process.spawn` with `detached: true`, `stdio: "ignore"`, `windowsHide: true`
+- Operation: a server route starting `powershell.exe -File <script>` as a fire-and-forget child
+- Symptom: the child exits 0 at once and the script never runs - no log line, no side effect; nothing reports an error
+- Likely cause: with `detached` and no stdio Node creates the process with no console at all; Windows PowerShell requires one to initialise and gives up silently
+- Mitigation: start it through `wscript.exe //B //Nologo engine/run-hidden.vbs powershell.exe ...` (WScript.Shell.Run gives it a hidden console) or spawn without `detached` (Node then attaches a hidden console). Same script, non-detached, ran and logged; the wscript form ran and logged; the detached form ran nothing - three launches each, 2026-09-16
+- Script/doc now encoding mitigation: this ledger, `engine/serve-tracker.cjs` (the `/display/move` route)
+- Verification: the `/display/move` route did nothing on its first live click and re-homed the window once switched to the wscript launcher
