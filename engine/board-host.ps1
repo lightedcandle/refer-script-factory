@@ -34,7 +34,13 @@ param(
   [int]$Monitor = 2,
   [switch]$NoBrowser,
   # Which repo's board the window opens on. Empty means the server's default.
-  [string]$Repo = ""
+  [string]$Repo = "",
+  # Passed through to kiosk.ps1: -Replace closes the board's existing window
+  # first (re-home instead of a second window); -Keep stays resident and puts
+  # the window back on its monitor when Windows moves it (a screen turned off
+  # and on again). -Keep implies -Replace.
+  [switch]$Replace,
+  [switch]$Keep
 )
 
 $ErrorActionPreference = 'Stop'
@@ -76,6 +82,9 @@ if ($NoBrowser) { Write-Log 'NoBrowser set - not opening a window'; exit 0 }
 # close. Since 2026-09-16 this script only knows what is board-specific - the
 # server and the URL - and hands the screen to the sibling that knows screens.
 $url = if ($Repo) { "http://127.0.0.1:$Port/?repo=$Repo" } else { "http://127.0.0.1:$Port" }
-Write-Log "handing $url to kiosk.ps1 for monitor $Monitor"
-& (Join-Path $PSScriptRoot 'kiosk.ps1') -Name board -Url $url -Monitor $Monitor
+Write-Log "handing $url to kiosk.ps1 for monitor $Monitor$(if ($Keep) { ' (keep)' } elseif ($Replace) { ' (replace)' })"
+$extra = @{}
+if ($Replace) { $extra.Replace = $true }
+if ($Keep) { $extra.Keep = $true }
+& (Join-Path $PSScriptRoot 'kiosk.ps1') -Name board -Url $url -Monitor $Monitor @extra
 exit $LASTEXITCODE

@@ -4922,6 +4922,7 @@ ${["gear", "calendar", "clock", "triage", "stale", "blocked", "eye", "hourglass"
   <div style="display:flex; align-items:center; gap:10px; font-family:${mono}; font-size:12.5px; color:oklch(0.50 0.01 80); margin-top:-8px">
     <span>ask what its output triggers, never who supervises it</span>
     <span style="margin-left:auto; color:oklch(0.58 0.01 80)">tap anything to see how it is wired</span>
+    <span id="screen-control" style="display:flex; align-items:center; gap:6px; margin-left:14px"></span>
   </div>
 
   <!-- EVERY PANEL, RENDERED AT BUILD TIME ------------------------------------
@@ -5084,6 +5085,46 @@ ${Object.entries(EXPLAIN)
   // this lives on an always-on monitor, where "it was on screen" and "somebody
   // read it" are completely unrelated facts.
   //
+  // THE SCREEN CONTROL. Operator, 2026-09-16: a monitor turned off and on again
+  // sends this window to screen 1. A page cannot move its own window, so it
+  // asks the server, which re-homes the board through the kiosk script. One
+  // button per monitor, the one this window is on marked (window.screenX/Y
+  // against the monitor rectangles the server reports), and the whole control
+  // disappears when there is no server to ask - a published artifact has no
+  // screens. Fire and forget: the window this runs in is the one being closed.
+  (function screenControl() {
+    var host = document.getElementById('screen-control');
+    if (!host) return;
+    function draw(monitors) {
+      if (!monitors || !monitors.length) { host.textContent = ''; return; }
+      var x = window.screenX, y = window.screenY;
+      var html = '<span style="color:oklch(0.50 0.01 80)">screen</span>';
+      for (var i = 0; i < monitors.length; i++) {
+        var m = monitors[i];
+        var on = x >= m.x && x < m.x + m.width && y >= m.y && y < m.y + m.height;
+        html += ' <button type="button" data-monitor="' + m.index + '" title="' + m.width + 'x' + m.height + (m.primary ? ', primary' : '') + '"' +
+          ' style="font:inherit; padding:1px 7px; border-radius:3px; background:transparent; cursor:pointer; border:1px solid ' +
+          (on ? 'oklch(0.75 0.12 190)' : 'oklch(0.35 0.01 80)') + '; color:' + (on ? 'oklch(0.85 0.10 190)' : 'oklch(0.58 0.01 80)') + '">' + m.index + '</button>';
+      }
+      host.innerHTML = html;
+    }
+    host.addEventListener('click', function (ev) {
+      var b = ev.target.closest ? ev.target.closest('button[data-monitor]') : null;
+      if (!b) return;
+      var n = Number(b.getAttribute('data-monitor'));
+      host.textContent = 'moving to screen ' + n + '...';
+      try {
+        fetch(api('/display/move'), { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ monitor: n }) }).catch(function () {});
+      } catch (e) { /* the window may be gone before the answer arrives; that is the point */ }
+    });
+    try {
+      fetch(api('/display/monitors'), { cache: 'no-store' })
+        .then(function (r) { return r.json(); })
+        .then(function (j) { draw(j.monitors); })
+        .catch(function () { host.textContent = ''; });
+    } catch (e) { host.textContent = ''; }
+  })();
+
   // Fire and forget. If the server is down the board must still work - the
   // memory degrades, the display does not.
   function markRead(ids) {
