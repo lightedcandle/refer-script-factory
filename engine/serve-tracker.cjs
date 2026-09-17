@@ -23,6 +23,7 @@
 const http = require("http");
 const fs = require("fs");
 const path = require("path");
+const { spawn, spawnSync } = require("child_process");
 
 // THIS IS THE SERVER'S HOME, NOT A SUBJECT. Nothing served comes from here:
 // every route resolves its files through repoOf(), from the ecosystem map, so
@@ -230,6 +231,71 @@ const server = http
       });
       res.writeHead(200, { "content-type": "application/json", "cache-control": "no-store", "x-living-factory": "board", "x-board-version": OWN_VERSION });
       res.end(JSON.stringify({ default: DEFAULT_REPO, repos: list }));
+      return;
+    }
+    // ---- DISPLAY: the one place this server touches the host --------------------
+    //
+    // Operator, 2026-09-16: "when monitor is turned off and then back on the
+    // window moves to #1, can we have a button on the window that closes the
+    // current one and open it in the #2 monitor." A page cannot move its own
+    // window; this server can, and it does exactly that and nothing else: it
+    // lists the monitors (through kiosk.ps1 -List, so the page and the script
+    // number screens identically) and re-homes THE BOARD'S OWN window through
+    // board-host.ps1 -Keep, which closes the current window, reopens it on the
+    // asked-for screen, and stays to keep it there. Loopback only: a page shown
+    // on another machine may look, never move. No belt record is written - a
+    // window is not a judgement, and the belt is for judgements.
+    if (P === "/display/monitors" && req.method === "GET") {
+      const r = spawnSync("powershell.exe", ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", path.join(__dirname, "kiosk.ps1"), "-List"], { encoding: "utf8", timeout: 15000, windowsHide: true });
+      let monitors = [];
+      try {
+        monitors = JSON.parse((r.stdout || "").trim() || "[]");
+        if (!Array.isArray(monitors)) monitors = [monitors];
+      } catch {
+        monitors = [];
+      }
+      res.writeHead(200, { "content-type": "application/json", "cache-control": "no-store", "x-living-factory": "board", "x-board-version": OWN_VERSION });
+      res.end(JSON.stringify({ monitors }));
+      return;
+    }
+    if (P === "/display/move" && req.method === "POST") {
+      const from = String(req.socket.remoteAddress || "");
+      if (!(from === "127.0.0.1" || from === "::1" || from === "::ffff:127.0.0.1")) {
+        res.writeHead(403, { "content-type": "application/json", "cache-control": "no-store" });
+        res.end(JSON.stringify({ error: "only the machine that shows the board may move its window" }));
+        return;
+      }
+      let body = "";
+      req.on("data", (c) => {
+        body += c;
+        if (body.length > 1024) req.destroy();
+      });
+      req.on("end", () => {
+        let n = 0;
+        try {
+          n = Number(JSON.parse(body || "{}").monitor);
+        } catch {
+          n = 0;
+        }
+        if (!Number.isInteger(n) || n < 1 || n > 16) {
+          res.writeHead(400, { "content-type": "application/json", "cache-control": "no-store" });
+          res.end(JSON.stringify({ error: "monitor must be an integer 1..16" }));
+          return;
+        }
+        // Detached and unref'd: the window this request came from is about to
+        // be closed by the very process this starts, so nothing here waits on
+        // it. The reply may never be read; that is the expected outcome.
+        try {
+          const child = spawn("powershell.exe", ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", path.join(__dirname, "board-host.ps1"), "-Monitor", String(n), "-Keep"], { cwd: ROOT, detached: true, stdio: "ignore", windowsHide: true });
+          child.unref();
+        } catch (err) {
+          res.writeHead(500, { "content-type": "application/json", "cache-control": "no-store" });
+          res.end(JSON.stringify({ error: `could not start the board host: ${err.message}` }));
+          return;
+        }
+        res.writeHead(200, { "content-type": "application/json", "cache-control": "no-store", "x-living-factory": "board", "x-board-version": OWN_VERSION });
+        res.end(JSON.stringify({ moving: n }));
+      });
       return;
     }
     // ---- ALL REPOS: one page, one tile per repo ---------------------------------

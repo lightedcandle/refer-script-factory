@@ -34,7 +34,7 @@ New-Item -ItemType Directory -Force -Path $startupDir | Out-Null
 
 $content = @"
 @echo off
-powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "$scriptPath" -Port $Port -Monitor $Monitor
+powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "$scriptPath" -Port $Port -Monitor $Monitor -Keep
 "@
 
 if ($Force -or -not (Test-Path -LiteralPath $launcher) -or ((Get-Content -LiteralPath $launcher -Raw) -ne $content)) {
