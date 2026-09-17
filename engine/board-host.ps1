@@ -71,50 +71,11 @@ if ($inUse) {
 
 if ($NoBrowser) { Write-Log 'NoBrowser set - not opening a window'; exit 0 }
 
-# --app gives a chromeless window; --start-fullscreen fills the monitor. Both
-# Chrome and Edge accept these, so whichever is present is used. A dedicated
-# user-data-dir keeps this window out of the ordinary browsing profile, so it
-# cannot inherit a session, a pinned tab, or a restore prompt.
-$profileDir = Join-Path $stateDir 'board-browser-profile'
+# The window itself is the general kiosk (engine/kiosk.ps1): one URL on one
+# screen, its own browser profile, --app so the board keeps a title bar you can
+# close. Since 2026-09-16 this script only knows what is board-specific - the
+# server and the URL - and hands the screen to the sibling that knows screens.
 $url = if ($Repo) { "http://127.0.0.1:$Port/?repo=$Repo" } else { "http://127.0.0.1:$Port" }
-
-$browser = $null
-foreach ($candidate in @(
-    "$env:ProgramFiles\Google\Chrome\Application\chrome.exe",
-    "${env:ProgramFiles(x86)}\Google\Chrome\Application\chrome.exe",
-    "$env:ProgramFiles (x86)\Microsoft\Edge\Application\msedge.exe",
-    "${env:ProgramFiles(x86)}\Microsoft\Edge\Application\msedge.exe"
-  )) {
-  if (Test-Path -LiteralPath $candidate) { $browser = $candidate; break }
-}
-
-if (-not $browser) {
-  Write-Log 'no Chrome or Edge found - serving only'
-  Write-Host "Board is serving at $url - open it yourself and press F11."
-  exit 0
-}
-
-# Window position picks the monitor. Screens are enumerated left to right; -Monitor
-# is 1-based, and an out-of-range value falls back to the primary rather than
-# opening a window nobody can see.
-Add-Type -AssemblyName System.Windows.Forms
-$screens = [System.Windows.Forms.Screen]::AllScreens
-$target = if ($Monitor -ge 1 -and $Monitor -le $screens.Count) { $screens[$Monitor - 1] } else { [System.Windows.Forms.Screen]::PrimaryScreen }
-$x = $target.Bounds.X
-$y = $target.Bounds.Y
-
-Write-Log "opening on monitor $Monitor at $x,$y using $(Split-Path -Leaf $browser)"
-
-Start-Process -FilePath $browser -ArgumentList @(
-  "--app=$url",
-  "--user-data-dir=`"$profileDir`"",
-  "--window-position=$x,$y",
-  '--start-fullscreen',
-  '--noerrdialogs',
-  '--disable-session-crashed-bubble',
-  '--disable-infobars',
-  '--no-first-run'
-)
-
-Write-Log 'board window opened'
-exit 0
+Write-Log "handing $url to kiosk.ps1 for monitor $Monitor"
+& (Join-Path $PSScriptRoot 'kiosk.ps1') -Name board -Url $url -Monitor $Monitor
+exit $LASTEXITCODE
