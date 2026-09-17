@@ -194,15 +194,30 @@ if ($Replace) { Close-Existing }
 $proc = Open-Window
 if (-not $Keep) { exit 0 }
 
-Write-Log "keeping the window on monitor $Monitor (PID $($proc.Id))"
+# ONE KEEPER PER -NAME, THE NEWEST. The first keeper hand-over (2026-09-16
+# 21:50) had two: the old one saw its window vanish under -Replace, read the
+# dying window's rectangle (-32000,-32000, the place Windows parks a minimised
+# or closing window), decided the move had failed, and reopened a window of its
+# own while the new keeper opened another. So: the newest keeper writes its PID
+# to a file, every keeper checks the file each loop and steps aside the moment
+# it is not the owner; a parked rectangle is left alone (a minimise is a
+# decision too); and a keeper that reopens closes only ITS OWN window, never
+# whatever else holds the profile.
+$pidFile = Join-Path $stateDir ("kiosk-keeper-" + $Name + ".pid")
+Set-Content -LiteralPath $pidFile -Value $PID -Encoding ASCII
+Write-Log "keeping the window on monitor $Monitor (window PID $($proc.Id), keeper PID $PID)"
 while ($true) {
   Start-Sleep -Seconds 10
+  $owner = try { (Get-Content -LiteralPath $pidFile -Raw -ErrorAction Stop).Trim() } catch { '' }
+  if ($owner -ne "$PID") { Write-Log "keeper PID $owner owns this window now - this keeper (PID $PID) steps aside"; exit 0 }
   if ($proc.HasExited) { Write-Log 'window closed - a close is a decision, the keeper stops'; exit 0 }
   $t = Get-Target
   if (-not $t) { continue }   # the screen is off or unplugged: leave the window where Windows put it
   $live = Get-Process -Id $proc.Id -ErrorAction SilentlyContinue
   if (-not $live -or $live.MainWindowHandle -eq 0) { continue }
   $rect = Get-Rect $live.MainWindowHandle
+  if (-not $rect) { continue }
+  if ($rect.x -le -32000 -or $rect.y -le -32000) { continue }   # minimised or closing: not ours to undo
   if (Fills $rect $t) { continue }
   Write-Log "window at $($rect.x),$($rect.y) $($rect.width)x$($rect.height) is not filling monitor $Monitor - moving it back"
   [KioskWin]::SetWindowPos($live.MainWindowHandle, [IntPtr]::Zero, $t.x, $t.y, $t.width, $t.height, 0x0040) | Out-Null
@@ -210,6 +225,7 @@ while ($true) {
   $rect = Get-Rect $live.MainWindowHandle
   if (Fills $rect $t) { Write-Log 'moved back'; continue }
   Write-Log 'the move did not take (fullscreen lost) - reopening on its screen'
-  Close-Existing
+  Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue
+  Start-Sleep -Milliseconds 1500
   $proc = Open-Window
 }
