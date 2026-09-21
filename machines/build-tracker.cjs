@@ -823,6 +823,34 @@ const KIND_WORD = {
   decision: "reserved to you by law",
 };
 
+// The plan horizon, as one colour each. Deliberately NOT the kind palette:
+// these sit in their own pane and mean something different, and reusing the
+// contract green for "being built" would invite the exact reading this whole
+// design refuses - that a plan is work somebody owes.
+// Everything a one-line plan row cannot hold, on hover. Built with an explicit
+// newline character rather than an escape written into the template, because
+// an escape sequence typed into a source file by an editor that resolves it
+// becomes a real line break inside a string literal and the file stops
+// parsing - which is exactly what happened here once, and in this repo a file
+// that does not parse silently stops the hourly board build.
+const NL = String.fromCharCode(10);
+function planTip(r) {
+  // The TITLE leads, because four columns in a 700px strip clip most of them
+  // mid-phrase. A list you can count but not read is half a list, and the
+  // tooltip is where the other half lives until plans get a wider home.
+  const head = [r.id, r.owner, r.status].filter(Boolean).join(" · ");
+  const top = r.title ? r.title + NL + head : head;
+  return r.note ? top + NL + NL + r.note : top;
+}
+
+const PLAN_BUCKET_COLOR = {
+  now: "oklch(0.72 0.13 150)",
+  next: "oklch(0.74 0.12 195)",
+  later: "oklch(0.62 0.10 300)",
+  held: "oklch(0.66 0.10 60)",
+  unplaced: "oklch(0.72 0.12 25)",
+};
+
 // Incoming: everything still in flight, newest first. Resolved: everything the
 // factory finished, newest first. Nothing belongs to both and nothing is lost.
 // Built further down, once carrierStates and watchedDims exist - statusOf needs
@@ -4886,52 +4914,49 @@ ${["gear", "calendar", "clock", "triage", "stale", "blocked", "eye", "hourglass"
             !D.plans.present
               ? `<p style="margin:0; font-size:14px; line-height:1.5; color:oklch(0.62 0.01 80)">This repo has no plan register at <span style="font-family:${mono}">public/assets/plan/refer.plan.json</span>. Nothing is drawn here rather than a roadmap being invented for it.</p>`
               : `
-          <div style="display:flex; align-items:baseline; gap:8px; margin-bottom:8px">
-            <span style="font-family:${mono}; font-size:12px; letter-spacing:0.16em; color:oklch(0.62 0.01 80)">THE REGISTER</span>
-            <span style="font-family:${mono}; font-size:12px; color:oklch(0.50 0.01 80)">${D.plans.live} live of ${D.plans.total} registered</span>
-          </div>
-
-          <!-- The filter strip is its own, deliberately. The one above the
-               incoming column filters BELT rows by kind and status; a plan has
-               neither, so the pattern is copied and the code is not. Sharing it
-               would have meant giving plans a kind. -->
-          <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px">
+          <!-- EVERY LINE OF CHROME HERE IS PAID FOR IN ROWS. The panelbody is
+               163px; a heading of its own cost 22 of them, which is one whole
+               row of plans in every column. So the count sits in the filter
+               strip and the explanation is one line, not a paragraph - the
+               thing he asked to see is the list. -->
+          <div style="display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin-bottom:4px">
+            <span title="Registered intent, never on the belt and never counted as open work. A contract sitting three days is an alarm; a plan sitting three months is a plan - which is why no row here carries a timer and nothing here can be dispatched. Hover any row for its id, owner and finding." style="font-family:${mono}; font-size:11px; letter-spacing:0.16em; color:oklch(0.50 0.01 80); cursor:help">${D.plans.live} LIVE OF ${D.plans.total}</span>
             <span class="planpick on" data-pick="all" style="cursor:pointer; font-family:${mono}; font-size:11px; color:oklch(0.56 0.01 80); padding:2px 7px; border:1px solid oklch(0.52 0.012 70); background:oklch(0.22 0.012 70); border-radius:10px; letter-spacing:0.08em">ALL ${D.plans.live}</span>
             ${D.plans.buckets
               .map(
                 (b) =>
-                  `<span class="planpick" data-pick="${esc(b.key)}" title="${esc(b.why)}" style="cursor:pointer; font-family:${mono}; font-size:11px; color:oklch(0.56 0.01 80); padding:2px 7px; border:1px solid transparent; border-radius:10px; letter-spacing:0.08em">${b.n} ${esc(b.label.toUpperCase())}</span>`,
+                  `<span class="planpick" data-pick="${esc(b.key)}" title="${esc(b.why)}" style="cursor:pointer; display:inline-flex; align-items:center; gap:5px; font-family:${mono}; font-size:11px; color:oklch(0.56 0.01 80); padding:2px 7px; border:1px solid transparent; border-radius:10px; letter-spacing:0.08em"><span style="width:6px; height:6px; border-radius:50%; background:${PLAN_BUCKET_COLOR[b.key] || "oklch(0.50 0.01 80)"}"></span>${b.n} ${esc(b.label.toUpperCase())}</span>`,
               )
               .join("")}
           </div>
 
+          <!-- THE WHOLE LIST, VISIBLE AT ONCE. Operator, 2026-09-21: "I still
+               need to see the list, not just count."
+               Every panelbody on this board is about 160 stage-pixels tall, so
+               a one-plan-per-line list showed five of twenty-seven and hid the
+               rest behind a scroll - which is a count wearing a list's
+               clothes. Three columns of one-line rows put all of them on
+               screen together. What a row cannot hold - the id, the owner, the
+               status and the finding - is on hover, because the thing he asked
+               to see is WHICH PLANS EXIST, and that is the title. -->
+          <!-- The sentence that was here is now on the count chip's tooltip.
+               It cost 16px, which is one row in every one of four columns -
+               four plans traded for a caption, on the pane whose entire job is
+               to show the plans. The honesty is kept; the height is not. -->
+          <div style="display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:0 14px; align-content:start">
           ${D.plans.rows
             .map(
               (r) => `
-          <div class="planrow" data-plan-bucket="${esc(r.bucket)}" style="display:flex; gap:10px; padding:7px 0; border-bottom:1px solid oklch(0.22 0.012 70)">
-            <span style="flex:0 0 auto; font-family:${mono}; font-size:11px; letter-spacing:0.08em; color:oklch(0.72 0.11 300); border:1px solid oklch(0.42 0.08 300); border-radius:3px; padding:1px 4px; height:fit-content">PL</span>
-            <span style="flex:1 1 auto; min-width:0">
-              <span style="display:block; font-size:14px; color:oklch(0.90 0.008 85)">${esc(r.title)}</span>
-              <span style="display:block; font-family:${mono}; font-size:11px; color:oklch(0.54 0.01 80); margin-top:2px">${esc(r.id)}${r.owner ? ` &middot; ${esc(r.owner)}` : ""} &middot; ${esc(r.status)}</span>
-              <!-- ONE LINE, clipped, with the whole note on hover. The first
-                   build of this pane let the note run to five lines and the
-                   column showed two plans at a time out of twenty-seven -
-                   which is a list nobody scrolls. The sentence is worth
-                   keeping and it is not worth the height, so it is clipped
-                   here and complete in the tooltip. -->
-              ${r.note ? `<span title="${esc(r.note)}" style="display:block; font-size:12px; line-height:1.4; color:oklch(0.64 0.01 80); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">${esc(r.note)}</span>` : ""}
-            </span>
-          </div>`,
+            <div class="planrow" data-plan-bucket="${esc(r.bucket)}" title="${esc(planTip(r))}" style="display:flex; align-items:baseline; gap:5px; padding:1px 0; border-bottom:1px solid oklch(0.20 0.012 70); min-width:0">
+              <span style="flex:0 0 auto; font-family:${mono}; font-size:9px; letter-spacing:0.06em; color:oklch(0.72 0.11 300); border:1px solid oklch(0.38 0.08 300); border-radius:2px; padding:0 3px">PL</span>
+              <span style="flex:0 0 auto; width:6px; height:6px; border-radius:50%; background:${PLAN_BUCKET_COLOR[r.bucket] || "oklch(0.50 0.01 80)"}" ></span>
+              <span style="flex:1 1 auto; min-width:0; font-size:11px; line-height:1.35; color:oklch(0.88 0.008 85); white-space:nowrap; overflow:hidden; text-overflow:ellipsis">${esc(r.title)}</span>
+            </div>`,
             )
             .join("")}
+          </div>
 
-          <p style="margin:12px 0 0; font-size:13px; line-height:1.5; color:oklch(0.62 0.01 80); border-left:2px solid oklch(0.42 0.08 300); padding-left:10px">
-            <!-- Why a plan carries no age and no alarm, said on the board
-                 rather than only in the source, because the absence of a timer
-                 here is a deliberate decision someone will otherwise read as an
-                 oversight. -->
-            A plan is registered intent, not work somebody owes &mdash; so none of these ride the belt, none can be dispatched, and none count toward open work. They carry a horizon rather than an age: a contract sitting three days is an alarm, a plan sitting three months is a plan. A plan becomes work by an act, the same way a deposit does.
-          </p>`
+`
           }
         </div>
 
