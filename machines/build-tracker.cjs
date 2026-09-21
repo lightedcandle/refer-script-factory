@@ -2348,6 +2348,94 @@ const horizon = (() => {
   return { counts, silent, unreadable, total, tracks, blueprintAge };
 })();
 
+// THE PLAN REGISTER, which is a different thing from the plan FOLDER above.
+//
+// Operator, 2026-09-21: "put them on the board ... we might need icons on the
+// board or filters on the board that deals with plans. Because I don't think
+// the board has a plan thing. It just has intake."
+//
+// He was right, and the reason is worth keeping. HORIZON reads the markdown
+// folder and infers a stage by matching prose - which was the only thing
+// available when it was written, and which counts DOCUMENTS. The canonical
+// register is `public/assets/plan/refer.plan.json`: plans carrying a real
+// status field, an owner, a branch and acceptance criteria. Two sources
+// describing the same subject is how a board starts arguing with itself, so
+// they are deliberately given different jobs: the register answers WHAT IS
+// BEING BUILT, the folder answers WHICH DOCUMENTS EXIST, and the HORIZON pane
+// now says so in those words.
+//
+// A PLAN IS NOT A CONTRACT AND MUST NEVER BE COUNTED AS ONE. `kind.cjs` is
+// explicit that a contract is work somebody owes and the only kind that may
+// ride the belt, be dispatched, or count toward open work - and that guessing
+// something into the work queue is the failure that model exists to prevent.
+// Registered intent is not owed by anyone. So plans get their own key, their
+// own pane and their own two-letter mark; they touch neither the belt nor the
+// kind vocabulary, and `openCount` does not move because this key exists.
+//
+// A plan therefore has a HORIZON rather than an age. A contract sitting three
+// days is an alarm; a plan sitting three months is a plan. The horizon is
+// derived from the status the register already carries, never from an invented
+// due date - a date nobody committed to would harden into a promise nobody
+// made, which is the same class of claim as a green check that checks nothing.
+const plans = (() => {
+  const file = path.join(ROOT, "public/assets/plan/refer.plan.json");
+  const DEAD = /^(completed|archived|retired|superseded)/i;
+  // Status words the register actually uses, read off it rather than assumed.
+  const NOW = /^(in progress|executing|building|gbir flow|execution flow)/i;
+  const NEXT = /^(ratified|ready|registered)/i;
+  const LATER = /^(planned|planning|scoping)/i;
+  const HELD = /^(postponed|parked|provider-blocked|blocked)/i;
+  let doc = null;
+  try {
+    doc = JSON.parse(fs.readFileSync(file, "utf8"));
+  } catch {
+    // A repo with no register is a legitimate state, and an empty pane that
+    // says so is better than one that invents a roadmap.
+    return { present: false, total: 0, live: 0, buckets: [], rows: [] };
+  }
+  const all = Array.isArray(doc && doc.plans) ? doc.plans : [];
+  const live = all.filter((p) => !DEAD.test(String((p && p.status) || "")));
+  const bucketOf = (status) => {
+    const s = String(status || "");
+    if (NOW.test(s)) return "now";
+    if (NEXT.test(s)) return "next";
+    if (HELD.test(s)) return "held";
+    if (LATER.test(s)) return "later";
+    // DECLARED BUT UNPLACED is not the same as held, and filing it as held
+    // would hide a status word this reader has never met. Named, not guessed -
+    // the same rule the pane above already applies to "declared in words the
+    // board cannot read".
+    return "unplaced";
+  };
+  const rows = live
+    .map((p) => ({
+      id: String((p && p.id) || ""),
+      title: String((p && p.title) || ""),
+      status: String((p && p.status) || ""),
+      owner: String((p && p.primary_owner) || ""),
+      bucket: bucketOf(p && p.status),
+      // The note is where the cleanup pass recorded what it found - which
+      // phase a plan actually reached, or why it is held. It is the single
+      // most useful sentence on the row, so it travels with the row rather
+      // than being summarised away.
+      note: String((p && p.notes) || ""),
+    }))
+    .sort((a, b) => {
+      const order = { now: 0, next: 1, later: 2, held: 3, unplaced: 4 };
+      return order[a.bucket] - order[b.bucket] || a.id.localeCompare(b.id);
+    });
+  const buckets = [
+    { key: "now", label: "being built", why: "someone is working it now" },
+    { key: "next", label: "ready to start", why: "registered or ratified, nobody assigned" },
+    { key: "later", label: "written, not begun", why: "planned, or still being scoped" },
+    { key: "held", label: "held", why: "postponed, parked or waiting on a provider" },
+    { key: "unplaced", label: "status the board cannot place", why: "a word this reader has never met" },
+  ]
+    .map((b) => Object.assign({}, b, { n: rows.filter((r) => r.bucket === b.key).length }))
+    .filter((b) => b.n > 0);
+  return { present: true, total: all.length, live: live.length, buckets, rows };
+})();
+
 // Now that carriers and watched dimensions are known, each row can say what is
 // actually happening to it.
 // A closer is not shown on its own. The record it closed now carries that
@@ -2480,6 +2568,7 @@ const D = {
   onBelt,
   learned,
   horizon,
+  plans,
   newCount,
   // NO PLAUSIBLE DEFAULT. This read `extras.detectors || "3/14"`, so a missing
   // or unreadable extras file printed a real-looking measurement that nothing
@@ -4637,6 +4726,13 @@ ${["gear", "calendar", "clock", "triage", "stale", "blocked", "eye", "hourglass"
                the one failure mode a reading area has. -->
           <button class="paneltab" data-panel="notes">NOTES${D.unreadNotes ? ` <span class="tabdot" style="background:oklch(0.66 0.14 150); color:oklch(0.16 0.01 70)">${D.unreadNotes} UNREAD</span>` : D.notes.length ? ` <span class="tabdot" style="background:oklch(0.34 0.012 70)">${D.notes.length}</span>` : ""}</button>
           <button class="paneltab" data-panel="learned">LEARNED${D.newCount ? ` <span class="tabdot">${D.newCount} NEW</span>` : ""}</button>
+          <!-- PLANS. Operator, 2026-09-21: "I don't think the board has a plan
+               thing. It just has intake. Maybe we can use PL for" - the mark is
+               PL, and it is a two-letter code rather than a fifth kind glyph on
+               purpose. A kind is a property of a BELT record; a plan never
+               rides the belt, so giving it a kind word would have forced it
+               into the one vocabulary that decides what counts as owed work. -->
+          <button class="paneltab" data-panel="plans">PLANS${D.plans.live ? ` <span class="tabdot" style="background:oklch(0.52 0.12 300)">${D.plans.live}</span>` : ""}</button>
           <button class="paneltab" data-panel="horizon">HORIZON</button>
           <button class="paneltab" data-panel="year">${year}</button>
           <button id="markread" class="paneltab" style="margin-left:auto" title="Mark everything on this board as read, so next time only what is new stands out">MARK ALL READ</button>
@@ -4784,6 +4880,61 @@ ${["gear", "calendar", "clock", "triage", "stale", "blocked", "eye", "hourglass"
           }
         </div>
 
+        <!-- PLANS ---------------------------------------------------------- -->
+        <div class="panelbody scrollcol" data-panel="plans" hidden>
+          ${
+            !D.plans.present
+              ? `<p style="margin:0; font-size:14px; line-height:1.5; color:oklch(0.62 0.01 80)">This repo has no plan register at <span style="font-family:${mono}">public/assets/plan/refer.plan.json</span>. Nothing is drawn here rather than a roadmap being invented for it.</p>`
+              : `
+          <div style="display:flex; align-items:baseline; gap:8px; margin-bottom:8px">
+            <span style="font-family:${mono}; font-size:12px; letter-spacing:0.16em; color:oklch(0.62 0.01 80)">THE REGISTER</span>
+            <span style="font-family:${mono}; font-size:12px; color:oklch(0.50 0.01 80)">${D.plans.live} live of ${D.plans.total} registered</span>
+          </div>
+
+          <!-- The filter strip is its own, deliberately. The one above the
+               incoming column filters BELT rows by kind and status; a plan has
+               neither, so the pattern is copied and the code is not. Sharing it
+               would have meant giving plans a kind. -->
+          <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px">
+            <span class="planpick on" data-pick="all" style="cursor:pointer; font-family:${mono}; font-size:11px; color:oklch(0.56 0.01 80); padding:2px 7px; border:1px solid oklch(0.52 0.012 70); background:oklch(0.22 0.012 70); border-radius:10px; letter-spacing:0.08em">ALL ${D.plans.live}</span>
+            ${D.plans.buckets
+              .map(
+                (b) =>
+                  `<span class="planpick" data-pick="${esc(b.key)}" title="${esc(b.why)}" style="cursor:pointer; font-family:${mono}; font-size:11px; color:oklch(0.56 0.01 80); padding:2px 7px; border:1px solid transparent; border-radius:10px; letter-spacing:0.08em">${b.n} ${esc(b.label.toUpperCase())}</span>`,
+              )
+              .join("")}
+          </div>
+
+          ${D.plans.rows
+            .map(
+              (r) => `
+          <div class="planrow" data-plan-bucket="${esc(r.bucket)}" style="display:flex; gap:10px; padding:7px 0; border-bottom:1px solid oklch(0.22 0.012 70)">
+            <span style="flex:0 0 auto; font-family:${mono}; font-size:11px; letter-spacing:0.08em; color:oklch(0.72 0.11 300); border:1px solid oklch(0.42 0.08 300); border-radius:3px; padding:1px 4px; height:fit-content">PL</span>
+            <span style="flex:1 1 auto; min-width:0">
+              <span style="display:block; font-size:14px; color:oklch(0.90 0.008 85)">${esc(r.title)}</span>
+              <span style="display:block; font-family:${mono}; font-size:11px; color:oklch(0.54 0.01 80); margin-top:2px">${esc(r.id)}${r.owner ? ` &middot; ${esc(r.owner)}` : ""} &middot; ${esc(r.status)}</span>
+              <!-- ONE LINE, clipped, with the whole note on hover. The first
+                   build of this pane let the note run to five lines and the
+                   column showed two plans at a time out of twenty-seven -
+                   which is a list nobody scrolls. The sentence is worth
+                   keeping and it is not worth the height, so it is clipped
+                   here and complete in the tooltip. -->
+              ${r.note ? `<span title="${esc(r.note)}" style="display:block; font-size:12px; line-height:1.4; color:oklch(0.64 0.01 80); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">${esc(r.note)}</span>` : ""}
+            </span>
+          </div>`,
+            )
+            .join("")}
+
+          <p style="margin:12px 0 0; font-size:13px; line-height:1.5; color:oklch(0.62 0.01 80); border-left:2px solid oklch(0.42 0.08 300); padding-left:10px">
+            <!-- Why a plan carries no age and no alarm, said on the board
+                 rather than only in the source, because the absence of a timer
+                 here is a deliberate decision someone will otherwise read as an
+                 oversight. -->
+            A plan is registered intent, not work somebody owes &mdash; so none of these ride the belt, none can be dispatched, and none count toward open work. They carry a horizon rather than an age: a contract sitting three days is an alarm, a plan sitting three months is a plan. A plan becomes work by an act, the same way a deposit does.
+          </p>`
+          }
+        </div>
+
         <!-- HORIZON ------------------------------------------------------- -->
         <div class="panelbody scrollcol" data-panel="horizon" hidden>
 
@@ -4806,8 +4957,16 @@ ${["gear", "calendar", "clock", "triage", "stale", "blocked", "eye", "hourglass"
           </div>
 
           <div style="display:flex; align-items:baseline; gap:8px; margin-bottom:6px">
-            <span style="font-family:${mono}; font-size:12px; letter-spacing:0.16em; color:oklch(0.62 0.01 80)">THE PLANS</span>
-            <span style="font-family:${mono}; font-size:12px; color:oklch(0.50 0.01 80)">${D.horizon.total} written</span>
+            <!-- RENAMED 2026-09-21, and the rename is the point. This block
+                 counts DOCUMENTS in refer.app/plan/ by matching their prose,
+                 which is all that existed when it was written. The canonical
+                 register is public/assets/plan/refer.plan.json and it is now
+                 drawn in its own PLANS pane. Two panes describing "the plans"
+                 with different numbers is how a board starts arguing with
+                 itself, so each one now says which question it answers. -->
+            <span style="font-family:${mono}; font-size:12px; letter-spacing:0.16em; color:oklch(0.62 0.01 80)">THE PLAN DOCUMENTS</span>
+            <span style="font-family:${mono}; font-size:12px; color:oklch(0.50 0.01 80)">${D.horizon.total} in the folder</span>
+            ${D.plans.present ? `<span style="font-family:${mono}; font-size:12px; color:oklch(0.72 0.11 300)">&middot; the register itself is in PLANS &mdash; ${D.plans.live} live</span>` : ""}
           </div>
           <div style="display:flex; flex-wrap:wrap; gap:8px 18px; margin-bottom:12px">
             <!-- Every document in the folder appears in exactly one of these,
@@ -5349,6 +5508,39 @@ ${Object.entries(EXPLAIN)
       });
     });
     apply('all', 'all');
+  })();
+
+  // PLAN FILTER. One axis, not two: a plan has a horizon and nothing else to
+  // cross it with. The lesson from the strip above is carried across rather
+  // than relearned - every plan row has an inline display, so the toggle sets
+  // style.display and never the hidden attribute, and clicking an active chip
+  // clears the filter instead of leaving him looking at a subset he cannot see
+  // the edge of.
+  (function () {
+    var picks = document.querySelectorAll('.planpick');
+    var rows = document.querySelectorAll('.planrow');
+    if (!picks.length || !rows.length) return;
+    var active = 'all';
+    function apply(next) {
+      active = next;
+      rows.forEach(function (r) {
+        var show = active === 'all' || r.getAttribute('data-plan-bucket') === active;
+        r.style.display = show ? 'flex' : 'none';
+      });
+      picks.forEach(function (p) {
+        var on = p.getAttribute('data-pick') === active;
+        p.classList.toggle('on', on);
+        p.style.borderColor = on ? 'oklch(0.52 0.012 70)' : 'transparent';
+        p.style.background = on ? 'oklch(0.22 0.012 70)' : 'transparent';
+      });
+    }
+    picks.forEach(function (p) {
+      p.addEventListener('click', function () {
+        var k = p.getAttribute('data-pick');
+        apply(active === k && k !== 'all' ? 'all' : k);
+      });
+    });
+    apply('all');
   })();
 
   // Live reload, AND an honest disconnected state.
