@@ -6157,6 +6157,13 @@ ${Object.entries(EXPLAIN)
     var body = document.getElementById('planmodalbody');
     if (!modal || !body) return;
     var openId = null;
+    // UNSENT NOTES SURVIVE A CLOSE. The panel rebuilds its body every time it
+    // opens, so the first version lost whatever was typed the moment Escape was
+    // pressed - and Escape is the fastest way to close anything. A half-written
+    // thought is the most expensive thing on this panel: it is the one part
+    // that exists nowhere else yet. Kept per plan, in memory, cleared only when
+    // the note actually reaches the belt.
+    var drafts = {};
     function esc(s) {
       return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
         return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
@@ -6203,6 +6210,11 @@ ${Object.entries(EXPLAIN)
       if (close) close.addEventListener('click', hide);
       var save = document.getElementById('plansave');
       if (save) save.addEventListener('click', function () { submit(p); });
+      var ta = document.getElementById('plannote');
+      if (ta) {
+        if (drafts[p.id]) ta.value = drafts[p.id];
+        ta.addEventListener('input', function () { drafts[p.id] = ta.value; });
+      }
     }
     function submit(p) {
       var ta = document.getElementById('plannote');
@@ -6225,6 +6237,9 @@ ${Object.entries(EXPLAIN)
             status.textContent = 'On the belt as ' + (out.j.record || 'a deposit') + '. It will show in INCOMING at the next build.';
             status.style.color = 'oklch(0.72 0.13 150)';
           }
+          // Cleared only here, where the record exists on the belt. Anywhere
+          // else and a failed save would quietly take the note with it.
+          delete drafts[p.id];
           if (ta) ta.value = '';
         })
         .catch(function (err) {
