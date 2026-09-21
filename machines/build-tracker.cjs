@@ -6263,7 +6263,7 @@ ${Object.entries(EXPLAIN)
       fetch('/plan-note' + (location.search || ''), {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ planId: p.id, title: p.title, status: p.status, note: note })
+        body: JSON.stringify({ planId: p.id, title: p.title, status: p.status, owner: p.owner, note: note })
       })
         .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
         .then(function (out) {

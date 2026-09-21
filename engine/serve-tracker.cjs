@@ -767,11 +767,26 @@ const server = http
         // The id carries the plan it is about, so the record is traceable back
         // to its subject without a lookup table - the same reason every other
         // record on this belt names its own subject.
+        // NEVER `operator` AS THE TRIGGER, and this was wrong in the first
+        // version. The board sets forYou from `triggers === "operator"`, so
+        // every note he left counted itself among the things WAITING ON HIM -
+        // exactly backwards: he wrote it, and it waits on an agent. One note
+        // moved "for you" from 16 to 17 and would have kept climbing.
+        //
+        // The honest trigger names the dimension that will work it, and it is
+        // DERIVED rather than guessed: the register already records a primary
+        // owner per plan, and the three that map to belt dimensions are taken.
+        // Anything else carries no dimension at all and waits for triage to
+        // assign one, because inventing a dimension to fill a field is how a
+        // record ends up owned by whoever happened to be named first.
+        const ownerDim = { "body-agent": "body", "mind-agent": "mind", "spirit-agent": "spirit" }[
+          typeof p.owner === "string" ? p.owner.trim() : ""
+        ];
         const rec = {
           id: `plannote-${planId}-${Date.now().toString(36)}`,
           at,
           kind: "deposit",
-          triggers: "operator",
+          ...(ownerDim ? { triggers: `contract:${ownerDim}`, dimension: ownerDim } : {}),
           source: "board:plan-inspection",
           plan: planId,
           planStatus: status,
