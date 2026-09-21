@@ -6185,7 +6185,21 @@ ${Object.entries(EXPLAIN)
             '<div style="font-size:18px; line-height:1.3; color:oklch(0.94 0.008 85)">' + esc(p.title) + '</div>' +
             '<div style="font-family:ui-monospace,monospace; font-size:11px; color:oklch(0.56 0.01 80); margin-top:3px">' + esc(p.id) + (p.owner ? ' &middot; ' + esc(p.owner) : '') + ' &middot; ' + esc(p.status) + (p.updated ? ' &middot; updated ' + esc(String(p.updated).slice(0, 10)) : '') + '</div>' +
           '</div>' +
-          '<button id="planclose" style="flex:0 0 auto; cursor:pointer; background:transparent; border:1px solid oklch(0.34 0.012 70); color:oklch(0.78 0.01 80); border-radius:6px; padding:3px 9px; font-size:13px">Close</button>' +
+          // A 23px-tall target is too small, and this project has already paid
+          // for that lesson once: a 13px link was missed over and over until it
+          // was given a padded 28px target. This one is 34px and says the two
+          // other ways out, because a dialog whose only exit is a small button
+          // is one bad click from feeling stuck.
+          //
+          // NO INLINE onmouseover HERE, AND THE REASON MATTERS. This whole
+          // script is emitted from a Node template literal, so a backslash in
+          // it is consumed before it is ever written: an escaped quote inside
+          // an inline handler arrived in the page as a bare quote, which is a
+          // syntax error that killed this entire script - the panel stopped
+          // opening at all. Hover is attached as a listener below, where no
+          // quote has to survive two layers of escaping. Same class of bug as
+          // the newline that stopped the file parsing earlier today.
+          '<button id="planclose" title="Close - or press Escape, or click outside" style="flex:0 0 auto; cursor:pointer; background:oklch(0.22 0.012 70); border:1px solid oklch(0.40 0.012 70); color:oklch(0.86 0.01 80); border-radius:7px; padding:8px 16px; font-size:13px; line-height:1; transition:background 120ms, border-color 120ms">Close</button>' +
         '</div>' +
         (p.note ? '<div style="margin-top:12px; font-size:13px; line-height:1.55; color:oklch(0.80 0.01 85); border-left:2px solid oklch(0.42 0.08 300); padding-left:10px">' + esc(p.note) + '</div>' : '') +
         para('THE PROBLEM', p.problem) +
@@ -6207,7 +6221,17 @@ ${Object.entries(EXPLAIN)
           '</div>' +
         '</div>';
       var close = document.getElementById('planclose');
-      if (close) close.addEventListener('click', hide);
+      if (close) {
+        close.addEventListener('click', hide);
+        close.addEventListener('mouseenter', function () {
+          close.style.background = 'oklch(0.28 0.012 70)';
+          close.style.borderColor = 'oklch(0.56 0.012 70)';
+        });
+        close.addEventListener('mouseleave', function () {
+          close.style.background = 'oklch(0.22 0.012 70)';
+          close.style.borderColor = 'oklch(0.40 0.012 70)';
+        });
+      }
       var save = document.getElementById('plansave');
       if (save) save.addEventListener('click', function () { submit(p); });
       var ta = document.getElementById('plannote');
