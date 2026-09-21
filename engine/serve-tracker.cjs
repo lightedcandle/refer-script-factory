@@ -724,6 +724,71 @@ const server = http
       return;
     }
 
+    // ---- PLAN NOTE: A THOUGHT ABOUT A PLAN, PUT WHERE WORK ENTERS -----------
+    //
+    // Operator, 2026-09-21: "an Add Notes to it and on save ai will read the
+    // notes and act on it."
+    //
+    // It appends a DEPOSIT, and that choice is the whole design. A deposit is
+    // "seen, not yet judged" - it lands in INCOMING and waits for somebody to
+    // accept it, exactly like every other way work enters this factory. So an
+    // agent reading the note and acting on it needs no new machinery: it is the
+    // machinery that already exists, reached from a new place.
+    //
+    // WHAT IT DELIBERATELY IS NOT is a contract. Writing one here would put
+    // work into the queue that nobody judged, which is the single failure the
+    // kind model was built to prevent - and it would do it from a textarea. The
+    // panel says "waiting to be picked up" for that reason; a box that implied
+    // an agent was already working would be a promise this board cannot keep.
+    if (P === "/plan-note" && req.method === "POST") {
+      let body = "";
+      req.on("data", (c) => {
+        body += c;
+        if (body.length > 16 * 1024) req.destroy();
+      });
+      req.on("end", () => {
+        const fail = (code, why) => {
+          res.writeHead(code, { "content-type": "application/json", "cache-control": "no-store" });
+          res.end(JSON.stringify({ error: why }));
+        };
+        let p = {};
+        try {
+          p = JSON.parse(body || "{}");
+        } catch {
+          return fail(400, "unreadable body");
+        }
+        const planId = typeof p.planId === "string" ? p.planId.trim().slice(0, 120) : "";
+        const note = typeof p.note === "string" ? p.note.trim().slice(0, 4000) : "";
+        if (!planId) return fail(400, "no plan named");
+        if (!note) return fail(400, "an empty note is not a record");
+        const title = typeof p.title === "string" ? p.title.trim().slice(0, 200) : "";
+        const status = typeof p.status === "string" ? p.status.trim().slice(0, 80) : "";
+        const at = new Date().toISOString();
+        // The id carries the plan it is about, so the record is traceable back
+        // to its subject without a lookup table - the same reason every other
+        // record on this belt names its own subject.
+        const rec = {
+          id: `plannote-${planId}-${Date.now().toString(36)}`,
+          at,
+          kind: "deposit",
+          triggers: "operator",
+          source: "board:plan-inspection",
+          plan: planId,
+          planStatus: status,
+          title: title ? `Note on ${title}` : `Note on ${planId}`,
+          detail: note,
+        };
+        try {
+          fs.appendFileSync(R.belt, JSON.stringify(rec) + "\n", "utf8");
+        } catch {
+          return fail(500, "the belt could not be appended to");
+        }
+        res.writeHead(200, { "content-type": "application/json", "cache-control": "no-store", "x-living-factory": "board", "x-board-version": OWN_VERSION });
+        res.end(JSON.stringify({ accepted: planId, record: rec.id, kind: rec.kind }));
+      });
+      return;
+    }
+
     // ---- TRIAGE: THE ACT THAT TURNS A DEPOSIT INTO A CONTRACT ---------------
     //
     // Operator's phrasing named a stage the model did not have: "deposits to be

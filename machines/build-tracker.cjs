@@ -2447,6 +2447,22 @@ const plans = (() => {
       // most useful sentence on the row, so it travels with the row rather
       // than being summarised away.
       note: String((p && p.notes) || ""),
+      // WHAT THE INSPECTION SHOWS. Operator, 2026-09-21: "I need inspection on
+      // those plans. Pop up." A row can hold a title; a decision needs the
+      // problem it solves, what "done" means, and what it must not touch. All
+      // of it is already in the register, so none of it is summarised here -
+      // it is carried whole and clipped only where a list would otherwise run
+      // to a thousand lines.
+      problem: String((p && p.problem) || ""),
+      smallest: String((p && p.smallest_end_to_end) || ""),
+      constraint: String((p && p.constraint) || ""),
+      criteria: (Array.isArray(p && p.acceptance_criteria) ? p.acceptance_criteria : []).slice(0, 12).map(String),
+      nonScope: (Array.isArray(p && p.non_scope) ? p.non_scope : []).slice(0, 8).map(String),
+      questions: (Array.isArray(p && p.open_questions) ? p.open_questions : []).slice(0, 8).map(String),
+      paths: (Array.isArray(p && p.target_paths) ? p.target_paths : []).slice(0, 10).map(String),
+      branch: String((p && p.branch_name) || ""),
+      spec: String((p && p.spec_markdown) || ""),
+      updated: String((p && p.updated_at) || ""),
     }))
     .sort((a, b) => {
       const order = { now: 0, next: 1, later: 2, held: 3, unplaced: 4 };
@@ -4947,7 +4963,7 @@ ${["gear", "calendar", "clock", "triage", "stale", "blocked", "eye", "hourglass"
           ${D.plans.rows
             .map(
               (r) => `
-            <div class="planrow" data-plan-bucket="${esc(r.bucket)}" title="${esc(planTip(r))}" style="display:flex; align-items:baseline; gap:5px; padding:1px 0; border-bottom:1px solid oklch(0.20 0.012 70); min-width:0">
+            <div class="planrow" data-plan-bucket="${esc(r.bucket)}" data-plan-id="${esc(r.id)}" title="${esc(planTip(r))}" style="display:flex; align-items:baseline; gap:5px; padding:1px 0; border-bottom:1px solid oklch(0.20 0.012 70); min-width:0; cursor:pointer">
               <span style="flex:0 0 auto; font-family:${mono}; font-size:9px; letter-spacing:0.06em; color:oklch(0.72 0.11 300); border:1px solid oklch(0.38 0.08 300); border-radius:2px; padding:0 3px">PL</span>
               <span style="flex:0 0 auto; width:6px; height:6px; border-radius:50%; background:${PLAN_BUCKET_COLOR[r.bucket] || "oklch(0.50 0.01 80)"}" ></span>
               <span style="flex:1 1 auto; min-width:0; font-size:11px; line-height:1.35; color:oklch(0.88 0.008 85); white-space:nowrap; overflow:hidden; text-overflow:ellipsis">${esc(r.title)}</span>
@@ -6101,6 +6117,146 @@ ${Object.entries(EXPLAIN)
   setInterval(refreshSessions, 10000);
   // And on the wall clock between fetches, so a silent session leaves on time.
   setInterval(function () { if (window.__sessions) renderSessions(window.__sessions); }, 30000);
+</script>
+
+<!-- PLAN INSPECTION. Operator, 2026-09-21: "I need inspection on those plans.
+     Pop up, and if possible an Add Notes to it and on save ai will read the
+     notes and act on it."
+     It sits OUTSIDE #stage on purpose. #stage is a fixed 1920x1080 surface
+     scaled to whatever the board is being shown on, so anything inside it is
+     scaled too - and an inspection panel that shrinks to 43% on a laptop is
+     the one thing here that must stay readable. -->
+<div id="planmodal" hidden style="position:fixed; inset:0; z-index:60; background:oklch(0.10 0.01 70 / 0.82); display:flex; align-items:center; justify-content:center; padding:24px">
+  <div id="planmodalcard" style="background:oklch(0.17 0.012 70); border:1px solid oklch(0.34 0.012 70); border-radius:10px; width:min(760px, 96vw); max-height:88vh; overflow:auto; padding:18px 20px; box-shadow:0 18px 60px oklch(0.05 0.01 70 / 0.7)">
+    <div id="planmodalbody"></div>
+  </div>
+</div>
+
+<script>
+  // The register, keyed by plan id, for the inspection panel. Serialised with
+  // JSON.stringify rather than interpolated field by field, and with the one
+  // sequence that can end a script block neutralised - a title containing
+  // "&lt;/script&gt;" would otherwise close this tag and break every script after it.
+  window.__plans = ${JSON.stringify(
+    Object.fromEntries(D.plans.rows.map((r) => [r.id, r])),
+  ).replace(/<\//g, "<\\/")};
+</script>
+
+<script>
+  // THE NOTE IS NOT A COMMENT FIELD. Saving one appends a DEPOSIT to the belt -
+  // the same channel every other piece of work enters by, and the same one the
+  // intake worker already drains. So "an agent reads it and acts on it" is not
+  // a new capability wired up here; it is the existing one reached from a new
+  // place. What it is NOT is instant: a deposit is seen, not yet judged, and it
+  // waits in incoming for triage exactly like everything else. The panel says
+  // that in those words, because a box that implies an agent is already working
+  // would be the kind of promise this board exists to refuse.
+  (function () {
+    var PLANS = window.__plans || {};
+    var modal = document.getElementById('planmodal');
+    var body = document.getElementById('planmodalbody');
+    if (!modal || !body) return;
+    var openId = null;
+    function esc(s) {
+      return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+      });
+    }
+    function list(title, arr) {
+      if (!arr || !arr.length) return '';
+      return '<div style="margin-top:12px"><div style="font-family:ui-monospace,monospace; font-size:11px; letter-spacing:0.14em; color:oklch(0.60 0.01 80); margin-bottom:4px">' + esc(title) + '</div><ul style="margin:0; padding-left:18px; font-size:13px; line-height:1.5; color:oklch(0.84 0.01 85)">' + arr.map(function (x) { return '<li style="margin-bottom:3px">' + esc(x) + '</li>'; }).join('') + '</ul></div>';
+    }
+    function para(title, text) {
+      if (!text) return '';
+      return '<div style="margin-top:12px"><div style="font-family:ui-monospace,monospace; font-size:11px; letter-spacing:0.14em; color:oklch(0.60 0.01 80); margin-bottom:4px">' + esc(title) + '</div><p style="margin:0; font-size:13px; line-height:1.55; color:oklch(0.84 0.01 85)">' + esc(text) + '</p></div>';
+    }
+    function render(p) {
+      body.innerHTML =
+        '<div style="display:flex; align-items:flex-start; gap:12px">' +
+          '<span style="flex:0 0 auto; font-family:ui-monospace,monospace; font-size:10px; letter-spacing:0.08em; color:oklch(0.72 0.11 300); border:1px solid oklch(0.42 0.08 300); border-radius:3px; padding:1px 4px; margin-top:4px">PL</span>' +
+          '<div style="flex:1 1 auto; min-width:0">' +
+            '<div style="font-size:18px; line-height:1.3; color:oklch(0.94 0.008 85)">' + esc(p.title) + '</div>' +
+            '<div style="font-family:ui-monospace,monospace; font-size:11px; color:oklch(0.56 0.01 80); margin-top:3px">' + esc(p.id) + (p.owner ? ' &middot; ' + esc(p.owner) : '') + ' &middot; ' + esc(p.status) + (p.updated ? ' &middot; updated ' + esc(String(p.updated).slice(0, 10)) : '') + '</div>' +
+          '</div>' +
+          '<button id="planclose" style="flex:0 0 auto; cursor:pointer; background:transparent; border:1px solid oklch(0.34 0.012 70); color:oklch(0.78 0.01 80); border-radius:6px; padding:3px 9px; font-size:13px">Close</button>' +
+        '</div>' +
+        (p.note ? '<div style="margin-top:12px; font-size:13px; line-height:1.55; color:oklch(0.80 0.01 85); border-left:2px solid oklch(0.42 0.08 300); padding-left:10px">' + esc(p.note) + '</div>' : '') +
+        para('THE PROBLEM', p.problem) +
+        para('SMALLEST END TO END', p.smallest) +
+        para('CONSTRAINT', p.constraint) +
+        list('ACCEPTANCE CRITERIA', p.criteria) +
+        list('NOT IN SCOPE', p.nonScope) +
+        list('OPEN QUESTIONS', p.questions) +
+        list('TOUCHES', p.paths) +
+        (p.branch || p.spec
+          ? '<div style="margin-top:12px; font-family:ui-monospace,monospace; font-size:11px; color:oklch(0.56 0.01 80)">' + (p.branch ? 'branch ' + esc(p.branch) : '') + (p.branch && p.spec ? ' &middot; ' : '') + (p.spec ? esc(p.spec) : '') + '</div>'
+          : '') +
+        '<div style="margin-top:16px; border-top:1px solid oklch(0.26 0.012 70); padding-top:12px">' +
+          '<div style="font-family:ui-monospace,monospace; font-size:11px; letter-spacing:0.14em; color:oklch(0.60 0.01 80); margin-bottom:5px">ADD A NOTE</div>' +
+          '<textarea id="plannote" rows="3" placeholder="What should happen with this plan?" style="width:100%; box-sizing:border-box; background:oklch(0.13 0.01 70); color:oklch(0.90 0.008 85); border:1px solid oklch(0.32 0.012 70); border-radius:7px; padding:8px 10px; font-size:13px; line-height:1.5; font-family:inherit; resize:vertical"></textarea>' +
+          '<div style="display:flex; align-items:center; gap:10px; margin-top:8px">' +
+            '<button id="plansave" style="cursor:pointer; background:oklch(0.30 0.06 300); color:oklch(0.94 0.01 300); border:1px solid oklch(0.46 0.08 300); border-radius:7px; padding:5px 12px; font-size:13px; font-weight:600">Save to the belt</button>' +
+            '<span id="planstatus" style="font-size:12px; color:oklch(0.60 0.01 80)">It arrives as a deposit in INCOMING, waiting to be picked up &mdash; not worked on the instant you save it.</span>' +
+          '</div>' +
+        '</div>';
+      var close = document.getElementById('planclose');
+      if (close) close.addEventListener('click', hide);
+      var save = document.getElementById('plansave');
+      if (save) save.addEventListener('click', function () { submit(p); });
+    }
+    function submit(p) {
+      var ta = document.getElementById('plannote');
+      var status = document.getElementById('planstatus');
+      var note = ta && ta.value ? ta.value.trim() : '';
+      if (!note) {
+        if (status) { status.textContent = 'Nothing to save yet.'; status.style.color = 'oklch(0.76 0.12 75)'; }
+        return;
+      }
+      if (status) { status.textContent = 'Saving...'; status.style.color = 'oklch(0.60 0.01 80)'; }
+      fetch('/plan-note' + (location.search || ''), {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ planId: p.id, title: p.title, status: p.status, note: note })
+      })
+        .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+        .then(function (out) {
+          if (!out.ok) throw new Error((out.j && out.j.error) || 'refused');
+          if (status) {
+            status.textContent = 'On the belt as ' + (out.j.record || 'a deposit') + '. It will show in INCOMING at the next build.';
+            status.style.color = 'oklch(0.72 0.13 150)';
+          }
+          if (ta) ta.value = '';
+        })
+        .catch(function (err) {
+          // AN HONEST FAILURE, NOT A SILENT ONE. A board opened as a saved file
+          // has no server to post to, and saying "saved" there would be a lie
+          // that loses the note. So it says where it is and hands it back.
+          if (status) {
+            status.textContent = 'Could not save (' + (err && err.message ? err.message : 'no board server') + '). Your note is still in the box - copy it before closing.';
+            status.style.color = 'oklch(0.76 0.12 25)';
+          }
+        });
+    }
+    function show(id) {
+      var p = PLANS[id];
+      if (!p) return;
+      openId = id;
+      render(p);
+      modal.hidden = false;
+    }
+    function hide() {
+      modal.hidden = true;
+      openId = null;
+    }
+    document.addEventListener('click', function (e) {
+      var row = e.target && e.target.closest ? e.target.closest('.planrow') : null;
+      if (row && row.getAttribute('data-plan-id')) { show(row.getAttribute('data-plan-id')); return; }
+      if (e.target === modal) hide();
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && !modal.hidden) hide();
+    });
+  })();
 </script>
 
 </body></html>
