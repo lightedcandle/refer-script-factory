@@ -6126,7 +6126,18 @@ ${Object.entries(EXPLAIN)
      scaled to whatever the board is being shown on, so anything inside it is
      scaled too - and an inspection panel that shrinks to 43% on a laptop is
      the one thing here that must stay readable. -->
-<div id="planmodal" hidden style="position:fixed; inset:0; z-index:60; background:oklch(0.10 0.01 70 / 0.82); display:flex; align-items:center; justify-content:center; padding:24px">
+<!-- display:none INLINE, and NOT the hidden attribute. This element carries an
+     inline display:flex for its centring, and an inline style beats the hidden
+     attribute's display:none unless a rule marks it !important - so the first
+     version set the attribute and nothing moved on screen: Close appeared
+     dead, and a refresh showed an empty collapsed overlay sitting over the
+     board. The operator found it by using it. This file already carried that
+     exact warning, on the incoming filter, and it was read and then not
+     applied here.
+     No backticks in this comment either: it is emitted from a template
+     literal, so one would end the literal and stop the file parsing - which it
+     did, once, while this very comment was being written. -->
+<div id="planmodal" style="position:fixed; inset:0; z-index:60; background:oklch(0.10 0.01 70 / 0.82); display:none; align-items:center; justify-content:center; padding:24px">
   <div id="planmodalcard" style="background:oklch(0.17 0.012 70); border:1px solid oklch(0.34 0.012 70); border-radius:10px; width:min(760px, 96vw); max-height:88vh; overflow:auto; padding:18px 20px; box-shadow:0 18px 60px oklch(0.05 0.01 70 / 0.7)">
     <div id="planmodalbody"></div>
   </div>
@@ -6276,15 +6287,21 @@ ${Object.entries(EXPLAIN)
           }
         });
     }
+    // Shown and hidden by the property that actually paints, never by a flag.
+    // isOpen asks the computed style rather than a variable, so nothing here
+    // can confirm its own assignment and call that working.
+    function isOpen() {
+      return window.getComputedStyle(modal).display !== 'none';
+    }
     function show(id) {
       var p = PLANS[id];
       if (!p) return;
       openId = id;
       render(p);
-      modal.hidden = false;
+      modal.style.display = 'flex';
     }
     function hide() {
-      modal.hidden = true;
+      modal.style.display = 'none';
       openId = null;
     }
     document.addEventListener('click', function (e) {
@@ -6293,7 +6310,7 @@ ${Object.entries(EXPLAIN)
       if (e.target === modal) hide();
     });
     document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape' && !modal.hidden) hide();
+      if (e.key === 'Escape' && isOpen()) hide();
     });
   })();
 </script>
