@@ -305,12 +305,69 @@ if (DO_DISPATCH && picks.length) {
     // main-checkout session by matching a transcript filename against the
     // session id, and the CLI names that file after this uuid.
     const session = crypto.randomUUID();
-    const logPath = path.join(DISPATCH_LOGS, `${String(p.r.id).replace(/[^a-z0-9._-]/gi, "_").slice(0, 80)}.log`);
+    const stem = String(p.r.id).replace(/[^a-z0-9._-]/gi, "_").slice(0, 80);
+    const logPath = path.join(DISPATCH_LOGS, `${stem}.log`);
+    // THE BRIEF WAS 71 CHARACTERS LONG BY THE TIME IT ARRIVED.
+    //
+    // It used to be passed as an argument: spawn("cmd.exe", ["/c", "claude",
+    // "-p", ..., brief(p)]). cmd.exe ends a command line at the first CR or LF,
+    // and no amount of quoting changes that - so every dispatched session
+    // received exactly the first line, "Work this single deposit from the
+    // Living Factory belt and nothing else.", and NOTHING after it. Not the ID.
+    // Not the claim, the evidence or the recommendation. Not one of the five
+    // publishing steps. Not the git trap or the Set-Content trap.
+    //
+    // Proven from the receiving end on 2026-09-22: the first user message in a
+    // live dispatched session's transcript measures 71 characters. The sessions
+    // were titled after it, which is why three agents all carried the same name
+    // on the board.
+    //
+    // They worked anyway - branching, committing with -F, publishing, closing
+    // their records - because CLAUDE.md is injected by the harness at session
+    // start and carries that discipline. They found their own assignment by
+    // reading the process table. That is the fleet compensating for a broken
+    // dispatcher, and it is not a reason to leave it broken: the ONE thing
+    // CLAUDE.md cannot supply is which deposit this session is for, which is
+    // the only part of the brief that differs between them.
+    //
+    // FOUR SHAPES WERE TRIED BEFORE THIS ONE, and the three that failed all
+    // failed the same way: they tried to push the whole brief THROUGH the
+    // command line.
+    //
+    //   brief as an argument        - cut at the first newline. The bug.
+    //   stdin from a file handle    - works, but only when the child is NOT
+    //                                 detached. This dispatcher must detach;
+    //                                 it starts three sessions and exits.
+    //   cmd.exe's own < redirect    - the quoting does not survive spawn().
+    //
+    // So the brief stops travelling and the POINTER travels instead. One line
+    // is all cmd.exe will carry, and one line is all this needs: the id, so a
+    // session knows its assignment even if nothing else works, and the path to
+    // the rest of it.
+    //
+    // The file lives inside the repo deliberately. The first pointer probe put
+    // it in a scratchpad and the dispatched session could not read another
+    // session's scratchpad - it spent its entire turn proving it had no way to
+    // see its own orders. Under .claude/agent-context it is beside the belt the
+    // session is already reading.
+    const briefPath = path.join(DISPATCH_LOGS, `${stem}.brief.txt`);
+    const briefRel = path.relative(ROOT, briefPath).replace(/\\/g, "/");
     try {
+      fs.writeFileSync(briefPath, brief(p), "utf8");
       // Output goes to a file rather than nowhere. Whatever an agent says on
       // its way out is the only evidence of why it left.
+      //
+      // Read it for what it is: `claude -p` holds ALL of its output until the
+      // run finishes, so an empty log means STILL WORKING far more often than
+      // it means dead. That is why the aliveness check below asks the operating
+      // system and not this file. Three probes were scored as failures against
+      // an empty log while the sessions behind them were running fine.
       const fd = fs.openSync(logPath, "w");
-      const child = spawn("cmd.exe", ["/c", "claude", "-p", "--session-id", session, "--permission-mode", "acceptEdits", brief(p)], {
+      const pointer =
+        `Work the deposit ${p.r.id} from the Living Factory belt and nothing else. ` +
+        `Your full brief - the claim, the evidence, the recommendation and how to publish and close it - ` +
+        `is in this repo at ${briefRel}. Read that file first, before anything else.`;
+      const child = spawn("cmd.exe", ["/c", "claude", "-p", "--session-id", session, "--permission-mode", "acceptEdits", pointer], {
         cwd: ROOT,
         detached: true,
         stdio: ["ignore", fd, fd],
