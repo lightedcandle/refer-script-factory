@@ -17,20 +17,38 @@
  * a default to be set quietly at two in the morning by the thing that benefits
  * from it.
  *
- * SELECTION, in order, and each rule earns its place:
+ * IT DOES NOT CHOOSE. IT DRAINS A LIST SOMEBODY ELSE ORDERED.
  *
- *   capacity      never exceed the concurrent limit. A factory that dispatches
- *                 everything at once has not scheduled anything.
- *   his           never touch an item addressed to the operator. Those are his
- *                 by law - taste, money, deletion - and an agent picking one up
- *                 would be taking a decision that was reserved.
- *   actionable    an item carrying a recommendation goes before one without.
- *                 Dispatching a diagnosis with no proposed action just moves the
- *                 thinking to a colder session.
- *   oldest        among equals, the one that has waited longest.
+ * The watcher writes a STANDING ordered ready-list - .claude/agent-context/
+ * watcher-queue.json, with its own freshness stamp - and this door takes from
+ * the top of it. A per-tick message was the alternative and it starves the door
+ * on every tick where the watcher did not wake, which is most of them; a
+ * standing list lets both share one clock without either waiting on the other.
  *
- *   node <factory>/machines/intake-worker.cjs             select and brief
- *   node <factory>/machines/intake-worker.cjs --dispatch  actually start it
+ * FOUR RULES, and each one closes a failure available without it:
+ *
+ *   top-first     the list is taken in the order it was written and never
+ *                 re-sorted. THE WATCHER OWNS ORDER, THIS OWNS COUNT. A door
+ *                 that reorders is quietly making the judgement again.
+ *   capacity      room still governs. The list says what may go; the belt says
+ *                 how much fits.
+ *   never off     an id that is not on the list is never dispatched, however
+ *   the list      eligible it looks from here. A door that invents work when
+ *                 the list is empty is how a belt fills with things nobody
+ *                 chose.
+ *   refuse stale  a list past its own freshness stamp is a decayed judgement -
+ *                 the same rot as an aging deposit one level up - so it is
+ *                 refused, out loud, and nothing goes out on it.
+ *
+ * It may still NARROW, never add and never reorder: between the watcher's run
+ * and this one an item can be closed or picked up by a live session, so every
+ * entry is re-checked against the belt as it stands now and each one dropped is
+ * named with its reason. That is the door refusing to double-dispatch, which is
+ * not a judgement about whether the work is worth doing.
+ *
+ *   node <factory>/machines/intake-worker.cjs             drain and brief
+ *   node <factory>/machines/intake-worker.cjs --dispatch  actually start them
+ *   node <factory>/machines/intake-worker.cjs --dry       decide, write nothing
  *   node <factory>/machines/intake-worker.cjs --json      machine-readable
  *
  * Exit 0 always: having nothing to pick up is a normal, healthy morning.
@@ -119,7 +137,13 @@ function intakeMode() {
   }
 }
 const MODE = intakeMode();
-const DO_DISPATCH = process.argv.includes("--dispatch") || MODE === "auto";
+// --dry DECIDES EVERYTHING AND WRITES NOTHING - no dispatch, no report, no belt
+// record. It exists because once the AutoRun switch is on there is otherwise no
+// way to exercise this machine at all: DO_DISPATCH is true whenever the mode
+// file says "auto", so every trial run would start three real agents. The
+// watcher has had the same flag, for the same reason, since it was armed.
+const DRY = process.argv.includes("--dry");
+const DO_DISPATCH = !DRY && (process.argv.includes("--dispatch") || MODE === "auto");
 
 const MS = { m: 6e4, h: 36e5 };
 const ALIVE_MS = 30 * MS.m;
@@ -209,15 +233,99 @@ const room = Math.max(0, CAPACITY - onBelt.length);
 // The "his by law" filter below is kept as well, deliberately redundant - a
 // decision could only reach here through a mis-set kind, and the cost of that
 // mistake is an agent taking a decision that was reserved.
-const waiting = records
-  // Not "has this ever been dispatched" but "is somebody working it NOW". A
-  // dead session's item is waiting again, which is the only answer that does
-  // not lose it.
-  .filter((r) => IX.isOpenContract(r) && !heldByLiveSession(r.id))
-  // His by law. Never pick these up.
-  .filter((r) => String(r.triggers || "") !== "operator" && r.owner !== "operator" && !r.operatorDecision)
-  .map((r) => ({ r, advice: adviceOf(r), at: Date.parse(r.run || "") || 0 }))
-  .sort((a, b) => (a.advice ? 0 : 1) - (b.advice ? 0 : 1) || a.at - b.at);
+// PULLABLE IS A TEST APPLIED TO AN ID THE WATCHER ALREADY CHOSE - never a way
+// to find one. Read as a search it would be the old behaviour under a new name.
+//
+// Not "has this ever been dispatched" but "is somebody working it NOW": a dead
+// session's item is pullable again, which is the only answer that does not lose
+// it. The "his by law" test is kept here as well, deliberately redundant with
+// the watcher's - a decision could only reach this line through a mis-set kind,
+// and the cost of that mistake is an agent taking a decision that was reserved.
+const pullable = (r) =>
+  IX.isOpenContract(r) &&
+  !heldByLiveSession(r.id) &&
+  String(r.triggers || "") !== "operator" &&
+  r.owner !== "operator" &&
+  !r.operatorDecision;
+
+const whyNotPullable = (r) => {
+  if (!IX.isOpenContract(r)) return "it is no longer an open contract here - closed, retired or re-kinded since the watcher ordered it";
+  if (heldByLiveSession(r.id)) return "a live session is already holding it";
+  return "it is addressed to the operator, and those are his by law";
+};
+
+const byId = new Map();
+for (const r of records) if (r.id) byId.set(String(r.id), r);
+
+// FOUR WAYS A STANDING LIST CAN FAIL TO BE ONE, and they are four different
+// facts. Absent means nothing has ever judged this belt; unreadable means the
+// list is there and cannot be trusted; undated means it carries no claim about
+// its own freshness; stale means the judgement has decayed. None of them
+// dispatches anything, and each of them says which it was - this factory has
+// read absence as a clean result before, and that is the failure being avoided.
+const QUEUE_FILE = path.join(CTX, "watcher-queue.json");
+const humanMs = (ms) => {
+  const m = Math.round(ms / MS.m);
+  if (m < 90) return `${m}m`;
+  const h = ms / MS.h;
+  return h < 48 ? `${h.toFixed(1)}h` : `${(h / 24).toFixed(1)}d`;
+};
+const queue = (() => {
+  let raw;
+  try {
+    raw = fs.readFileSync(QUEUE_FILE, "utf8");
+  } catch (err) {
+    if (err && err.code === "ENOENT") {
+      return { state: "absent", why: "the watcher has never written a ready-list here, so there is nothing to drain. Nothing has judged this belt yet - that is not a quiet morning.", ready: [] };
+    }
+    return { state: "unreadable", why: `the ready-list could not be read: ${String(err.message).split("\n")[0]}`, ready: [] };
+  }
+  let j;
+  try {
+    j = JSON.parse(raw.replace(/^\uFEFF/, ""));
+  } catch (err) {
+    return { state: "unreadable", why: `the ready-list is not valid JSON: ${String(err.message).split("\n")[0]}`, ready: [] };
+  }
+  const producedAt = Date.parse(j.producedAt || "") || null;
+  const staleAfter = Date.parse(j.staleAfter || "") || null;
+  const base = {
+    producedAt: j.producedAt || null,
+    staleAfter: j.staleAfter || null,
+    goodFor: j.goodFor || null,
+    listed: Array.isArray(j.ready) ? j.ready.length : 0,
+    emptyBecause: j.readyEmptyBecause || null,
+  };
+  if (!staleAfter) return { ...base, state: "undated", why: "the ready-list carries no staleAfter stamp, so nothing here can say whether it is still good. An undated judgement is refused exactly as an expired one is.", ready: [] };
+  if (now > staleAfter) return { ...base, state: "stale", why: `the ready-list expired ${humanMs(now - staleAfter)} ago - produced ${j.producedAt}, good for ${j.goodFor || "an unstated span"}. A long-unrun watcher's list is a decayed judgement, and acting on it would dispatch what somebody decided about a factory that has moved on.`, ready: [] };
+  return { ...base, state: "fresh", why: `written ${humanMs(now - (producedAt || staleAfter))} ago, good until ${j.staleAfter}`, ready: Array.isArray(j.ready) ? j.ready : [] };
+})();
+
+// TAKEN IN THE ORDER IT WAS WRITTEN. There is no sort here and there must not
+// be one: the watcher computed rank, band and priority for every entry, and a
+// second opinion applied at the door would make those numbers decorative.
+const skipped = [];
+const waiting = [];
+for (const entry of queue.ready) {
+  const id = String((entry && entry.id) || "");
+  const r = id ? byId.get(id) : null;
+  const rank = entry && entry.rank !== undefined ? entry.rank : null;
+  if (!r) {
+    skipped.push({ id: id || "(an entry carrying no id)", rank, why: "no record on this belt carries that id" });
+    continue;
+  }
+  if (!pullable(r)) {
+    skipped.push({ id, rank, why: whyNotPullable(r) });
+    continue;
+  }
+  waiting.push({ r, advice: adviceOf(r), at: Date.parse(r.run || "") || 0, rank });
+}
+
+// WHAT THE BELT WOULD HAVE OFFERED, COUNTED AND NEVER PULLED. This is the whole
+// shape of the change in one number: work can be eligible here and still not go
+// out, because nothing chose it. Reported so an idle door is never read as an
+// empty belt - and so the gap between the two is visible to anyone who wonders
+// why a busy belt is sending nothing.
+const beltEligible = records.filter(pullable).length;
 
 const picks = waiting.slice(0, room);
 
@@ -576,13 +684,77 @@ if (started.length) {
   }
 }
 
+// A REFUSED LIST GOES ON THE BELT, because a door that quietly stops pulling
+// looks exactly like a morning with nothing to do. The watcher failing to run
+// is the single failure that halts this whole factory, and nothing else would
+// say so: the board's AUTO lane reads `armed` and `room`, both of which stay
+// true and healthy while nothing moves.
+//
+// ONLY WHEN WORK IS ACTUALLY STRANDED BEHIND IT. A refused list with an empty
+// belt costs nothing and is not a fault worth a record.
+//
+// ONE RECORD PER DISTINCT FAULT PER DAY. At a five-minute cadence an
+// unconditional write would put 288 identical records on the belt before
+// anybody read one, and `a-belt-can-die-by-flooding-not-only-by-leaking` is
+// already a finding here. A day is short enough that a fault returning after a
+// fix appears as a new record, and long enough not to bury the belt it warns.
+if (!DRY && queue.state !== "fresh" && beltEligible) {
+  const key = `${queue.state}|${new Date(now).toISOString().slice(0, 10)}`;
+  let beltText = "";
+  try {
+    beltText = fs.readFileSync(BELT, "utf8");
+  } catch {
+    /* the console still says it */
+  }
+  if (!beltText.includes(`"intakeRefusal":${JSON.stringify(key)}`)) {
+    const rec = {
+      id: `intake-refused-${key.replace("|", "-")}`,
+      run: new Date(now).toISOString(),
+      kind: "deposit",
+      dimension: "architecture",
+      source: "intake-worker",
+      intakeRefusal: key,
+      title: "The auto door refused the watcher's ready-list",
+      claim: `Auto intake dispatched nothing: the list it drains is ${queue.state}, and ${beltEligible} contract(s) on this belt are eligible behind it.`,
+      detail: `${queue.why} This door pulls only what the watcher put on the list, so it will go on refusing - correctly - until a watcher run writes a fresh one. Nothing has been lost and nothing has been reordered.`,
+      recommend: "Find out why the watcher stopped writing its ready-list - its rhythm on the rail, its lock, or its own last run - and let it write one. The door itself needs no change.",
+    };
+    try {
+      fs.appendFileSync(BELT, JSON.stringify(rec) + "\n", "utf8");
+    } catch {
+      /* the console still says it */
+    }
+  }
+}
+
 const report = {
   checkedAt: new Date(now).toISOString(),
   repo: path.basename(ROOT),
   capacity: CAPACITY,
   onBelt: onBelt.length,
   room,
+  // `waiting` is what THIS DOOR could take: entries on the watcher's ready-list
+  // that are still pullable. The board's AUTO lane and the watcher's doors zone
+  // both read it, and for a door that is the honest number - a belt full of work
+  // nobody has offered is not work waiting at this door. The two counts below
+  // keep the difference visible rather than leaving it to be inferred from a
+  // zero.
   waiting: waiting.length,
+  beltEligible,
+  beltEligibleNotOffered: Math.max(0, beltEligible - waiting.length),
+  queue: {
+    file: path.relative(ROOT, QUEUE_FILE).replace(/\\/g, "/"),
+    state: queue.state,
+    why: queue.why,
+    producedAt: queue.producedAt || null,
+    staleAfter: queue.staleAfter || null,
+    goodFor: queue.goodFor || null,
+    listed: queue.listed || 0,
+    offered: waiting.length,
+    skipped,
+    emptyBecause: queue.emptyBecause || null,
+  },
+  dry: DRY,
   selected: picks.map((p) => ({ id: p.r.id, hasRecommendation: !!p.advice, waitedHours: Math.round((now - p.at) / MS.h) })),
   // Only the ones still running when they were checked. A pid is not a start.
   dispatched: DO_DISPATCH ? started : [],
@@ -594,22 +766,34 @@ const report = {
   mode: MODE,
   armedBy: DO_DISPATCH ? (MODE === "auto" ? "the AutoRun switch" : "the --dispatch flag") : null,
 };
-fs.mkdirSync(CTX, { recursive: true });
-fs.writeFileSync(path.join(CTX, "intake-worker.json"), JSON.stringify(report, null, 2) + "\n");
-if (picks.length) fs.writeFileSync(path.join(CTX, "intake-brief.txt"), picks.map(brief).join("\n\n" + "-".repeat(70) + "\n\n"), "utf8");
+if (!DRY) {
+  fs.mkdirSync(CTX, { recursive: true });
+  fs.writeFileSync(path.join(CTX, "intake-worker.json"), JSON.stringify(report, null, 2) + "\n");
+  if (picks.length) fs.writeFileSync(path.join(CTX, "intake-brief.txt"), picks.map(brief).join("\n\n" + "-".repeat(70) + "\n\n"), "utf8");
+}
 
 if (JSON_OUT) {
   console.log(JSON.stringify(report, null, 2));
 } else {
-  console.log(`intake-worker: ${onBelt.length}/${CAPACITY} on the belt, ${waiting.length} waiting, room for ${room}  [${report.repo}]`);
+  console.log(`intake-worker: ${onBelt.length}/${CAPACITY} on the belt, ${waiting.length} offered by the watcher, room for ${room}  [${report.repo}]${DRY ? "   DRY - nothing written" : ""}`);
+  // THE LIST IS NAMED EVERY RUN, whatever it says, because a verdict printed
+  // only on failure makes silence ambiguous.
+  console.log(`  ready-list  ${queue.state.toUpperCase()} - ${queue.why}`);
+  for (const s of skipped) console.log(`  skipped  ${s.id} - ${s.why}`);
   for (const p of picks) console.log(`  would dispatch  ${p.r.id}${p.advice ? "" : "   (no recommendation - it would have to work one out)"}`);
   if (!picks.length) {
-    // NOTHING ELIGIBLE AND NOTHING ACCEPTED ARE DIFFERENT FACTS, and they look
-    // identical from a worker that only prints the first. A queue of unjudged
-    // deposits is a factory waiting on a person, not a factory with nothing to do.
-    const untriaged = records.filter(IX.isAwaitingTriage).length;
-    if (room && untriaged) console.log(`  nothing eligible - ${untriaged} deposit(s) are waiting to be judged, and only a contract can be dispatched`);
-    else console.log(room ? "  nothing eligible to pick up" : "  belt is full");
+    // FIVE DIFFERENT MORNINGS THAT ALL LOOK LIKE AN IDLE DOOR. Refused, full,
+    // empty by decision, empty with work stranded behind it, and genuinely
+    // nothing to do are not the same fact, and this factory has read absence as
+    // a clean result before.
+    if (queue.state !== "fresh") console.log(`  REFUSED - nothing dispatched, because the list this door drains is ${queue.state}. Run the watcher.`);
+    else if (!room) console.log("  belt is full");
+    else if (queue.emptyBecause) console.log(`  nothing offered - ${queue.emptyBecause}`);
+    else if (beltEligible) console.log(`  nothing offered - ${beltEligible} contract(s) here are eligible and the watcher put none of them on the ready-list. This door pulls what it is given and never chooses for itself.`);
+    else {
+      const untriaged = records.filter(IX.isAwaitingTriage).length;
+      console.log(untriaged ? `  nothing offered, and nothing here is eligible - ${untriaged} deposit(s) are still waiting to be judged, and only a contract can be dispatched` : "  nothing offered, and nothing on this belt is eligible either");
+    }
   }
   if (DO_DISPATCH) {
     // RUNNING is the word now, and it is only printed for a process that was
