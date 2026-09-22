@@ -175,17 +175,136 @@ const brief = (p) =>
     `never the flag you just set.`,
   ].join("\n");
 
+// A LAUNCH IS NOT A START, and this machine reported one as the other.
+//
+// Operator, 2026-09-22, after the first watched run: "fix the collector so it
+// stops reporting dispatched." It printed DISPATCHED with three process ids;
+// all three were dead within seconds because the headless CLI could not sign
+// in - "Failed to authenticate: OAuth session expired and could not be
+// refreshed". The message went to a stdio that was thrown away, and the board
+// showed work going out every twenty minutes with nothing ever coming back.
+//
+// Two changes, and they are the same change really: KEEP THE OUTPUT, and CHECK
+// THE PROCESS IS STILL THERE before calling it dispatched. Neither is clever;
+// what was missing was the idea that spawn() returning a pid says only that
+// the operating system created something.
+const DISPATCH_LOGS = path.join(CTX, "dispatch-logs");
+// HOW LONG "STILL THERE" HAS TO MEAN SOMETHING. The first version of this
+// check waited 6 seconds and reported three agents RUNNING that were all dead
+// ten seconds later - the sign-in failure takes longer to come back than the
+// window allowed, so the check confirmed nothing and said everything. A wait
+// that is shorter than the failure it is looking for is not a check.
+//
+// 20s against a 20-minute cadence is cheap, and an agent that is still there
+// after twenty seconds has got past sign-in and started reading.
+const SURVIVE_MS = 20000;
+
+function stillAlive(pid) {
+  try {
+    // Signal 0 tests for existence without touching the process.
+    process.kill(pid, 0);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function lastWords(file) {
+  try {
+    const t = fs.readFileSync(file, "utf8").replace(/\[[0-9;]*m/g, "").trim();
+    // AN EMPTY LOG IS ITSELF A DIAGNOSIS, so it is not reported as a shrug. A
+    // detached agent that exits at once having written nothing has almost
+    // always failed before it began, and on 2026-09-22 the cause was the
+    // headless CLI's sign-in: "Failed to authenticate: OAuth session expired
+    // and could not be refreshed", visible only when the same command was run
+    // in the foreground. Naming the likely cause and how to confirm it beats
+    // reporting silence, which is what sent the operator looking twice.
+    if (!t) {
+      return "it exited at once and wrote nothing - most often the headless CLI is not signed in. Run `claude -p \"hello\"` in a terminal here to see the real message";
+    }
+    // The first non-empty line is the useful one: these failures announce
+    // themselves immediately and then say nothing else.
+    return t.split(/\r?\n/).filter((l) => l.trim())[0].slice(0, 300);
+  } catch {
+    return "it exited and left no output";
+  }
+}
+
 let started = [];
+let failedToStart = [];
 if (DO_DISPATCH && picks.length) {
+  fs.mkdirSync(DISPATCH_LOGS, { recursive: true });
+  const launched = [];
   for (const p of picks) {
     const label = String(p.r.id).slice(0, 28);
+    const logPath = path.join(DISPATCH_LOGS, `${String(p.r.id).replace(/[^a-z0-9._-]/gi, "_").slice(0, 80)}.log`);
     try {
-      // Detached so the worker's own exit does not take the agent with it.
-      const child = spawn("cmd.exe", ["/c", "claude", "-p", brief(p)], { cwd: ROOT, detached: true, stdio: "ignore" });
+      // Output goes to a file rather than nowhere. Whatever an agent says on
+      // its way out is the only evidence of why it left.
+      const fd = fs.openSync(logPath, "w");
+      const child = spawn("cmd.exe", ["/c", "claude", "-p", brief(p)], {
+        cwd: ROOT,
+        detached: true,
+        stdio: ["ignore", fd, fd],
+      });
       child.unref();
-      started.push({ id: p.r.id, label, pid: child.pid });
+      // The handle stays open until after the survival check. Closing it
+      // immediately left every log file 0 bytes, so a dispatch that died had
+      // nothing to say about why - which is most of the value of keeping a log
+      // at all. This process exits moments later and the handle goes with it.
+      launched.push({ id: p.r.id, label, pid: child.pid, logPath, fd });
     } catch (err) {
-      started.push({ id: p.r.id, label, error: err.message.split("\n")[0] });
+      failedToStart.push({ id: p.r.id, label, why: err.message.split("\n")[0] });
+    }
+  }
+  if (launched.length) {
+    // One wait for all of them, not one each - they were started together and
+    // an immediate failure is immediate.
+    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, SURVIVE_MS);
+    for (const l of launched) {
+      if (stillAlive(l.pid)) started.push({ id: l.id, label: l.label, pid: l.pid });
+      else failedToStart.push({ id: l.id, label: l.label, pid: l.pid, why: lastWords(l.logPath), log: path.relative(ROOT, l.logPath).replace(/\\/g, "/") });
+      try {
+        fs.closeSync(l.fd);
+      } catch {
+        /* already gone with the child */
+      }
+    }
+  }
+}
+
+// A DISPATCH THAT DIED GOES ON THE BELT, because a failure only this machine
+// knows about is the same silence the board was built to end. One record per
+// distinct reason per run, and never a duplicate of one already sitting there
+// unanswered - the same authentication failure every twenty minutes would bury
+// the belt it is trying to warn.
+if (failedToStart.length) {
+  const reasons = [...new Set(failedToStart.map((f) => f.why))];
+  let beltText = "";
+  try {
+    beltText = fs.readFileSync(BELT, "utf8");
+  } catch {
+    /* already handled above */
+  }
+  for (const why of reasons) {
+    const ids = failedToStart.filter((f) => f.why === why).map((f) => f.id);
+    if (beltText.includes(`"dispatchFailure":${JSON.stringify(why)}`)) continue;
+    const rec = {
+      id: `dispatch-failed-${Date.now().toString(36)}`,
+      run: new Date().toISOString(),
+      kind: "deposit",
+      dimension: "architecture",
+      source: "intake-worker",
+      dispatchFailure: why,
+      title: "An agent was dispatched and never started",
+      claim: `${ids.length} dispatch(es) exited immediately: ${why}`,
+      detail: `Items affected: ${ids.join(", ")}. The work stays accepted and will be offered again on the next run. Nothing is wrong with the items themselves.`,
+      recommend: "Fix what the exit message names, then let the next run pick these up again. Until then every run will keep failing the same way.",
+    };
+    try {
+      fs.appendFileSync(BELT, JSON.stringify(rec) + "\n", "utf8");
+    } catch {
+      /* the console still says it */
     }
   }
 }
@@ -198,7 +317,9 @@ const report = {
   room,
   waiting: waiting.length,
   selected: picks.map((p) => ({ id: p.r.id, hasRecommendation: !!p.advice, waitedHours: Math.round((now - p.at) / MS.h) })),
+  // Only the ones still running when they were checked. A pid is not a start.
   dispatched: DO_DISPATCH ? started : [],
+  failedToStart: DO_DISPATCH ? failedToStart : [],
   armed: DO_DISPATCH,
   // Which of the two reasons it is armed, so the board can say "Automatic"
   // rather than just "armed" - and so a run armed by a typed flag is never
@@ -223,7 +344,20 @@ if (JSON_OUT) {
     if (room && untriaged) console.log(`  nothing eligible - ${untriaged} deposit(s) are waiting to be judged, and only a contract can be dispatched`);
     else console.log(room ? "  nothing eligible to pick up" : "  belt is full");
   }
-  if (DO_DISPATCH) for (const s of started) console.log(`  DISPATCHED ${s.id}${s.error ? " - FAILED: " + s.error : " (pid " + s.pid + ")"}`);
+  if (DO_DISPATCH) {
+    // RUNNING is the word now, and it is only printed for a process that was
+    // still there when it was looked at. The old line said DISPATCHED the
+    // instant a pid existed, which is how three agents that never signed in
+    // were reported as three agents working.
+    for (const s of started) console.log(`  RUNNING ${s.id} (pid ${s.pid}, still alive after ${Math.round(SURVIVE_MS / 1000)}s)`);
+    for (const f of failedToStart) {
+      console.log(`  DID NOT START ${f.id} - ${f.why}`);
+      if (f.log) console.log(`      its last words: ${f.log}`);
+    }
+    if (failedToStart.length && !started.length) {
+      console.log(`\n  NOTHING IS RUNNING. The work stays accepted and will be offered again next run; the reason is on the belt.`);
+    }
+  }
   else if (picks.length) console.log(`\n  Not armed. Brief written to .claude/agent-context/intake-brief.txt; run with --dispatch to start them.`);
 }
 process.exit(0);
