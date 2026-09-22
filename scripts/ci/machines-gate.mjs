@@ -163,7 +163,7 @@ const MANIFEST = {
   "composition-watch.cjs": { args: ["--dry", "--json"], exit: 0, why: "no src/app in the fixture, so it reports NOT APPLICABLE and exits clean - which is the behaviour P13 requires of a machine whose subject is absent" },
   "deposit.cjs": { args: ["--open"], exit: 0, why: "three open records, listed by handle" },
   "exit-worker.cjs": { args: ["--dry", "--json"], exit: 0, why: "nothing is held by a live session, so nothing was abandoned" },
-  "intake-worker.cjs": { args: ["--json"], exit: 0, why: "selects and briefs without --dispatch; exit 0 always, because an empty morning is healthy" },
+  "intake-worker.cjs": { args: ["--dry", "--json"], exit: 0, why: "drains the watcher's ready-list. --dry because --json alone still writes a report and would still dispatch if a fixture ever carried an auto mode file; the fixture has no ready-list, so it reports the list ABSENT and exits 0 - an empty morning is healthy" },
   "kind.cjs": { args: [], exit: 0, why: "library - the belt's vocabulary, required by everything that reads it" },
   "manager.cjs": { args: ["--json"], exit: 1, writes: true, why: "finds work nobody is carrying. HAS NO READ-ONLY FLAG: this run appends two records, which is safe only because the fixture is a temp directory" },
   "mind-watch.cjs": { args: ["--dry", "--json"], exit: 1, why: "no database credentials, and it refuses to report a condition as met because it could not check" },
