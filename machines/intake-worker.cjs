@@ -393,9 +393,23 @@ if (failedToStart.length) {
 // bookkeeping, drawn in no column, counted in no tally, and - because
 // terminal:recorded is in the NOTING family - it does NOT close the item.
 //
-// `via: "spawn"` because an agent starting an agent is the SPAWN door by
-// definition and not by convention (P15). viaOf reads exactly auto / chat /
-// spawn and reports anything else as unknown; do not mint a second vocabulary.
+// `via: "auto"` because THIS MACHINE IS THE AUTO DOOR. build-tracker says it
+// in as many words - "AUTO is the intake worker dispatching on a schedule" -
+// and the doors are the trigger classes, so a dispatch this machine makes
+// arrived by a schedule whatever it started.
+//
+// It said "spawn" for one day and that was worse than the blank it replaced.
+// P15's "an agent starting an agent" is about a CONVERSATION forking an
+// unattended worker, not about the scheduled machine; reading it here filed 17
+// scheduled arrivals at the SPAWN door, left AUTO - the busiest door on the
+// board - structurally unable to count above zero, and made the AUTO row
+// contradict itself, since its state is read from this machine's own report.
+// An attribution invented to make three lanes look busy is the same defect as
+// a count that does not count, and a wrong door is exactly that in reverse.
+//
+// The SPAWN door's real supply is machines/dispatch-stamp.cjs, which a chat
+// calls when it forks a worker. viaOf reads exactly auto / chat / spawn and
+// reports anything else as unknown; do not mint a second vocabulary.
 if (started.length) {
   for (const s of started) {
     const at = new Date().toISOString();
@@ -413,7 +427,7 @@ if (started.length) {
         "Proven from disk rather than believed: the session must have a transcript written within the liveness window, " +
         "or the card leaves the belt and the dispatch is reported as abandoned. The session id is the uuid this machine " +
         "handed to the CLI with --session-id, which is what the transcript is named after.",
-      dispatch: { session: s.session, label: s.label, via: "spawn", pid: s.pid, at },
+      dispatch: { session: s.session, label: s.label, via: "auto", pid: s.pid, at },
       seen: true,
       confidence: "measured",
       triggers: "terminal:recorded",
