@@ -260,7 +260,7 @@ const add = (id, name, met, detail, why) => conditions.push({ id, name, met: met
     try {
       // schtasks rather than the PowerShell cmdlet: no module load, and it is
       // present on every Windows since XP.
-      const out = execSync(`schtasks /query /tn "${name}" /fo LIST`, { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] });
+      const out = execSync(`schtasks /query /tn "${name}" /fo LIST`, { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], windowsHide: true });
       const status = (out.match(/Status:\s*(\w+)/i) || [])[1] || "unknown";
       taskName = name;
       schedulerState = status;

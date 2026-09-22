@@ -164,7 +164,7 @@ const listening = (port) =>
     console.log(`board-serve-check: server on ${PORT} is older than the code - replacing it`);
     try {
       const { execSync } = require("child_process");
-      const out = execSync(`netstat -ano -p tcp | findstr LISTENING | findstr :${PORT}`, { encoding: "utf8" });
+      const out = execSync(`netstat -ano -p tcp | findstr LISTENING | findstr :${PORT}`, { encoding: "utf8", windowsHide: true });
       const pid = (out.trim().split(/\s+/).pop() || "").trim();
       if (pid && /^\d+$/.test(pid)) process.kill(Number(pid));
     } catch {
@@ -181,10 +181,15 @@ const listening = (port) =>
   // every repo's files from the ecosystem map and uses its own root only for
   // the port file and the pulse belt. Starting it inside whichever repo
   // happened to run this check would make its home depend on who revived it.
+  // windowsHide because detached means DETACHED_PROCESS, which gives node a
+  // console of its own - and a console in an interactive session is a black
+  // window on the operator's desktop. The factory's standing rule since
+  // 2026-09-15: nothing it starts by itself is allowed to appear.
   const child = spawn(process.execPath, [SERVER, "--port", String(PORT)], {
     cwd: FACTORY,
     detached: true,
     stdio: "ignore",
+    windowsHide: true,
   });
   child.unref();
 

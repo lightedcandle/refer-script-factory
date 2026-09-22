@@ -42,7 +42,52 @@ const path = require("path");
 // id was unknowable until after the session existed - which is to say, never.
 // --session-id lets this machine mint the id first. See the stamp below.
 const crypto = require("crypto");
-const { spawn } = require("child_process");
+const { spawn, execFileSync } = require("child_process");
+
+// NO WINDOW, EVER. This is the factory's standing rule for anything it starts
+// on its own, and it was written on 2026-09-15 for the pulse: "the node pulse
+// pop-up window is intrusive, can it run in background or stay in system tray."
+// Every other launcher in the engine honours it - run-hidden.vbs for the
+// scheduled task, windowsHide on every spawnSync - and this one did not, so
+// three black console windows landed on the operator's desktop every twenty
+// minutes and sat on top of whatever he was doing.
+//
+// Hiding the cmd.exe wrapper is NOT enough, and that was the first attempt:
+// `claude` resolves to a launcher that opens a console of its OWN, so the
+// window came back with the whole command line as its title. Measured, not
+// assumed - the probe compared the set of windowed processes before and after.
+//
+// Starting claude.exe DIRECTLY removes the wrapper that was defeating the flag,
+// and the newline that started this whole thread cannot bite either, because
+// nothing re-parses a command line. Resolved once, here, rather than hardcoded:
+// a path baked into a machine is a machine that breaks on the next install.
+// `where.exe claude` answers with the SHIMS only - claude and claude.cmd - and
+// never the executable, so the .exe has to be derived from where a shim lives:
+// npm puts the real binary under <bin>/node_modules/@anthropic-ai/claude-code/.
+// Anything that is not a file on disk is not returned, so a layout change
+// degrades to the visible-window fallback rather than to a failed dispatch.
+const CLAUDE_EXE = (() => {
+  const seen = [];
+  try {
+    for (const line of String(execFileSync("where.exe", ["claude"], { encoding: "utf8", windowsHide: true })).split(/\r?\n/)) {
+      const shim = line.trim();
+      if (!shim) continue;
+      if (/\.exe$/i.test(shim)) seen.push(shim);
+      seen.push(path.join(path.dirname(shim), "node_modules/@anthropic-ai/claude-code/bin/claude.exe"));
+    }
+  } catch {
+    /* not on PATH at all - the fallback says so by behaving visibly */
+  }
+  if (process.env.APPDATA) seen.push(path.join(process.env.APPDATA, "npm/node_modules/@anthropic-ai/claude-code/bin/claude.exe"));
+  for (const p of seen) {
+    try {
+      if (fs.statSync(p).isFile()) return p;
+    } catch {
+      /* next candidate */
+    }
+  }
+  return null;
+})();
 
 const ROOT = process.cwd();
 const CTX = path.join(ROOT, ".claude/agent-context");
@@ -200,17 +245,39 @@ const brief = (p) =>
     `that is not on a branch when that happens is lost or, worse, left loose in a`,
     `working tree other sessions share.`,
     ``,
-    `1. FIRST, before changing anything: cut the branch.`,
+    // STEP ZERO IS A REFUSAL, and it is first because every other step writes
+    // something. On the night of 2026-09-22 two sessions worked
+    // six-orphans-need-a-decision-not-a-purge and both merged it (#571, #572),
+    // and a third had to reconcile them. claim.cjs exits 3 when another live
+    // session already holds this item; it is on main and, until this line, no
+    // session had ever been told to run it.
+    `0. FIRST, before reading further: node tools/factory/claim.cjs`,
+    `   It names the deposit that is yours and reports any other live session`,
+    `   holding it. If it exits 3, STAND DOWN - do not branch, do not edit, do`,
+    `   not close anything. Deposit what the duplicate cost and stop.`,
+    `1. Then, before changing anything: cut the branch.`,
     `   <lane>/<PLAN-ID>--claude--<lineage>--<description>`,
     `2. Commit each coherent piece as you finish it, and push after the first one.`,
     `   Use git commit -F <file> for the message, never inline -m.`,
     `3. Commit ONLY the files you touched. This tree is shared with other sessions`,
     `   and carries their uncommitted work; never git add -A, never stash.`,
-    `4. Then append ONE record to .claude/agent-context/findings.jsonl with`,
-    `   subject "${p.r.id}" and a terminal trigger (terminal:fixed, terminal:shipped,`,
-    `   terminal:resolved, or terminal:withdrawn if it should not be done). That`,
-    `   closure is what takes it off the conveyor - nothing else will, and until it`,
-    `   is written the board cannot say your work happened.`,
+    // THE CLOSING RECORD HAS A SHAPE, AND THIS STEP USED TO DESCRIBE ONLY ITS
+    // PURPOSE. Four sessions on the night of 2026-09-22 read the word "closure"
+    // in the sentence below and wrote it as the record's KIND - a word the belt
+    // does not recognise, so each one landed in badKinds and carried no kind at
+    // all. They were reading the brief correctly; the brief named the act and
+    // never named the vocabulary. Both constraints are stated literally now.
+    `4. Then append ONE record to .claude/agent-context/findings.jsonl that ends`,
+    `   this item. Three fields decide whether it lands:`,
+    `     subject  EXACTLY "${p.r.id}" - the id and nothing else. A subject that`,
+    `              describes the item in prose closes nothing and says nothing.`,
+    `     triggers one of terminal:fixed, terminal:shipped, terminal:resolved, or`,
+    `              terminal:withdrawn if it should not be done.`,
+    `     kind     one of contract, deposit, note, decision - or leave the field`,
+    `              out entirely, which is fine. "closure" is not a kind; it is`,
+    `              what the record DOES, and writing it there voids the field.`,
+    `   That record is what takes this off the conveyor - nothing else will, and`,
+    `   until it is written the board cannot say your work happened.`,
     `5. Publish with npm run branch:publish, which opens AND squash-merges the PR.`,
     ``,
     // A REAL TRAP, FOUND BY AN AGENT ON THIS BELT, not theory: it wanted to run
@@ -293,16 +360,84 @@ if (DO_DISPATCH && picks.length) {
     // main-checkout session by matching a transcript filename against the
     // session id, and the CLI names that file after this uuid.
     const session = crypto.randomUUID();
-    const logPath = path.join(DISPATCH_LOGS, `${String(p.r.id).replace(/[^a-z0-9._-]/gi, "_").slice(0, 80)}.log`);
+    const stem = String(p.r.id).replace(/[^a-z0-9._-]/gi, "_").slice(0, 80);
+    const logPath = path.join(DISPATCH_LOGS, `${stem}.log`);
+    // THE BRIEF WAS 71 CHARACTERS LONG BY THE TIME IT ARRIVED.
+    //
+    // It used to be passed as an argument: spawn("cmd.exe", ["/c", "claude",
+    // "-p", ..., brief(p)]). cmd.exe ends a command line at the first CR or LF,
+    // and no amount of quoting changes that - so every dispatched session
+    // received exactly the first line, "Work this single deposit from the
+    // Living Factory belt and nothing else.", and NOTHING after it. Not the ID.
+    // Not the claim, the evidence or the recommendation. Not one of the five
+    // publishing steps. Not the git trap or the Set-Content trap.
+    //
+    // Proven from the receiving end on 2026-09-22: the first user message in a
+    // live dispatched session's transcript measures 71 characters. The sessions
+    // were titled after it, which is why three agents all carried the same name
+    // on the board.
+    //
+    // They worked anyway - branching, committing with -F, publishing, closing
+    // their records - because CLAUDE.md is injected by the harness at session
+    // start and carries that discipline. They found their own assignment by
+    // reading the process table. That is the fleet compensating for a broken
+    // dispatcher, and it is not a reason to leave it broken: the ONE thing
+    // CLAUDE.md cannot supply is which deposit this session is for, which is
+    // the only part of the brief that differs between them.
+    //
+    // FOUR SHAPES WERE TRIED BEFORE THIS ONE, and the three that failed all
+    // failed the same way: they tried to push the whole brief THROUGH the
+    // command line.
+    //
+    //   brief as an argument        - cut at the first newline. The bug.
+    //   stdin from a file handle    - works, but only when the child is NOT
+    //                                 detached. This dispatcher must detach;
+    //                                 it starts three sessions and exits.
+    //   cmd.exe's own < redirect    - the quoting does not survive spawn().
+    //
+    // So the brief stops travelling and the POINTER travels instead. One line
+    // is all cmd.exe will carry, and one line is all this needs: the id, so a
+    // session knows its assignment even if nothing else works, and the path to
+    // the rest of it.
+    //
+    // The file lives inside the repo deliberately. The first pointer probe put
+    // it in a scratchpad and the dispatched session could not read another
+    // session's scratchpad - it spent its entire turn proving it had no way to
+    // see its own orders. Under .claude/agent-context it is beside the belt the
+    // session is already reading.
+    const briefPath = path.join(DISPATCH_LOGS, `${stem}.brief.txt`);
+    const briefRel = path.relative(ROOT, briefPath).replace(/\\/g, "/");
     try {
+      fs.writeFileSync(briefPath, brief(p), "utf8");
       // Output goes to a file rather than nowhere. Whatever an agent says on
       // its way out is the only evidence of why it left.
+      //
+      // Read it for what it is: `claude -p` holds ALL of its output until the
+      // run finishes, so an empty log means STILL WORKING far more often than
+      // it means dead. That is why the aliveness check below asks the operating
+      // system and not this file. Three probes were scored as failures against
+      // an empty log while the sessions behind them were running fine.
       const fd = fs.openSync(logPath, "w");
-      const child = spawn("cmd.exe", ["/c", "claude", "-p", "--session-id", session, "--permission-mode", "acceptEdits", brief(p)], {
-        cwd: ROOT,
-        detached: true,
-        stdio: ["ignore", fd, fd],
-      });
+      // "ID: <slug>" IS A CONTRACT WITH ANOTHER STATION, not a formatting
+      // choice. tools/factory/claim.cjs - the collision guard an agent built on
+      // this belt - finds a session's own deposit by matching exactly that
+      // marker in an ancestor's command line. Writing the id in prose instead
+      // would leave the guard reporting "this session was not dispatched by the
+      // intake worker" for every session, which is silence where a refusal
+      // belongs. Keep the marker, keep a space after the id, and let nothing
+      // else in this line look like one.
+      const pointer =
+        `Work one deposit from the Living Factory belt and nothing else. ID: ${p.r.id} . ` +
+        `Run node tools/factory/claim.cjs first - it names your deposit and stops you if another live session already holds it. ` +
+        `Then read your full brief - the claim, the evidence, the recommendation and how to publish and close it - ` +
+        `in this repo at ${briefRel} , before anything else.`;
+      const argv = ["-p", "--session-id", session, "--permission-mode", "acceptEdits", pointer];
+      // The fallback keeps the factory running on a host where claude is only a
+      // shim - at the cost of the window, which is said out loud rather than
+      // discovered on the desktop.
+      const child = CLAUDE_EXE
+        ? spawn(CLAUDE_EXE, argv, { cwd: ROOT, detached: true, stdio: ["ignore", fd, fd], windowsHide: true })
+        : spawn("cmd.exe", ["/c", "claude", ...argv], { cwd: ROOT, detached: true, stdio: ["ignore", fd, fd], windowsHide: true });
       child.unref();
       // The handle stays open until after the survival check. Closing it
       // immediately left every log file 0 bytes, so a dispatch that died had

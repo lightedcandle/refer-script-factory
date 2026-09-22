@@ -1753,10 +1753,19 @@ const workerState = (file, armedKey) => {
 // A dispatch record carries `via`. Where it does not, the door is UNKNOWN and
 // is reported as unknown - never guessed. An attribution invented to make three
 // lanes look busy would be the same defect as a count that does not count.
-const viaOf = (d) => {
+// A FUNCTION DECLARATION, DELIBERATELY, AND NOT A CONST ARROW.
+//
+// It was a const arrow and the board stopped building: "Cannot access 'viaOf'
+// before initialization". Two readers above this line call it while the file is
+// still executing top to bottom - the belt row mapper at :654 and the live-agent
+// row mapper at :1654 - and a const is in its dead zone until the line that
+// defines it runs. A declaration is hoisted, so where it sits in the file stops
+// mattering, which is the right property for a pure two-line helper that four
+// separate passes need.
+function viaOf(d) {
   const v = String((d && d.via) || "").toLowerCase();
   return v === "auto" || v === "chat" || v === "spawn" ? v : "unknown";
-};
+}
 
 // Can the board see this door at all? The two evidence sources are the session
 // transcripts and the worktrees; either can be absent on a host.
