@@ -1,16 +1,18 @@
-# Hive Node Deployment Pack: Telechurch Zo
+# Hive Node Deployment Pack: Home Desk
 
-Created: 2026-04-29T20:13:30.193Z
+Created: 2026-09-22T20:39:13.446Z
 
 ## Node
 
 - ID: `telechurch`
 - Instance: `telechurch`
-- Account: `zo:telechurch`
-- Status: `ratifying`
-- Role: first hive proving node
-- Transport: `file_api_tandem`
+- Account: `local:windows-desktop`
+- Status: `active`
+- Role: The operator's own Windows desktop - the machine the Living Factory actually runs on. It is the first and currently the only outpost.
+- Transport: `local_station`
+- Lifecycle: `active`
 - Ready to stage: `true`
+- Stage blocker: none
 
 ## Required Datasets
 
@@ -64,13 +66,13 @@ Created: 2026-04-29T20:13:30.193Z
 
 ## Ratification Contracts
 
-### Ratify Telechurch Zo transport
+### Ratify Home Desk transport
 
 - Template: `ratification-test`
 - Operation: `file_exists:/home/workspace/refer-zo-bootstrap/package.json`
 - Acceptance: contract ships through file/API lane; talkback returns status done; talkback validates with root hive director
 
-### Ratify Telechurch Zo bounded execution
+### Ratify Home Desk bounded execution
 
 - Template: `ratification-test`
 - Operations: `file_exists:/home/workspace/refer-zo-bootstrap/package.json`, `list_dir:/home/workspace/refer-zo-bootstrap/scripts/factory`

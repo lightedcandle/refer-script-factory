@@ -1,17 +1,18 @@
 {
   "schema": "refer.hive.node-deployment-pack.v1",
-  "created_at": "2026-04-29T21:23:06.589Z",
+  "created_at": "2026-09-22T20:39:01.723Z",
   "node": {
     "id": "alliance",
     "name": "Alliance Zo",
     "kind": "zo_computer",
-    "role": "alliance application build node",
+    "role": "RETIRED. Was a multi-scope Zo hive node; its ratified scope was the Alliance application build.",
     "account": "zo:alliance",
     "instance": "alliance",
-    "status": "active",
+    "status": "retired",
+    "lifecycle": "stopped",
     "transport": "file_api_tandem",
-    "persona": "governance-synced",
-    "rules": "governance-synced"
+    "persona": "unknown",
+    "rules": "unknown"
   },
   "authority": {
     "source_repo": "refer-script-factory",
@@ -183,6 +184,7 @@
       ]
     }
   ],
-  "ready_to_stage": true,
-  "next": "sync runtime to node, run remote checks, dispatch ratification contracts, validate talkback, then update hive registry"
+  "stage_blocker": "node status is \"retired\"",
+  "ready_to_stage": false,
+  "next": "this node is not stageable: node status is \"retired\". Revive it in the registry before building a deployment pack against it."
 }

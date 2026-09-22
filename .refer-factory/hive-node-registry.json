@@ -1,6 +1,6 @@
 {
   "schema": "refer.hive.node-registry.v1",
-  "updated_at": "2026-09-12T11:27:05.129Z",
+  "updated_at": "2026-09-22T12:40:18.831Z",
   "purpose": "Track the machines the factory can reach - outposts that receive work, do it and report back - together with their roles, lifecycle state, and ratification evidence.",
   "purpose_original": "Track hive-capable factory and Zo computer nodes, their roles, deployment state, and ratification evidence.",
   "vocabulary": {
@@ -18,7 +18,7 @@
       "stopped": "It ran and then quit. Nobody decided that, and nobody noticed at the time.",
       "never_started": "Nothing ever fed it on its own. It only ever answered when pushed to, or it never ran at all. This is NOT the same as stopped, and calling it stopped invents a working period that never existed."
     },
-    "reader_warning": "No reader enforces these. scripts/hive/hive-node-deployment-pack.mjs gates only on status !== 'blocked', so a retired outpost still reports ready_to_stage: true. See finding `retired-status-does-not-block-the-deployment-pack`."
+    "reader_warning": "One reader now enforces these. scripts/hive/hive-node-deployment-pack.mjs refuses to stage a node whose status is blocked or retired, and - when the field is present - whose lifecycle is anything but active; it names the reason in stage_blocker. Fixed 2026-09-22, finding `retired-status-does-not-block-the-deployment-pack`. Two things are still true and should not be read as covered: no writer sets `lifecycle` at all - hive-node-registry.mjs upsert and heartbeat both leave it alone, so a node registered today is judged on status only - and that same heartbeat command will re-arm a pulse for a retired node without objecting."
   },
   "nodes": [
     {
@@ -801,8 +801,8 @@
         }
       ],
       "created_at": "2026-04-29T17:09:16.543Z",
-      "updated_at": "2026-09-12T11:27:05.129Z",
-      "last_seen_at": "2026-09-12T11:27:05.129Z",
+      "updated_at": "2026-09-22T12:40:18.831Z",
+      "last_seen_at": "2026-09-22T12:40:18.831Z",
       "heartbeat": {
         "policy": "adaptive",
         "mode": "living-factory",
@@ -811,22 +811,22 @@
         "interval_label": "15m",
         "max_interval_ms": 86400000,
         "max_interval_label": "24h",
-        "next_due_at": "2026-09-12T19:27:05.129Z",
-        "current_interval_ms": 28800000,
-        "current_interval_label": "8h",
-        "last_beat_at": "2026-09-12T11:27:05.129Z"
+        "next_due_at": "2026-09-23T12:40:18.831Z",
+        "current_interval_ms": 86400000,
+        "current_interval_label": "24h",
+        "last_beat_at": "2026-09-22T12:40:18.831Z"
       },
       "host": {
         "platform": "win32",
-        "booted_at": "2026-09-11T06:33:36.324Z",
-        "uptime_hours": 28.9,
+        "booted_at": "2026-09-21T09:39:00.454Z",
+        "uptime_hours": 27,
         "reboot_pending": false,
         "reboot_pending_reasons": [],
         "restart_window": {
           "from": 0,
           "to": 6
         },
-        "checked_at": "2026-09-12T11:27:05.129Z"
+        "checked_at": "2026-09-22T12:40:18.831Z"
       }
     }
   ]
