@@ -200,7 +200,17 @@ const brief = (p) =>
     `that is not on a branch when that happens is lost or, worse, left loose in a`,
     `working tree other sessions share.`,
     ``,
-    `1. FIRST, before changing anything: cut the branch.`,
+    // STEP ZERO IS A REFUSAL, and it is first because every other step writes
+    // something. On the night of 2026-09-22 two sessions worked
+    // six-orphans-need-a-decision-not-a-purge and both merged it (#571, #572),
+    // and a third had to reconcile them. claim.cjs exits 3 when another live
+    // session already holds this item; it is on main and, until this line, no
+    // session had ever been told to run it.
+    `0. FIRST, before reading further: node tools/factory/claim.cjs`,
+    `   It names the deposit that is yours and reports any other live session`,
+    `   holding it. If it exits 3, STAND DOWN - do not branch, do not edit, do`,
+    `   not close anything. Deposit what the duplicate cost and stop.`,
+    `1. Then, before changing anything: cut the branch.`,
     `   <lane>/<PLAN-ID>--claude--<lineage>--<description>`,
     `2. Commit each coherent piece as you finish it, and push after the first one.`,
     `   Use git commit -F <file> for the message, never inline -m.`,
@@ -363,10 +373,19 @@ if (DO_DISPATCH && picks.length) {
       // system and not this file. Three probes were scored as failures against
       // an empty log while the sessions behind them were running fine.
       const fd = fs.openSync(logPath, "w");
+      // "ID: <slug>" IS A CONTRACT WITH ANOTHER STATION, not a formatting
+      // choice. tools/factory/claim.cjs - the collision guard an agent built on
+      // this belt - finds a session's own deposit by matching exactly that
+      // marker in an ancestor's command line. Writing the id in prose instead
+      // would leave the guard reporting "this session was not dispatched by the
+      // intake worker" for every session, which is silence where a refusal
+      // belongs. Keep the marker, keep a space after the id, and let nothing
+      // else in this line look like one.
       const pointer =
-        `Work the deposit ${p.r.id} from the Living Factory belt and nothing else. ` +
-        `Your full brief - the claim, the evidence, the recommendation and how to publish and close it - ` +
-        `is in this repo at ${briefRel}. Read that file first, before anything else.`;
+        `Work one deposit from the Living Factory belt and nothing else. ID: ${p.r.id} . ` +
+        `Run node tools/factory/claim.cjs first - it names your deposit and stops you if another live session already holds it. ` +
+        `Then read your full brief - the claim, the evidence, the recommendation and how to publish and close it - ` +
+        `in this repo at ${briefRel} , before anything else.`;
       const child = spawn("cmd.exe", ["/c", "claude", "-p", "--session-id", session, "--permission-mode", "acceptEdits", pointer], {
         cwd: ROOT,
         detached: true,
