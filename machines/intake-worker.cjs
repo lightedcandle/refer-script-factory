@@ -37,6 +37,11 @@
  */
 const fs = require("fs");
 const path = require("path");
+// A dispatch has to be able to say WHICH session it started, and until now it
+// could not: the CLI names its transcript after a uuid it chooses itself, so the
+// id was unknowable until after the session existed - which is to say, never.
+// --session-id lets this machine mint the id first. See the stamp below.
+const crypto = require("crypto");
 const { spawn } = require("child_process");
 
 const ROOT = process.cwd();
@@ -131,7 +136,20 @@ const alive = (id) => {
 // What it CANNOT count is a live session that no belt record names - and that is
 // a missing record, not a wrong filter. Do not "fix" this into counting only our
 // own dispatches; that would be the bug it was mistaken for.
-const onBelt = records.filter((r) => !isDone(r) && !isCloser(r) && !isAnnotation(r) && dispatchFor.has(String(r.id)) && alive(dispatchFor.get(String(r.id)).session));
+// HELD means held by a session that is STILL THERE, and both callers below
+// must mean the same thing by it. `onBelt` always checked liveness; `waiting`
+// checked only that a dispatch record existed. While nothing wrote one the two
+// could never disagree - and the moment something did, they disagreed on every
+// dispatch whose agent died: excluded from waiting so never offered again, and
+// absent from onBelt so not holding capacity either. The item stopped being
+// anywhere, and exit-worker - the machine that returns it to incoming - is not
+// armed.
+//
+// It short-circuits on the map before touching the disk, so sessionLife runs
+// only for items that actually carry a dispatch.
+const heldByLiveSession = (id) => dispatchFor.has(String(id)) && alive(dispatchFor.get(String(id)).session);
+
+const onBelt = records.filter((r) => !isDone(r) && !isCloser(r) && !isAnnotation(r) && heldByLiveSession(r.id));
 const room = Math.max(0, CAPACITY - onBelt.length);
 
 // ONLY A CONTRACT MAY BE DISPATCHED.
@@ -147,7 +165,10 @@ const room = Math.max(0, CAPACITY - onBelt.length);
 // decision could only reach here through a mis-set kind, and the cost of that
 // mistake is an agent taking a decision that was reserved.
 const waiting = records
-  .filter((r) => IX.isOpenContract(r) && !dispatchFor.has(String(r.id)))
+  // Not "has this ever been dispatched" but "is somebody working it NOW". A
+  // dead session's item is waiting again, which is the only answer that does
+  // not lose it.
+  .filter((r) => IX.isOpenContract(r) && !heldByLiveSession(r.id))
   // His by law. Never pick these up.
   .filter((r) => String(r.triggers || "") !== "operator" && r.owner !== "operator" && !r.operatorDecision)
   .map((r) => ({ r, advice: adviceOf(r), at: Date.parse(r.run || "") || 0 }))
@@ -267,12 +288,17 @@ if (DO_DISPATCH && picks.length) {
   const launched = [];
   for (const p of picks) {
     const label = String(p.r.id).slice(0, 28);
+    // MINTED BEFORE THE SPAWN, not read back after it. This is the whole reason
+    // the stamp below can be proven from disk: sessionLife identifies a
+    // main-checkout session by matching a transcript filename against the
+    // session id, and the CLI names that file after this uuid.
+    const session = crypto.randomUUID();
     const logPath = path.join(DISPATCH_LOGS, `${String(p.r.id).replace(/[^a-z0-9._-]/gi, "_").slice(0, 80)}.log`);
     try {
       // Output goes to a file rather than nowhere. Whatever an agent says on
       // its way out is the only evidence of why it left.
       const fd = fs.openSync(logPath, "w");
-      const child = spawn("cmd.exe", ["/c", "claude", "-p", "--permission-mode", "acceptEdits", brief(p)], {
+      const child = spawn("cmd.exe", ["/c", "claude", "-p", "--session-id", session, "--permission-mode", "acceptEdits", brief(p)], {
         cwd: ROOT,
         detached: true,
         stdio: ["ignore", fd, fd],
@@ -282,7 +308,7 @@ if (DO_DISPATCH && picks.length) {
       // immediately left every log file 0 bytes, so a dispatch that died had
       // nothing to say about why - which is most of the value of keeping a log
       // at all. This process exits moments later and the handle goes with it.
-      launched.push({ id: p.r.id, label, pid: child.pid, logPath, fd });
+      launched.push({ id: p.r.id, label, session, pid: child.pid, logPath, fd });
     } catch (err) {
       failedToStart.push({ id: p.r.id, label, why: err.message.split("\n")[0] });
     }
@@ -292,7 +318,7 @@ if (DO_DISPATCH && picks.length) {
     // an immediate failure is immediate.
     Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, SURVIVE_MS);
     for (const l of launched) {
-      if (stillAlive(l.pid)) started.push({ id: l.id, label: l.label, pid: l.pid });
+      if (stillAlive(l.pid)) started.push({ id: l.id, label: l.label, session: l.session, pid: l.pid });
       else failedToStart.push({ id: l.id, label: l.label, pid: l.pid, why: lastWords(l.logPath), log: path.relative(ROOT, l.logPath).replace(/\\/g, "/") });
       try {
         fs.closeSync(l.fd);
@@ -330,6 +356,68 @@ if (failedToStart.length) {
       claim: `${ids.length} dispatch(es) exited immediately: ${why}`,
       detail: `Items affected: ${ids.join(", ")}. The work stays accepted and will be offered again on the next run. Nothing is wrong with the items themselves.`,
       recommend: "Fix what the exit message names, then let the next run pick these up again. Until then every run will keep failing the same way.",
+    };
+    try {
+      fs.appendFileSync(BELT, JSON.stringify(rec) + "\n", "utf8");
+    } catch {
+      /* the console still says it */
+    }
+  }
+}
+
+// A DISPATCH THAT STARTED GOES ON THE BELT TOO. Until now only the failures
+// did, and the asymmetry was invisible because the field it should have written
+// already existed and already had readers.
+//
+// `dispatch` is how the factory answers "who is working on what". THREE
+// machines read it: this one at :113 to compute how full the belt is,
+// exit-worker at :83 to decide whether work was abandoned, and watcher at :1372
+// to judge MOVING against QUIET. NOTHING WROTE IT. One record in 464 had one -
+// hand-written on 2026-09-12 - so all three answered from a belt of one, and
+// each read its own blank as a separate defect: intake reported onBelt:0 with
+// three sessions alive and double-dispatched an item, the exit door has judged
+// nothing since, and the board's door census counted one arrival on a night
+// that ran ten.
+//
+// ONE RECORD PER SURVIVOR, NEVER PER LAUNCH. `started` is already filtered to
+// processes still there after SURVIVE_MS. Stamping a pid that died in twenty
+// seconds would rebuild precisely the defect the operator named - "fix the
+// collector so it stops reporting dispatched" - one field further along.
+//
+// NO `kind` FIELD, AND THIS IS LOAD-BEARING. kind.cjs attaches a declared kind
+// to the record's SUBJECT when that subject is a known id, so a dispatch stamp
+// carrying `kind` would silently RECLASSIFY THE ITEM IT NAMES - "note" would
+// drop a live contract out of open work altogether. The hand-written record got
+// this right by carrying no kind and this follows it. With `triggers:
+// terminal:recorded` and a known subject the record reads as an ANNOTATION:
+// bookkeeping, drawn in no column, counted in no tally, and - because
+// terminal:recorded is in the NOTING family - it does NOT close the item.
+//
+// `via: "spawn"` because an agent starting an agent is the SPAWN door by
+// definition and not by convention (P15). viaOf reads exactly auto / chat /
+// spawn and reports anything else as unknown; do not mint a second vocabulary.
+if (started.length) {
+  for (const s of started) {
+    const at = new Date().toISOString();
+    const rec = {
+      id: `dispatch-${s.session}`,
+      run: at,
+      tier: 1,
+      dimension: "architecture",
+      source: "intake-worker",
+      // Keyed by SUBJECT and looked up by the item's ID in all three readers,
+      // so this must be the dispatched item itself - never a description of it.
+      subject: String(s.id),
+      claim: `Dispatched to its own session. ${s.label} took this at ${at} (pid ${s.pid}).`,
+      evidence:
+        "Proven from disk rather than believed: the session must have a transcript written within the liveness window, " +
+        "or the card leaves the belt and the dispatch is reported as abandoned. The session id is the uuid this machine " +
+        "handed to the CLI with --session-id, which is what the transcript is named after.",
+      dispatch: { session: s.session, label: s.label, via: "spawn", pid: s.pid, at },
+      seen: true,
+      confidence: "measured",
+      triggers: "terminal:recorded",
+      owner: "architecture",
     };
     try {
       fs.appendFileSync(BELT, JSON.stringify(rec) + "\n", "utf8");
