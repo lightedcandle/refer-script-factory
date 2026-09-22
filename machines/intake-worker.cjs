@@ -206,11 +206,23 @@ const brief = (p) =>
     `   Use git commit -F <file> for the message, never inline -m.`,
     `3. Commit ONLY the files you touched. This tree is shared with other sessions`,
     `   and carries their uncommitted work; never git add -A, never stash.`,
-    `4. Then append ONE record to .claude/agent-context/findings.jsonl with`,
-    `   subject "${p.r.id}" and a terminal trigger (terminal:fixed, terminal:shipped,`,
-    `   terminal:resolved, or terminal:withdrawn if it should not be done). That`,
-    `   closure is what takes it off the conveyor - nothing else will, and until it`,
-    `   is written the board cannot say your work happened.`,
+    // THE CLOSING RECORD HAS A SHAPE, AND THIS STEP USED TO DESCRIBE ONLY ITS
+    // PURPOSE. Four sessions on the night of 2026-09-22 read the word "closure"
+    // in the sentence below and wrote it as the record's KIND - a word the belt
+    // does not recognise, so each one landed in badKinds and carried no kind at
+    // all. They were reading the brief correctly; the brief named the act and
+    // never named the vocabulary. Both constraints are stated literally now.
+    `4. Then append ONE record to .claude/agent-context/findings.jsonl that ends`,
+    `   this item. Three fields decide whether it lands:`,
+    `     subject  EXACTLY "${p.r.id}" - the id and nothing else. A subject that`,
+    `              describes the item in prose closes nothing and says nothing.`,
+    `     triggers one of terminal:fixed, terminal:shipped, terminal:resolved, or`,
+    `              terminal:withdrawn if it should not be done.`,
+    `     kind     one of contract, deposit, note, decision - or leave the field`,
+    `              out entirely, which is fine. "closure" is not a kind; it is`,
+    `              what the record DOES, and writing it there voids the field.`,
+    `   That record is what takes this off the conveyor - nothing else will, and`,
+    `   until it is written the board cannot say your work happened.`,
     `5. Publish with npm run branch:publish, which opens AND squash-merges the PR.`,
     ``,
     // A REAL TRAP, FOUND BY AN AGENT ON THIS BELT, not theory: it wanted to run
