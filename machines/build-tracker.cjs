@@ -4629,7 +4629,7 @@ ${D.cycles
         <span id="autorun" title="Automatic: accepted work is picked up and started on its own, up to three at a time. Manual: nothing starts until you mark each one Go." style="display:inline-flex; align-items:center; gap:7px; margin-left:12px; cursor:pointer; user-select:none; font-family:${mono}; font-size:11px; letter-spacing:0.08em">
           <span id="autorun-auto" style="color:oklch(0.50 0.01 80)">AUTOMATIC</span>
           <span id="autorun-track" style="position:relative; width:34px; height:14px; border-radius:7px; border:1px solid oklch(0.36 0.012 70); background:oklch(0.18 0.012 70); flex:none">
-            <span id="autorun-knob" style="position:absolute; top:1px; left:1px; width:10px; height:10px; border-radius:50%; background:oklch(0.62 0.01 80); transition:left 140ms, background 140ms"></span>
+            <span id="autorun-knob" style="position:absolute; top:1px; left:21px; width:10px; height:10px; border-radius:50%; background:oklch(0.62 0.01 80); transition:left 140ms, background 140ms"></span>
           </span>
           <span id="autorun-manual" style="color:oklch(0.86 0.01 80)">MANUAL</span>
         </span>
@@ -5464,7 +5464,12 @@ ${Object.entries(EXPLAIN)
     var busy = false;
     function paint(next, pending) {
       mode = next;
-      knob.style.left = next === 'auto' ? '21px' : '1px';
+      // THE KNOB SITS UNDER THE WORD THAT IS TRUE. AUTOMATIC is the left
+      // label, so automatic is the left position - the first version had it
+      // backwards, parking the knob beside AUTOMATIC while the factory was in
+      // Manual. On a control whose whole job is to say whether work starts by
+      // itself, reading the wrong way round is the worst thing it can do.
+      knob.style.left = next === 'auto' ? '1px' : '21px';
       knob.style.background = next === 'auto' ? 'oklch(0.72 0.13 150)' : 'oklch(0.62 0.01 80)';
       autoLbl.style.color = next === 'auto' ? 'oklch(0.80 0.12 150)' : 'oklch(0.50 0.01 80)';
       manLbl.style.color = next === 'auto' ? 'oklch(0.50 0.01 80)' : 'oklch(0.86 0.01 80)';
