@@ -809,6 +809,15 @@ if (JSON_OUT) {
       console.log(`\n  NOTHING IS RUNNING. The work stays accepted and will be offered again next run; the reason is on the belt.`);
     }
   }
-  else if (picks.length) console.log(`\n  Not armed. Brief written to .claude/agent-context/intake-brief.txt; run with --dispatch to start them.`);
+  // THREE REASONS NOTHING WENT OUT, AND THEY ARE NOT THE SAME REASON. --dry
+  // disarms the run and writes nothing, so saying "brief written" there names a
+  // file that does not exist; and "not armed" is about the AutoRun switch, which
+  // may well be set to Automatic while --dry is in force. A machine that
+  // misreports its own state in the one mode built for checking it is worse than
+  // one with no check at all.
+  else if (picks.length) {
+    if (DRY) console.log(`\n  Dry run. Nothing was written and nothing was started. Without --dry these ${picks.length} would go out ${MODE === "auto" ? "now - the AutoRun switch is set to Automatic" : "only with --dispatch - the AutoRun switch is set to Manual"}.`);
+    else console.log(`\n  Not armed. Brief written to .claude/agent-context/intake-brief.txt; run with --dispatch to start them.`);
+  }
 }
 process.exit(0);
