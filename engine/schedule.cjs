@@ -341,6 +341,7 @@ function machineIsMidEdit(command) {
     r = spawnSync("git", ["-C", path.dirname(file), "status", "--porcelain", "--", file], {
       encoding: "utf8",
       windowsHide: true,
+      windowsHide: true,
     });
   } catch (err) {
     return { checked: false, why: `git could not be run - ${err.message}` };
@@ -812,7 +813,13 @@ for (const st of due) {
   let res;
   try {
     const [cmd, ...args] = command.split(/\s+/);
-    res = spawnSync(cmd, args, { cwd: ROOT, encoding: "utf8", shell: process.platform === "win32" });
+    // windowsHide: every station runs through here, every five minutes. It
+    // inherits a hidden console today because run-hidden.vbs starts the engine -
+    // but a station is also run by hand and by other callers, and the rule is
+    // that nothing the factory starts on its own may put a window on screen.
+    // Stated at the one point all of them pass through, rather than trusted to
+    // an ancestor two launchers away.
+    res = spawnSync(cmd, args, { cwd: ROOT, encoding: "utf8", shell: process.platform === "win32", windowsHide: true });
   } finally {
     // The lock clears whatever happened. A finally, not a happy path.
     s.lockedAt = null;

@@ -42,7 +42,52 @@ const path = require("path");
 // id was unknowable until after the session existed - which is to say, never.
 // --session-id lets this machine mint the id first. See the stamp below.
 const crypto = require("crypto");
-const { spawn } = require("child_process");
+const { spawn, execFileSync } = require("child_process");
+
+// NO WINDOW, EVER. This is the factory's standing rule for anything it starts
+// on its own, and it was written on 2026-09-15 for the pulse: "the node pulse
+// pop-up window is intrusive, can it run in background or stay in system tray."
+// Every other launcher in the engine honours it - run-hidden.vbs for the
+// scheduled task, windowsHide on every spawnSync - and this one did not, so
+// three black console windows landed on the operator's desktop every twenty
+// minutes and sat on top of whatever he was doing.
+//
+// Hiding the cmd.exe wrapper is NOT enough, and that was the first attempt:
+// `claude` resolves to a launcher that opens a console of its OWN, so the
+// window came back with the whole command line as its title. Measured, not
+// assumed - the probe compared the set of windowed processes before and after.
+//
+// Starting claude.exe DIRECTLY removes the wrapper that was defeating the flag,
+// and the newline that started this whole thread cannot bite either, because
+// nothing re-parses a command line. Resolved once, here, rather than hardcoded:
+// a path baked into a machine is a machine that breaks on the next install.
+// `where.exe claude` answers with the SHIMS only - claude and claude.cmd - and
+// never the executable, so the .exe has to be derived from where a shim lives:
+// npm puts the real binary under <bin>/node_modules/@anthropic-ai/claude-code/.
+// Anything that is not a file on disk is not returned, so a layout change
+// degrades to the visible-window fallback rather than to a failed dispatch.
+const CLAUDE_EXE = (() => {
+  const seen = [];
+  try {
+    for (const line of String(execFileSync("where.exe", ["claude"], { encoding: "utf8", windowsHide: true })).split(/\r?\n/)) {
+      const shim = line.trim();
+      if (!shim) continue;
+      if (/\.exe$/i.test(shim)) seen.push(shim);
+      seen.push(path.join(path.dirname(shim), "node_modules/@anthropic-ai/claude-code/bin/claude.exe"));
+    }
+  } catch {
+    /* not on PATH at all - the fallback says so by behaving visibly */
+  }
+  if (process.env.APPDATA) seen.push(path.join(process.env.APPDATA, "npm/node_modules/@anthropic-ai/claude-code/bin/claude.exe"));
+  for (const p of seen) {
+    try {
+      if (fs.statSync(p).isFile()) return p;
+    } catch {
+      /* next candidate */
+    }
+  }
+  return null;
+})();
 
 const ROOT = process.cwd();
 const CTX = path.join(ROOT, ".claude/agent-context");
@@ -386,11 +431,13 @@ if (DO_DISPATCH && picks.length) {
         `Run node tools/factory/claim.cjs first - it names your deposit and stops you if another live session already holds it. ` +
         `Then read your full brief - the claim, the evidence, the recommendation and how to publish and close it - ` +
         `in this repo at ${briefRel} , before anything else.`;
-      const child = spawn("cmd.exe", ["/c", "claude", "-p", "--session-id", session, "--permission-mode", "acceptEdits", pointer], {
-        cwd: ROOT,
-        detached: true,
-        stdio: ["ignore", fd, fd],
-      });
+      const argv = ["-p", "--session-id", session, "--permission-mode", "acceptEdits", pointer];
+      // The fallback keeps the factory running on a host where claude is only a
+      // shim - at the cost of the window, which is said out loud rather than
+      // discovered on the desktop.
+      const child = CLAUDE_EXE
+        ? spawn(CLAUDE_EXE, argv, { cwd: ROOT, detached: true, stdio: ["ignore", fd, fd], windowsHide: true })
+        : spawn("cmd.exe", ["/c", "claude", ...argv], { cwd: ROOT, detached: true, stdio: ["ignore", fd, fd], windowsHide: true });
       child.unref();
       // The handle stays open until after the survival check. Closing it
       // immediately left every log file 0 bytes, so a dispatch that died had

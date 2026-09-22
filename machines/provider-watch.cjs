@@ -53,7 +53,7 @@ if (!fs.existsSync(CTX)) {
 
 const run = (cmd, args) => {
   try {
-    return { ok: true, out: execFileSync(cmd, args, { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }) };
+    return { ok: true, out: execFileSync(cmd, args, { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], windowsHide: true }) };
   } catch (err) {
     return { ok: false, out: "", err: String((err && err.stderr) || (err && err.message) || err).trim() };
   }
