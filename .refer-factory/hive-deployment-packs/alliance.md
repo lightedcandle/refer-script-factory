@@ -1,16 +1,18 @@
 # Hive Node Deployment Pack: Alliance Zo
 
-Created: 2026-04-29T21:23:06.589Z
+Created: 2026-09-22T20:39:01.723Z
 
 ## Node
 
 - ID: `alliance`
 - Instance: `alliance`
 - Account: `zo:alliance`
-- Status: `active`
-- Role: alliance application build node
+- Status: `retired`
+- Role: RETIRED. Was a multi-scope Zo hive node; its ratified scope was the Alliance application build.
 - Transport: `file_api_tandem`
-- Ready to stage: `true`
+- Lifecycle: `stopped`
+- Ready to stage: `false`
+- Stage blocker: node status is "retired"
 
 ## Required Datasets
 
@@ -78,5 +80,5 @@ Created: 2026-04-29T21:23:06.589Z
 
 ## Next
 
-sync runtime to node, run remote checks, dispatch ratification contracts, validate talkback, then update hive registry
+this node is not stageable: node status is "retired". Revive it in the registry before building a deployment pack against it.
 

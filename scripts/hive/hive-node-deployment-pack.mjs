@@ -67,6 +67,30 @@ function findNode(registry, id) {
   return node;
 }
 
+// A node is stageable only if it is a machine the factory still keeps. Two
+// vocabularies say otherwise and both have to be read: `status`, which carries
+// `blocked` and also `retired`, and `lifecycle`, added by the retirement pass of
+// 2026-09-11 to separate a machine deliberately stood down from one that quit
+// unwatched from one that never ran at all.
+//
+// Reading only `status !== "blocked"` meant all three retired Zo computers kept
+// reporting ready_to_stage: true hours after they were stood down, because
+// "retired" is not "blocked" - finding
+// `retired-status-does-not-block-the-deployment-pack`.
+//
+// `lifecycle` is checked only when it is present. No writer sets it yet -
+// hive-node-registry.mjs upsert and heartbeat both leave it alone - so requiring
+// it outright would make every newly registered node unstageable, which is the
+// same defect pointed the other way.
+const UNSTAGEABLE_STATUS = new Set(["blocked", "retired"]);
+const STAGEABLE_LIFECYCLE = "active";
+
+function stageBlocker(node) {
+  if (UNSTAGEABLE_STATUS.has(node.status)) return `node status is "${node.status}"`;
+  if (node.lifecycle && node.lifecycle !== STAGEABLE_LIFECYCLE) return `node lifecycle is "${node.lifecycle}"`;
+  return null;
+}
+
 function buildPack(args) {
   const registry = readRegistry();
   const node = findNode(registry, args.id);
@@ -81,6 +105,7 @@ function buildPack(args) {
     };
   });
   const missing = files.filter((file) => !file.exists).map((file) => file.local);
+  const blocker = stageBlocker(node);
   const pack = {
     schema: "refer.hive.node-deployment-pack.v1",
     created_at: new Date().toISOString(),
@@ -92,6 +117,7 @@ function buildPack(args) {
       account: node.account,
       instance: node.instance,
       status: node.status,
+      lifecycle: node.lifecycle || null,
       transport: node.transport,
       persona: node.persona,
       rules: node.rules,
@@ -151,10 +177,13 @@ function buildPack(args) {
         ],
       },
     ],
-    ready_to_stage: missing.length === 0 && node.status !== "blocked",
-    next: missing.length
-      ? "add missing local deployment files before attempting node sync"
-      : "sync runtime to node, run remote checks, dispatch ratification contracts, validate talkback, then update hive registry",
+    stage_blocker: blocker,
+    ready_to_stage: missing.length === 0 && !blocker,
+    next: blocker
+      ? `this node is not stageable: ${blocker}. Revive it in the registry before building a deployment pack against it.`
+      : missing.length
+        ? "add missing local deployment files before attempting node sync"
+        : "sync runtime to node, run remote checks, dispatch ratification contracts, validate talkback, then update hive registry",
   };
   writePack(pack);
   return pack;
@@ -184,7 +213,9 @@ function renderMarkdown(pack) {
     `- Status: \`${pack.node.status}\``,
     `- Role: ${pack.node.role}`,
     `- Transport: \`${pack.node.transport}\``,
+    `- Lifecycle: \`${pack.node.lifecycle || "not recorded"}\``,
     `- Ready to stage: \`${pack.ready_to_stage}\``,
+    `- Stage blocker: ${pack.stage_blocker || "none"}`,
     "",
     "## Required Datasets",
     "",
