@@ -2164,6 +2164,80 @@ function main(lockState) {
     claim: String(x.r.claim || "").replace(/\s+/g, " ").slice(0, 180),
   });
 
+  // ---- THE LIST STANDS, AND THAT IS NOT WHAT PROMOTE ALONE GIVES ----------
+  //
+  // `byOutcome.PROMOTE` is this round's promotions and nothing else, because
+  // zone 1 scans INCOMING - awaiting triage, plus the decisions held for him. A
+  // deposit promoted at 20:20 is a contract by 20:50 and has left that scan, so
+  // a list built from PROMOTE alone drops it and every contract accepted before
+  // it. That is a per-tick message wearing a standing list's name, and it is the
+  // exact failure the deposit behind this warns about: the door starves on every
+  // tick the watcher did not wake.
+  //
+  // Measured 2026-09-22T20:49Z, once the door began draining instead of
+  // choosing: "0 offered by the watcher" beside 28 eligible contracts.
+  //
+  // SO THE LIST CARRIES EVERYTHING THE DOOR MAY PULL, refreshed every round.
+  // This round's promotions first, in the rank zone 1 computed for them; then
+  // every accepted contract nobody is holding, oldest first.
+  //
+  // A CARRIED ROW SAYS IT HAS NO PRIORITY rather than being given an invented
+  // one. Zone 1 never judged it - it was accepted on some earlier round - and a
+  // number computed from nothing is worse here than an honest blank, because
+  // everything downstream treats priority as a judgement somebody made.
+  //
+  // THIS IS NOT A NEW POWER. Step 6 publishes; it accepts nothing, promotes
+  // nothing, retires nothing and dispatches nothing. A contract on this list was
+  // already accepted by a recorded act. Listing it is how the door can reach it.
+  //
+  // HELD MEANS HELD BY A SESSION THAT IS STILL THERE - the same rule zone 2 and
+  // the intake worker use, from the same `sessionLife`, so an item whose agent
+  // died is listed again rather than lost. Never "has this ever been dispatched".
+  const dispatchOf = new Map();
+  for (const r of records) if (r.subject && r.dispatch) dispatchOf.set(String(r.subject), r.dispatch);
+  const heldByLive = (id) => {
+    const d = dispatchOf.get(String(id));
+    if (!d) return false;
+    const life = sessionLife(d.session, ROOT, ALIVE_MS);
+    return !!(life && life.alive);
+  };
+
+  const carriedRow = (r, rank) => ({
+    rank,
+    handle: H(r),
+    id: String(r.id),
+    outcome: "CARRIED",
+    band: null,
+    priority: null,
+    priorityParts: null,
+    priorityInputsAbsent: ["zone 1 scans incoming and never judged this one - it was accepted on an earlier round, so no priority was computed for it and none is invented here"],
+    blockedBehindIt: null,
+    tier: Number.isFinite(Number(r.tier)) ? Number(r.tier) : null,
+    dimension: r.dimension || null,
+    addressedTo: r.triggers || null,
+    waitedHours: Math.round(((now - (runAt(r) || now)) / MS.h) * 10) / 10,
+    timer: null,
+    reverify: null,
+    gaps: [],
+    caveats: [],
+    hasRecommendation: !!adviceOf(r),
+    why: "already accepted as work, and nobody is holding it. Listed so the door can reach it - a list carrying only this round's promotions would strand every contract accepted on an earlier one.",
+    claim: String(r.claim || "").replace(/\s+/g, " ").slice(0, 180),
+  });
+
+  const promotedRows = ARM ? byOutcome.PROMOTE.map(row) : [];
+  const promotedIds = new Set(promotedRows.map((r) => r.id));
+  const readyStanding = [
+    ...promotedRows,
+    ...records
+      .filter((r) => IX.isOpenContract(r) && !promotedIds.has(String(r.id)))
+      // His by law, and never listed for a door to take.
+      .filter((r) => String(r.triggers || "") !== "operator" && r.owner !== "operator" && !r.operatorDecision)
+      .filter((r) => !heldByLive(r.id))
+      .sort((a, b) => runAt(a) - runAt(b))
+      .map((r, i) => carriedRow(r, promotedRows.length + i + 1)),
+  ];
+
   const queue = {
     producedAt: new Date(now).toISOString(),
     goodFor: humanMs(GOOD_FOR),
@@ -2192,9 +2266,22 @@ function main(lockState) {
       retire: byOutcome.RETIRE.length,
       raise: byOutcome.RAISE.length,
     },
-    // What intake may pull. Only an ACCEPTED contract is pullable.
-    ready: ARM ? byOutcome.PROMOTE.map(row) : [],
-    readyEmptyBecause: ARM ? null : "promotion is disarmed. The watcher has judged these as ready but has not accepted them, and only a contract may be dispatched. Nothing here is pullable until --arm is used or somebody triages them by hand. This is not an empty morning.",
+    // What intake may pull. Only an ACCEPTED contract is pullable - this round's
+    // promotions and every contract accepted earlier that nobody is holding.
+    ready: readyStanding,
+    // AN EMPTY LIST IS THREE DIFFERENT MORNINGS and they must not read alike:
+    // promotion disarmed, everything already in hand, or genuinely nothing to do.
+    // The field built to explain an empty handoff sat at null for weeks while the
+    // list was empty, which is the silent-success shape this factory exists to end.
+    readyEmptyBecause: readyStanding.length
+      ? null
+      : ARM
+        ? `nothing is pullable. ${byOutcome.PROMOTE.length} deposit(s) were promoted this round, and every contract already accepted is either finished or held by a live session right now. This is a genuinely empty morning, not a withheld one.`
+        : "promotion is disarmed. The watcher has judged these as ready but has not accepted them, and only a contract may be dispatched. Nothing here is pullable until --arm is used or somebody triages them by hand. This is not an empty morning.",
+    // Kept apart because they answer different questions: how much did THIS round
+    // decide, against how much can the door reach at all.
+    readyPromotedThisRound: promotedRows.length,
+    readyCarriedForward: readyStanding.length - promotedRows.length,
     // The full ordered judgement. HOLD is deliberately absent - see below.
     queue: judged.filter((x) => x.outcome !== "HOLD").map(row),
     holdsSilent: byOutcome.HOLD.length,
