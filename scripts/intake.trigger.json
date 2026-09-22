@@ -1,0 +1,8 @@
+{
+  "id": "intake",
+  "run": "factory:intake-worker",
+  "every": "20m",
+  "floor": "5m",
+  "owns": "architecture",
+  "why": "Picks the next accepted contract off incoming and starts a named agent on it, within a capacity of 3. Nothing ran this before, so work marked Go filled a queue nobody collected - the operator could accept work and watch it sit. It is NOT a dispatcher on a timer: it reads .claude/agent-context/intake-mode.json first and, in MANUAL (the default, including when that file is missing), only prepares a brief and stops. It dispatches only while the board's AutoRun switch is set to Automatic, which is the operator's hand on the trigger with a clock merely deciding how often it is checked."
+}

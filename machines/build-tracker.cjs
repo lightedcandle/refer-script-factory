@@ -3474,8 +3474,19 @@ const rowHtml = (e, i, side) => `
               // It appends a belt record rather than editing one. The belt is
               // append-only, so accepting work is itself evidence, with a time
               // and an author, exactly like the work it authorises.
-              side === "in" && e.kind === KIND.DEPOSIT
-                ? `<div class="acceptrow"><button class="acceptbtn" data-accept="${esc(e.rid)}" data-dim="${esc(e.dimWord)}">ACCEPT AS WORK</button><span class="acceptwhy">nothing is owed on this until somebody accepts it</span></div>`
+              // NOTES GET THE SWITCH TOO, added 2026-09-21 on the operator's
+              // instruction: "add a switch to notes and deposits that can mark
+              // it as Go. So it can get picked up."
+              //
+              // A note is a statement to read and nothing is owed on it - that
+              // stays true, and is exactly why it needed this. Before, a note
+              // that turned out to matter had no way out of the reading area at
+              // all: the only route into work was to write it again as a
+              // deposit. The kind model refuses to INFER work from a note; it
+              // has never refused a recorded act saying so, which is what this
+              // is.
+              (side === "in" && e.kind === KIND.DEPOSIT) || e.kind === KIND.NOTE
+                ? `<div class="acceptrow"><button class="acceptbtn" data-accept="${esc(e.rid)}" data-dim="${esc(e.dimWord)}">GO &middot; ACCEPT AS WORK</button><span class="acceptwhy">${e.kind === KIND.NOTE ? "a note is only read; Go makes it work somebody owes" : "nothing is owed on this until somebody accepts it"}</span></div>`
                 : ""
             }
             ${e.why ? `<p class="rowwhy">${esc(e.why)}</p>` : ""}
@@ -4606,6 +4617,22 @@ ${D.cycles
       <div style="display:flex; align-items:center; gap:14px">
         <span style="width:9px; height:9px; border-radius:50%; background:oklch(0.66 0.14 150); animation:alive 3s ease-in-out infinite; flex:none"></span>
         <span style="font-family:${mono}; font-size:13px; letter-spacing:0.16em; color:oklch(0.62 0.01 80)">INCOMING</span>
+        <!-- THE AUTORUN SWITCH. Operator, 2026-09-21: "an AutoRun switch on the
+             incoming section that will flip all to being cued and pulled to the
+             board automatically. but when off its manual by the individual
+             switch. Automatic *|---* Manual"
+             It renders as one track with the live position marked, because the
+             two words are the whole state and a checkbox would make the reader
+             work out which way is which. It starts nothing itself - it writes a
+             setting the scheduled intake worker reads, and MANUAL is what every
+             unknown or missing value means. -->
+        <span id="autorun" title="Automatic: accepted work is picked up and started on its own, up to three at a time. Manual: nothing starts until you mark each one Go." style="display:inline-flex; align-items:center; gap:7px; margin-left:12px; cursor:pointer; user-select:none; font-family:${mono}; font-size:11px; letter-spacing:0.08em">
+          <span id="autorun-auto" style="color:oklch(0.50 0.01 80)">AUTOMATIC</span>
+          <span id="autorun-track" style="position:relative; width:34px; height:14px; border-radius:7px; border:1px solid oklch(0.36 0.012 70); background:oklch(0.18 0.012 70); flex:none">
+            <span id="autorun-knob" style="position:absolute; top:1px; left:1px; width:10px; height:10px; border-radius:50%; background:oklch(0.62 0.01 80); transition:left 140ms, background 140ms"></span>
+          </span>
+          <span id="autorun-manual" style="color:oklch(0.86 0.01 80)">MANUAL</span>
+        </span>
         <span style="font-family:${mono}; font-size:13px; color:oklch(0.62 0.01 80); margin-left:auto; white-space:nowrap">${D.incoming.length} in flight${D.forYouCount ? ` &middot; <span style="color:oklch(0.82 0.11 25)">${D.forYouCount} for you</span>` : ""}</span>
       </div>
       <!-- TWO ROWS OF CHIPS, BECAUSE THERE ARE TWO QUESTIONS.
@@ -5404,7 +5431,7 @@ ${Object.entries(EXPLAIN)
       var id = btn.getAttribute('data-accept');
       var dim = btn.getAttribute('data-dim') || '';
       btn.disabled = true;
-      btn.textContent = 'ACCEPTING...';
+      btn.textContent = 'MARKING GO...';
       try {
         fetch(api('/triage'), {
           method: 'POST',
@@ -5412,7 +5439,7 @@ ${Object.entries(EXPLAIN)
           body: JSON.stringify({ id: id, kind: 'contract', to: dim, by: 'operator, from the board' }),
         })
           .then(function (r) { return r.ok ? r.json() : Promise.reject(new Error('bad status')); })
-          .then(function () { btn.textContent = 'ACCEPTED · ON THE NEXT BUILD'; })
+          .then(function () { btn.textContent = 'GO · ON THE NEXT BUILD'; })
           .catch(function () { btn.disabled = false; btn.textContent = 'COULD NOT REACH THE BELT — RETRY'; });
       } catch (e) {
         btn.disabled = false;
@@ -5420,6 +5447,49 @@ ${Object.entries(EXPLAIN)
       }
     });
   });
+
+  // AUTORUN. The switch asks the server what the setting is rather than
+  // trusting what the page was built with, because the board is a snapshot and
+  // this is the one control whose wrong position would be actively misleading -
+  // a switch reading MANUAL while the factory dispatches is worse than no
+  // switch. Same rule on the way back: the position is set from the server's
+  // answer, never from the click.
+  (function () {
+    var wrap = document.getElementById('autorun');
+    if (!wrap) return;
+    var knob = document.getElementById('autorun-knob');
+    var autoLbl = document.getElementById('autorun-auto');
+    var manLbl = document.getElementById('autorun-manual');
+    var mode = 'manual';
+    var busy = false;
+    function paint(next, pending) {
+      mode = next;
+      knob.style.left = next === 'auto' ? '21px' : '1px';
+      knob.style.background = next === 'auto' ? 'oklch(0.72 0.13 150)' : 'oklch(0.62 0.01 80)';
+      autoLbl.style.color = next === 'auto' ? 'oklch(0.80 0.12 150)' : 'oklch(0.50 0.01 80)';
+      manLbl.style.color = next === 'auto' ? 'oklch(0.50 0.01 80)' : 'oklch(0.86 0.01 80)';
+      wrap.style.opacity = pending ? '0.55' : '1';
+    }
+    fetch(api('/intake-mode'), { headers: { accept: 'application/json' } })
+      .then(function (r) { return r.json(); })
+      .then(function (j) { paint(j && j.mode === 'auto' ? 'auto' : 'manual', false); })
+      .catch(function () { paint('manual', false); });
+    wrap.addEventListener('click', function () {
+      if (busy) return;
+      busy = true;
+      var want = mode === 'auto' ? 'manual' : 'auto';
+      paint(mode, true);
+      fetch(api('/intake-mode'), {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ mode: want })
+      })
+        .then(function (r) { return r.ok ? r.json() : Promise.reject(new Error('refused')); })
+        .then(function (j) { paint(j && j.mode === 'auto' ? 'auto' : 'manual', false); })
+        .catch(function () { paint(mode, false); wrap.title = 'Could not reach the board server, so the switch did not move.'; })
+        .then(function () { busy = false; });
+    });
+  })();
 
   (function () {
     var btn = document.getElementById('markread');
@@ -6226,9 +6296,23 @@ ${Object.entries(EXPLAIN)
         '<div style="margin-top:16px; border-top:1px solid oklch(0.26 0.012 70); padding-top:12px">' +
           '<div style="font-family:ui-monospace,monospace; font-size:11px; letter-spacing:0.14em; color:oklch(0.60 0.01 80); margin-bottom:5px">ADD A NOTE</div>' +
           '<textarea id="plannote" rows="3" placeholder="What should happen with this plan?" style="width:100%; box-sizing:border-box; background:oklch(0.13 0.01 70); color:oklch(0.90 0.008 85); border:1px solid oklch(0.32 0.012 70); border-radius:7px; padding:8px 10px; font-size:13px; line-height:1.5; font-family:inherit; resize:vertical"></textarea>' +
-          '<div style="display:flex; align-items:center; gap:10px; margin-top:8px">' +
-            '<button id="plansave" style="cursor:pointer; background:oklch(0.30 0.06 300); color:oklch(0.94 0.01 300); border:1px solid oklch(0.46 0.08 300); border-radius:7px; padding:5px 12px; font-size:13px; font-weight:600">Save to the belt</button>' +
-            '<span id="planstatus" style="font-size:12px; color:oklch(0.60 0.01 80)">It arrives as a deposit in INCOMING, waiting to be picked up &mdash; not worked on the instant you save it.</span>' +
+          '<div style="display:flex; align-items:center; gap:10px; margin-top:8px; flex-wrap:wrap">' +
+            '<button id="plansave" style="cursor:pointer; background:oklch(0.30 0.06 300); color:oklch(0.94 0.01 300); border:1px solid oklch(0.46 0.08 300); border-radius:7px; padding:8px 14px; font-size:13px; font-weight:600">Save to the belt</button>' +
+            // THE GO SWITCH. Off, a note is a deposit: seen, not yet judged,
+            // and nobody owes anything on it. On, the same save also performs
+            // the triage act, so it lands as a contract - work somebody owes -
+            // without having to be found again in INCOMING afterwards.
+            //
+            // It is a real switch rather than a second button because the
+            // decision belongs WITH the writing: by the time a note is written
+            // its author already knows whether it is a thought or a job, and
+            // making them come back later to say so is how a queue fills with
+            // things nobody ever promoted.
+            '<label id="plangowrap" title="Go marks this as work somebody owes, instead of a thought waiting to be judged. It does not start an agent this second." style="display:inline-flex; align-items:center; gap:7px; cursor:pointer; padding:7px 11px; border:1px solid oklch(0.34 0.012 70); border-radius:7px; font-size:13px; color:oklch(0.78 0.01 80)">' +
+              '<input id="plango" type="checkbox" style="width:15px; height:15px; accent-color:oklch(0.62 0.13 150); cursor:pointer">' +
+              '<span>Go</span>' +
+            '</label>' +
+            '<span id="planstatus" style="font-size:12px; color:oklch(0.60 0.01 80)">Saved without Go it waits in INCOMING as a thought. With Go it becomes work somebody owes.</span>' +
           '</div>' +
         '</div>';
       var close = document.getElementById('planclose');
@@ -6259,18 +6343,31 @@ ${Object.entries(EXPLAIN)
         if (status) { status.textContent = 'Nothing to save yet.'; status.style.color = 'oklch(0.76 0.12 75)'; }
         return;
       }
-      if (status) { status.textContent = 'Saving...'; status.style.color = 'oklch(0.60 0.01 80)'; }
+      var goBox = document.getElementById('plango');
+      var go = !!(goBox && goBox.checked);
+      if (status) { status.textContent = go ? 'Saving and marking Go...' : 'Saving...'; status.style.color = 'oklch(0.60 0.01 80)'; }
       fetch('/plan-note' + (location.search || ''), {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ planId: p.id, title: p.title, status: p.status, owner: p.owner, note: note })
+        body: JSON.stringify({ planId: p.id, title: p.title, status: p.status, owner: p.owner, note: note, go: go })
       })
         .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
         .then(function (out) {
           if (!out.ok) throw new Error((out.j && out.j.error) || 'refused');
           if (status) {
-            status.textContent = 'On the belt as ' + (out.j.record || 'a deposit') + '. It will show in INCOMING at the next build.';
-            status.style.color = 'oklch(0.72 0.13 150)';
+            // Three outcomes, three sentences. Asking for Go and not getting it
+            // is the one that must never read like success: the note is safe,
+            // and it is still only a thought.
+            if (out.j.go) {
+              status.textContent = 'Marked Go. It is now work somebody owes, and shows on the belt at the next build.';
+              status.style.color = 'oklch(0.72 0.13 150)';
+            } else if (out.j.goWhy) {
+              status.textContent = out.j.goWhy;
+              status.style.color = 'oklch(0.76 0.12 75)';
+            } else {
+              status.textContent = 'Saved as a thought in INCOMING. Nothing is owed on it until it is marked Go.';
+              status.style.color = 'oklch(0.72 0.13 150)';
+            }
           }
           // Cleared only here, where the record exists on the belt. Anywhere
           // else and a failed save would quietly take the note with it.

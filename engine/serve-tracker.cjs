@@ -724,6 +724,75 @@ const server = http
       return;
     }
 
+    // ---- INTAKE MODE: THE AUTORUN SWITCH -----------------------------------
+    //
+    // Operator, 2026-09-21: "an AutoRun switch on the incoming section that
+    // will flip all to being cued and pulled to the board automatically. but
+    // when off its manual by the individual switch."
+    //
+    // AUTOMATIC means the intake worker dispatches whatever it finds, within
+    // its own capacity of 3. MANUAL means it only prepares, and each item moves
+    // by its own Go switch. The board writes this file; the worker reads it on
+    // every run.
+    //
+    // THIS ENDPOINT ONLY WRITES A SETTING. It starts nothing. The dispatching
+    // is done by the scheduled worker, which is what a scheduler is for -
+    // having a web handler spawn agents would put process creation behind an
+    // HTTP request, and that is a sharp edge regardless of how local the
+    // socket is.
+    //
+    // Manual is the default everywhere, including when this file is missing or
+    // unreadable, so nothing can start dispatching because a setting got lost.
+    if (P === "/intake-mode" && (req.method === "GET" || req.method === "POST")) {
+      const modeFile = path.join(path.dirname(R.read), "intake-mode.json");
+      const readMode = () => {
+        try {
+          const j = JSON.parse(fs.readFileSync(modeFile, "utf8"));
+          return { mode: String(j && j.mode) === "auto" ? "auto" : "manual", at: j && j.at, by: j && j.by };
+        } catch {
+          return { mode: "manual", at: null, by: null };
+        }
+      };
+      if (req.method === "GET") {
+        res.writeHead(200, { "content-type": "application/json", "cache-control": "no-store", "x-living-factory": "board", "x-board-version": OWN_VERSION });
+        res.end(JSON.stringify(readMode()));
+        return;
+      }
+      let body = "";
+      req.on("data", (c) => {
+        body += c;
+        if (body.length > 2 * 1024) req.destroy();
+      });
+      req.on("end", () => {
+        let p = {};
+        try {
+          p = JSON.parse(body || "{}");
+        } catch {
+          res.writeHead(400, { "content-type": "application/json", "cache-control": "no-store" });
+          return res.end(JSON.stringify({ error: "unreadable body" }));
+        }
+        // Only the two words. Anything else is refused rather than rounded to
+        // one of them, because rounding an unknown value toward "auto" is how a
+        // factory starts dispatching by accident.
+        const mode = p.mode === "auto" ? "auto" : p.mode === "manual" ? "manual" : null;
+        if (!mode) {
+          res.writeHead(400, { "content-type": "application/json", "cache-control": "no-store" });
+          return res.end(JSON.stringify({ error: 'mode must be "auto" or "manual"' }));
+        }
+        const next = { mode, at: new Date().toISOString(), by: "the board" };
+        try {
+          fs.mkdirSync(path.dirname(modeFile), { recursive: true });
+          fs.writeFileSync(modeFile, JSON.stringify(next, null, 2) + "\n", "utf8");
+        } catch {
+          res.writeHead(500, { "content-type": "application/json", "cache-control": "no-store" });
+          return res.end(JSON.stringify({ error: "the setting could not be written" }));
+        }
+        res.writeHead(200, { "content-type": "application/json", "cache-control": "no-store", "x-living-factory": "board", "x-board-version": OWN_VERSION });
+        res.end(JSON.stringify(next));
+      });
+      return;
+    }
+
     // ---- PLAN NOTE: A THOUGHT ABOUT A PLAN, PUT WHERE WORK ENTERS -----------
     //
     // Operator, 2026-09-21: "an Add Notes to it and on save ai will read the
@@ -798,8 +867,45 @@ const server = http
         } catch {
           return fail(500, "the belt could not be appended to");
         }
-        res.writeHead(200, { "content-type": "application/json", "cache-control": "no-store", "x-living-factory": "board", "x-board-version": OWN_VERSION });
-        res.end(JSON.stringify({ accepted: planId, record: rec.id, kind: rec.kind }));
+        // GO. Operator, 2026-09-21: "add a switch to notes and deposits that
+        // can mark it as Go. So it can get picked up."
+        //
+        // Go is not a new state and deliberately so: it is the triage act this
+        // factory already has, reached at the moment of writing instead of
+        // afterwards. Without it a note is written here and then has to be
+        // found again in INCOMING to be accepted, and a control somebody has to
+        // go looking for is one they will not use.
+        //
+        // BOTH RECORDS OR NEITHER IS NOT AVAILABLE - the belt is append-only,
+        // so the deposit is already written by the time this runs. If the
+        // triage append fails, the note still exists as a deposit and the
+        // response says so rather than claiming Go succeeded. A half act that
+        // reports success is worse than one that reports what it managed.
+        let promoted = null;
+        if (p.go === true) {
+          if (!KINDLIB) {
+            return okish({ accepted: planId, record: rec.id, kind: rec.kind, go: false, goWhy: "the kind vocabulary is not resolvable from this repo, so the note was saved but not marked Go" });
+          }
+          try {
+            const t = KINDLIB.triageRecord({
+              id: rec.id,
+              kind: "contract",
+              dimension: rec.dimension,
+              owner: typeof p.owner === "string" ? p.owner.slice(0, 80) : "",
+              to: rec.dimension,
+              by: "operator, from the plan panel",
+            });
+            fs.appendFileSync(R.belt, JSON.stringify(t) + "\n", "utf8");
+            promoted = t.id;
+          } catch (err) {
+            return okish({ accepted: planId, record: rec.id, kind: rec.kind, go: false, goWhy: `the note was saved, but marking it Go failed: ${err.message}` });
+          }
+        }
+        function okish(payload) {
+          res.writeHead(200, { "content-type": "application/json", "cache-control": "no-store", "x-living-factory": "board", "x-board-version": OWN_VERSION });
+          res.end(JSON.stringify(payload));
+        }
+        okish({ accepted: planId, record: rec.id, kind: promoted ? "contract" : rec.kind, go: !!promoted, triaged: promoted });
       });
       return;
     }

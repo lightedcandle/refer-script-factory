@@ -43,7 +43,33 @@ const ROOT = process.cwd();
 const CTX = path.join(ROOT, ".claude/agent-context");
 const BELT = path.join(CTX, "findings.jsonl");
 const JSON_OUT = process.argv.includes("--json");
-const DO_DISPATCH = process.argv.includes("--dispatch");
+
+// AUTOMATIC OR MANUAL, and the operator holds the switch.
+//
+// Operator, 2026-09-21: "add an AutoRun switch on the incoming section that
+// will flip all to being cued and pulled to the board automatically. but when
+// off its manual by the individual switch."
+//
+// Until now dispatching was decided by whoever typed the command: --dispatch
+// or nothing. That is not a setting, it is an argument, so the board could
+// show the intake door as CLOSED and nobody could open it from the board. The
+// mode file is the setting, written by the board and read here.
+//
+// MANUAL IS THE DEFAULT, and it is the default on every path: a missing file,
+// an unreadable file, or any word other than "auto" all mean manual. A factory
+// that starts dispatching because a settings file went missing is the wrong
+// failure to build in.
+const MODE_FILE = path.join(process.cwd(), ".claude/agent-context/intake-mode.json");
+function intakeMode() {
+  try {
+    const j = JSON.parse(fs.readFileSync(MODE_FILE, "utf8"));
+    return String(j && j.mode) === "auto" ? "auto" : "manual";
+  } catch {
+    return "manual";
+  }
+}
+const MODE = intakeMode();
+const DO_DISPATCH = process.argv.includes("--dispatch") || MODE === "auto";
 
 const MS = { m: 6e4, h: 36e5 };
 const ALIVE_MS = 30 * MS.m;
@@ -174,6 +200,11 @@ const report = {
   selected: picks.map((p) => ({ id: p.r.id, hasRecommendation: !!p.advice, waitedHours: Math.round((now - p.at) / MS.h) })),
   dispatched: DO_DISPATCH ? started : [],
   armed: DO_DISPATCH,
+  // Which of the two reasons it is armed, so the board can say "Automatic"
+  // rather than just "armed" - and so a run armed by a typed flag is never
+  // mistaken for the switch being on.
+  mode: MODE,
+  armedBy: DO_DISPATCH ? (MODE === "auto" ? "the AutoRun switch" : "the --dispatch flag") : null,
 };
 fs.mkdirSync(CTX, { recursive: true });
 fs.writeFileSync(path.join(CTX, "intake-worker.json"), JSON.stringify(report, null, 2) + "\n");
