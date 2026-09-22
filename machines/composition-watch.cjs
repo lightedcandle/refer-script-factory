@@ -80,12 +80,69 @@ const files = [];
 // holds the template, and counting them separately would halve the number for
 // every component that uses an external template.
 const RE = /\*ngIf|\*ngFor|\*ngSwitch|@if\b|@for\b|@switch\b/g;
+
+// STRIPPING COMMENTS IS NOT A ONE-LINE REGEX, and this machine reported a third
+// of the app's biggest component as commented-out for five days because it
+// assumed otherwise.
+//
+// It used to run `.replace(/\/\*[\s\S]*?\*\//g, " ")` over raw source. In
+// sanctuary.component.ts, line 2459 carries an ordinary file-input attribute:
+//
+//     accept="image/*" capture="environment" (change)="onIssueScreenshotSelect(…)"
+//
+// The `/*` inside the MIME type `image/*` opens what that regex reads as a
+// comment, and nothing closes it until the next `*/` 285,128 characters later.
+// One span, 273 of the file's 390 structural directives swallowed, and the
+// watcher reported 117.
+//
+// The damage was not cosmetic. Composition law turns on this number - 63
+// rebuilds in about six seconds and 73 takes over three minutes - so the
+// scheduled instrument that exists to raise the alarm was reporting the most
+// expensive component in the app as comfortably inside the line. The repo's own
+// composition-gate had it right at 382 the whole time, which is how the
+// disagreement surfaced at all.
+//
+// Two rules now, and both matter:
+//
+//   1. A comment opens only where code can actually begin - not inside a quoted
+//      attribute value. Quoted strings are blanked first, so `image/*` is gone
+//      before any comment scan sees it.
+//   2. An unterminated `/*` consumes nothing. A comment that never closes is far
+//      more likely to be a false open than a genuine third of a file, and
+//      failing to strip costs an over-count that someone checks, while
+//      over-stripping hides the fault this machine exists to catch.
+function stripBlockComments(text) {
+  // Blank the contents of quoted runs, keeping length and newlines, so that a
+  // `/*` living inside an attribute value cannot open a comment.
+  const masked = text.replace(/"[^"\n]*"|'[^'\n]*'/g, (m) => m[0] + " ".repeat(m.length - 2) + m[0]);
+  let out = "";
+  let i = 0;
+  for (;;) {
+    const open = masked.indexOf("/*", i);
+    if (open < 0) {
+      out += text.slice(i);
+      break;
+    }
+    const close = masked.indexOf("*/", open + 2);
+    if (close < 0) {
+      // Unterminated: keep the rest verbatim rather than eating the file.
+      out += text.slice(i);
+      break;
+    }
+    out += text.slice(i, open);
+    // Preserve newlines so nothing downstream sees the file shrink by lines.
+    out += text.slice(open, close + 2).replace(/[^\n]/g, " ");
+    i = close + 2;
+  }
+  return out;
+}
+
 const counts = {};
 for (const f of files) {
   const key = path.relative(ROOT, f).replace(/\.(ts|html)$/, "").replace(/\\/g, "/");
   // Block comments stripped, so a commented-out block does not count against a
   // component that has already been cleaned up.
-  const src = fs.readFileSync(f, "utf8").replace(/\/\*[\s\S]*?\*\//g, " ");
+  const src = stripBlockComments(fs.readFileSync(f, "utf8"));
   counts[key] = (counts[key] || 0) + (src.match(RE) || []).length;
 }
 

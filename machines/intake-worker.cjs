@@ -164,15 +164,45 @@ const brief = (p) =>
     `Evidence: ${String(p.r.evidence || "").replace(/\s+/g, " ")}`,
     p.advice ? `Recommended: ${String(p.advice).replace(/\s+/g, " ")}` : `No recommendation exists. Work out what to do, and say so before doing it.`,
     ``,
-    `When finished, append ONE record to .claude/agent-context/findings.jsonl with`,
-    `subject "${p.r.id}" and a terminal trigger (terminal:fixed, terminal:shipped,`,
-    `terminal:resolved, or terminal:withdrawn if it should not be done). That closure`,
-    `is what takes it off the conveyor - nothing else will.`,
+    // ORDER REWRITTEN 2026-09-22, from watching three real runs.
+    //
+    // All three did good work and two of them landed nothing, because a run
+    // ends at its last tool call and every one of them was still mid-action:
+    // "Committing my two files", "Building the minimal one". Publishing came
+    // last in the brief, so it came last in the run, so it did not happen. One
+    // agent left two new files loose in a shared checkout on no branch.
+    //
+    // So the brief now asks for the branch FIRST and a push as soon as there
+    // is one commit. A branch with a partial change on it is recoverable by
+    // anybody; an unbranched file in a tree three sessions share is not.
+    `Publish as you go, not at the end. A run can stop at any tool call, and work`,
+    `that is not on a branch when that happens is lost or, worse, left loose in a`,
+    `working tree other sessions share.`,
     ``,
-    `Repo law: never edit files through PowerShell Set-Content; use git commit -F for`,
-    `messages; branch as <lane>/<PLAN-ID>--claude--<lineage>--<description> and publish`,
-    `with npm run branch:publish, which squash-merges. Verify what a person would see,`,
-    `never the flag you just set.`,
+    `1. FIRST, before changing anything: cut the branch.`,
+    `   <lane>/<PLAN-ID>--claude--<lineage>--<description>`,
+    `2. Commit each coherent piece as you finish it, and push after the first one.`,
+    `   Use git commit -F <file> for the message, never inline -m.`,
+    `3. Commit ONLY the files you touched. This tree is shared with other sessions`,
+    `   and carries their uncommitted work; never git add -A, never stash.`,
+    `4. Then append ONE record to .claude/agent-context/findings.jsonl with`,
+    `   subject "${p.r.id}" and a terminal trigger (terminal:fixed, terminal:shipped,`,
+    `   terminal:resolved, or terminal:withdrawn if it should not be done). That`,
+    `   closure is what takes it off the conveyor - nothing else will, and until it`,
+    `   is written the board cannot say your work happened.`,
+    `5. Publish with npm run branch:publish, which opens AND squash-merges the PR.`,
+    ``,
+    // A REAL TRAP, FOUND BY AN AGENT ON THIS BELT, not theory: it wanted to run
+    // git from elsewhere and could not, then diagnosed it correctly - the Bash
+    // allow-list prefix-matches "git status*", so "git -C <path> status" never
+    // matches any rule and is refused. Telling every agent the shape that works
+    // is cheaper and safer than widening a permission for all of them.
+    `Run git from the repo root with no -C flag. The permission rules prefix-match`,
+    `("git status*"), so "git -C <path> status" matches nothing and is refused - it`,
+    `looks like a policy block and is only a command shape. Change directory instead.`,
+    ``,
+    `Never edit files through PowerShell Set-Content; it corrupts every non-ASCII`,
+    `character. Verify what a person would see, never the flag you just set.`,
   ].join("\n");
 
 // A LAUNCH IS NOT A START, and this machine reported one as the other.
@@ -242,7 +272,7 @@ if (DO_DISPATCH && picks.length) {
       // Output goes to a file rather than nowhere. Whatever an agent says on
       // its way out is the only evidence of why it left.
       const fd = fs.openSync(logPath, "w");
-      const child = spawn("cmd.exe", ["/c", "claude", "-p", brief(p)], {
+      const child = spawn("cmd.exe", ["/c", "claude", "-p", "--permission-mode", "acceptEdits", brief(p)], {
         cwd: ROOT,
         detached: true,
         stdio: ["ignore", fd, fd],
