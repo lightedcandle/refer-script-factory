@@ -1158,6 +1158,19 @@ function main(lockState) {
   const PULSE = 5 * MS.m;
   const TIMER_BY_TIER = { 0: 4 * MS.h, 1: 4 * MS.h, 2: 12 * MS.h, 3: 24 * MS.h, 4: 48 * MS.h, 5: 48 * MS.h, 6: 72 * MS.h, 7: 72 * MS.h };
 
+  // HOW MUCH LATENESS IS NOT LATENESS. Written for zone 3 and lifted up here the
+  // day the ready-list turned out to need the identical rule. A rhythm is not
+  // late the instant it is due: the scheduler only gets a chance to fire it when
+  // the primordial tick wakes it, so anything inside one pulse of its deadline is
+  // on time by construction, and a quarter of its own interval on top of that
+  // absorbs jitter without hiding a rhythm that has actually stopped.
+  //
+  // TWO CALLERS, ONE RULE. Zone 3 decides LATE with it; the ready-list's
+  // freshness window below is built on it. They were always the same question -
+  // "how long after its deadline is a rhythm still keeping its promise" - and
+  // answering it twice is how the two answers drift apart.
+  const graceFor = (iv) => Math.max(PULSE, Math.round(iv * 0.25));
+
   function timerFor(r) {
     const filedAt = runAt(r);
     const tier = Number.isFinite(Number(r.tier)) ? Number(r.tier) : null;
@@ -1484,13 +1497,10 @@ function main(lockState) {
     const stateIds = new Set(Object.keys(state.triggers || {}));
     const declaredIds = new Set(declared.map((t) => t.id));
 
-    // LATE has to be generous enough that a rhythm is not reported the instant
-    // it is due. The scheduler itself only gets a chance to fire when the
-    // primordial tick wakes it, so anything inside one pulse of its deadline is
-    // on time by construction, and a quarter of its own interval on top of that
-    // absorbs jitter without hiding a rhythm that has actually stopped.
-    const graceFor = (iv) => Math.max(PULSE, Math.round(iv * 0.25));
-
+    // LATE is decided with graceFor, which is declared beside the pulse rather
+    // than here: one pulse is on time by construction and a quarter of the
+    // interval absorbs jitter. It moved out of this function the day the
+    // ready-list needed the same rule, so that both read the same number.
     const rows = [];
     for (const t of declared) {
       const s = state.triggers[t.id] || null;
@@ -2146,7 +2156,45 @@ function main(lockState) {
   // "nothing to do" on a morning when twenty items are waiting on one flag -
   // absence is not failure, and here the difference is the whole authority
   // question.
-  const GOOD_FOR = 30 * MS.m;
+  // HOW LONG THE LIST IS GOOD FOR - ITS OWN INTERVAL, PLUS THE GRACE THE RAIL
+  // ALREADY GRANTS EVERY OTHER RHYTHM.
+  //
+  // It was a flat 30m, which is exactly this watcher's interval, and that is the
+  // one value it can never be. Both halves sit on the same five-minute grid, and
+  // the tick fires its triggers in alphabetical order, so on every shared beat
+  // `intake` reaches this file BEFORE `watcher` rewrites it. The door therefore
+  // always reads the list produced one full interval ago - and a window of
+  // exactly one interval makes that list's verdict a coin toss decided by a few
+  // seconds of tick jitter.
+  //
+  // MEASURED, 2026-09-23. The list expired at 11:50:26.442. The door read it at
+  // 11:50:28.453, two seconds late, refused it, and filed a deposit saying the
+  // watcher had stopped writing its ready-list. The watcher wrote the next one at
+  // 11:50:35.036, six seconds later, having never missed a beat: 37 runs, last
+  // exit 0, dead on its declared rhythm. A door refusing correctly, a watcher
+  // running correctly, and a deposit blaming a fault that did not exist.
+  //
+  // IT STILL CATCHES A WATCHER THAT HAS STOPPED, which is the entire purpose of
+  // the stamp and the thing a wider window must not cost. The adaptive ladder's
+  // ceiling IS the declared interval, so this list can only ever be refreshed
+  // faster than the window, never slower - and a watcher that misses even one
+  // beat leaves a list older than the window, refused at the next read. That is
+  // sooner than the old flat interval managed, not later.
+  //
+  // ROUNDED UP TO A WHOLE PULSE, because the pulse is the finest grain this
+  // factory can observe and a window that ends between two ticks ends at a moment
+  // nothing can act on - the same reason the decision timer above is floored at
+  // it. It also keeps the stamp and the words agreeing: `goodFor` is rendered in
+  // whole minutes, and a window of 37.5m would be published as "38m".
+  const GOOD_FOR = (() => {
+    const own = discoverTriggers(ROOT).find((t) => t.id === "watcher");
+    const declared = own ? parseEvery(own.every) : null;
+    // A repo that does not declare this watcher keeps the old flat window. An
+    // interval nothing declared is a number invented here, and this file refuses
+    // to invent one anywhere else either.
+    const iv = Number.isFinite(declared) && declared > 0 ? declared : 30 * MS.m;
+    return iv + Math.ceil(graceFor(iv) / PULSE) * PULSE;
+  })();
   const row = (x) => ({
     rank: x.rank,
     handle: H(x.r),
