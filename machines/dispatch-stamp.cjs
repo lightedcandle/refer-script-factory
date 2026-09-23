@@ -96,7 +96,7 @@ if (!fs.existsSync(BELT)) {
 
 const records = fs
   .readFileSync(BELT, "utf8")
-  .replace(/^﻿/, "")
+  .replace(/^\uFEFF/, "")
   .split("\n")
   .filter((line) => line.trim())
   .map((line) => {
