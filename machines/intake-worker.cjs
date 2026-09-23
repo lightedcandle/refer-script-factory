@@ -150,6 +150,46 @@ const ALIVE_MS = 30 * MS.m;
 const CAPACITY = 3; // concurrent items on the belt
 const now = Date.now();
 
+// THE DOOR DOES NOT OPEN INTO A STARVED ACCOUNT.
+//
+// Deposit `the-tick-shares-a-budget-with-the-work-it-watches`, 2026-09-12, its
+// second recommendation: "Throttle heavy dispatch against the pulse: never let
+// the factory spend on work what the heartbeat needs to report that work. That
+// is a scheduling rule, not a code change, and it belongs wherever dispatch
+// capacity is decided - WHICH IS INTAKE."
+//
+// The heartbeat it was written to protect no longer needs protecting: the beat
+// left the Claude account on 2026-09-14 for a Windows task running node, and
+// Telechurch's budget-independence station measured that it really does survive
+// a starvation - PROVEN, 172 account refusals across 375 minutes with all 37
+// out-of-band readings of the beat reporting ALIVE.
+//
+// The SPENDING still needs it, and the same measurement is what shows why: 311
+// refusals in twenty-four hours on that machine. One of them was the first
+// dispatch of this very deposit - started here at 01:20Z, dead at 01:37Z on
+// "You've hit your session limit", and the item sat marked HELD until the
+// watcher read its transcript an hour later. A door that keeps dispatching into
+// a refusal manufactures dead sessions at its own cadence, and every one of
+// them looks exactly like work in progress.
+//
+// So capacity gains a second question. `room` asks how much fits on the belt;
+// this asks whether the account will serve what is put there. The test, and the
+// releases, are account-budget.cjs's - including the one that keeps this from
+// deadlocking, which matters because THIS DOOR IS THE ONLY THING THAT STARTS
+// SESSIONS HERE: held shut, it would wait forever for a success that only it
+// could have produced, so the hold expires at the reset time the account's own
+// message names rather than at a timeout invented here.
+//
+// IT NARROWS DISPATCH AND NOTHING ELSE. Selection, the four rules, the brief
+// and the report all still run, so the report says exactly what would have gone
+// out - which is the difference between a door that is holding and a door with
+// nothing to do.
+const { accountStarved } = require("./account-budget.cjs");
+const budget = accountStarved(now);
+// Armed, and the account will serve it. Both, because "armed" is about the
+// AutoRun switch and says nothing about whether a session can run.
+const DISPATCH_ALLOWED = DO_DISPATCH && !budget.starved;
+
 if (!fs.existsSync(BELT)) {
   console.error(`intake-worker: no belt in ${ROOT}`);
   process.exit(2);
@@ -502,7 +542,7 @@ function lastWords(file) {
 
 let started = [];
 let failedToStart = [];
-if (DO_DISPATCH && picks.length) {
+if (DISPATCH_ALLOWED && picks.length) {
   fs.mkdirSync(DISPATCH_LOGS, { recursive: true });
   const launched = [];
   for (const p of picks) {
@@ -771,6 +811,48 @@ if (!DRY && queue.state !== "fresh" && beltEligible) {
   }
 }
 
+// A HELD DOOR GOES ON THE BELT, on exactly the terms the refused list above
+// uses, and for the same reason: holding correctly and having nothing to do are
+// indistinguishable from outside, and this door has been repaired twice already
+// for looking busy while nothing moved.
+//
+// ONLY WHEN WORK IS ACTUALLY STRANDED BEHIND IT - `picks.length`, which is what
+// this run would have sent. A hold over an empty ready-list costs nothing and is
+// not a fault worth a record.
+//
+// ONE RECORD PER DAY. At five-minute cadence an unconditional write would put
+// 288 identical records on the belt before anybody read one, and a starvation
+// lasting six hours is ordinary here rather than exceptional.
+if (!DRY && budget.starved && picks.length) {
+  const key = new Date(now).toISOString().slice(0, 10);
+  let beltText = "";
+  try {
+    beltText = fs.readFileSync(BELT, "utf8");
+  } catch {
+    /* the console still says it */
+  }
+  if (!beltText.includes(`"intakeHold":${JSON.stringify(key)}`)) {
+    const rec = {
+      id: `intake-held-starved-${key}`,
+      run: new Date(now).toISOString(),
+      kind: "deposit",
+      dimension: "architecture",
+      source: "intake-worker",
+      intakeHold: key,
+      title: "The auto door held, because the account will not run what it would have started",
+      claim: `Auto intake dispatched nothing: ${picks.length} item(s) were selected and held, because the Claude account is refusing to serve new sessions.`,
+      detail: `${budget.why} The work stays accepted, in the order the watcher wrote it, and goes out on the first run after the account is serving again. Nothing has been lost and nothing has been reordered. This is the door working, not the door broken - the alternative is spending a belt slot on a session that cannot run, which is what produced the dispatch that died at 01:37Z on 2026-09-23.`,
+      recommend:
+        "Nothing needs doing to the door. If holds like this are frequent, the cause is how much of the account the factory's own workers spend - deposit `the-tick-shares-a-budget-with-the-work-it-watches` is the record of that, and the answer is fewer or cheaper concurrent workers, not a wider door.",
+    };
+    try {
+      fs.appendFileSync(BELT, JSON.stringify(rec) + "\n", "utf8");
+    } catch {
+      /* the console still says it */
+    }
+  }
+}
+
 const report = {
   checkedAt: new Date(now).toISOString(),
   repo: path.basename(ROOT),
@@ -804,6 +886,23 @@ const report = {
   dispatched: DO_DISPATCH ? started : [],
   failedToStart: DO_DISPATCH ? failedToStart : [],
   armed: DO_DISPATCH,
+  // ARMED AND HELD ARE DIFFERENT FACTS AND BOTH ARE PUBLISHED.
+  //
+  // `armed` is the AutoRun switch. It stays true through a starvation, and a
+  // board reading it alone would draw a healthy open door with nothing coming
+  // out of it - which is the exact failure the refused-list record below was
+  // written to end, one cause further along. So the hold is its own field, with
+  // the account's own words for why and the instant it lifts.
+  held: budget.starved,
+  budget: {
+    question: "will the Claude account serve a session started right now?",
+    observable: budget.observable,
+    starved: budget.starved,
+    why: budget.why,
+    holdsUntil: budget.holdsUntil ? new Date(budget.holdsUntil).toISOString() : null,
+    newestRefusal: budget.refusal || null,
+    newestSuccess: budget.lastSuccessAt || null,
+  },
   // Which of the two reasons it is armed, so the board can say "Automatic"
   // rather than just "armed" - and so a run armed by a typed flag is never
   // mistaken for the switch being on.
@@ -839,7 +938,12 @@ if (JSON_OUT) {
       console.log(untriaged ? `  nothing offered, and nothing here is eligible - ${untriaged} deposit(s) are still waiting to be judged, and only a contract can be dispatched` : "  nothing offered, and nothing on this belt is eligible either");
     }
   }
-  if (DO_DISPATCH) {
+  // PRINTED EVERY RUN THAT HOLDS, not only when something was stranded behind
+  // it. A door that is shut for a reason and a door with nothing to do read the
+  // same from outside, and that is the whole family of defect this machine keeps
+  // being repaired for.
+  if (budget.starved) console.log(`  HELD - ${budget.why}`);
+  if (DISPATCH_ALLOWED) {
     // RUNNING is the word now, and it is only printed for a process that was
     // still there when it was looked at. The old line said DISPATCHED the
     // instant a pid existed, which is how three agents that never signed in
@@ -861,6 +965,11 @@ if (JSON_OUT) {
   // one with no check at all.
   else if (picks.length) {
     if (DRY) console.log(`\n  Dry run. Nothing was written and nothing was started. Without --dry these ${picks.length} would go out ${MODE === "auto" ? "now - the AutoRun switch is set to Automatic" : "only with --dispatch - the AutoRun switch is set to Manual"}.`);
+    // A FOURTH REASON, AND IT IS NOT "NOT ARMED". The switch may well be set to
+    // Automatic while the account refuses every session started under it, and
+    // printing "run with --dispatch" there would send somebody to type a flag
+    // that changes nothing.
+    else if (budget.starved) console.log(`\n  Held, not idle. Brief written to .claude/agent-context/intake-brief.txt; these ${picks.length} go out on the first run after the account is serving again${budget.holdsUntil ? `, which its own message puts at ${new Date(budget.holdsUntil).toISOString()}` : ""}. Nothing has been lost and nothing has been reordered.`);
     else console.log(`\n  Not armed. Brief written to .claude/agent-context/intake-brief.txt; run with --dispatch to start them.`);
   }
 }
