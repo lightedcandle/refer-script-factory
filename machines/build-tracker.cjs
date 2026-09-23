@@ -1186,11 +1186,31 @@ const liveness = (() => {
     if (worst === null || ratio > worst.ratio) worst = { id: s.id, ratio, overdueBy };
   }
   const faulted = pulseFaults.length > 0;
-  if (!stationRows.length || !worst) return { label: "NOT POSTED", hue: "25", running: false, note: "no station declared" };
-  if (worst.ratio === Infinity) return { label: "NEVER RUN", hue: "25", running: false, note: `${worst.id} has never run` };
-  if (worst.ratio > STALL_RATIO) return { label: "STALLED", hue: "25", running: false, note: `${worst.id} overdue` };
-  if (faulted) return { label: "DEGRADED", hue: "75", running: true, note: `${pulseFaults.length} fault(s)` };
-  return { label: "ALIVE", hue: "150", running: true, note: "every station inside its interval" };
+  // THE VERDICT TRAVELS WITH THE WORKING IT WAS REACHED ON. The panel under
+  // this lamp has to name the station the verdict is about and the interval
+  // it was measured against - the two facts that were wrong the last time
+  // this lamp was wrong. The only other way to get them into a panel is to
+  // run this loop a second time somewhere else, which is exactly the drift
+  // the explain panels exist to remove. One rule, one place, and the answer
+  // carries its own working.
+  //
+  // The threshold rides along as STALL_RATIO rather than as a repeated 3, so
+  // the lamp, the rhythm panels and this lamp's own "the line it crosses" row
+  // can never quote three different numbers for one rule.
+  const said = (v) => ({
+    ...v,
+    worst,
+    latest: worst ? worst.id : null,
+    ratio: worst ? worst.ratio : null,
+    faults: pulseFaults.length,
+    lateAfter: STALL_RATIO,
+    measured: stationRows.length,
+  });
+  if (!stationRows.length || !worst) return said({ label: "NOT POSTED", hue: "25", running: false, note: "no station declared" });
+  if (worst.ratio === Infinity) return said({ label: "NEVER RUN", hue: "25", running: false, note: `${worst.id} has never run` });
+  if (worst.ratio > STALL_RATIO) return said({ label: "STALLED", hue: "25", running: false, note: `${worst.id} overdue` });
+  if (faulted) return said({ label: "DEGRADED", hue: "75", running: true, note: `${pulseFaults.length} fault(s)` });
+  return said({ label: "ALIVE", hue: "150", running: true, note: "every station inside its interval" });
 })();
 
 // THE REPOS THIS BOARD CAN OBSERVE, from the ecosystem map the operator keeps.
@@ -3250,6 +3270,429 @@ explains("rail:all", {
   ],
 });
 
+// ---- THE HEADER INSTRUMENTS, THE BELT'S TWO HEMISPHERES, AND THE TWO COLUMNS -
+//
+// Nine elements that made load-bearing claims and could not be questioned. They
+// carried a `title` attribute between them and nothing else - a sentence written
+// beside a live value, which is precisely the drift this feature exists to
+// remove, surviving in the places a person looks FIRST.
+//
+// The lamp is the clearest case. It is the most trusted pixel on the board, it
+// has been rebuilt twice for asserting rather than reporting, and until now
+// there was no way to see which station its verdict was about or what interval
+// it had been measured against - the two facts that were wrong the last time it
+// was wrong. Same for CLOSED BY THE FACTORY, which is a claim about whether the
+// operator may stop watching, and for ON THE BELT, which has already once
+// counted a different quantity from the drawing beside it.
+//
+// Same three rules as everything above: every field names its source, a fact
+// the board cannot obtain says NOT RECORDED, and where two sources disagree
+// both are shown and the disagreement leads.
+
+// ---- the lamp ---------------------------------------------------------------
+explains("head:liveness", {
+  title: D.liveness.label,
+  kind: "the lamp - whether every declared station has run inside three times its own interval",
+  headline:
+    D.liveness.label === "ALIVE"
+      ? {
+          tone: "ok",
+          text: `All ${D.liveness.measured} stations are inside their intervals. The latest is ${D.liveness.latest}, at ${D.liveness.ratio.toFixed(1)} times its own interval, and this lamp changes at 3.`,
+        }
+      : D.liveness.label === "DEGRADED"
+        ? {
+            tone: "gap",
+            text: `Nothing is overdue. The pulse is carrying ${D.liveness.faults} recorded fault${D.liveness.faults === 1 ? "" : "s"}, and late is a different failure from faulted - this lamp reports the second one in its own colour on purpose.`,
+          }
+        : D.liveness.label === "STALLED"
+          ? {
+              tone: "disagree",
+              text: `${D.liveness.latest} has not run for ${D.liveness.ratio.toFixed(1)} times its own interval. The scheduler holds a trigger for it, so something that was running has stopped - which is a different fault from never having been started, and it sends you to different work.`,
+            }
+          : D.liveness.label === "NEVER RUN"
+            ? {
+                tone: "gap",
+                text: `${D.liveness.latest} is declared and the schedule records no run for it at all. Never run is an absence; STALLED is a contradiction. The lamp will not spend one word on both.`,
+              }
+            : { tone: "gap", text: "No station is declared in this tree, so there is nothing for the lamp to measure. It reads NOT POSTED rather than green." },
+  purpose: {
+    text: "The design drew this as a fixed green lamp and the header as ALWAYS ON. Both assert instead of reporting, and a status light that cannot deliver bad news is a green check that checks nothing - worse than no light, because it is trusted. So the lamp is derived, and the board is allowed to say the factory has stopped.",
+    source: "machines/build-tracker.cjs · the note above liveness",
+  },
+  wiring: [
+    wire("what it measures", "the latest station of them all, as a multiple of its own interval", "machines/build-tracker.cjs · liveness"),
+    wire(
+      "the line it crosses",
+      `${D.liveness.lateAfter}x - three times, not one, because a station running late is normal and a board that cries wolf is a board nobody reads`,
+      "machines/build-tracker.cjs · STALL_RATIO, the same constant the rhythm panels measure against",
+    ),
+    wire("stations measured", D.liveness.measured, schedule.from ? `${schedule.from} · triggers, matched against the declarations found on disk` : "no schedule state file could be read"),
+    wire("the station this verdict is about", D.liveness.latest, "machines/build-tracker.cjs · liveness - the worst ratio of all stationRows"),
+    wire(
+      "how late that one is",
+      D.liveness.worst && Number.isFinite(D.liveness.ratio) ? `${D.liveness.ratio.toFixed(1)}x its interval` : null,
+      D.liveness.worst && !Number.isFinite(D.liveness.ratio)
+        ? "no run is recorded for it at all"
+        : schedule.from
+          ? `${schedule.from} · triggers.${D.liveness.latest}.lastRunAt`
+          : null,
+    ),
+    wire(
+      "measured against",
+      "the interval the clock is ACTUALLY using, never the declared ceiling",
+      "machines/build-tracker.cjs · effectiveMs",
+      { note: "with the ceiling as the yardstick, a station tightened to 15m could be dead for nearly six hours and this lamp would still have read ALIVE" },
+    ),
+    wire("pulse faults counted", pulseFaults.length, ".claude/agent-context/pulse.json · faults"),
+    wire(
+      "what it does NOT prove",
+      "that any run did useful work. It reads WHEN a station last ran, never what that run returned - a station failing every time, on schedule, still reads ALIVE.",
+      "machines/build-tracker.cjs · liveness reads lastRunAt, and never lastExit",
+      { disagree: true },
+    ),
+  ],
+});
+
+// ---- can he stop watching ---------------------------------------------------
+explains("head:trust", {
+  title: "CLOSED BY THE FACTORY",
+  kind: "how much of what the factory decided has not since been undone",
+  headline: D.trust.reversed
+    ? {
+        tone: "disagree",
+        text: `${D.trust.reversed} of ${D.trust.decisions} were later corrected, reverted, superseded or withdrawn. That counts against the score even when the factory is the one that caught it - especially then, because a number that only rises is decoration.`,
+      }
+    : {
+        tone: "ok",
+        text: `${D.trust.held} of ${D.trust.decisions} taken to an end state, and none has since been undone. Held is not the same as right. It is what has survived.`,
+      },
+  purpose: {
+    text: "This board used to answer whether the factory was running, and that question dies exactly as autonomy arrives - a display whose value falls as the system improves is built backwards. What replaces it is whether the factory's judgement can be trusted, and that is not granted by declaration, it is earned by a visible record. Without a number he can see, he cannot tell whether he is allowed to look away, so he keeps checking - which is the exact cost this whole system was built to remove.",
+    source: "machines/build-tracker.cjs · the note above trust",
+  },
+  wiring: [
+    wire("what counts as a decision", "a record with a terminal trigger", ".claude/agent-context/findings.jsonl · triggers"),
+    wire(
+      "what is excluded, and why",
+      "closers, annotations and notes. A closer is the paperwork on a job already counted, and writing a lesson down is not work the factory can claim credit for closing - counting either would credit it twice for one job.",
+      "machines/build-tracker.cjs · trust",
+    ),
+    wire("decisions counted", D.trust.decisions, ".claude/agent-context/findings.jsonl"),
+    wire(
+      "undone since",
+      D.trust.reversed,
+      ".claude/agent-context/findings.jsonl · end word matching corrected, reverted, superseded, withdrawn or false-alarm",
+      D.trust.reversed ? { disagree: true } : null,
+    ),
+    wire("still standing", D.trust.held, "machines/build-tracker.cjs · trust - decisions minus undone, both drawn from the same population"),
+    wire(
+      "left to you by law",
+      D.trust.his || null,
+      ".claude/agent-context/findings.jsonl · operatorDecision",
+      { note: "deletion, money, identity, and a direction between genuinely different futures. Work the factory declined to do alone is work it correctly refused, and it is never counted against it." },
+    ),
+    wire("shown as", "a fraction, never a percentage - a percentage of a few dozen reads like a percentage of a thousand", "machines/build-tracker.cjs · trust.line"),
+    wire(
+      "what it CANNOT say",
+      "whether you were present when any of these closed. Some were closed while you were asleep and some were closed with a sentence of yours in the evidence, and no field records which. The stronger number is the one you actually want; it is on the belt as its own finding rather than papered over here.",
+      "searched: no field in findings.jsonl records operator presence at closure",
+      { disagree: true },
+    ),
+  ],
+});
+
+// ---- the repo count and the machine -----------------------------------------
+explains("head:host", {
+  title: "REPOS WIRED · HOST",
+  kind: "how many repos this board could observe, and the state of the machine it all runs on",
+  headline: D.hostWarn
+    ? {
+        tone: "gap",
+        text: "A restart is queued on this machine. Nothing has stopped, but the host line is reporting a pending change rather than a steady state, and the rail carries a cell for it.",
+      }
+    : !host
+      ? {
+          tone: "gap",
+          text: "The node registry holds no host block for this repo, so the line reads HOST UNKNOWN rather than borrowing another node's uptime. A missing fact is not a zero.",
+        }
+      : {
+          tone: "ok",
+          text: `${D.wiredRepos} of ${D.repos} repos declare a trigger the scheduler can tick, and this machine has been up ${D.hostUpH}.`,
+        },
+  purpose: {
+    text: "Saying fourteen repos when one is instrumented is the board flattering itself. WIRED is the same test the scheduler applies when it fans out, so this line can never claim a repo the scheduler is not ticking. The host sits beside it because the machine is part of the factory: a board that cannot say its own host is about to restart is missing the most ordinary reason for everything stopping at once.",
+    source: "machines/build-tracker.cjs · the notes above repoList and host",
+  },
+  wiring: [
+    wire("repos in the map", repoList.length || null, ECOSYSTEM_MAP ? `${ECOSYSTEM_MAP} · repos` : "no ecosystem map was found on this host"),
+    wire("counted as wired", D.wiredRepos, "machines/build-tracker.cjs · declaresTriggers"),
+    wire(
+      "the test for wired",
+      "the repo carries at least one *.trigger.json or *.station.json under tools, tools/factory or scripts",
+      "machines/build-tracker.cjs · declaresTriggers - the same folders the scheduler searches, so the two can never disagree",
+    ),
+    wire("the repo this board is watching", D.repoId, "machines/build-tracker.cjs · matched by PATH against the map, never by name"),
+    wire("host uptime", D.hostUpH, host ? host._from : "no node registry could be read", host && D.hostBoot ? { at: D.hostBoot, t: "uph" } : null),
+    wire("restart queued", host ? (host.reboot_pending ? "yes" : "no") : null, host ? host._from : null, D.hostWarn ? { disagree: true } : null),
+    wire(
+      "who measures the host",
+      "node-heartbeat, and only node-heartbeat",
+      "machines/build-tracker.cjs · host - this board reads the registry rather than probing again, because two stations probing one thing is how two answers start disagreeing",
+    ),
+  ],
+});
+
+// ---- three kinds of time ----------------------------------------------------
+explains("head:clock", {
+  title: "CLOCK · CYCLE · UPTIME",
+  kind: "the wall clock, the days this factory has worked, and the age of the whole enterprise",
+  headline: {
+    tone: "ok",
+    text: `Three different kinds of time, kept apart. The clock is this browser's own and ticks every second. CYCLE ${D.cycle} and ${D.uptime} are both counted from the belt's records - neither reports how long any process has been running.`,
+  },
+  purpose: {
+    text: "A cycle is a day on which the factory actually deposited something, so the number says how often it has worked rather than how long it has existed. Uptime is measured from the first record ever written, not from a process start, because a restart must not reset a figure the board uses to mean the age of the work.",
+    source: "machines/build-tracker.cjs · the notes above runDays and firstDeposit",
+  },
+  wiring: [
+    wire("the clock", "this browser's wall clock, rewritten every second", "machines/build-tracker.cjs · the countdown script - never the build time"),
+    wire("date shown", D.dateLine, "machines/build-tracker.cjs · dateLine, from the build machine's locale"),
+    wire("cycle", D.cycle, ".claude/agent-context/findings.jsonl · the count of distinct run dates"),
+    wire("what a cycle is", "one calendar day with at least one record deposited on it - never a run, a beat or a session", "machines/build-tracker.cjs · runDays"),
+    wire("uptime", D.uptime, ".claude/agent-context/findings.jsonl · the oldest record", D.upSince ? { at: D.upSince, t: "up" } : null),
+    wire(
+      "counted from",
+      firstDeposit ? `${hhmm(firstDeposit)} · ${ago(firstDeposit)}` : null,
+      ".claude/agent-context/findings.jsonl · the earliest run timestamp",
+      firstDeposit ? { at: firstDeposit, t: "stampago" } : null,
+    ),
+    wire(
+      "when this page was built",
+      D.builtLabel,
+      "machines/build-tracker.cjs · builtLabel",
+      { note: "every other time on this board is live and counts on your own clock. This one is the build, and the footer states it separately for that reason." },
+    ),
+  ],
+});
+
+// ---- the number in the middle of the belt -----------------------------------
+explains("belt:count", {
+  title: "ON THE BELT",
+  kind: "how many cards are actually riding the conveyor, and what is queued behind them",
+  headline: D.onBelt.length
+    ? {
+        tone: "ok",
+        text: `${D.onBelt.length} card${D.onBelt.length === 1 ? "" : "s"} on the belt, each with a named agent whose session was proved alive on disk. ${D.waitingByDomain.reduce((a, w) => a + w.count, 0)} more are queued behind them with nobody on them.`,
+      }
+    : {
+        tone: "gap",
+        text: `Nothing is on the belt, and that is not the same as nothing to do: ${circulating.length} contracted item${circulating.length === 1 ? " is" : "s are"} waiting and ${awaitingTriage.length} deposit${awaitingTriage.length === 1 ? " has" : "s have"} not been judged at all. Zero is a stark thing to put in this type and it is the true one.`,
+      },
+  purpose: {
+    text: "This number used to count items ADDRESSED to a domain while the belt carried none of them - two different quantities, one label between them, with the drawing deciding what the data was allowed to say. It now counts exactly what the diagram beside it draws. The list underneath is everything still waiting, by domain, including domains nobody drew as a carrier; a domain with nothing waiting is absent rather than shown as a zero, because absent and none are different facts and a column of zeroes teaches the eye to skip the block.",
+    source: "machines/build-tracker.cjs · the notes above onBelt and waitingByDomain",
+  },
+  wiring: [
+    wire("on the belt", D.onBelt.length, ".claude/agent-context/findings.jsonl · records carrying a live dispatch"),
+    wire("what puts a card here", "a named agent is working it AND that session is alive on disk - never the claim on its own", "machines/build-tracker.cjs · onBelt"),
+    wire("how alive is proved", `a transcript or worktree touched inside the last ${inWords(DISPATCH_ALIVE_MS)}`, "machines/build-tracker.cjs · DISPATCH_ALIVE_MS and sessionLife"),
+    wire(
+      "waiting, by domain",
+      D.waitingByDomain.length ? D.waitingByDomain.map((w) => `${w.dim} ${w.count}`).join(", ") : null,
+      ".claude/agent-context/findings.jsonl · open contracts not on the belt, tallied by contract trigger or owner",
+    ),
+    wire(
+      "waiting in total",
+      D.waitingByDomain.reduce((a, w) => a + w.count, 0),
+      "machines/build-tracker.cjs · waitingByDomain - it sums to the whole, which it did not while only three domains could be listed",
+    ),
+    wire(
+      "oldest thing waiting",
+      oldestWaiting ? inWords(now - oldestWaiting) : null,
+      ".claude/agent-context/findings.jsonl · the earliest run timestamp among waiting contracts",
+      oldestWaiting ? { at: oldestWaiting, t: "since" } : null,
+    ),
+    wire("excluded from the waiting list", "anything already on the belt - a dispatched item is not waiting", "machines/build-tracker.cjs · waitingByDomain"),
+  ],
+});
+
+// ---- the belt's own verdict, and the four numbers under it -------------------
+explains("belt:state", {
+  title:
+    D.beltState === "RUNNING"
+      ? "CIRCULATING"
+      : D.beltState === "STALLED"
+        ? "BELT STALLED"
+        : D.beltState === "WAITING"
+          ? "NOBODY IS WORKING"
+          : D.beltState === "UNJUDGED"
+            ? "NOTHING JUDGED YET"
+            : "BELT IDLE",
+  kind: "what the belt is doing, and the counts printed beside it",
+  headline:
+    // THE LAMP IS THE OTHER SOURCE, AND IT IS CHECKED FIRST. beltState tests
+    // the lamp for the single word STALLED, so a factory whose latest station
+    // has NEVER RUN - or which declares no station at all - leaves this belt
+    // free to go on calling itself CIRCULATING. That is two readings of one
+    // schedule file disagreeing, and by rule the disagreement leads instead of
+    // being quietly reconciled. Caught by reading this panel on live data the
+    // day it was built: the lamp said NEVER RUN and this said AGREES.
+    !D.liveness.running && D.beltState !== "STALLED"
+      ? {
+          tone: "disagree",
+          text: `This belt reads ${D.beltState} and the lamp beside it reads ${D.liveness.label}. Only the word STALLED travels from the lamp to the belt, so every other way of not being alive leaves the belt describing itself as though nothing were wrong. Both are read from the same schedule state file - the difference is in this board, not in the plant.`,
+        }
+      : D.beltState === "UNJUDGED"
+      ? {
+          tone: "gap",
+          text: `${awaitingTriage.length} deposits are waiting to be judged and none has been accepted as work. Only a contract may ride the belt, so nothing can be dispatched until somebody accepts something. This is not the same as having nothing to do, and the board will not call it that.`,
+        }
+      : D.beltState === "WAITING"
+        ? {
+            tone: "gap",
+            text: `${circulating.length} contracted items are queued and none is dispatched. WAITING is not IDLE - idle means there is nothing to do, and waiting means there is work with nobody doing it.`,
+          }
+        : D.beltState === "STALLED"
+          ? {
+              tone: "disagree",
+              text: "The belt reads STALLED because the lamp does: triggers are overdue. Whatever the cards claim about themselves, nothing is collecting them.",
+            }
+          : { tone: "ok", text: D.beltWhyFull },
+  purpose: {
+    text: "Operator, 2026-09-11: the conveyor is lying, moving when nothing is running. It was - the belt turned whenever the stations were merely healthy, so a plant sitting idle between runs showed work flowing through it, which is a lie told in motion, the most convincing kind. Since 2026-09-14 the motion means the pulse is beating and nothing else. Load is these numbers and the cards riding the loop, never whether it turns.",
+    source: "machines/build-tracker.cjs · the notes above beltState and beltMoving",
+  },
+  wiring: [
+    wire("state", D.beltState, "machines/build-tracker.cjs · beltState"),
+    wire(
+      "the lamp beside it says",
+      D.liveness.label,
+      "machines/build-tracker.cjs · liveness",
+      !D.liveness.running && D.beltState !== "STALLED"
+        ? { disagree: true, note: "beltState tests the lamp only for the word STALLED, so NEVER RUN and NOT POSTED never reach it" }
+        : null,
+    ),
+    wire(
+      "how the state is chosen",
+      "STALLED if the lamp is stalled; else RUNNING if work moved recently; else WAITING if anything is contracted; else UNJUDGED if anything is deposited and unaccepted; else IDLE",
+      "machines/build-tracker.cjs · beltState",
+    ),
+    wire("contracted", D.openCount, ".claude/agent-context/findings.jsonl · open records that are contracted or riding a carrier"),
+    wire("awaiting triage", D.triageCount, ".claude/agent-context/findings.jsonl · deposits nothing has yet accepted as work"),
+    wire("held for you", D.heldCount || null, ".claude/agent-context/findings.jsonl · operatorDecision"),
+    wire(
+      "resolved",
+      D.closedCount,
+      "machines/build-tracker.cjs · closedCount, which is the length of the RESOLVED column itself",
+      { note: "derived FROM the column rather than counted a second time, because counting it twice is how this centre once printed 39 beside a column headed 38 out" },
+    ),
+    wire(
+      "on no carrier and not held",
+      D.unplaced || null,
+      ".claude/agent-context/findings.jsonl · open records that are neither contracted nor riding a domain",
+      D.unplaced ? { disagree: true } : null,
+    ),
+    wire("what the motion means", "the pulse is beating - never that work is processing", "machines/build-tracker.cjs · powerBelt, superseding the 2026-09-11 rule for motion only"),
+  ],
+});
+
+// ---- the left column --------------------------------------------------------
+explains("col:incoming", {
+  title: "INCOMING",
+  kind: "everything deposited and not yet picked up",
+  headline: D.forYouCount
+    ? {
+        tone: "gap",
+        text: `${D.incoming.length} in flight, and ${D.forYouCount} of them are addressed to you rather than to the factory. Those are the ones nothing in here can close.`,
+      }
+    : {
+        tone: "ok",
+        text: `${D.incoming.length} in flight. Anything a named live agent has picked up has already left this column for PROCESSING, so a record appears in exactly one place and moves left to right as it progresses.`,
+      },
+  purpose: {
+    text: "A deposit arrives here, moves to the belt when somebody takes it, and leaves for RESOLVED when something closes it. A note is in none of the three: it is read or it is not, nothing is owed on it, and a message sharing a column with a contract would make one of them lie about the other.",
+    source: "machines/build-tracker.cjs · the note above incoming",
+  },
+  wiring: [
+    wire("in flight", D.incoming.length, ".claude/agent-context/findings.jsonl"),
+    wire("what is excluded", "anything finished, every closer, every annotation, every note, and anything already riding the belt", "machines/build-tracker.cjs · incoming"),
+    wire("addressed to you", D.forYouCount || null, ".claude/agent-context/findings.jsonl · operatorDecision"),
+    wire(
+      "why there are two filter rows",
+      "the first asks what KIND of thing a record is; the second asks what is HAPPENING to it. They filter independently and combine, because folding them into one strip would force every record to be one or the other.",
+      "machines/build-tracker.cjs · KIND_ICONS and ICONS",
+    ),
+    wire("by kind", Object.keys(D.kindCounts).length ? Object.keys(D.kindCounts).map((k) => `${k} ${D.kindCounts[k]}`).join(", ") : null, ".claude/agent-context/findings.jsonl · kind"),
+    wire("by state", Object.keys(D.statusCounts).length ? Object.keys(D.statusCounts).map((k) => `${k} ${D.statusCounts[k]}`).join(", ") : null, "machines/build-tracker.cjs · statusOf - derived every build, never stored"),
+    wire(
+      "the AUTOMATIC / MANUAL switch",
+      "writes a setting the scheduled intake worker reads. It starts nothing itself, and MANUAL is what every unknown or missing value means.",
+      "the board server · /intake-mode",
+    ),
+  ],
+});
+
+// ---- the right column -------------------------------------------------------
+explains("col:resolved", {
+  title: "RESOLVED",
+  kind: "work the factory took to an end state",
+  headline: {
+    tone: "ok",
+    text: `${D.resolved.length} out. Resolved means a record reached a terminal word. It does not mean the answer was right - only that something ended it.`,
+  },
+  purpose: {
+    text: "Finished work used to scroll past and vanish, so a factory that resolved everything would have looked emptiest of all. This column is throughput rather than inventory, and the resolved figure in the middle of the belt is derived from this list rather than counted a second time - because counting it twice is exactly how the two came to disagree.",
+    source: "machines/build-tracker.cjs · the note above closedCount",
+  },
+  wiring: [
+    wire("out", D.resolved.length, ".claude/agent-context/findings.jsonl · records with a terminal trigger"),
+    wire("what is excluded", "closers, annotations and notes - the same three the trust figure excludes, for the same reason", "machines/build-tracker.cjs · resolved"),
+    wire(
+      "the number printed in the belt",
+      `${D.closedCount} resolved`,
+      "machines/build-tracker.cjs · closedCount, which IS the length of this list",
+      D.closedCount === D.resolved.length ? null : { disagree: true },
+    ),
+    wire("of these, still standing", `${D.trust.held} of ${D.trust.decisions}`, "machines/build-tracker.cjs · trust"),
+    wire("of these, later undone", D.trust.reversed, ".claude/agent-context/findings.jsonl · end word matching a reversal", D.trust.reversed ? { disagree: true } : null),
+    wire("what closes a record", "its own terminal trigger, or a later record naming it as its subject and carrying one", "machines/build-tracker.cjs · isDone and endWord"),
+  ],
+});
+
+// ---- the footer strip -------------------------------------------------------
+explains("foot:loops", {
+  title: "LOOPS",
+  kind: "the footer strip - the rhythms nearest to firing",
+  headline:
+    loopStrip.length < stationRows.length
+      ? {
+          tone: "gap",
+          text: `This strip shows ${loopStrip.length} of ${stationRows.length} rhythms. It is the head of the same list the rail draws in full, cut at five for width - so a rhythm missing from here is not a rhythm missing from the factory. The rail at the top is the complete picture.`,
+        }
+      : { tone: "ok", text: `All ${stationRows.length} rhythms fit in the strip, so this and the rail are showing the same set.` },
+  purpose: {
+    text: "A glance-level repeat of the front of the rail, at the bottom of the board where the eye lands last. Each cell carries the same two facts the rail's cells carry - last run and interval - so the page can keep counting down on the wall clock between builds instead of printing a sentence written once an hour and read as live.",
+    source: "machines/build-tracker.cjs · the note above loopStrip",
+  },
+  wiring: [
+    wire("rhythms shown", loopStrip.length, "machines/build-tracker.cjs · loopStrip"),
+    wire(
+      "rhythms the scheduler holds",
+      stationRows.length,
+      schedule.from ? `${schedule.from} · triggers` : "no schedule state file could be read",
+      loopStrip.length < stationRows.length ? { disagree: true } : null,
+    ),
+    wire("chosen by", "soonest due first - the same sort the rail uses, then the first five", "machines/build-tracker.cjs · stationRows sorted on dueIn"),
+    wire("what a lit dot means", "due now. A dim dot is a rhythm still counting down.", "machines/build-tracker.cjs · loopStrip.due"),
+    wire(
+      "next to fire",
+      loopStrip.length ? `${loopStrip[0].name} · ${loopStrip[0].when}` : null,
+      loopStrip.length && schedule.from ? `${schedule.from} · triggers.${loopStrip[0].id}, plus its interval` : null,
+    ),
+    wire("counted on", "your own clock, from the last run and the interval carried on each element", "machines/build-tracker.cjs · the countdown script"),
+  ],
+});
+
 // ---- render -----------------------------------------------------------------
 
 const esc = (s) =>
@@ -4620,10 +5063,10 @@ const html = `<!DOCTYPE html>
       </div>`
           : ""
       }
-      <span style="font-family:${mono}; font-size:14px; letter-spacing:0.12em; color:oklch(0.62 0.01 80)">${D.wiredRepos} OF ${esc(D.repos)} REPOS WIRED &middot; <span style="color:${D.hostWarn ? "oklch(0.82 0.11 25)" : "oklch(0.62 0.01 80)"}">${D.host ? "HOST UP " + live("uph", D.hostBoot, D.hostUpH) + (D.hostWarn ? " · RESTART QUEUED" : "") : esc(D.hostLine)}</span></span>
+      <span class="xopen" data-explain="head:host" title="click for what WIRED actually tests for, and where this machine uptime is read from" style="font-family:${mono}; font-size:14px; letter-spacing:0.12em; color:oklch(0.62 0.01 80)">${D.wiredRepos} OF ${esc(D.repos)} REPOS WIRED &middot; <span style="color:${D.hostWarn ? "oklch(0.82 0.11 25)" : "oklch(0.62 0.01 80)"}">${D.host ? "HOST UP " + live("uph", D.hostBoot, D.hostUpH) + (D.hostWarn ? " · RESTART QUEUED" : "") : esc(D.hostLine)}</span></span>
     </div>
 
-    <div title="${esc(D.liveness.note)}" style="display:flex; align-items:center; gap:12px; padding:10px 18px; border:1px solid oklch(0.32 0.05 ${D.liveness.hue}); border-radius:4px">
+    <div class="xopen" data-explain="head:liveness" title="${esc(D.liveness.note)} &#183; click for which station this verdict is about, and the interval it was measured against" style="display:flex; align-items:center; gap:12px; padding:10px 18px; border:1px solid oklch(0.32 0.05 ${D.liveness.hue}); border-radius:4px">
       <span style="width:12px; height:12px; border-radius:50%; background:oklch(0.66 0.14 ${D.liveness.hue})${D.liveness.running ? "; animation:alive 3s ease-in-out infinite" : ""}"></span>
       <span style="font-family:${mono}; font-size:17px; letter-spacing:0.14em; color:oklch(0.80 0.10 ${D.liveness.hue})">${D.liveness.label}</span>
     </div>
@@ -4633,7 +5076,7 @@ const html = `<!DOCTYPE html>
          judgement has been worth anything. "Held" means not later undone - the
          only claim the belt can actually support - and the words under it say
          exactly that, so the number cannot be read as more than it is. -->
-    <div title="Work the factory took to an end state, and how much of it has not since been undone. Still standing is not the same as right - it is what has survived. The board cannot yet tell which of these were closed while you were away; that is a known gap and it is on the belt." style="display:flex; align-items:center; gap:14px; padding:10px 18px; border:1px solid oklch(0.30 0.012 70); border-radius:4px">
+    <div class="xopen" data-explain="head:trust" title="Click for what counts as a decision, what is excluded, and what this number cannot say. Work the factory took to an end state, and how much of it has not since been undone. Still standing is not the same as right - it is what has survived. The board cannot yet tell which of these were closed while you were away; that is a known gap and it is on the belt." style="display:flex; align-items:center; gap:14px; padding:10px 18px; border:1px solid oklch(0.30 0.012 70); border-radius:4px">
       <div style="display:flex; flex-direction:column; gap:2px">
         <span style="font-family:${mono}; font-size:11px; letter-spacing:0.16em; color:oklch(0.56 0.01 80)">CLOSED BY THE FACTORY</span>
         <span style="font-family:${mono}; font-size:17px; letter-spacing:0.06em; color:oklch(0.86 0.008 85)">${D.trust.held}<span style="color:oklch(0.52 0.01 80)"> of </span>${D.trust.decisions}<span style="color:oklch(0.52 0.01 80)"> still standing</span></span>
@@ -4654,7 +5097,7 @@ ${chipBlock("mind", "DATABASE &middot; SUPABASE", 195, D.mind)}
 ${chipBlock("spirit", "SIGNAL &middot; CLOUDFLARE", 310, D.spirit)}
     </div>
 
-    <div style="display:flex; align-items:flex-end; gap:16px; margin-left:48px">
+    <div class="xopen" data-explain="head:clock" title="click for what a cycle counts, and what the uptime is measured from" style="display:flex; align-items:flex-end; gap:16px; margin-left:48px">
       <div style="display:flex; flex-direction:column; gap:2px">
         <span style="font-family:${mono}; font-size:21px; font-weight:500; letter-spacing:0.14em; line-height:1; color:oklch(0.74 0.13 195)">${esc(D.dateLine)}</span>
         <span id="clock" style="font-family:${mono}; font-size:44px; font-weight:500; letter-spacing:0.02em; line-height:1">--:--:--</span>
@@ -4726,7 +5169,7 @@ ${D.cycles
     <div style="background:oklch(0.185 0.012 70); border:1px solid oklch(0.28 0.012 70); border-radius:6px; padding:16px 18px; display:flex; flex-direction:column; gap:10px; min-height:0; overflow:hidden">
       <div style="display:flex; align-items:center; gap:14px">
         <span style="width:9px; height:9px; border-radius:50%; background:oklch(0.66 0.14 150); animation:alive 3s ease-in-out infinite; flex:none"></span>
-        <span style="font-family:${mono}; font-size:13px; letter-spacing:0.16em; color:oklch(0.62 0.01 80)">INCOMING</span>
+        <span class="xopen" data-explain="col:incoming" title="click for what enters this column, what leaves it, and what the two filter rows ask" style="font-family:${mono}; font-size:13px; letter-spacing:0.16em; color:oklch(0.62 0.01 80)">INCOMING</span>
         <!-- THE AUTORUN SWITCH. Operator, 2026-09-21: "an AutoRun switch on the
              incoming section that will flip all to being cued and pulled to the
              board automatically. but when off its manual by the individual
@@ -4743,7 +5186,7 @@ ${D.cycles
           </span>
           <span id="autorun-manual" style="color:oklch(0.86 0.01 80)">MANUAL</span>
         </span>
-        <span style="font-family:${mono}; font-size:13px; color:oklch(0.62 0.01 80); margin-left:auto; white-space:nowrap">${D.incoming.length} in flight${D.forYouCount ? ` &middot; <span style="color:oklch(0.82 0.11 25)">${D.forYouCount} for you</span>` : ""}</span>
+        <span class="xopen" data-explain="col:incoming" title="click for what is counted here and what is excluded" style="font-family:${mono}; font-size:13px; color:oklch(0.62 0.01 80); margin-left:auto; white-space:nowrap">${D.incoming.length} in flight${D.forYouCount ? ` &middot; <span style="color:oklch(0.82 0.11 25)">${D.forYouCount} for you</span>` : ""}</span>
       </div>
       <!-- TWO ROWS OF CHIPS, BECAUSE THERE ARE TWO QUESTIONS.
            "What needs doing" is a question about KIND; "what is happening to it"
@@ -4805,7 +5248,7 @@ ${["gear", "calendar", "clock", "triage", "stale", "blocked", "eye", "hourglass"
         <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; pointer-events:none">
           <div style="width:${BELT_INTERIOR_PCT.toFixed(1)}%; display:flex; align-items:center; gap:26px">
 
-            <div style="flex:0 0 auto; display:flex; flex-direction:column; align-items:center; min-width:0">
+            <div class="xopen" data-explain="belt:count" title="click for what puts a card on the belt, and what is queued behind it" style="pointer-events:auto; flex:0 0 auto; display:flex; flex-direction:column; align-items:center; min-width:0">
               <!-- The big number is what is ON THE BELT, which is what the
                    drawing beside it shows. It used to print the count of items
                    ADDRESSED to a domain while the belt carried none of them -
@@ -4853,7 +5296,7 @@ ${["gear", "calendar", "clock", "triage", "stale", "blocked", "eye", "hourglass"
               </div>
             </div>
 
-            <div style="flex:1 1 auto; min-width:0; display:flex; flex-direction:column; gap:5px; border-left:1px solid oklch(0.26 0.012 70); padding-left:24px">
+            <div class="xopen" data-explain="belt:state" title="click for how this state is chosen, and where each number beside it comes from" style="pointer-events:auto; flex:1 1 auto; min-width:0; display:flex; flex-direction:column; gap:5px; border-left:1px solid oklch(0.26 0.012 70); padding-left:24px">
               <span title="${esc(D.beltWhyFull)}" style="font-family:${mono}; font-size:16px; letter-spacing:0.16em; color:${D.beltState === "RUNNING" ? "oklch(0.72 0.13 150)" : D.beltState === "STALLED" ? "oklch(0.80 0.11 25)" : D.beltState === "WAITING" ? "oklch(0.80 0.12 75)" : D.beltState === "UNJUDGED" ? "oklch(0.80 0.12 75)" : "oklch(0.62 0.01 80)"}">${D.beltState === "RUNNING" ? "CIRCULATING" : D.beltState === "STALLED" ? "BELT STALLED" : D.beltState === "WAITING" ? "NOBODY IS WORKING" : D.beltState === "UNJUDGED" ? "NOTHING JUDGED YET" : "BELT IDLE"}</span>
               <span title="${esc(D.beltWhyFull)}" style="font-family:${mono}; font-size:14px; line-height:1.4; letter-spacing:0.02em; color:oklch(0.62 0.01 80); overflow-wrap:anywhere">${beltWhyHtml()}</span>
               <!-- THE THREE KINDS, EACH COUNTED WHERE IT BELONGS.
@@ -5225,8 +5668,8 @@ ${["gear", "calendar", "clock", "triage", "stale", "blocked", "eye", "hourglass"
     <div style="background:oklch(0.185 0.012 70); border:1px solid oklch(0.28 0.012 70); border-radius:6px; padding:16px 18px; display:flex; flex-direction:column; gap:10px; min-height:0; overflow:hidden">
       <div style="display:flex; align-items:center; gap:14px">
         <span style="width:9px; height:9px; border-radius:50%; background:oklch(0.66 0.14 150); flex:none"></span>
-        <span style="font-family:${mono}; font-size:13px; letter-spacing:0.16em; color:oklch(0.62 0.01 80)">RESOLVED</span>
-        <span style="font-family:${mono}; font-size:13px; color:oklch(0.72 0.13 150); margin-left:auto; white-space:nowrap">${D.resolved.length} out</span>
+        <span class="xopen" data-explain="col:resolved" title="click for what resolved does and does not claim" style="font-family:${mono}; font-size:13px; letter-spacing:0.16em; color:oklch(0.62 0.01 80)">RESOLVED</span>
+        <span class="xopen" data-explain="col:resolved" title="click for how this is counted, and how much of it has since been undone" style="font-family:${mono}; font-size:13px; color:oklch(0.72 0.13 150); margin-left:auto; white-space:nowrap">${D.resolved.length} out</span>
       </div>
       <div class="scrollcol" style="display:flex; flex-direction:column; gap:2px; flex:1; min-height:0; overflow-x:hidden">${pulseSlot("resolved")}${resolvedRows}
       </div>
@@ -5246,7 +5689,7 @@ ${["gear", "calendar", "clock", "triage", "stale", "blocked", "eye", "hourglass"
     <span class="xopen" data-explain="foot:routes" title="click for what is counted and what the denominator is" style="display:flex; align-items:baseline; gap:10px"><span style="font-size:22px; color:oklch(0.92 0.008 85)">${esc(D.routesProven)}</span>routes proven</span>
     <span class="xopen" data-explain="foot:shed" title="click for what shedding a law means" style="display:flex; align-items:baseline; gap:10px"><span style="font-size:22px; color:oklch(0.92 0.008 85)">${D.shedCount}</span>laws shed</span>
     <span class="xopen" data-explain="foot:built" title="click for when the judgements on this board were made - the times beside them are live" style="display:flex; align-items:baseline; gap:10px"><span style="color:oklch(0.50 0.01 80)">built ${esc(D.builtLabel)}</span></span>
-    <span style="display:flex; align-items:center; gap:14px; margin-left:auto">
+    <span class="xopen" data-explain="foot:loops" title="click for which rhythms this strip shows, and which it leaves to the rail" style="display:flex; align-items:center; gap:14px; margin-left:auto">
       <span style="color:oklch(0.50 0.01 80); letter-spacing:0.14em">LOOPS</span>
       ${D.loopStrip
         .map(
