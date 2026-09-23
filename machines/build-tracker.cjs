@@ -1585,44 +1585,22 @@ const beltMoving = actedRecently && circulating.length > 0 && liveness.label !==
 // nothing verifies would be exactly the lie this replaces.
 const DISPATCH_ALIVE_MS = 30 * MS.m;
 
-// A SPAWNED AGENT DOES NOT WRITE WHERE THIS WAS LOOKING.
+// WHERE A SPAWNED AGENT ACTUALLY WRITES, AND WHY THIS FILE NOW ASKS SOMEBODY
+// ELSE.
 //
 // A session working in a git worktree writes its transcript to its OWN project
-// directory, not the repo's:
+// directory rather than the repo's, and the filename is a random uuid rather
+// than the session id, so the obvious check can never match. An unattended
+// worker spawned with worktree isolation writes no transcript at all. And a
+// worktree folder's mtime moves only when a file is added or removed at its top
+// level - never when work happens inside it. Each of those three cost a working
+// agent its card at least once, and the board then reported it abandoned.
 //
-//   ~/.claude/projects/E--Telechurch-e2e-v2                             <- all this used to search
-//   ~/.claude/projects/E--Telechurch-e2e-v2--claude-worktrees-<name>    <- where a spawned agent writes
-//
-// And the filename is a random uuid, NOT the session id. The old check matched
-// `filename.startsWith(session.slice(0, 8))`, which for a worktree session can
-// never match: measured 2026-09-12, the dispatch naming
-// `intelligent-nobel-ccd039` had its transcript at `57e082d9-....jsonl`.
-//
-// It therefore fell through to the worktree FOLDER's mtime, which moves only
-// when a file is added or removed at the folder's top level - not when anything
-// inside is written. Four worktree folders measured at 22:02-22:26 while two of
-// those sessions were actively working. So every spawned agent - the only kind
-// that currently exists - went invisible about thirty minutes after its folder
-// last changed, whatever it was doing, and the belt then dropped it.
-//
-// The proof this now works is not that it compiles: asked about the session
-// building this very board, it answers ALIVE from a transcript written seconds
-// ago, where before it would have answered dead from a folder untouched for
-// forty minutes.
-//
-// THIS IS THE THIRD COPY OF ONE RULE. The other two are in `session-life.cjs`,
-// which exit-worker and intake-worker both require.
-//
-// THE REASON FOR THE DUPLICATION EXPIRED ON 2026-09-14. It was duplicated
-// because this file lived in the product repo and session-life.cjs in the
-// factory, so importing it would have tied a build to a path that was
-// discovered rather than guaranteed. They are SIBLINGS now - the file is
-// `path.join(__dirname, "session-life.cjs")`, resolved the same way kind.cjs is
-// at the top - and a require would be as safe as the one already there. The
-// copy is left standing only because collapsing it is a behaviour change and
-// this commit is a move; it is now plain duplication with no argument behind
-// it. Until somebody collapses it: if you change the rule, change it in both
-// places.
+// The whole ladder, with the measurement behind each rung, is written out in
+// `session-life.cjs`. This file used to repeat it and no longer does - see the
+// note above sessionLife below. The constants here stay because the board reads
+// the same directories to answer other questions: which door a session came
+// through, which worktrees exist, and what the footer says it looked at.
 const PROJECTS = path.join(process.env.USERPROFILE || process.env.HOME || "", ".claude/projects");
 // A project directory is the repo's absolute path with the colon, separators
 // and dots all replaced by "-".
@@ -1642,56 +1620,46 @@ for (const r of records) {
 
 // Is this session real, and has it done anything lately?
 //
-// Evidence in order, best first:
-//   1. a transcript in the session's OWN worktree project directory. The
-//      directory is named for the worktree and a dispatch names the worktree, so
-//      the directory itself is the identification - any transcript in it counts.
-//   2. a transcript in the repo's project directory whose filename starts with
-//      the session id. The main-checkout case, where the id IS the uuid.
-//   3. the worktree folder's mtime. LAST RESORT AND BARELY EVIDENCE - it does
-//      not move while work happens. Kept only so a session with no transcript is
-//      not reported as fictional. Read 1 and 2 before trusting it.
-const sessionLife = (id) => {
-  if (!id) return null;
-  const seen = [];
-  try {
-    for (const d of fs.readdirSync(PROJECTS)) {
-      const own = d === `${PROJECT_BASE}--claude-worktrees-${id}`;
-      const base = d === PROJECT_BASE;
-      if (!own && !base) continue;
-      let files = [];
-      try {
-        files = fs.readdirSync(path.join(PROJECTS, d));
-      } catch {
-        continue;
-      }
-      for (const f of files) {
-        if (!f.endsWith(".jsonl")) continue;
-        if (!own && !f.startsWith(String(id).slice(0, 8))) continue;
-        try {
-          seen.push({ where: own ? "transcript (worktree)" : "transcript", at: fs.statSync(path.join(PROJECTS, d, f)).mtimeMs });
-        } catch (err) {
-          // Vanished between listing and stat. Anything else is a bug.
-          if (!expectedFsError(err)) throw err;
-        }
-      }
-    }
-  } catch (err) {
-    // No projects directory on this host is expected and means no evidence.
-    // A programming error here would report a working agent as DEAD and get its
-    // work returned to incoming, so it must not be swallowed into that answer.
-    if (!expectedFsError(err)) throw err;
-  }
-  try {
-    const p = path.join(WORKTREES, String(id));
-    if (fs.existsSync(p)) seen.push({ where: "worktree folder", at: fs.statSync(p).mtimeMs, weak: true });
-  } catch {
-    /* no worktree */
-  }
-  if (!seen.length) return null;
-  const newest = seen.sort((a, b) => b.at - a.at)[0];
-  return { ...newest, alive: now - newest.at < DISPATCH_ALIVE_MS };
-};
+// ONE DEFINITION, LOADED FROM THE ONE FILE THAT HOLDS IT. All four sources of
+// evidence, and the measurements that put each of them there, live in
+// `session-life.cjs` beside this file. Every other machine that judges liveness
+// already requires it: dispatch-stamp, exit-worker, intake-worker, session-belt
+// and watcher.
+//
+// THIS FILE KEPT A FOURTH PRIVATE COPY, AND THE COPY MISSED THE FIX. Source 3 -
+// the newest write anywhere inside the worktree, which is what stops an
+// unattended worker from being called abandoned while it edits existing files -
+// was added to the shared module and never to the copy that stood here. The two
+// agreed against every real worktree, because each of those has a transcript and
+// source 1 outranks the folder, so nothing ever showed the disagreement. It bit
+// only the transcript-less case - and a background worker spawned with worktree
+// isolation writes no transcript, so that case is the standing default for
+// unattended work.
+//
+// Measured 2026-09-22 on a constructed worktree with no transcript, a folder
+// aged 180 minutes, and one file written seconds ago inside it: the shared
+// module answered "worktree file (...)", alive; this copy answered "worktree
+// folder", 180m, not alive. The board is the reader the operator actually
+// looks at, so the one place the defect survived was the visible one.
+//
+// The comment that stood here said "if you change the rule, change it in both
+// places." Somebody changed one. That is the argument against keeping two, so
+// there is now one.
+const SESSIONLIFE = (() => {
+  const p = path.join(__dirname, "session-life.cjs");
+  if (fs.existsSync(p)) return require(p);
+  console.error(
+    "build-tracker: the shared liveness rule is missing, so no dispatch can be proven alive.\n" +
+      `  tried ${p}\n` +
+      "It ships beside this file, so its absence means a broken factory install. Nothing was written.",
+  );
+  process.exit(2);
+})();
+// ROOT, not REPO_ROOT. The module does its own worktree-to-repo resolution from
+// whatever root it is handed, so passing an already-resolved one would work only
+// by accident - and would stop working the moment the board is built from inside
+// a worktree, which is the case the third source exists for.
+const sessionLife = (id) => SESSIONLIFE.sessionLife(id, ROOT, DISPATCH_ALIVE_MS);
 
 // Dispatched and then abandoned is its own fact, and a worse one than never
 // dispatched: somebody picked the work up and put it down.
@@ -4056,13 +4024,23 @@ const recordWiring = (e, life) => {
       // THE EVIDENCE BEHIND THE WORD "LIVE". Without it the belt asserts that
       // somebody is working, and an assertion is what put a card here in the
       // first place - so the claim would be resting on itself.
-      wire("what proved that session alive", life ? life.where : null, life ? "machines/build-tracker.cjs · sessionLife" : "sessionLife found no evidence at all"),
+      wire("what proved that session alive", life ? life.where : null, life ? "machines/session-life.cjs · sessionLife" : "sessionLife found no evidence at all"),
       wire("when it was last seen", life ? `${hhmm(life.at)} · ${ago(life.at)}` : null, life ? `${life.where} · modified time` : null, life ? { at: life.at, t: "stampago" } : null),
       wire(
         "counted alive because",
         life ? `last seen inside the ${inWords(DISPATCH_ALIVE_MS)} window` : null,
         "machines/build-tracker.cjs · DISPATCH_ALIVE_MS",
-        life && life.weak ? { note: "a worktree folder is weaker evidence than a transcript - the folder can be touched by something other than the session" } : null,
+        // EACH WEAK PROOF GETS ITS OWN REASON. Both of these arrive flagged
+        // `weak`, and they are weak for opposite reasons: a folder mtime is real
+        // evidence of the wrong thing, while an incomplete scan is the absence of
+        // evidence. Printing the folder sentence for a scan that gave up would
+        // name a cause that did not happen - which is the defect this board keeps
+        // finding elsewhere, written into the board itself.
+        life && life.incomplete
+          ? { note: "the worktree scan stopped at its limit before finding a recent write, so this is a scan that gave up rather than a tree with nothing recent in it" }
+          : life && life.weak
+            ? { note: "a worktree folder is weaker evidence than a transcript - the folder can be touched by something other than the session" }
+            : null,
       ),
     );
   }
