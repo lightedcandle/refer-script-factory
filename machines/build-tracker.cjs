@@ -1252,6 +1252,86 @@ const REPO_ID = (repoList.find((r) => r.current) || {}).id || path.basename(ROOT
 // when it can be read; otherwise the one thing this build can vouch for.
 const wiredRepos = repoList.length ? repoList.filter((r) => r.wired).length : stationRows.length ? 1 : 0;
 
+// DETECTOR COVERAGE, COUNTED FROM THE PLAN RATHER THAN TRANSCRIBED FROM IT.
+//
+// The footer's detector count was hand-typed into tracker-extras.json as "3/14"
+// and read straight back out. A hand-typed measurement is not merely stale, it
+// is UNFALSIFIABLE: there is no state of the world in which it looks wrong,
+// because nothing else computes it to disagree with. Disclosing that in a panel
+// - which the previous pass did - tells a reader the number cannot be trusted
+// and still leaves it on the board as the only figure available.
+//
+// A contradiction and a gap need opposite fixes. A gap is a fact no script can
+// obtain, and saying so IS the work (hive channels, one panel over). A
+// contradiction is a fact with a live source that nothing reads, and it is
+// fixed by reading it. This is the second kind, and the plan says so itself:
+// "the 'detectable today?' column is the honest map of how far that has got".
+// The column is the measurement. Nothing had to be invented to count it.
+//
+// THREE VERDICTS, NOT TWO. "partly" is neither a detector nor the absence of
+// one, and collapsing it either way is how a progress metric starts flattering
+// itself. It is counted and reported separately; the footer shows only the
+// unambiguous yes, which is what the plan's own metric asks for - "how many of
+// the fourteen drivers have a detector", not how many are on the way.
+//
+// A verdict outside that vocabulary is UNREADABLE, counted as such and never
+// silently dropped - the same distinction the plan-folder reader above already
+// makes between a document that never answered and one that answered in a
+// language this reader does not speak.
+//
+// Unreadable at the table level renders a dash. Absence of a plan, a renamed
+// column or a table this reader cannot parse all produce NO NUMBER, because the
+// whole point of the deposit behind this is that a missing measurement must
+// never arrive looking like a reading.
+const LIVING_FACTORY_PLAN = "refer.app/plan/refer.living-factory.plan.md";
+const detectorCoverage = (() => {
+  let text;
+  try {
+    text = fs.readFileSync(path.join(ROOT, LIVING_FACTORY_PLAN), "utf8");
+  } catch {
+    return null; // a repo with no such plan is a legitimate state, and it shows as a dash
+  }
+  const plain = (s) => s.replace(/\*\*/g, "").replace(/`/g, "").trim();
+  const rows = [];
+  let column = null;
+  for (const raw of text.split(/\r?\n/)) {
+    const line = raw.trim();
+    if (!line.startsWith("|")) continue;
+    const cells = line.split("|").slice(1, -1).map(plain);
+    // THE HEADER IS MATCHED WHOLE, not by containment. A later row in a
+    // different table QUOTES the words "detectable today?" inside a sentence
+    // about this very metric; a containment test would have taken that sentence
+    // for a column heading and silently re-pointed the reader at column 2.
+    const headerAt = cells.findIndex((c) => /^detectable\s+today\s*\??$/i.test(c));
+    if (headerAt >= 0) {
+      column = headerAt;
+      continue;
+    }
+    if (column == null) continue;
+    if (!/^[IE]\d+$/.test(cells[0] || "")) continue;
+    const said = cells[column] || "";
+    const verdict = said.toLowerCase().split(/[—–,(-]/)[0].trim();
+    rows.push({
+      driver: cells[0],
+      name: plain(cells[1] || ""),
+      verdict: ["yes", "partly", "no"].includes(verdict) ? verdict : "unreadable",
+      said,
+    });
+  }
+  if (!rows.length) return null;
+  const count = (v) => rows.filter((r) => r.verdict === v).length;
+  return {
+    total: rows.length,
+    yes: count("yes"),
+    partly: count("partly"),
+    no: count("no"),
+    unreadable: count("unreadable"),
+    named: rows.filter((r) => r.verdict === "yes").map((r) => `${r.driver} ${r.name}`),
+    partlyNamed: rows.filter((r) => r.verdict === "partly").map((r) => `${r.driver} ${r.name}`),
+    source: `${LIVING_FACTORY_PLAN} · the internal and external driver tables, "detectable today?" column`,
+  };
+})();
+
 // The host is part of the factory, so its state belongs on the board. It is read
 // from the node registry rather than probed again here: node-heartbeat owns that
 // block and writes it, and two stations probing the same thing is how two
@@ -2401,9 +2481,17 @@ const horizon = (() => {
 
   // Measurable distances, each with a declared target so "how far" is a fact
   // rather than a feeling. A bar with no declared end is a mood, not a measure.
+  // AT AND OF ARE MEASUREMENTS, SO AN UNKNOWN ONE STAYS NULL. Both defaults here
+  // were the same defect as the detector count two panels over: `?? 0` read as
+  // "none proven yet" on a build that could not count them at all, and
+  // `Number(extras.repos) || 14` supplied a hand-typed denominator - which also
+  // turned a genuine zero into fourteen, because `||` cannot tell them apart.
+  // The declared target of 3 stays a number: body, mind and spirit is a target
+  // somebody chose, not a reading somebody took, and defaulting an ARGUMENT is
+  // ordinary. The bar renders a dash for anything null.
   const tracks = [
-    { label: "routes proven", at: scriptsRegistered ?? 0, of: scriptsTotal ?? 0, why: "machinery anyone can find and drive, rather than remember" },
-    { label: "repos wired", at: wiredRepos, of: Number(extras.repos) || 14, why: "repos with a trigger watching them" },
+    { label: "routes proven", at: scriptsRegistered ?? null, of: scriptsTotal || null, why: "machinery anyone can find and drive, rather than remember" },
+    { label: "repos wired", at: wiredRepos, of: repoList.length || null, why: "repos with a trigger watching them" },
     { label: "domains watched", at: ["body", "mind", "spirit"].filter((d) => stations.some((s) => s.owns === d)).length, of: 3, why: "body, mind and spirit each with a watcher" },
   ];
 
@@ -2661,17 +2749,25 @@ const D = {
   horizon,
   plans,
   newCount,
-  // NO PLAUSIBLE DEFAULT. This read `extras.detectors || "3/14"`, so a missing
-  // or unreadable extras file printed a real-looking measurement that nothing
-  // had measured - the one thing the extras file's own header says it exists to
-  // prevent ("anything absent renders as unknown rather than as zero"). The
-  // three numbers beside it already fall back to a dash; this one did not, and
-  // the fallback was the very value it was standing in for, so nobody could tell
-  // the difference by looking.
-  detectors: extras.detectors != null ? String(extras.detectors) : "—",
+  // NO PLAUSIBLE DEFAULT, AND NOW NO TRANSCRIPTION EITHER.
+  //
+  // This read `extras.detectors || "3/14"` - a hand-typed figure with a
+  // hand-typed fallback of the SAME value, so deleting the file it came from
+  // would have changed nothing on screen. The fallback went first; the
+  // transcription goes now. It is counted from the plan's own "detectable
+  // today?" column on every build, and where that column cannot be read it
+  // renders absent rather than plausible. See detectorCoverage above.
+  detectors: detectorCoverage ? `${detectorCoverage.yes}/${detectorCoverage.total}` : "—",
   hiveChannels: extras.hiveChannels != null ? String(extras.hiveChannels) : "\u2014",
   routesProven: scriptsRegistered != null && scriptsTotal ? `${scriptsRegistered}/${scriptsTotal}` : "\u2014",
-  repos: repoList.length ? String(repoList.length) : extras.repos != null ? String(extras.repos) : "14",
+  // SWEPT WITH THE ONE ABOVE, because it is the same shape one line down. The
+  // ecosystem map is the live source for how many repos exist; `extras.repos`
+  // was a hand-typed copy of it and `"14"` was a hand-typed copy of the copy.
+  // So "N OF 14 REPOS WIRED" printed a denominator nobody had counted, on a
+  // build that had just failed to read the file that counts it. It now says
+  // "N OF — REPOS WIRED", which is the honest sentence: this build knows what it
+  // wired and does not know what it was out of.
+  repos: repoList.length ? String(repoList.length) : "—",
   repoList,
   repoId: REPO_ID,
   builtAt: new Date(now).toISOString(),
@@ -3128,22 +3224,46 @@ for (const dim of ["body", "mind", "spirit"]) {
 explains("foot:detectors", {
   title: "DETECTORS",
   kind: "a footer count — drivers of change that something can notice automatically",
-  headline: {
-    tone: "disagree",
-    text: `Nothing computes this number. It is typed into ${path.relative(ROOT, EXTRAS).replace(/\\/g, "/")} by hand and read straight out again, so the board shows a transcription rather than a measurement, and it will keep showing ${D.detectors} after the real figure has moved. The plan that defines it is the live source; nothing connects the two.`,
-  },
+  // WAS A CONTRADICTION, IS NOW A READING. This panel used to lead with the
+  // disclosure that nothing computed the number beside it. Disclosure was the
+  // right first move and the wrong last one: it told a reader the figure could
+  // not be trusted and left it on the board as the only figure available. The
+  // column the plan names as its own honest map is now read on every build, so
+  // the panel reports where the number came from rather than apologising for it.
+  headline: detectorCoverage
+    ? {
+        tone: "ok",
+        text: `Counted on this build from the plan's own "detectable today?" column, not transcribed from it. ${detectorCoverage.yes} of ${detectorCoverage.total} drivers answer yes. ${detectorCoverage.partly} answer "partly" and are deliberately not counted here — a metric that counts half a detector flatters itself — and ${detectorCoverage.no} answer no. Edit the table and this number moves on the next build.`,
+      }
+    : {
+        tone: "gap",
+        text: `Not recorded. ${LIVING_FACTORY_PLAN} could not be read here, or its "detectable today?" column has been renamed, so the board shows a dash rather than a number. Nobody has counted is a different fact from there being none, and this one used to print 3/14 in both cases.`,
+      },
   purpose: {
     text: "A driver is a reason the application needs to change. A detector is something that notices that reason without a person looking. This is the count of drivers with one - the single number that says how much of the factory can find its own work.",
     source: "refer.app/plan/refer.living-factory.plan.md · section 3.3, and the metrics table",
   },
   wiring: [
-    wire("what it counts", "drivers of change that have an automatic detector", "refer.app/plan/refer.living-factory.plan.md · section 3.3"),
-    wire("what the denominator is", "the fourteen drivers listed in that plan — NOT the fourteen repos shown elsewhere on this board", "refer.app/plan/refer.living-factory.plan.md · section 3.3"),
-    wire("where the shown value comes from", `hand-written: ${D.detectors}`, `${path.relative(ROOT, EXTRAS).replace(/\\/g, "/")} · detectors`),
-    wire("how it was arrived at", extras._source || null, `${path.relative(ROOT, EXTRAS).replace(/\\/g, "/")} · _source`),
-    wire("when it was last written", extras._updated || null, `${path.relative(ROOT, EXTRAS).replace(/\\/g, "/")} · _updated`),
-    wire("recomputed by", "nothing — no trigger and no script counts detectors", "searched: no machinery writes this field", { disagree: true }),
-    wire("what a good value looks like", "up. Every watcher built raises it; the plan's own target is that all fourteen drivers have a detector.", "refer.app/plan/refer.living-factory.plan.md · section 3.3"),
+    wire("what it counts", `drivers whose "detectable today?" cell answers yes`, detectorCoverage ? detectorCoverage.source : `${LIVING_FACTORY_PLAN} · not found on this build`),
+    wire(
+      "what the denominator is",
+      detectorCoverage ? `${detectorCoverage.total} driver rows found in those tables — NOT the repo count shown elsewhere on this board` : null,
+      detectorCoverage ? detectorCoverage.source : null,
+    ),
+    wire("which drivers have one", detectorCoverage && detectorCoverage.named.length ? detectorCoverage.named.join(" · ") : null, detectorCoverage ? detectorCoverage.source : null),
+    wire("counted as partly, and excluded", detectorCoverage && detectorCoverage.partlyNamed.length ? detectorCoverage.partlyNamed.join(" · ") : null, detectorCoverage ? detectorCoverage.source : null),
+    // A CELL THIS READER COULD NOT PARSE IS ITS OWN FACT, reported rather than
+    // rounded into "no". It is the one way this count can be quietly wrong, so
+    // it is on the panel where a reader will see it.
+    wire(
+      "cells answering outside yes / partly / no",
+      detectorCoverage ? detectorCoverage.unreadable : null,
+      detectorCoverage ? "machines/build-tracker.cjs · detectorCoverage" : null,
+      detectorCoverage && detectorCoverage.unreadable ? { disagree: true } : undefined,
+    ),
+    wire("recomputed by", "this build, every time it runs", "machines/build-tracker.cjs · detectorCoverage"),
+    wire("what it used to be", `hand-typed into ${path.relative(ROOT, EXTRAS).replace(/\\/g, "/")}, with a fallback of the same value if that file went missing`, "the deposit a-default-for-a-missing-measurement-is-a-lie"),
+    wire("what a good value looks like", "up. Every watcher built raises it; the plan's own target is that every driver has a detector.", "refer.app/plan/refer.living-factory.plan.md · section 3.3"),
   ],
 });
 
@@ -3173,6 +3293,13 @@ explains("foot:hive", {
     wire("how it was arrived at", extras._source || null, `${path.relative(ROOT, EXTRAS).replace(/\\/g, "/")} · _source`),
     wire("when it was last written", extras._updated || null, `${path.relative(ROOT, EXTRAS).replace(/\\/g, "/")} · _updated`),
     wire("recomputed by", "nothing — a script cannot enumerate them, which is why the file exists", `${path.relative(ROOT, EXTRAS).replace(/\\/g, "/")} · _why`, { disagree: true }),
+    // A GAP IS FIXED BY NAMING WHO CAN ANSWER IT, not by leaving it open. The
+    // panel already said no script can count these; a reader who then wanted the
+    // number had nowhere to go. The tools that CAN see them are named here, so
+    // refreshing this figure is a task somebody can pick up rather than a
+    // permanent shrug. This is the difference from the detector count beside it:
+    // that one had a live source nothing read, and it is read now.
+    wire("who can answer it", "a session holding the hive tools — ListAgents and list_sessions enumerate the channels a script has no access to", `${path.relative(ROOT, EXTRAS).replace(/\\/g, "/")} · _source`),
   ],
 });
 
@@ -5565,11 +5692,14 @@ ${["gear", "calendar", "clock", "triage", "stale", "blocked", "eye", "hourglass"
                 (t) => `
             <div style="min-width:180px">
               <div style="display:flex; align-items:baseline; gap:8px">
-                <span style="font-family:${mono}; font-size:19px; color:oklch(0.92 0.008 85)">${t.at}<span style="color:oklch(0.50 0.01 80)"> / ${t.of}</span></span>
+                <!-- A DASH, NEVER A ZERO. An unmeasured track drew "0 / 0" with
+                     an empty bar, which reads as no progress rather than as no
+                     reading - and those need opposite responses. -->
+                <span style="font-family:${mono}; font-size:19px; color:oklch(0.92 0.008 85)">${t.at == null ? "&mdash;" : t.at}<span style="color:oklch(0.50 0.01 80)"> / ${t.of == null ? "&mdash;" : t.of}</span></span>
                 <span style="font-family:${mono}; font-size:12px; letter-spacing:0.1em; color:oklch(0.62 0.01 80)">${esc(t.label.toUpperCase())}</span>
               </div>
               <div style="height:4px; border-radius:2px; background:oklch(0.26 0.012 70); margin:5px 0 3px; overflow:hidden">
-                <div style="height:100%; width:${t.of ? Math.round((t.at / t.of) * 100) : 0}%; background:oklch(0.62 0.13 150)"></div>
+                <div style="height:100%; width:${t.of && t.at != null ? Math.round((t.at / t.of) * 100) : 0}%; background:oklch(0.62 0.13 150)"></div>
               </div>
               <span style="font-size:12px; color:oklch(0.56 0.01 80)">${esc(t.why)}</span>
             </div>`,
