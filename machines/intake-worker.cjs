@@ -329,13 +329,56 @@ const beltEligible = records.filter(pullable).length;
 
 const picks = waiting.slice(0, room);
 
+// WHAT A RECORD SAYS ABOUT ITSELF, IN WHATEVER FIELDS IT HAPPENS TO CARRY.
+//
+// brief() read `claim` and `evidence` and nothing else. That is right for the
+// belt's original author and wrong for every plan note: the Go switch writes
+// `title` / `detail` / `plan` / `planStatus` and neither of the two fields
+// this printed. Both lines came out empty, no error, agent dispatched blind.
+//
+// ORDER IS THE POINT. claim and evidence first, because that is what a briefed
+// agent expects to read first and nothing about the common case should move.
+// Everything after is additive: a record that already carried claim and
+// evidence now also shows its title, which is context it always had and never
+// handed over.
+//
+// A BLANK IS NEVER PRINTED. If none of these fields exist, the brief says the
+// record is silent and names where to read it, rather than emitting "Claim: "
+// and letting the agent decide whether that means empty or broken. Same rule
+// the auto door now follows for its own queue: report why you are empty.
+const CONTENT_FIELDS = [
+  ["Claim", "claim"],
+  ["Evidence", "evidence"],
+  ["Title", "title"],
+  ["Detail", "detail"],
+];
+const contentOf = (r) => {
+  const out = [];
+  // The plan line comes first because it is the subject everything else is
+  // about, and because a plan id is the one field here that leads somewhere:
+  // the registered plan file, which no other field can point at.
+  if (r.plan) out.push(`Plan: ${String(r.plan)}${r.planStatus ? ` (${r.planStatus})` : ""}`);
+  for (const [label, key] of CONTENT_FIELDS) {
+    const v = String(r[key] || "").replace(/\s+/g, " ").trim();
+    if (v) out.push(`${label}: ${v}`);
+  }
+  if (!out.length) {
+    out.push(
+      `This record ${MISSING_CONTENT} - it is on the belt with an id and`,
+      `nothing that says what it is. Do not guess. Read the line whose "id" is`,
+      `the one above in .claude/agent-context/findings.jsonl, and if it really`,
+      `says nothing, close it terminal:withdrawn and say that is why.`
+    );
+  }
+  return out;
+};
+
 const brief = (p) =>
   [
     `Work this single deposit from the Living Factory belt and nothing else.`,
     ``,
     `ID: ${p.r.id}`,
-    `Claim: ${String(p.r.claim || "").replace(/\s+/g, " ")}`,
-    `Evidence: ${String(p.r.evidence || "").replace(/\s+/g, " ")}`,
+    ...contentOf(p.r),
     p.advice ? `Recommended: ${String(p.advice).replace(/\s+/g, " ")}` : `No recommendation exists. Work out what to do, and say so before doing it.`,
     ``,
     // ORDER REWRITTEN 2026-09-22, from watching three real runs.
@@ -414,6 +457,7 @@ const brief = (p) =>
 // THE PROCESS IS STILL THERE before calling it dispatched. Neither is clever;
 // what was missing was the idea that spawn() returning a pid says only that
 // the operating system created something.
+const MISSING_CONTENT = "carries no claim, evidence, title or detail";
 const DISPATCH_LOGS = path.join(CTX, "dispatch-logs");
 // HOW LONG "STILL THERE" HAS TO MEAN SOMETHING. The first version of this
 // check waited 6 seconds and reported three agents RUNNING that were all dead

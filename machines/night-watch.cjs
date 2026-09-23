@@ -136,7 +136,7 @@ const fresh = all.filter((r) => {
 // contracts became different things, and a stale copy here would have reported
 // every acceptance of work as an overnight closure - the night report saying
 // eight things were finished on a night when eight things were merely started.
-const { NOTING, selfTerminal } = require("./kind.cjs");
+const { NOTING, selfTerminal, headlineOf } = require("./kind.cjs");
 const newFindings = fresh.filter((r) => !selfTerminal(r));
 const closures = fresh.filter((r) => selfTerminal(r) && !NOTING.test(String(r.triggers || "").trim()) && r.subject);
 const lessons = fresh.filter((r) => r.lesson);
@@ -197,5 +197,5 @@ if (JSON_OUT) {
   } else {
     console.log(`\n  No gaps. The factory ran continuously for ${hours} hours.`);
   }
-  for (const r of newFindings.slice(0, 12)) console.log(`\n  ${String(r.claim).replace(/\s+/g, " ").slice(0, 150)}`);
+  for (const r of newFindings.slice(0, 12)) console.log(`\n  ${headlineOf(r).slice(0, 150)}`);
 }

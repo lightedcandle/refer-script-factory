@@ -57,7 +57,7 @@ const records = fs
 const { byHandle, handleOf: handles } = require("./kind.cjs").handleIndex(records);
 
 // The belt's vocabulary, from the one file that holds it.
-const { beltIndex } = require("./kind.cjs");
+const { beltIndex, headlineOf, reasonOf } = require("./kind.cjs");
 const IX = beltIndex(records);
 const selfTerminal = IX.selfTerminal;
 const isDone = IX.isDone;
@@ -83,7 +83,7 @@ if (LIST_OPEN) {
     // The KIND goes on the line, because "open" covers a contract somebody owes
     // and a deposit nobody has judged, and the two ask for opposite things from
     // whoever is reading this list.
-    console.log(`  ${h.padEnd(5)} ${IX.kindOf(r).toUpperCase().padEnd(9)} ${String(r.triggers).padEnd(16)} ${String(r.claim).replace(/\s+/g, " ").slice(0, 78)}`);
+    console.log(`  ${h.padEnd(5)} ${IX.kindOf(r).toUpperCase().padEnd(9)} ${String(r.triggers || "").padEnd(16)} ${headlineOf(r).slice(0, 78)}`);
     if (rec) console.log(`        -> ${String(rec).replace(/\s+/g, " ").slice(0, 100)}`);
   }
   process.exit(0);
@@ -108,8 +108,8 @@ const out = {
   status: isDone(r) ? "closed" : "open",
   triggers: r.triggers,
   owner: r.owner,
-  claim: r.claim,
-  evidence: r.evidence,
+  claim: headlineOf(r),
+  evidence: reasonOf(r),
   recommend: adviceLate.get(String(r.id)) || r.recommend || null,
   options: optsLate.get(String(r.id)) || r.options || null,
   lesson: lessonLate.get(String(r.id)) || r.lesson || null,
