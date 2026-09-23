@@ -143,7 +143,10 @@ const MODE = intakeMode();
 // file says "auto", so every trial run would start three real agents. The
 // watcher has had the same flag, for the same reason, since it was armed.
 const DRY = process.argv.includes("--dry");
-const DO_DISPATCH = !DRY && (process.argv.includes("--dispatch") || MODE === "auto");
+// --self-test drives the failure-reporting path and exits before the dispatch
+// block, so it can never start an agent. See the block below lastWords.
+const SELF_TEST = process.argv.includes("--self-test");
+const DO_DISPATCH = !DRY && !SELF_TEST && (process.argv.includes("--dispatch") || MODE === "auto");
 
 const MS = { m: 6e4, h: 36e5 };
 const ALIVE_MS = 30 * MS.m;
@@ -570,25 +573,178 @@ function stillAlive(pid) {
   }
 }
 
-function lastWords(file) {
+// How recent a refusal has to be to be THIS dispatch's cause rather than an
+// older one still sitting in the transcript store.
+const REFUSAL_IS_OURS_MS = 10 * MS.m;
+
+/**
+ * WHY A SILENT EXIT NO LONGER GUESSES.
+ *
+ * This used to answer "most often the headless CLI is not signed in. Run
+ * `claude -p hello` in a terminal here to see the real message". That was a
+ * guess, written on 2026-09-22 from a single foreground observation, and it is
+ * measurably wrong on this host. Measured across all 49 dispatch logs in
+ * Telechurch's .claude/agent-context/dispatch-logs on 2026-09-23: not one names
+ * an authentication failure, and every dispatch failure that named a cause at
+ * all named the account's session limit - six logs and four belt deposits
+ * carrying "You've hit your session limit - resets ..." in the CLI's own words.
+ * Sending the next session to go and check its sign-in points it at the one
+ * cause never once observed here.
+ *
+ * It does not guess the other way either. Two things this machine can READ
+ * separate the cases, and both are already wired here for other reasons:
+ *
+ *   the transcript   sessionLife() looks for a transcript named after the uuid
+ *                    this machine minted at spawn. No transcript means the CLI
+ *                    never got as far as opening a session - it failed BEFORE
+ *                    it began, which is precisely what the deposit's own title
+ *                    claims and what nothing until now actually checked.
+ *   the account      accountStarved() reads the newest refusal out of the
+ *                    transcript store, in the CLI's own sentence. A session
+ *                    killed by the limit leaves that sentence behind even when
+ *                    its own log file is empty.
+ *
+ * So the message reports what was found, and names a cause only when something
+ * on disk says so. Where nothing does, it says that plainly and points at the
+ * foreground run - which stays the only way to see a message that was never
+ * written down anywhere.
+ *
+ * NEITHER PROBE MAY BECOME A SECOND FAILURE. This runs only on the path where a
+ * dispatch has already died, so a throw here would replace the report of the
+ * first failure with a crash about the diagnosis of it.
+ *
+ * THE TEXT MUST STAY STABLE ACROSS RUNS. The deposit below de-duplicates on
+ * this exact string - "never a duplicate of one already sitting there
+ * unanswered" - so folding a session id or a timestamp in here would make every
+ * failure distinct and bury the belt under the same failure every twenty
+ * minutes. The self-test drives that directly.
+ */
+function silentExit(session) {
+  let opened = null;
   try {
-    const t = fs.readFileSync(file, "utf8").replace(/\[[0-9;]*m/g, "").trim();
-    // AN EMPTY LOG IS ITSELF A DIAGNOSIS, so it is not reported as a shrug. A
-    // detached agent that exits at once having written nothing has almost
-    // always failed before it began, and on 2026-09-22 the cause was the
-    // headless CLI's sign-in: "Failed to authenticate: OAuth session expired
-    // and could not be refreshed", visible only when the same command was run
-    // in the foreground. Naming the likely cause and how to confirm it beats
-    // reporting silence, which is what sent the operator looking twice.
-    if (!t) {
-      return "it exited at once and wrote nothing - most often the headless CLI is not signed in. Run `claude -p \"hello\"` in a terminal here to see the real message";
+    opened = sessionLife(session, ROOT, ALIVE_MS);
+  } catch {
+    /* the probe is evidence, never a second failure */
+  }
+  let refusal = null;
+  try {
+    const b = accountStarved(Date.now());
+    if (b && b.refusal && Date.now() - Date.parse(b.refusal.at) < REFUSAL_IS_OURS_MS) {
+      refusal = String(b.refusal.text || "").trim();
     }
-    // The first non-empty line is the useful one: these failures announce
-    // themselves immediately and then say nothing else.
-    return t.split(/\r?\n/).filter((l) => l.trim())[0].slice(0, 300);
+  } catch {
+    /* same */
+  }
+  const began = opened
+    ? "it opened a session and then died without printing anything"
+    : "it never opened a session, so it failed before it began";
+  if (refusal) return `${began} - and the account refused a run moments earlier: "${refusal.slice(0, 120)}"`;
+  return (
+    `${began}, and nothing in the transcript store names a cause. Run the same command in the foreground to see ` +
+    "what the CLI says - on this host every failure that named one named the account's session limit"
+  );
+}
+
+function lastWords(file, session) {
+  let t = "";
+  try {
+    // THE ESCAPE IS PART OF THE SEQUENCE. This pattern used to be
+    // /\[[0-9;]*m/, which removes the "[31m" and leaves the escape byte
+    // itself sitting at the front of the message - invisible in a terminal,
+    // and then carried verbatim onto the belt, where the next reader finds a
+    // control character inside a JSON field. The optional "?" keeps every
+    // sequence the old pattern stripped, so nothing that worked stops working.
+    //
+    // Population on this host today: zero. `claude -p` writing to a redirected
+    // handle emits no colour at all, so not one of the dispatch logs on disk has
+    // ever carried an escape byte - which is exactly why a guard that never
+    // worked has never been noticed. The self-test below is what found it.
+    t = fs.readFileSync(file, "utf8").replace(/\u001b?\[[0-9;]*m/g, "").trim();
   } catch {
     return "it exited and left no output";
   }
+  // AN EMPTY LOG IS ITSELF A DIAGNOSIS, so it is not reported as a shrug - but
+  // the diagnosis is now read off disk instead of assumed. See silentExit.
+  if (!t) return silentExit(session);
+  // The first non-empty line is the useful one: these failures announce
+  // themselves immediately and then say nothing else.
+  return t.split(/\r?\n/).filter((l) => l.trim())[0].slice(0, 300);
+}
+
+// PROVEN RATHER THAN ARGUED: `node machines/intake-worker.cjs --self-test`.
+//
+// A sentence is the entire product of this path, so the only thing worth
+// asserting is what the sentence SAYS. Every check drives the real function
+// against the real filesystem; not one of them re-implements it. It runs here,
+// above the dispatch block, so a test run can never start an agent.
+if (SELF_TEST) {
+  const os = require("os");
+  const SL = require("./session-life.cjs");
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "lastwords-"));
+  let failed = 0;
+  let skipped = 0;
+  const check = (name, ok, got) => {
+    console.log(`  ${ok ? "ok  " : "FAIL"}  ${name}`);
+    if (!ok) {
+      failed++;
+      console.log(`        got: ${got}`);
+    }
+  };
+
+  // A log with words is answered from the log and the probes never run.
+  const spoke = path.join(dir, "spoke.log");
+  // The escape is WRITTEN as \u001b, never pasted in: an invisible character is a
+  // guard nobody can see break.
+  fs.writeFileSync(
+    spoke,
+    "\u001b[31mYou've hit your session limit - resets 8:30pm (America/New_York)\u001b[0m\nand then some\n"
+  );
+  const said = lastWords(spoke, crypto.randomUUID());
+  check(
+    "a log with words returns the CLI's own first line",
+    said === "You've hit your session limit - resets 8:30pm (America/New_York)",
+    said
+  );
+
+  // A silent exit by a session that never existed.
+  const silent = path.join(dir, "silent.log");
+  fs.writeFileSync(silent, "");
+  const never = crypto.randomUUID();
+  const a = lastWords(silent, never);
+  check("a silent exit by a session with no transcript says it never began", /never opened a session/.test(a), a);
+  check("the sign-in guess is gone - it was never observed on this host", !/not signed in/i.test(a), a);
+  check("and no session is sent to run `claude -p` after a cause nothing measured", !/claude -p/.test(a), a);
+  check("the same failure reads identically twice, so the belt can de-duplicate it", a === lastWords(silent, never), a);
+  check("and carries no session id, which would make every failure distinct", !a.includes(never), a);
+
+  // The other half of the discriminator, against a session this host really
+  // opened. No fixture is invented: the newest uuid-named transcript in the
+  // store IS a session that existed, which is the condition under test.
+  let real = null;
+  try {
+    const d = path.join(SL.PROJECTS, SL.tokenize(ROOT));
+    const files = fs.readdirSync(d).filter((f) => /^[0-9a-f-]{36}\.jsonl$/i.test(f));
+    if (files.length) {
+      real = files
+        .sort((x, y) => fs.statSync(path.join(d, y)).mtimeMs - fs.statSync(path.join(d, x)).mtimeMs)[0]
+        .replace(/\.jsonl$/i, "");
+    }
+  } catch {
+    /* no store on this host is a SKIP, reported as one, never folded into a pass */
+  }
+  if (real) {
+    const b = lastWords(silent, real);
+    check("a silent exit that DID open a session says so instead", /opened a session/.test(b), b);
+    check("so the two silences are never reported as the same thing", b !== a, b);
+  } else {
+    skipped += 2;
+    console.log("  SKIP  no uuid-named transcript in this host's store, so the opened-a-session half was not driven");
+  }
+
+  fs.rmSync(dir, { recursive: true, force: true });
+  const tail = skipped ? ` (${skipped} NOT DRIVEN - see SKIP above)` : "";
+  console.log(failed ? `\nintake-worker self-test: ${failed} FAILED${tail}` : `\nintake-worker self-test: all passed${tail}`);
+  process.exit(failed ? 1 : 0);
 }
 
 let started = [];
@@ -700,7 +856,9 @@ if (DISPATCH_ALLOWED && picks.length) {
     Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, SURVIVE_MS);
     for (const l of launched) {
       if (stillAlive(l.pid)) started.push({ id: l.id, label: l.label, session: l.session, pid: l.pid });
-      else failedToStart.push({ id: l.id, label: l.label, pid: l.pid, why: lastWords(l.logPath), log: path.relative(ROOT, l.logPath).replace(/\\/g, "/") });
+      // The session id travels with the log path. On a silent exit it is the only
+      // thing that can say whether the CLI ever opened a session at all.
+      else failedToStart.push({ id: l.id, label: l.label, pid: l.pid, why: lastWords(l.logPath, l.session), log: path.relative(ROOT, l.logPath).replace(/\\/g, "/") });
       try {
         fs.closeSync(l.fd);
       } catch {
