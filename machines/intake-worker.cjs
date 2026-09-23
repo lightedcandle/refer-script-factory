@@ -920,9 +920,38 @@ if (DISPATCH_ALLOWED && picks.length) {
       // started and says nothing about what that process starts. The window
       // that reached the desktop was two generations down.
       const psq = (s) => `'${String(s).replace(/'/g, "''")}'`;
+      // TWO QUOTING LAYERS, AND ONLY ONE OF THEM WAS BEING WRITTEN.
+      //
+      // `psq` quotes for POWERSHELL's parser. It is not what the started process
+      // sees. Start-Process joins -ArgumentList with single spaces into one
+      // command-line string and quotes nothing, so a multi-word element is
+      // delivered to the target as MANY arguments - and the target's own parser
+      // has no way to know they were ever one.
+      //
+      // MEASURED, BOTH ENDS, 2026-09-23. The dispatcher builds a 400-character
+      // pointer and hands it over as one argv element. The command line of a live
+      // dispatched session carried all 648 characters of it, unquoted. The first
+      // user message in that session's transcript was FOUR CHARACTERS: "Work".
+      // Driven against a real Start-Process afterwards with a target that writes
+      // its own argv: 38 arguments arrived where 6 were sent, and the last one
+      // was "it." - the final word of the sentence.
+      //
+      // So the pointer that replaced the cut-at-the-first-newline brief was being
+      // cut at every space instead, and the fleet went on compensating through
+      // claim.cjs and the process table - which is what made it invisible. The
+      // brief file it points at has been written correctly, and read by nobody.
+      //
+      // The fix is the second layer: anything carrying whitespace is also quoted
+      // for the TARGET, inside the PowerShell quoting. `ID: <slug> ` survives it
+      // intact, which claim.cjs depends on, because the quotes go around the whole
+      // sentence and not inside it.
+      const psqArg = (s) => {
+        const v = String(s);
+        return /\s/.test(v) ? psq(`"${v.replace(/"/g, '\\"')}"`) : psq(v);
+      };
       const exe = CLAUDE_EXE || "claude";
       const psCmd =
-        `$p = Start-Process -FilePath ${psq(exe)} -ArgumentList @(${argv.map(psq).join(",")}) ` +
+        `$p = Start-Process -FilePath ${psq(exe)} -ArgumentList @(${argv.map(psqArg).join(",")}) ` +
         `-WorkingDirectory ${psq(ROOT)} -WindowStyle Hidden ` +
         // Two files, not one: PowerShell refuses to redirect both streams to the
         // same path, and a dispatch that failed on that would look like an agent
