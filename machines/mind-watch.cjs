@@ -139,7 +139,12 @@ select
   (select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace
      where n.nspname='public' and has_function_privilege('anon', p.oid, 'EXECUTE')) as anon_executable_functions,
   (select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace
-     where n.nspname='public' and c.relkind='r') as tables
+     where n.nspname='public' and c.relkind='r') as tables,
+  -- The database's own record of what it has run. Asked for here so the
+  -- migration check can compare the repo against the DATABASE rather than
+  -- against a local report file that goes stale without saying so.
+  (select coalesce(string_agg(version, ',' order by version), '')
+     from supabase_migrations.schema_migrations) as applied_migrations
 `;
 
 // https rather than global fetch, and agent:false so the socket is closed
@@ -208,7 +213,40 @@ function drift() {
   // Parked migrations: renamed so the runner skips them. Intentional, and worth
   // saying once rather than every cycle - which is what the baseline is for.
   const parked = fs.readdirSync(MIG).filter((f) => /\.sql\.[A-Z]+$/.test(f));
-  return { lastPush: rep.timestamp, onDisk: files.length, sinceLastPush: newer.map((f) => f).sort(), parked };
+  return { lastPush: rep.timestamp, onDisk: files.length, sinceLastPush: newer.map((f) => f).sort(), parked, files: files.slice().sort() };
+}
+
+// WHICH MIGRATIONS THE DATABASE ITSELF HAS NO RECORD OF.
+//
+// The local report file answers a different and weaker question - "has a push
+// been recorded here lately" - and it goes stale on its own. Measured
+// 2026-09-23: it named two files from three weeks earlier as unproven while
+// BOTH were already applied; a run somewhere else had pushed them and not
+// written a report. An alarm built on that would have cried wolf daily, which
+// is how an alarm gets switched off before the day it matters.
+//
+// The database keeps its own list. Comparing disk against that list answers the
+// question actually worth asking, with no room for interpretation: this file
+// exists in the repo and the database has never seen it.
+function unapplied(d, appliedCsv) {
+  if (!d || appliedCsv === null || appliedCsv === undefined) return null;
+  const applied = new Set(
+    String(appliedCsv)
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean),
+  );
+  // An empty list from a project that plainly has migrations means the question
+  // could not be answered - reported as unknown rather than as "all missing",
+  // which would be the loudest possible way to be wrong.
+  if (!applied.size) return null;
+  const out = [];
+  for (const f of d.files || []) {
+    const m = /^(\d{10,})/.exec(f);
+    if (!m) continue; // not version-stamped; the runner would skip it too
+    if (!applied.has(m[1])) out.push(f);
+  }
+  return out;
 }
 
 function deposit() {
@@ -325,7 +363,10 @@ function finish(state, note) {
       const standing = [];
       if (state.definer_no_searchpath) standing.push(`${state.definer_no_searchpath} function(s) run with owner privileges and no pinned search path (${state.definer_names})`);
       if (state.anon_readable_tables) standing.push(`${state.anon_readable_tables} table(s) readable signed-out with no row-level security (${state.anon_readable_names})`);
-      if (state.migrationsSinceLastPush) standing.push(`${state.migrationsSinceLastPush} migration file(s) newer than the last recorded push`);
+      // The database's own record, not the local push report - the report was
+      // measured stale on 2026-09-23, naming two already-applied files.
+      const standingMissing = unapplied(d, state.applied_migrations);
+      if (standingMissing && standingMissing.length) standing.push(`${standingMissing.length} migration file(s) the database has no record of running`);
       if (standing.length) {
         say(
           "standing-state-at-first-watch",
@@ -368,11 +409,52 @@ function finish(state, note) {
   }
 
   // 4. Schema on disk that nothing local proves was ever applied.
-  if (d && d.sinceLastPush.length && d.sinceLastPush.length !== num(p.migrationsSinceLastPush)) {
+  //
+  // THIS ONE MUST NOT BE CHANGE-ONLY, and it was, and it cost a live leak.
+  //
+  // The condition used to be "the count differs from last run". A gap that
+  // simply PERSISTS never changes, so it fires once and is never heard from
+  // again - and schema drift is the one fault that gets worse the longer it
+  // stands still. On 2026-09-23 the database was sitting at a migration from
+  // 2026-09-03 while main carried three newer ones, one of which closed a
+  // verified anon data leak: two analytics views handing anyone with the
+  // browser's own key 944 sessions with user ids, routes, agents and referrers.
+  // The fix had been merged that morning. It reached production hours later,
+  // and only because an agent ran a push for an unrelated plan. This check had
+  // the number in its state file the whole time and said nothing, because the
+  // number had stopped moving.
+  //
+  // So it now speaks on EITHER the gap changing or the gap ageing. Deposits are
+  // deduplicated by day one level down, so a standing fault says its piece once
+  // a day rather than every cycle - loud enough to be a reminder, quiet enough
+  // not to become wallpaper.
+  // NOT CHANGE-ONLY, and not the local report file either. Both of those were
+  // wrong in different directions and the pair of mistakes is the whole lesson.
+  //
+  // It used to fire only when the count differed from last run, so a gap that
+  // simply PERSISTED went quiet - and schema drift is the one fault that gets
+  // worse standing still. Making it louder against the local push report would
+  // have been worse than silence: measured the same day, that file named two
+  // migrations as unproven while both were already live, so the new alarm would
+  // have rung daily about nothing until somebody muted it.
+  //
+  // The database's own migration table settles it. A file here that the
+  // database has no row for is unapplied, full stop, and that is worth saying
+  // every day it remains true - deposits are deduplicated by day one level
+  // down, so it is a daily reminder rather than a flood.
+  //
+  // Why it matters, dated: on 2026-09-23 a migration closing a verified anon
+  // data leak - two analytics views handing anyone with the browser's own key
+  // 944 sessions, with user ids, routes, agents and referrers - sat merged on
+  // main and unapplied for hours, and reached production only because an agent
+  // ran a push for an unrelated plan. NOTHING IN CI APPLIES MIGRATIONS. This
+  // check is the only thing that can notice.
+  const missing = unapplied(d, state.applied_migrations);
+  if (missing && missing.length) {
     say(
-      "migrations-newer-than-last-push",
-      `${d.sinceLastPush.length} migration file(s) are newer than the last recorded push, so nothing locally proves the database matches the repo.`,
-      `Last recorded push ${d.lastPush}. Files: ${d.sinceLastPush.join(", ")}. Not a claim that they are unapplied - a later push may simply not have written a report - but a claim that the repo can no longer show it. Schema drift is the definition of silent and permanent.`,
+      "migrations-not-in-the-database",
+      `${missing.length} migration file(s) are in the repo and have no row in the database's own migration table.`,
+      `Files: ${missing.join(", ")}. Compared against supabase_migrations.schema_migrations in the live database, not against a local push report - that report was measured stale on 2026-09-23, naming two already-applied files. Nothing in CI applies migrations, so a merged fix stays merged and unapplied until somebody runs a push; on that date the gap held an anon data leak open for hours after its fix landed on main.`,
     );
   }
 
