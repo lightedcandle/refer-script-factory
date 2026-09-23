@@ -542,20 +542,71 @@ const SURVIVE_MS = 20000;
 // One sample before the spawns and one after the survival check. Cheap (two
 // PowerShell reads per tick, hidden), and it measures the exact moment the risk
 // exists rather than watching the whole machine forever.
+// THE FIRST VERSION OF THIS WAS BLIND, and it is worth keeping why.
+//
+// It asked Get-Process for MainWindowHandle. That property finds a window owned
+// by the process's own MAIN THREAD - and a console window is owned by conhost on
+// behalf of somebody else, so three consoles stood on the operator's desktop
+// while this reported a clean machine and the report was believed over the man
+// looking at the screen.
+//
+// EnumWindows walks the real top-level window list; IsWindowVisible decides what
+// a person can actually see; GetWindowThreadProcessId names the owner from the
+// window rather than from a guess. Proven against a deliberately visible cmd.exe
+// before being trusted - the shape the old probe could not see.
+const WINDOW_LIST_PS = `
+Add-Type @'
+using System; using System.Text; using System.Collections.Generic; using System.Runtime.InteropServices;
+public class WL {
+  [DllImport("user32.dll")] static extern bool EnumWindows(EnumProc f, IntPtr l);
+  [DllImport("user32.dll")] static extern bool IsWindowVisible(IntPtr h);
+  // CharSet.Unicode IS LOAD-BEARING. Without it the default is Ansi, the
+  // StringBuilder is marshalled a byte at a time against a function writing
+  // UTF-16, and every title comes back as its FIRST LETTER - "ConsoleWindowClass"
+  // arrives as "C". The detection was still right; the evidence it printed was
+  // one character wide, which is the kind of quiet wrongness this whole thread
+  // has been about.
+  [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern int GetWindowTextW(IntPtr h, StringBuilder s, int n);
+  [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern int GetClassNameW(IntPtr h, StringBuilder s, int n);
+  [DllImport("user32.dll")] static extern uint GetWindowThreadProcessId(IntPtr h, out uint pid);
+  [DllImport("user32.dll")] static extern bool GetWindowRect(IntPtr h, out R r);
+  [StructLayout(LayoutKind.Sequential)] public struct R { public int L, T, Rr, B; }
+  delegate bool EnumProc(IntPtr h, IntPtr l);
+  public class W { public long H; public uint Pid; public string Title; public string Cls; }
+  public static List<W> All() {
+    var o = new List<W>();
+    EnumWindows((h, l) => {
+      if (!IsWindowVisible(h)) return true;
+      R r; GetWindowRect(h, out r);
+      if (r.Rr - r.L <= 0 || r.B - r.T <= 0) return true;
+      var t = new StringBuilder(512); GetWindowTextW(h, t, 512);
+      var c = new StringBuilder(256); GetClassNameW(h, c, 256);
+      uint pid; GetWindowThreadProcessId(h, out pid);
+      o.Add(new W { H = (long)h, Pid = pid, Title = t.ToString(), Cls = c.ToString() });
+      return true;
+    }, IntPtr.Zero);
+    return o;
+  }
+}
+'@
+[WL]::All() | Select-Object H,Pid,Cls,Title | ConvertTo-Json -Compress
+`;
+
 function windowedNow() {
   try {
-    const raw = execFileSync(
-      "powershell.exe",
-      [
-        "-NoProfile",
-        "-NonInteractive",
-        "-Command",
-        "Get-Process | Where-Object { $_.MainWindowHandle -ne 0 } | Select-Object Id,ProcessName,MainWindowTitle | ConvertTo-Json -Compress",
-      ],
-      { encoding: "utf8", maxBuffer: 32 * 1024 * 1024, windowsHide: true },
-    );
+    const raw = execFileSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-Command", WINDOW_LIST_PS], {
+      encoding: "utf8",
+      maxBuffer: 32 * 1024 * 1024,
+      windowsHide: true,
+    });
     const parsed = JSON.parse(String(raw).trim() || "[]");
-    return new Map((Array.isArray(parsed) ? parsed : [parsed]).map((w) => [w.Id, `${w.ProcessName}: ${String(w.MainWindowTitle || "").slice(0, 120)}`]));
+    // Keyed by WINDOW HANDLE, not by pid: one process can own several windows,
+    // and three consoles from one launcher is exactly the case this exists for.
+    // The class name is carried because it is what names a console - "C" is
+    // ConsoleWindowClass, and a title is often empty while a class never is.
+    return new Map(
+      (Array.isArray(parsed) ? parsed : [parsed]).map((w) => [w.H, `pid ${w.Pid} class=${w.Cls} ${String(w.Title || "").slice(0, 100)}`]),
+    );
   } catch {
     // Unreadable is not clean. An empty map would read as "no windows" and
     // quietly prove the opposite of what this is for, so the caller is told.
