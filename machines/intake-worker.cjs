@@ -60,7 +60,7 @@ const path = require("path");
 // id was unknowable until after the session existed - which is to say, never.
 // --session-id lets this machine mint the id first. See the stamp below.
 const crypto = require("crypto");
-const { spawn, execFileSync } = require("child_process");
+const { spawnSync, execFileSync } = require("child_process");
 
 // NO WINDOW, EVER. This is the factory's standing rule for anything it starts
 // on its own, and it was written on 2026-09-15 for the pulse: "the node pulse
@@ -819,7 +819,13 @@ if (DISPATCH_ALLOWED && picks.length) {
       // it means dead. That is why the aliveness check below asks the operating
       // system and not this file. Three probes were scored as failures against
       // an empty log while the sessions behind them were running fine.
-      const fd = fs.openSync(logPath, "w");
+      const errPath = path.join(DISPATCH_LOGS, `${stem}.err.txt`);
+      const pidPath = path.join(DISPATCH_LOGS, `${stem}.pid`);
+      try {
+        fs.unlinkSync(pidPath);
+      } catch {
+        /* first run for this item */
+      }
       // "ID: <slug>" IS A CONTRACT WITH ANOTHER STATION, not a formatting
       // choice. tools/factory/claim.cjs - the collision guard an agent built on
       // this belt - finds a session's own deposit by matching exactly that
@@ -834,18 +840,67 @@ if (DISPATCH_ALLOWED && picks.length) {
         `Then read your full brief - the claim, the evidence, the recommendation and how to publish and close it - ` +
         `in this repo at ${briefRel} , before anything else.`;
       const argv = ["-p", "--session-id", session, "--permission-mode", "acceptEdits", pointer];
-      // The fallback keeps the factory running on a host where claude is only a
-      // shim - at the cost of the window, which is said out loud rather than
-      // discovered on the desktop.
-      const child = CLAUDE_EXE
-        ? spawn(CLAUDE_EXE, argv, { cwd: ROOT, detached: true, stdio: ["ignore", fd, fd], windowsHide: true })
-        : spawn("cmd.exe", ["/c", "claude", ...argv], { cwd: ROOT, detached: true, stdio: ["ignore", fd, fd], windowsHide: true });
-      child.unref();
-      // The handle stays open until after the survival check. Closing it
-      // immediately left every log file 0 bytes, so a dispatch that died had
-      // nothing to say about why - which is most of the value of keeping a log
-      // at all. This process exits moments later and the handle goes with it.
-      launched.push({ id: p.r.id, label, session, pid: child.pid, logPath, fd });
+      // WINDOWS OFFERS A DISPATCHER TWO BAD SHAPES AND ONE GOOD ONE, and this
+      // machine shipped both bad ones before the operator's third report.
+      //
+      //   detached   survives the launcher - and has NO console. So when the
+      //              CLI runs its own startup lookup through cmd.exe
+      //              (`REG.exe QUERY ...\Cryptography /v MachineGuid`), Windows
+      //              has to CREATE a console for that grandchild, and a new
+      //              console in an interactive session is a visible window.
+      //              Photographed 2026-09-23T12:43:57Z: three agents, three
+      //              console windows, 895x518, cascading at +102 +128 +154,
+      //              five seconds after the switch went to Automatic.
+      //   attached   no window - and it dies the instant the launcher exits,
+      //              because it shares the launcher's console and takes its
+      //              close. Proven, not assumed: no transcript, empty log.
+      //
+      // The fix is to give the agent its OWN console, created hidden. Children
+      // inherit a console, so the grandchild finds one already there and never
+      // asks for a new one; and it is nobody's console-mate, so nothing closes
+      // under it. Start-Process is how that is asked for from out here:
+      // -WindowStyle Hidden creates with SW_HIDE, and without -Wait it returns
+      // at once. Proven before shipping - zero windows across 90 seconds of
+      // full window enumeration, and the agent still alive minutes after its
+      // launcher was gone.
+      //
+      // WHY windowsHide ALONE WAS NOT ENOUGH, since it is set three lines down
+      // and was set on the old shape too: it applies to the process being
+      // started and says nothing about what that process starts. The window
+      // that reached the desktop was two generations down.
+      const psq = (s) => `'${String(s).replace(/'/g, "''")}'`;
+      const exe = CLAUDE_EXE || "claude";
+      const psCmd =
+        `$p = Start-Process -FilePath ${psq(exe)} -ArgumentList @(${argv.map(psq).join(",")}) ` +
+        `-WorkingDirectory ${psq(ROOT)} -WindowStyle Hidden ` +
+        // Two files, not one: PowerShell refuses to redirect both streams to the
+        // same path, and a dispatch that failed on that would look like an agent
+        // that never started.
+        `-RedirectStandardOutput ${psq(logPath)} -RedirectStandardError ${psq(errPath)} -PassThru; ` +
+        // The pid goes to a FILE rather than down a pipe. A pipe kept this
+        // process waiting on a handle the grandchild had inherited, which is a
+        // hang in the one machine that must not hang.
+        `Set-Content -Path ${psq(pidPath)} -Value $p.Id -Encoding ascii`;
+      const launch = spawnSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-Command", psCmd], {
+        windowsHide: true,
+        stdio: "ignore",
+        timeout: 60000,
+      });
+      let pid = null;
+      try {
+        pid = Number(String(fs.readFileSync(pidPath, "utf8")).trim()) || null;
+      } catch {
+        /* handled just below - an unwritten pid file IS the failure */
+      }
+      if (!pid) {
+        failedToStart.push({
+          id: p.r.id,
+          label,
+          why: `the launcher wrote no pid (powershell exit ${launch.status}${launch.error ? `, ${launch.error.message.split("\n")[0]}` : ""})`,
+        });
+        continue;
+      }
+      launched.push({ id: p.r.id, label, session, pid, logPath, errPath });
     } catch (err) {
       failedToStart.push({ id: p.r.id, label, why: err.message.split("\n")[0] });
     }
@@ -858,12 +913,19 @@ if (DISPATCH_ALLOWED && picks.length) {
       if (stillAlive(l.pid)) started.push({ id: l.id, label: l.label, session: l.session, pid: l.pid });
       // The session id travels with the log path. On a silent exit it is the only
       // thing that can say whether the CLI ever opened a session at all.
-      else failedToStart.push({ id: l.id, label: l.label, pid: l.pid, why: lastWords(l.logPath, l.session), log: path.relative(ROOT, l.logPath).replace(/\\/g, "/") });
-      try {
-        fs.closeSync(l.fd);
-      } catch {
-        /* already gone with the child */
-      }
+      // Both streams are read, newest words first from whichever spoke. The
+      // launcher writes stderr to its own file now, and a CLI that refuses to
+      // start says so there rather than on stdout.
+      else
+        failedToStart.push({
+          id: l.id,
+          label: l.label,
+          pid: l.pid,
+          why: lastWords(l.errPath, l.session) !== "it exited and left no output" ? lastWords(l.errPath, l.session) : lastWords(l.logPath, l.session),
+          log: path.relative(ROOT, l.logPath).replace(/\\/g, "/"),
+        });
+      // No file handles to close: the agent's console is its own and the
+      // launcher opened the redirect files, not this process.
     }
     // The second sample, after the agents have had SURVIVE_MS to open anything
     // they were going to open. Anything windowed now that was not windowed
