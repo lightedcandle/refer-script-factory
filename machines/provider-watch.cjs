@@ -38,6 +38,7 @@
 const fs = require("fs");
 const path = require("path");
 const { execFileSync } = require("child_process");
+const { deposit: depositRecord } = require("./deposit.cjs");
 
 const ROOT = process.cwd();
 const CTX = path.join(ROOT, ".claude/agent-context");
@@ -156,12 +157,9 @@ else if (d.reclaimableGB >= 10)
   });
 
 let deposited = 0;
-const beltText = fs.existsSync(BELT) ? fs.readFileSync(BELT, "utf8") : "";
 for (const f of faults) {
-  const id = `world-${f.key}`;
-  if (beltText.includes(`"${id}"`)) continue;
   const record = {
-    id,
+    id: `world-${f.key}`,
     run: new Date().toISOString(),
     driver: "E1",
     tier: 7,
@@ -174,8 +172,11 @@ for (const f of faults) {
     triggers: "operator",
     owner: "operator",
   };
-  fs.appendFileSync(BELT, JSON.stringify(record) + "\n", "utf8");
-  deposited++;
+  // THROUGH THE DOOR, which reads the record before it lands and reports a
+  // repeat rather than writing one. The once-per-state rule used to be a copy
+  // of `beltText.includes` here, and the same copy stood in eight other
+  // machines - the drift kind.cjs already ended on the reading side.
+  if (depositRecord(record, { belt: BELT }).written) deposited++;
 }
 
 if (JSON_OUT) {

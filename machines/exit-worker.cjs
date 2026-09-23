@@ -76,6 +76,7 @@ const records = fs
 // deposit as work would look to THIS machine like a closure - and it would report
 // the work delivered at the moment somebody agreed to start it.
 const { beltIndex } = require("./kind.cjs");
+const { deposit: depositRecord } = require("./deposit.cjs");
 const IX = beltIndex(records);
 const closedBy = IX.closedBy;
 const isDone = IX.isDone;
@@ -128,14 +129,14 @@ for (const r of held) {
 // piece of work.
 let deposited = 0;
 if (!DRY) {
-  const beltText = fs.readFileSync(BELT, "utf8");
   for (const a of outcomes.abandoned) {
-    const id = `abandoned-${String(a.id).slice(0, 40)}-${new Date(now).toISOString().slice(0, 10).replace(/-/g, "")}`;
-    if (beltText.includes(`"${id}"`)) continue;
-    fs.appendFileSync(
-      BELT,
-      JSON.stringify({
-        id,
+    // THROUGH THE DOOR, which reports a repeat rather than writing one. The
+    // once-a-day rule was a copy of `beltText.includes` here and in eight other
+    // machines, and the belt is append-only, so a copy that drifted could not
+    // be repaired afterwards.
+    const res = depositRecord(
+      {
+        id: `abandoned-${String(a.id).slice(0, 40)}-${new Date(now).toISOString().slice(0, 10).replace(/-/g, "")}`,
         run: new Date(now).toISOString(),
         driver: "I7",
         tier: 1,
@@ -148,10 +149,10 @@ if (!DRY) {
         confidence: "measured",
         triggers: "contract:architecture",
         owner: "architecture",
-      }) + "\n",
-      "utf8",
+      },
+      { belt: BELT },
     );
-    deposited++;
+    if (res.written) deposited++;
   }
 }
 

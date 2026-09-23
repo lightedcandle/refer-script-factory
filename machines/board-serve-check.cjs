@@ -43,6 +43,7 @@ const fs = require("fs");
 const path = require("path");
 const http = require("http");
 const { spawn } = require("child_process");
+const { deposit: depositRecord } = require("./deposit.cjs");
 
 const ROOT = process.cwd();
 const CTX = path.join(ROOT, ".claude/agent-context");
@@ -210,31 +211,29 @@ const listening = (port) =>
 
   // Deposit once per outage, keyed to the day so a server that dies repeatedly
   // earns one record a day rather than one per cycle - the flooding rule.
-  const id = `board-server-down-${new Date().toISOString().slice(0, 10)}`;
-  const beltText = fs.existsSync(BELT) ? fs.readFileSync(BELT, "utf8") : "";
-  if (!beltText.includes(`"${id}"`)) {
-    fs.appendFileSync(
-      BELT,
-      JSON.stringify({
-        id,
-        run: new Date().toISOString(),
-        driver: "I6",
-        tier: 6,
-        dimension: "hive",
-        subject: `board server on port ${took}`,
-        claim: back
-          ? "The board server was not running and was revived. Anything watching the wall display was looking at a frozen page until then."
-          : "The board server was not running and could NOT be revived. The wall display is showing stale data.",
-        evidence: `Port ${PORT} was not accepting connections. Revive ${back ? "succeeded" : "failed"}. A loaded board keeps its clock ticking and its animations running with the server dead, so an outage is invisible to anyone glancing at it - which is why this check exists and why the page also dims and says so.`,
-        seen: false,
-        confidence: "measured",
-        triggers: back ? "terminal:revived" : "operator",
-        owner: back ? "spirit" : "operator",
-      }) + "\n",
-      "utf8",
-    );
-    console.log("  deposited");
-  }
+  // THROUGH THE DOOR in deposit.cjs, which owns both halves of this: it refuses
+  // a record the append-only belt could never take back, and it reports a
+  // repeat instead of writing one, which is what the once-a-day rule needed.
+  const put = depositRecord(
+    {
+      id: `board-server-down-${new Date().toISOString().slice(0, 10)}`,
+      run: new Date().toISOString(),
+      driver: "I6",
+      tier: 6,
+      dimension: "hive",
+      subject: `board server on port ${took}`,
+      claim: back
+        ? "The board server was not running and was revived. Anything watching the wall display was looking at a frozen page until then."
+        : "The board server was not running and could NOT be revived. The wall display is showing stale data.",
+      evidence: `Port ${PORT} was not accepting connections. Revive ${back ? "succeeded" : "failed"}. A loaded board keeps its clock ticking and its animations running with the server dead, so an outage is invisible to anyone glancing at it - which is why this check exists and why the page also dims and says so.`,
+      seen: false,
+      confidence: "measured",
+      triggers: back ? "terminal:revived" : "operator",
+      owner: back ? "spirit" : "operator",
+    },
+    { belt: BELT },
+  );
+  if (put.written) console.log("  deposited");
 
   process.exit(back ? 0 : 1);
 })();
