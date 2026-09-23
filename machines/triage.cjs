@@ -28,7 +28,7 @@
  */
 const fs = require("fs");
 const path = require("path");
-const { KIND, KIND_WORDS, beltIndex, triageRecord } = require("./kind.cjs");
+const { KIND, KIND_WORDS, beltIndex, triageRecord, headlineOf } = require("./kind.cjs");
 
 const ROOT = process.cwd();
 const CTX = path.join(ROOT, ".claude/agent-context");
@@ -69,11 +69,11 @@ const { byHandle, handleOf } = require("./kind.cjs").handleIndex(records);
 if (LIST) {
   const waiting = records.filter(IX.isAwaitingTriage);
   if (JSON_OUT) {
-    console.log(JSON.stringify(waiting.map((r) => ({ handle: handleOf.get(String(r.id)), id: r.id, dimension: r.dimension, triggers: r.triggers, claim: r.claim })), null, 2));
+    console.log(JSON.stringify(waiting.map((r) => ({ handle: handleOf.get(String(r.id)), id: r.id, dimension: r.dimension, triggers: r.triggers, claim: headlineOf(r) })), null, 2));
   } else {
     console.log(`${waiting.length} deposit(s) awaiting triage in ${path.basename(ROOT)}:\n`);
     for (const r of waiting) {
-      console.log(`  ${String(handleOf.get(String(r.id))).padEnd(5)} ${String(r.triggers).padEnd(24)} ${String(r.claim).replace(/\s+/g, " ").slice(0, 76)}`);
+      console.log(`  ${String(handleOf.get(String(r.id))).padEnd(5)} ${String(r.triggers).padEnd(24)} ${headlineOf(r).slice(0, 76)}`);
     }
     if (waiting.length) console.log(`\n  accept one:  node <factory>/machines/triage.cjs <handle> --contract`);
   }
@@ -127,7 +127,7 @@ if (JSON_OUT) {
   console.log(JSON.stringify({ id: target.id, handle: handleOf.get(String(target.id)), was, now: kindFlag, written: !DRY, record: rec }, null, 2));
 } else {
   console.log(`${DRY ? "would accept" : "accepted"}  ${handleOf.get(String(target.id))}  ${was} -> ${kindFlag}`);
-  console.log(`  ${String(target.claim || "").replace(/\s+/g, " ").slice(0, 90)}`);
+  console.log(`  ${headlineOf(target).slice(0, 90)}`);
   if (kindFlag === KIND.CONTRACT) console.log(`  It can now ride the belt and be dispatched. It could not before.`);
   if (kindFlag === KIND.NOTE) console.log(`  It leaves both columns for the reading area. Nothing is owed on it.`);
   if (!DRY) console.log(`  written as ${rec.id}`);

@@ -313,4 +313,31 @@ function triageRecord({ id, kind, dimension, owner, to, by, why }) {
   };
 }
 
-module.exports = { KIND, KIND_WORDS, NOTING, HANDLE_LETTER, selfTerminal, isNoting, beltIndex, handleIndex, triageRecord };
+// WHAT A RECORD SAYS, WHATEVER FIELDS IT KEEPS IT IN.
+//
+// Every reader on this belt took its headline from `claim` and its reason from
+// `evidence`, and for as long as the belt had one author that was correct. The
+// Go switch (2026-09-21) made the plan panel a second author, and its records
+// carry `title` and `detail` and neither of those. Nothing errored anywhere.
+// The board simply drew the operator's own note as a card with no words in it,
+// and three console tools printed the literal string "undefined".
+//
+// It lives here because kind.cjs is the one file all of them already require,
+// and because the next time the belt grows a field, ONE place should have to
+// learn it. The README's rule for this file is exactly that: there is one copy
+// now.
+//
+// reasonOf will not repeat the headline. A plan note with a title and a detail
+// gives headline=title, reason=detail; a note with only a detail gives
+// headline=detail and reason="" rather than saying the same sentence twice.
+const clean = (v) => String(v || "").replace(/\s+/g, " ").trim();
+const headlineOf = (r) => (r ? clean(r.claim) || clean(r.title) || clean(r.detail) : "");
+const reasonOf = (r) => {
+  if (!r) return "";
+  const e = clean(r.evidence);
+  if (e) return e;
+  const d = clean(r.detail);
+  return d && d !== headlineOf(r) ? d : "";
+};
+
+module.exports = { KIND, KIND_WORDS, NOTING, HANDLE_LETTER, selfTerminal, isNoting, beltIndex, handleIndex, triageRecord, headlineOf, reasonOf };
