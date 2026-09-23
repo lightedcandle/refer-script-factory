@@ -136,6 +136,10 @@ const KINDLIB = (() => {
   process.exit(2);
 })();
 const KIND = KINDLIB.KIND;
+// Lifted here rather than re-implemented in rowOf, for the reason the README
+// gives: there is one copy of the belt's vocabulary and this is part of it.
+const headlineOf = KINDLIB.headlineOf;
+const reasonOf = KINDLIB.reasonOf;
 
 // ---- the design's own palette, lifted verbatim ------------------------------
 
@@ -631,7 +635,7 @@ const rowOf = (r) => {
     return {
       time: t ? hhmm(t) : "--:--",
       tag: /^X\d/.test(String(r.driver || "")) ? "shed" : tag,
-      text: String(r.claim || "").replace(/\s+/g, " ").slice(0, 74),
+      text: headlineOf(r).slice(0, 74),
       // The row shows 74 characters clamped to two lines. Tapping it opens the
       // rest.
       //
@@ -639,12 +643,17 @@ const rowOf = (r) => {
       // expand untruncate to see full details toggle retruncate."
       //
       // The evidence comes with it, because the claim alone is the headline and
-      // the evidence is the reason to believe it. Every record on the belt
-      // carries one and the board had never shown a single one - the whole
-      // argument for a finding was sitting one field away from a display built
-      // to make findings legible.
-      full: String(r.claim || "").replace(/\s+/g, " "),
-      why: String(r.evidence || "").replace(/\s+/g, " "),
+      // the evidence is the reason to believe it. The board had never shown a
+      // single one - the whole argument for a finding was sitting one field away
+      // from a display built to make findings legible.
+      //
+      // "Every record on the belt carries one" is what this said, and it stopped
+      // being true the day the Go switch shipped: a plan note carries title and
+      // detail and neither claim nor evidence, so this row drew EMPTY for the
+      // operator's own notes. headlineOf/reasonOf in kind.cjs read whichever
+      // fields the record actually kept its words in.
+      full: headlineOf(r),
+      why: reasonOf(r),
       rid: String(r.id || ""),
       handle: handles.get(String(r.id)) || "",
       // The door this record came through, if a dispatch names one - drawn as
@@ -1642,9 +1651,9 @@ const onBelt = withLiveAgent
       color: HUE[dim],
       time: t ? hhmm(t) : "--:--",
       at: t,
-      text: String(r.claim || "").replace(/\s+/g, " ").slice(0, 74),
-      full: String(r.claim || "").replace(/\s+/g, " "),
-      why: String(r.evidence || "").replace(/\s+/g, " "),
+      text: headlineOf(r).slice(0, 74),
+      full: headlineOf(r),
+      why: reasonOf(r),
       advice: adviceOf(r),
       waited: t ? inWords(now - t) : "unknown",
       fresh: !readState.ids.has(String(r.id)),
@@ -2244,7 +2253,7 @@ const learned = (() => {
     const t = runAt(r);
     items.push({
       lesson: String(lesson).replace(/\s+/g, " "),
-      from: String(r.claim || "").replace(/\s+/g, " ").slice(0, 90),
+      from: headlineOf(r).slice(0, 90),
       tag: TAG[r.dimension] || String(r.dimension || "?").slice(0, 5),
       color: HUE[TAG[r.dimension]] || HUE.build,
       time: t ? hhmm(t) : "--:--",
