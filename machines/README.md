@@ -92,6 +92,7 @@ It lives in `.claude/agent-context/board-read.json`, keyed by record id with the
 | Machine | What it asks |
 | ------- | ------------ |
 | `kind.cjs` | Not a station — the belt's vocabulary and the handle numbering, required by everything that reads it. See above. |
+| `account-budget.cjs` | Not a station — **will the Claude account serve a session started right now?** Read by `intake-worker.cjs` before it dispatches, so a belt slot is never spent on a run the account will refuse. Answered from the CLI's own transcripts: the newest api-error naming a limit, whether anything has succeeded since it, and whether the reset time that message names has passed. Universal, because the transcript store is per-user rather than per-repo. It **never holds on a measurement it could not read**, and the hold expires at the account's own stated reset — this door is the only thing that starts sessions here, so a hold with no expiry would wait forever for evidence only it could have produced. Deposit `the-tick-shares-a-budget-with-the-work-it-watches`. |
 | `triage.cjs` | Turns a deposit into a contract, and records that somebody did. `--list` shows what is waiting. |
 | `watcher.cjs` | **Zone 1, incoming.** What should be judged, in what order, by when. Publishes a standing ordered ready-list. See below. |
 | `pulse-check.cjs` | Did every station that should have deposited, deposit — and is the belt still sound? Derives its expectations from the repo's own station declarations. |
