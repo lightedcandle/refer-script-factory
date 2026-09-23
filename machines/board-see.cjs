@@ -47,6 +47,7 @@
 const fs = require("fs");
 const path = require("path");
 const { createRequire } = require("module");
+const { deposit: depositRecord } = require("./deposit.cjs");
 
 const ROOT = process.cwd();
 const CTX = path.join(ROOT, ".claude/agent-context");
@@ -147,17 +148,16 @@ const vacuous = [];
 // middle. Something still broken tomorrow has earned the right to speak again.
 function deposit() {
   if (PROBE) return 0;
-  if (!fs.existsSync(BELT)) return 0;
-  const beltText = fs.readFileSync(BELT, "utf8");
   const day = new Date(now).toISOString().slice(0, 10).replace(/-/g, "");
   let n = 0;
   for (const f of findings) {
-    const id = `seer-${f.key}-${day}`;
-    if (beltText.includes(`"${id}"`)) continue;
-    fs.appendFileSync(
-      BELT,
-      JSON.stringify({
-        id,
+    // THROUGH THE DOOR, which reads the record before it lands and reports a
+    // repeat rather than writing one. The once-a-day rule used to be a copy of
+    // `beltText.includes` standing right here, and the same copy stood in eight
+    // other machines - the drift kind.cjs already ended on the reading side.
+    const res = depositRecord(
+      {
+        id: `seer-${f.key}-${day}`,
         run: new Date(now).toISOString(),
         driver: "I7",
         tier: 1,
@@ -172,10 +172,10 @@ function deposit() {
         confidence: "measured",
         triggers: f.triggers,
         owner: f.owner,
-      }) + "\n",
-      "utf8",
+      },
+      { belt: BELT },
     );
-    n++;
+    if (res.written) n++;
   }
   return n;
 }

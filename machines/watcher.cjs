@@ -343,6 +343,7 @@ const fs = require("fs");
 const os = require("os");
 const path = require("path");
 const { KIND, beltIndex, triageRecord } = require("./kind.cjs");
+const { deposit: depositRecord, depositMany } = require("./deposit.cjs");
 const { repoRootOf, sessionLife, tokenize, PROJECTS } = require("./session-life.cjs");
 const { discoverTriggers, readScheduleState } = require("./triggers.cjs");
 
@@ -2118,9 +2119,14 @@ function main(lockState) {
   let deferredByLimit = wouldAct.length - actsAllowed.length;
   if (ARM && !DRY) {
     const lines = [...wouldAnnotate, ...zoneAllowed.map((c) => c.ann), ...actsAllowed.map(actFor)];
-    for (const rec of lines) {
-      fs.appendFileSync(BELT, JSON.stringify(rec) + "\n", "utf8");
-      written.push(rec.id);
+    // THE WHOLE PASS THROUGH ONE DOOR. depositMany reads the belt once - this is
+    // the one writer that puts dozens of records down at a time - and refuses
+    // the WHOLE batch if any record is malformed, because a half-written batch
+    // on an append-only belt cannot be recovered and nothing afterwards can say
+    // which half landed. `allowDuplicate` keeps what this machine already did:
+    // every act it writes carries its own fresh id.
+    for (const res of depositMany(lines, { belt: BELT, allowDuplicate: true })) {
+      if (res.written) written.push(res.id);
     }
   }
 

@@ -37,6 +37,7 @@
  */
 const fs = require("fs");
 const path = require("path");
+const { deposit: depositRecord } = require("./deposit.cjs");
 
 const ROOT = process.cwd();
 const CTX = path.join(ROOT, ".claude/agent-context");
@@ -204,17 +205,16 @@ if (!prev || REMARK) {
 }
 
 function deposit() {
-  if (DRY || !fs.existsSync(BELT)) return 0;
-  const beltText = fs.readFileSync(BELT, "utf8");
+  if (DRY) return 0;
   const day = new Date(now).toISOString().slice(0, 10).replace(/-/g, "");
   let n = 0;
   for (const f of findings) {
-    const id = `composition-${f.key}-${day}`;
-    if (beltText.includes(`"${id}"`)) continue;
-    fs.appendFileSync(
-      BELT,
-      JSON.stringify({
-        id,
+    // THROUGH THE DOOR, which reads the record before it lands and reports a
+    // repeat rather than writing one. The once-a-day rule used to be a copy of
+    // `beltText.includes` standing right here, in nine machines at once.
+    const res = depositRecord(
+      {
+        id: `composition-${f.key}-${day}`,
         run: new Date(now).toISOString(),
         driver: "I4",
         tier: 2,
@@ -227,10 +227,10 @@ function deposit() {
         confidence: "measured",
         triggers: f.triggers,
         owner: f.owner,
-      }) + "\n",
-      "utf8",
+      },
+      { belt: BELT },
     );
-    n++;
+    if (res.written) n++;
   }
   return n;
 }

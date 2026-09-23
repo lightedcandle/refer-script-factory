@@ -109,6 +109,7 @@ const TERMINAL = (t) => /^(terminal:.+|closed)$/.test(String(t || "").trim());
 // comments above record them drifting and being caught by the cross-source check
 // below. There is one copy now.
 const { KIND, beltIndex } = require("./kind.cjs");
+const { deposit: depositRecord } = require("./deposit.cjs");
 const IX = beltIndex(belt);
 const NOTING = IX.NOTING;
 const isClosed = IX.isDone;
@@ -418,15 +419,15 @@ const say = (key, claim, evidence, triggers, owner, dimension) =>
 
 // ---- deposit, once per distinct finding --------------------------------------
 
-const beltText = fs.readFileSync(BELT, "utf8");
 let deposited = 0;
 for (const f of findings) {
-  const id = `critic-${f.key}`;
-  if (beltText.includes(`"${id}"`)) continue;
-  fs.appendFileSync(
-    BELT,
-    JSON.stringify({
-      id,
+  // THROUGH THE DOOR, which reads the record before it lands and reports a
+  // repeat rather than writing one. The once-per-finding rule used to be a copy
+  // of `beltText.includes` here, and the same copy stood in eight other
+  // machines - the drift kind.cjs already ended on the reading side.
+  const res = depositRecord(
+    {
+      id: `critic-${f.key}`,
       run: new Date(now).toISOString(),
       driver: "I7",
       tier: 1,
@@ -461,10 +462,10 @@ for (const f of findings) {
       confidence: "measured",
       triggers: f.triggers,
       owner: f.owner,
-    }) + "\n",
-    "utf8",
+    },
+    { belt: BELT },
   );
-  deposited++;
+  if (res.written) deposited++;
 }
 
 const report = { checkedAt: new Date(now).toISOString(), repo: path.basename(ROOT), found: findings.length, deposited, findings };

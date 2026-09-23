@@ -52,6 +52,7 @@
 const fs = require("fs");
 const path = require("path");
 const { sessionLife, repoRootOf } = require("./session-life.cjs");
+const { deposit: depositRecord } = require("./deposit.cjs");
 
 const ROOT = process.cwd();
 const CTX = path.join(ROOT, ".claude/agent-context");
@@ -169,7 +170,10 @@ if (DRY) {
   process.exit(0);
 }
 
-// Append. The belt is append-only: a handle is the Nth record of its dimension,
-// so rewriting a line renumbers somebody else's deposit under them.
-fs.appendFileSync(BELT, JSON.stringify(rec) + "\n", "utf8");
+// Through the door in deposit.cjs, which reads the record before it lands. The
+// belt is append-only twice over: a handle is the Nth record of its dimension,
+// so rewriting a line renumbers somebody else's deposit under them - and a
+// record written malformed cannot be repaired either, which is why it is
+// checked on the way in rather than found on the board the following night.
+depositRecord(rec, { belt: BELT, allowDuplicate: true });
 console.log(`dispatch-stamp: ${subject} -> ${session} at the ${via.toUpperCase()} door (${life.where}).`);
