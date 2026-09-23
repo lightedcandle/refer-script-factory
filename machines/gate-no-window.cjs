@@ -38,8 +38,32 @@ const fs = require("fs");
 const path = require("path");
 
 const FACTORY = path.resolve(__dirname, "..");
-const DIRS = ["engine", "machines"];
 const JSON_OUT = process.argv.includes("--json");
+
+// IT SCANNED HALF THE MACHINES AND REPORTED THE FACTORY CLEAN.
+//
+// The first version looked only at the factory's own engine and machines, and
+// passed - while the repo it was running IN held forty more factory scripts,
+// several of which spawn processes by the dozen. One of them, the gate that
+// proves the auto door still obeys its list, says so in its own registration:
+// "each run spawns about a dozen short node processes", every six hours. The
+// operator was still getting popups after the fix, and the gate that was meant
+// to have caught them was looking somewhere else.
+//
+// A rule that applies to the factory applies wherever the factory's work runs.
+// Both roots now, and a directory that does not exist is skipped in silence
+// rather than reported, because most repos have no tools/factory.
+// SCOPED TO WHAT THE CLOCK RUNS, and deliberately not to every script in the
+// repo. Scanning all of tools/ found 79 launchers, most of them in scripts a
+// person runs in a terminal they are already looking at - where a console is
+// the point, not a defect. Demanding the flag there would bury the twenty-odd
+// that actually matter, and a gate nobody can act on gets muted. The rule is
+// about AUTOMATED processes: the factory's own machines, and the stations this
+// repo registers on the clock.
+const ROOTS = [
+  { base: FACTORY, dirs: ["engine", "machines"] },
+  { base: process.cwd(), dirs: ["tools/factory"] },
+];
 
 const STARTERS = /\b(spawnSync|spawn|execFileSync|execFile|execSync|exec)\s*\(/g;
 
@@ -73,8 +97,10 @@ function callText(src, openIdx) {
 
 const offenders = [];
 let checked = 0;
-for (const dir of DIRS) {
-  const d = path.join(FACTORY, dir);
+const seenFiles = new Set();
+for (const { base, dirs } of ROOTS)
+  for (const dir of dirs) {
+  const d = path.join(base, dir);
   let entries = [];
   try {
     entries = fs.readdirSync(d);
@@ -84,7 +110,12 @@ for (const dir of DIRS) {
   for (const name of entries) {
     if (!/\.(cjs|mjs|js)$/.test(name)) continue;
     if (name === path.basename(__filename)) continue;
+    // A throwaway probe an agent left behind is not a launcher anybody runs.
+    // Named rather than inferred, so a real file cannot hide behind the suffix.
+    if (/\.tmp\.(cjs|mjs|js)$/.test(name)) continue;
     const file = path.join(d, name);
+    if (seenFiles.has(file)) continue;
+    seenFiles.add(file);
     const src = fs.readFileSync(file, "utf8");
     STARTERS.lastIndex = 0;
     let m;
@@ -113,8 +144,17 @@ for (const dir of DIRS) {
       const text = callText(src, open);
       checked++;
       if (/windowsHide\s*:\s*true/.test(text)) continue;
+      // ONE DELIBERATE WINDOW EXISTS, and a rule with no way to say so would
+      // either hide it - breaking the one thing it does - or fail forever,
+      // which is how a gate gets muted. `window: intentional` in the five lines
+      // above the call exempts it, and the phrase is deliberately one nobody
+      // types by accident. The emergency reboot prompt is the only user of it:
+      // a dialog that asks the operator whether to restart his machine must be
+      // seen, and it is started by him being asked, not by a clock.
+      const preamble = src.slice(Math.max(0, src.lastIndexOf("\n", m.index) - 400), m.index);
+      if (/window:\s*intentional/.test(preamble)) continue;
       offenders.push({
-        file: `${dir}/${name}`,
+        file: `${base === FACTORY ? "factory" : "repo"}:${dir}/${name}`,
         line: src.slice(0, m.index).split("\n").length,
         call: m[1],
         excerpt: text.replace(/\s+/g, " ").slice(0, 120),
@@ -123,7 +163,50 @@ for (const dir of DIRS) {
   }
 }
 
-const report = { checkedAt: new Date().toISOString(), launchers: checked, offenders };
+// A GATE WHOSE ONLY VOICE IS AN EXIT CODE IS A GATE NOBODY HEARS. Nothing in
+// this factory reads the exit codes the scheduler records - that is itself on
+// the belt - so a finding here goes where findings go, deduplicated by day so a
+// standing offence cannot bury the conveyor it is trying to warn.
+let deposited = 0;
+if (offenders.length) {
+  const BELT = path.join(process.cwd(), ".claude/agent-context/findings.jsonl");
+  try {
+    if (fs.existsSync(BELT)) {
+      const id = `no-window-${new Date().toISOString().slice(0, 10).replace(/-/g, "")}`;
+      if (!fs.readFileSync(BELT, "utf8").includes(`"${id}"`)) {
+        fs.appendFileSync(
+          BELT,
+          JSON.stringify({
+            id,
+            run: new Date().toISOString(),
+            driver: "I930",
+            tier: 2,
+            kind: "deposit",
+            dimension: "architecture",
+            source: "gate-no-window",
+            subject: "the factory's launchers",
+            claim: `${offenders.length} launcher(s) can put a console window on the operator's desktop.`,
+            evidence:
+              offenders.map((o) => `${o.file}:${o.line} ${o.call}()`).join("; ") +
+              ". The rule is his, twice: 2026-09-15 about the pulse window and 2026-09-22 about the dispatched agents.",
+            recommend:
+              "Add windowsHide: true. If the thing being started is itself a launcher - a .cmd shim, or cmd.exe wrapping something else - the flag is not enough; start the real executable directly and prove it by comparing the windowed processes before and after.",
+            seen: true,
+            confidence: "measured",
+            triggers: "contract:architecture",
+            owner: "architecture",
+          }) + "\n",
+          "utf8",
+        );
+        deposited = 1;
+      }
+    }
+  } catch {
+    /* the console still says it, and the exit code still fails */
+  }
+}
+
+const report = { checkedAt: new Date().toISOString(), launchers: checked, offenders, deposited };
 if (JSON_OUT) {
   console.log(JSON.stringify(report, null, 2));
 } else {

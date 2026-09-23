@@ -529,6 +529,37 @@ const DISPATCH_LOGS = path.join(CTX, "dispatch-logs");
 // after twenty seconds has got past sign-in and started reading.
 const SURVIVE_MS = 20000;
 
+// DID A WINDOW APPEAR? ASK, RATHER THAN TRUST THE FLAG.
+//
+// The operator has reported popups twice, and both times the answer came from
+// looking at the desktop rather than at the code - the second time a flag was
+// set, correct, and defeated by the launcher it was set on. A flag says what we
+// asked for; this says what happened.
+//
+// One sample before the spawns and one after the survival check. Cheap (two
+// PowerShell reads per tick, hidden), and it measures the exact moment the risk
+// exists rather than watching the whole machine forever.
+function windowedNow() {
+  try {
+    const raw = execFileSync(
+      "powershell.exe",
+      [
+        "-NoProfile",
+        "-NonInteractive",
+        "-Command",
+        "Get-Process | Where-Object { $_.MainWindowHandle -ne 0 } | Select-Object Id,ProcessName,MainWindowTitle | ConvertTo-Json -Compress",
+      ],
+      { encoding: "utf8", maxBuffer: 32 * 1024 * 1024, windowsHide: true },
+    );
+    const parsed = JSON.parse(String(raw).trim() || "[]");
+    return new Map((Array.isArray(parsed) ? parsed : [parsed]).map((w) => [w.Id, `${w.ProcessName}: ${String(w.MainWindowTitle || "").slice(0, 120)}`]));
+  } catch {
+    // Unreadable is not clean. An empty map would read as "no windows" and
+    // quietly prove the opposite of what this is for, so the caller is told.
+    return null;
+  }
+}
+
 function stillAlive(pid) {
   try {
     // Signal 0 tests for existence without touching the process.
@@ -562,8 +593,11 @@ function lastWords(file) {
 
 let started = [];
 let failedToStart = [];
+let windowsBefore = null;
+let windowsAppeared = [];
 if (DISPATCH_ALLOWED && picks.length) {
   fs.mkdirSync(DISPATCH_LOGS, { recursive: true });
+  windowsBefore = windowedNow();
   const launched = [];
   for (const p of picks) {
     const label = String(p.r.id).slice(0, 28);
@@ -672,6 +706,14 @@ if (DISPATCH_ALLOWED && picks.length) {
       } catch {
         /* already gone with the child */
       }
+    }
+    // The second sample, after the agents have had SURVIVE_MS to open anything
+    // they were going to open. Anything windowed now that was not windowed
+    // before this tick is reported by name and title, so the next report of a
+    // popup arrives with its culprit attached instead of a search.
+    const after = windowedNow();
+    if (windowsBefore && after) {
+      for (const [pid, what] of after) if (!windowsBefore.has(pid)) windowsAppeared.push(what);
     }
   }
 }
@@ -927,6 +969,11 @@ const report = {
   // mistaken for the switch being on.
   mode: MODE,
   armedBy: DO_DISPATCH ? (MODE === "auto" ? "the AutoRun switch" : "the --dispatch flag") : null,
+  // MEASURED, NOT ASSUMED. null means no dispatch happened this tick or the
+  // desktop could not be read; an empty array means it was read and nothing
+  // appeared. The two are different facts and a popup report should be able to
+  // tell them apart.
+  windowsAppeared: windowsBefore ? windowsAppeared : null,
 };
 if (!DRY) {
   fs.mkdirSync(CTX, { recursive: true });
