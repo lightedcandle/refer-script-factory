@@ -214,6 +214,26 @@ const records = fs
 // exit worker and the deposit lookup - six copies, which drifted every time the
 // rule changed.
 const { beltIndex } = require("./kind.cjs");
+const { deposit: depositRecord } = require("./deposit.cjs");
+
+// ONE PLACE, because this machine deposits from four call sites and each had
+// its own `try { appendFileSync } catch {}` that swallowed whatever went wrong.
+//
+// A BELT THAT CANNOT BE WRITTEN is survivable and stays swallowed: the console
+// still says what happened and the next run tries again in five minutes.
+//
+// A REFUSAL IS NOT. The door only refuses a record THIS MACHINE built wrong,
+// and three of the call sites below built one wrong for eleven days - eight of
+// the fifteen permanent leaks on Telechurch's belt came from here. Swallowing
+// that would put the guard behind the very silence it was added to end.
+function putOnBelt(rec) {
+  try {
+    return depositRecord(rec, { belt: BELT, allowDuplicate: true });
+  } catch (err) {
+    if (err && err.name === "DepositRefused") throw err;
+    return { written: false, reason: "belt-unwritable" };
+  }
+}
 const IX = beltIndex(records);
 const isDone = IX.isDone;
 const isCloser = IX.isCloser;
@@ -679,16 +699,19 @@ if (failedToStart.length) {
       dimension: "architecture",
       source: "intake-worker",
       dispatchFailure: why,
+      // ADDRESSED, because a record naming nothing to trigger is a LEAK -
+      // pulse-check's word for the way this belt dies quietly. This call site
+      // wrote eight of the fifteen permanent ones on Telechurch's belt, and an
+      // append-only belt cannot take any of them back. The kind stays
+      // `deposit`, so it still waits for somebody to judge whether it is work;
+      // the trigger only says whose queue it waits in until then.
+      triggers: "contract:architecture",
       title: "An agent was dispatched and never started",
       claim: `${ids.length} dispatch(es) exited immediately: ${why}`,
       detail: `Items affected: ${ids.join(", ")}. The work stays accepted and will be offered again on the next run. Nothing is wrong with the items themselves.`,
       recommend: "Fix what the exit message names, then let the next run pick these up again. Until then every run will keep failing the same way.",
     };
-    try {
-      fs.appendFileSync(BELT, JSON.stringify(rec) + "\n", "utf8");
-    } catch {
-      /* the console still says it */
-    }
+    putOnBelt(rec);
   }
 }
 
@@ -760,11 +783,7 @@ if (started.length) {
       triggers: "terminal:recorded",
       owner: "architecture",
     };
-    try {
-      fs.appendFileSync(BELT, JSON.stringify(rec) + "\n", "utf8");
-    } catch {
-      /* the console still says it */
-    }
+    putOnBelt(rec);
   }
 }
 
@@ -798,16 +817,16 @@ if (!DRY && queue.state !== "fresh" && beltEligible) {
       dimension: "architecture",
       source: "intake-worker",
       intakeRefusal: key,
+      // ADDRESSED - see the note at the dispatch-failure record above. A record
+      // that names nothing to trigger is a leak, and this is one of the three
+      // call sites that wrote them.
+      triggers: "contract:architecture",
       title: "The auto door refused the watcher's ready-list",
       claim: `Auto intake dispatched nothing: the list it drains is ${queue.state}, and ${beltEligible} contract(s) on this belt are eligible behind it.`,
       detail: `${queue.why} This door pulls only what the watcher put on the list, so it will go on refusing - correctly - until a watcher run writes a fresh one. Nothing has been lost and nothing has been reordered.`,
       recommend: "Find out why the watcher stopped writing its ready-list - its rhythm on the rail, its lock, or its own last run - and let it write one. The door itself needs no change.",
     };
-    try {
-      fs.appendFileSync(BELT, JSON.stringify(rec) + "\n", "utf8");
-    } catch {
-      /* the console still says it */
-    }
+    putOnBelt(rec);
   }
 }
 
@@ -839,17 +858,17 @@ if (!DRY && budget.starved && picks.length) {
       dimension: "architecture",
       source: "intake-worker",
       intakeHold: key,
+      // ADDRESSED - see the note at the dispatch-failure record above. A record
+      // that names nothing to trigger is a leak, and this is the third of the
+      // three call sites that wrote them.
+      triggers: "contract:architecture",
       title: "The auto door held, because the account will not run what it would have started",
       claim: `Auto intake dispatched nothing: ${picks.length} item(s) were selected and held, because the Claude account is refusing to serve new sessions.`,
       detail: `${budget.why} The work stays accepted, in the order the watcher wrote it, and goes out on the first run after the account is serving again. Nothing has been lost and nothing has been reordered. This is the door working, not the door broken - the alternative is spending a belt slot on a session that cannot run, which is what produced the dispatch that died at 01:37Z on 2026-09-23.`,
       recommend:
         "Nothing needs doing to the door. If holds like this are frequent, the cause is how much of the account the factory's own workers spend - deposit `the-tick-shares-a-budget-with-the-work-it-watches` is the record of that, and the answer is fewer or cheaper concurrent workers, not a wider door.",
     };
-    try {
-      fs.appendFileSync(BELT, JSON.stringify(rec) + "\n", "utf8");
-    } catch {
-      /* the console still says it */
-    }
+    putOnBelt(rec);
   }
 }
 

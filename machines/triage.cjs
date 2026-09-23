@@ -29,6 +29,7 @@
 const fs = require("fs");
 const path = require("path");
 const { KIND, KIND_WORDS, beltIndex, triageRecord, headlineOf } = require("./kind.cjs");
+const { deposit: depositRecord } = require("./deposit.cjs");
 
 const ROOT = process.cwd();
 const CTX = path.join(ROOT, ".claude/agent-context");
@@ -121,7 +122,11 @@ const rec = triageRecord({
   by: byArg || "the command line",
 });
 
-if (!DRY) fs.appendFileSync(BELT, JSON.stringify(rec) + "\n", "utf8");
+// Through the door, which reads the record before it lands. `allowDuplicate`
+// because the no-op this machine refuses is decided above, on what the record
+// MEANS - already a contract, already a note - and an id carrying a timestamp
+// would never collide anyway.
+if (!DRY) depositRecord(rec, { belt: BELT, allowDuplicate: true });
 
 if (JSON_OUT) {
   console.log(JSON.stringify({ id: target.id, handle: handleOf.get(String(target.id)), was, now: kindFlag, written: !DRY, record: rec }, null, 2));

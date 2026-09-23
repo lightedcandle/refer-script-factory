@@ -75,6 +75,22 @@ const KINDLIB = (() => {
   return null;
 })();
 
+// The belt's WRITING door, resolved as a sibling for exactly the reason the
+// vocabulary above is. This server is the only writer a person drives by
+// clicking, so it is the one writer whose mistakes arrive at human speed - and
+// the belt is append-only, which makes every one of them permanent. If it is
+// missing, the install is broken and the write doors answer 503 rather than
+// appending a record nothing can read.
+const DOORLIB = (() => {
+  const p = path.join(__dirname, "../machines/deposit.cjs");
+  if (!fs.existsSync(p)) return null;
+  try {
+    return require(p);
+  } catch {
+    return null;
+  }
+})();
+
 // The one definition of "alive" - session-life.cjs - resolved as a sibling for
 // the same reason the kind vocabulary is above. Without it /activity cannot say
 // how many contracts have a live agent, and says so rather than guessing.
@@ -855,16 +871,37 @@ const server = http
           id: `plannote-${planId}-${Date.now().toString(36)}`,
           at,
           kind: "deposit",
-          ...(ownerDim ? { triggers: `contract:${ownerDim}`, dimension: ownerDim } : {}),
+          // ADDRESSED EVEN WHEN THE PLAN NAMES NOBODY. The DIMENSION stays
+          // derived rather than guessed - a plan with no belt-dimension owner
+          // leaves the field off, because inventing one is how a record ends up
+          // owned by whoever happened to be named first, and that reasoning is
+          // unchanged.
+          //
+          // `triggers` is a different question and was answered by accident. A
+          // record that names nothing to trigger is a LEAK - pulse-check's word
+          // for the way this belt dies quietly - and the spread above wrote one
+          // every time a plan had no mapped owner. So an unaddressed note goes
+          // to architecture's queue, which is where a note nobody owns is
+          // judged anyway. The kind stays `deposit`, so it waits for triage
+          // rather than counting as work anybody owes.
+          triggers: ownerDim ? `contract:${ownerDim}` : "contract:architecture",
+          ...(ownerDim ? { dimension: ownerDim } : {}),
           source: "board:plan-inspection",
           plan: planId,
           planStatus: status,
           title: title ? `Note on ${title}` : `Note on ${planId}`,
           detail: note,
         };
+        if (!DOORLIB) return fail(503, "the belt door is not resolvable from this repo, so no record can be written in a shape anything else will read");
         try {
-          fs.appendFileSync(R.belt, JSON.stringify(rec) + "\n", "utf8");
-        } catch {
+          DOORLIB.deposit(rec, { belt: R.belt, allowDuplicate: true });
+        } catch (err) {
+          // A REFUSAL IS NOT AN I/O FAILURE, and saying so matters here more
+          // than anywhere: a person clicked a button. A belt that cannot be
+          // written is a 500 and they should try again; a record this server
+          // built wrong is a 400 that names the field, because trying again
+          // would write the same wrong record.
+          if (err && err.name === "DepositRefused") return fail(400, err.problems.join(" | "));
           return fail(500, "the belt could not be appended to");
         }
         // GO. Operator, 2026-09-21: "add a switch to notes and deposits that
@@ -895,7 +932,7 @@ const server = http
               to: rec.dimension,
               by: "operator, from the plan panel",
             });
-            fs.appendFileSync(R.belt, JSON.stringify(t) + "\n", "utf8");
+            DOORLIB.deposit(t, { belt: R.belt, allowDuplicate: true });
             promoted = t.id;
           } catch (err) {
             return okish({ accepted: planId, record: rec.id, kind: rec.kind, go: false, goWhy: `the note was saved, but marking it Go failed: ${err.message}` });
@@ -933,6 +970,7 @@ const server = http
           res.end(JSON.stringify({ error: why }));
         };
         if (!KINDLIB) return fail(503, "the kind vocabulary is not resolvable from this repo, so no record can be written in a shape anything else will read");
+        if (!DOORLIB) return fail(503, "the belt door is not resolvable from this repo, so no record can be written in a shape anything else will read");
         let p = {};
         try {
           p = JSON.parse(body || "{}");
@@ -979,8 +1017,13 @@ const server = http
           return fail(400, err.message);
         }
         try {
-          fs.appendFileSync(R.belt, JSON.stringify(rec) + "\n", "utf8");
-        } catch {
+          DOORLIB.deposit(rec, { belt: R.belt, allowDuplicate: true });
+        } catch (err) {
+          // A refusal names the field and is a 400 - see the same note on the
+          // plan-note door above. Trying again would write the same wrong
+          // record, so reporting it as a disk problem would send the person
+          // round the loop for nothing.
+          if (err && err.name === "DepositRefused") return fail(400, err.problems.join(" | "));
           return fail(500, "the belt could not be appended to");
         }
         res.writeHead(200, { "content-type": "application/json", "cache-control": "no-store", "x-living-factory": "board", "x-board-version": OWN_VERSION });
