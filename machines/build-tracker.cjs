@@ -1167,6 +1167,15 @@ const ranRecently = lastAnyRun !== null && now - lastAnyRun < fastestMs;
 // the interval each station is ACTUALLY on - see the note on stationRows. It
 // used the declared ceiling, which made it most forgiving of exactly the
 // stations the clock had decided to watch most closely.
+// HOW LATE IS LATE, named once. Three times a rhythm's own interval, and the
+// reason is written above: a station running late is normal and a board that
+// cries wolf is a board nobody reads. It was a bare 3 inside the lamp, which
+// was fine while the lamp was the only thing that judged lateness. The explain
+// panels judge it too now, and a panel saying a rhythm is fine while the lamp
+// calls the factory stalled is the exact two-sources-disagree defect the panels
+// exist to surface - told about themselves.
+const STALL_RATIO = 3;
+
 const liveness = (() => {
   let worst = null;
   for (const s of stationRows) {
@@ -1179,7 +1188,7 @@ const liveness = (() => {
   const faulted = pulseFaults.length > 0;
   if (!stationRows.length || !worst) return { label: "NOT POSTED", hue: "25", running: false, note: "no station declared" };
   if (worst.ratio === Infinity) return { label: "NEVER RUN", hue: "25", running: false, note: `${worst.id} has never run` };
-  if (worst.ratio > 3) return { label: "STALLED", hue: "25", running: false, note: `${worst.id} overdue` };
+  if (worst.ratio > STALL_RATIO) return { label: "STALLED", hue: "25", running: false, note: `${worst.id} overdue` };
   if (faulted) return { label: "DEGRADED", hue: "75", running: true, note: `${pulseFaults.length} fault(s)` };
   return { label: "ALIVE", hue: "150", running: true, note: "every station inside its interval" };
 })();
@@ -2760,15 +2769,43 @@ const explainRhythm = (s) => {
     };
   }
 
-  // An externally driven rhythm outranks the cadence headline, because "who
-  // fires this" is the more surprising fact and the reason its row looks unlike
-  // its neighbours. Stated from the declaration - `drivenBy` present, `run`
-  // absent - never from an assumption about any particular rhythm.
+  // AN EXTERNALLY DRIVEN RHYTHM HAS BOTH HALVES TOO, and this panel showed
+  // neither against the other. The driver fact replaced the cadence headline
+  // outright, so the primordial tick - the one rhythm every other rhythm on
+  // this rail is downstream of - was the only cell that never said whether it
+  // was keeping its own declared time. Its cadence row read NOT RECORDED beside
+  // a declaration of every 5m, on eighty-seven recorded beats.
+  //
+  // The deposit that asked for this named exactly that case: "the pulse itself
+  // read `never fired` while beating every five minutes". The inverse costs
+  // more - a stopped tick looking exactly like a beating one - and both are the
+  // same defect, which is a panel holding two facts and refusing to subtract.
+  //
+  // WHO DRIVES IT IS STILL SAID, second. It is the more surprising fact about
+  // the row and the reason it looks unlike its neighbours; it is simply not a
+  // reason to withhold the comparison.
+  //
+  // Measured against STALL_RATIO, the same yardstick the liveness lamp uses, so
+  // the lamp and this panel can never tell a reader two different stories about
+  // one beat.
   if (external) {
-    headline = {
-      tone: "gap",
-      text: `Driven from outside this repo, by ${d.drivenBy}. It declares no command to run, so there is nothing here for this repo's scheduler to fire - and it is correct that nothing does: this rhythm is what runs the scheduler, so a scheduler that fired it would be firing its own driver. It is declared, discovered, counted and drawn exactly like every other rhythm, which is the point - before it had a declaration of its own the rail had no row for it and borrowed another trigger's row to draw one.`,
-    };
+    const who = `Driven from outside this repo, by ${d.drivenBy}. It declares no command to run, so there is nothing here for this repo's scheduler to fire - and it is correct that nothing does: this rhythm is what runs the scheduler, so a scheduler that fired it would be firing its own driver. It is declared, discovered, counted and drawn exactly like every other rhythm, which is the point - before it had a declaration of its own the rail had no row for it and borrowed another trigger's row to draw one.`;
+    const beats = st.runs == null ? "" : `, on ${st.runs} beats recorded`;
+    let tone = "gap";
+    let beat;
+    if (!declaredMs) {
+      beat = "It declares no period either, so there is nothing here to measure its beats against.";
+    } else if (!s.last) {
+      tone = "disagree";
+      beat = `Declared every ${d.every}, and NOT ONE BEAT IS RECORDED. Either it has never fired or its stamp is not reaching this state file, and the board cannot tell which - both are findings.`;
+    } else if (now - s.last > declaredMs * STALL_RATIO) {
+      tone = "disagree";
+      beat = `Declared every ${d.every}, and the last beat landed ${ago(s.last)} - ${Math.floor((now - s.last) / declaredMs)} periods back, past the ${STALL_RATIO}x the liveness lamp allows before it calls the factory stalled. It is NOT keeping its declared time${beats}.`;
+    } else {
+      tone = "ok";
+      beat = `Declared and observed agree: it declares every ${d.every} and its last beat landed ${ago(s.last)}, inside that period${beats}.`;
+    }
+    headline = { tone, text: `${beat} ${who}` };
   }
 
   return {
@@ -2791,7 +2828,25 @@ const explainRhythm = (s) => {
         decl ? `${decl} · floor` : null,
         external ? { note: "an externally driven rhythm has no ladder here, so it declares no floor" } : null,
       ),
-      wire("actual cadence", paceWords(liveMs), stateOf("intervalMs"), declaredMs && liveMs && declaredMs !== liveMs ? { disagree: true } : null),
+      // THE ACTUAL, AND WHERE IT IS READ FROM, WHICH IS NOT THE SAME FIELD FOR
+      // BOTH KINDS. A trigger this scheduler fires carries an interval in the
+      // state and the row is that interval. An externally driven rhythm never
+      // gets one - the scheduler must not fire its own driver, so it never
+      // computes a pace for it - and a row reading NOT RECORDED against
+      // `intervalMs` named a field that will never hold anything and made a
+      // category difference look like a hole in the record. The actual for
+      // those is the beat that landed, which the state DOES stamp.
+      external
+        ? wire(
+            "actual cadence",
+            s.last ? `last beat ${hhmm(s.last)} · ${ago(s.last)}` : null,
+            stateOf("lastRunAt"),
+            {
+              note: "the scheduler holds no interval for an externally driven rhythm, and that absence is correct rather than missing - so the actual is read from the beats it stamped",
+              ...(declaredMs && (!s.last || now - s.last > declaredMs * STALL_RATIO) ? { disagree: true } : {}),
+            },
+          )
+        : wire("actual cadence", paceWords(liveMs), stateOf("intervalMs"), declaredMs && liveMs && declaredMs !== liveMs ? { disagree: true } : null),
       wire("last fired", s.last ? `${hhmm(s.last)} · ${ago(s.last)}` : null, stateOf("lastRunAt"), s.last ? { at: s.last, t: "stampago" } : null),
       wire(
         "how it exited",
@@ -2799,7 +2854,19 @@ const explainRhythm = (s) => {
         stateOf("lastExit"),
       ),
       wire("runs recorded", st.runs === null || st.runs === undefined ? null : st.runs, stateOf("runs")),
-      wire("next due", inWords(s.dueIn), "computed on this board from last fired plus actual cadence", { at: s.next, t: "until" }),
+      // NAMED PER KIND, because the two are not computed the same way and the
+      // single sentence became wrong the moment `actual cadence` started
+      // meaning a beat stamp on the grid row. The grid row's next is the next
+      // boundary of the declared period; every other row's is its last run plus
+      // the interval it is actually on.
+      wire(
+        "next due",
+        inWords(s.dueIn),
+        s.grid
+          ? "computed on this board as the next boundary of the declared period - the tick keeps the grid whether or not a stamp landed"
+          : "computed on this board from last fired plus actual cadence",
+        { at: s.next, t: "until" },
+      ),
       wire("declared in", d.declaredIn, "found by scanning tools, tools/factory and scripts for *.trigger.json and *.station.json"),
     ],
   };
@@ -2820,12 +2887,32 @@ for (const s of stationRows) explains(`rhythm:${s.id}`, explainRhythm(s));
 {
   const real = stationRows.find((s) => s.id === "host-restart");
   const realDecl = real && real.decl ? real.decl.declaredIn : null;
+  // THE THRESHOLD IS A DECLARED VALUE AND THE UPTIME IS A LIVE ONE, so this
+  // panel owes the same comparison the rhythms now make. It printed both
+  // numbers in the wiring and said nothing about whether they agree, which
+  // leaves the reader to do the subtraction - the same by-hand arithmetic the
+  // rail's asterisk used to demand, and the reason a machine three days overdue
+  // for a restart looked exactly like a fresh one.
+  const upH = host ? Number(host.uptime_hours) || 0 : null;
+  const restartQueued = host ? host.reboot_pending === true : false;
+  const pastThreshold = upH !== null && upH > RESTART_FRESH_DAYS * 24;
+  const policyLine =
+    upH === null
+      ? `Declared threshold ${RESTART_FRESH_DAYS}d, and the machine's uptime is NOT RECORDED - the hive node registry could not be read, so the board cannot say whether a restart is due.`
+      : restartQueued
+        ? `Declared threshold ${RESTART_FRESH_DAYS}d, uptime ${Math.round(upH)}h - and an update is ALREADY QUEUED, which makes the machine due whatever its uptime says.`
+        : pastThreshold
+          ? `Declared threshold ${RESTART_FRESH_DAYS}d, uptime ${Math.round(upH)}h - PAST it by ${inWords(upH * MS.h - RESTART_FRESH_DAYS * MS.d)}. A restart is due and nothing has taken it.`
+          : `Declared and actual agree: threshold ${RESTART_FRESH_DAYS}d, uptime ${Math.round(upH)}h - inside it, with ${inWords(RESTART_FRESH_DAYS * MS.d - upH * MS.h)} of freshness left.`;
   explains("rhythm:host-restart-policy", {
     title: "HOST RESTART",
     kind: "policy interval — not a trigger, and nothing fires it",
     headline: {
-      tone: "gap",
-      text: `This cell is not a trigger. No declaration names it and nothing on the schedule fires it: it is a policy value - how many days the machine may run before a restart is due - counted against the machine's uptime, and drawn here because it counts down like a rhythm. The trigger that actually asks whether a restart is due is RESTART CHECK${real ? `, every ${real.decl.every}` : ""}${realDecl ? `, declared in ${realDecl}` : ""}. The rail therefore draws ${cycles.length} cells while the scheduler holds ${stationRows.length} triggers, and this cell is the difference.`,
+      // The threshold disagreement outranks the not-a-trigger gap whenever
+      // there is one. A machine overdue for a restart is a fact about the
+      // plant; this cell's wiring is a fact about the board, and the plant wins.
+      tone: restartQueued || pastThreshold ? "disagree" : "gap",
+      text: `${policyLine} This cell is not a trigger. No declaration names it and nothing on the schedule fires it: it is a policy value - how many days the machine may run before a restart is due - counted against the machine's uptime, and drawn here because it counts down like a rhythm. The trigger that actually asks whether a restart is due is RESTART CHECK${real ? `, every ${real.decl.every}` : ""}${realDecl ? `, declared in ${realDecl}` : ""}. The rail therefore draws ${cycles.length} cells while the scheduler holds ${stationRows.length} triggers, and this cell is the difference.`,
     },
     purpose: {
       text: null,
@@ -2834,7 +2921,12 @@ for (const s of stationRows) explains(`rhythm:${s.id}`, explainRhythm(s));
     wiring: [
       wire("what it counts", "the machine's uptime against a freshness threshold", "machines/build-tracker.cjs · the cycles list"),
       wire("threshold", `${RESTART_FRESH_DAYS}d`, "machines/build-tracker.cjs · RESTART_FRESH_DAYS"),
-      wire("uptime", host ? `${Math.round(host.uptime_hours)}h` : null, host ? `${host._from}.uptime_hours` : "the hive node registry could not be read"),
+      wire(
+        "uptime",
+        host ? `${Math.round(host.uptime_hours)}h` : null,
+        host ? `${host._from}.uptime_hours` : "the hive node registry could not be read",
+        restartQueued || pastThreshold ? { disagree: true } : null,
+      ),
       wire("restart already queued", host ? (host.reboot_pending === true ? "yes" : "no") : null, host ? `${host._from}.reboot_pending` : null),
       wire("fired by this repo's scheduler", "no — nothing declares it, so nothing can fire it", "no *.trigger.json declares host-restart-policy"),
       wire("the trigger that does run", real ? `restart check, every ${real.decl.every}` : null, realDecl ? `${realDecl} · every` : null),
