@@ -134,8 +134,30 @@ function buildFixture() {
 //          on the file rather than on what it printed about the file.
 //   none   a reason this machine has no path that can be run here. It still gets
 //          parsed and BOM-checked; it just cannot be exercised.
+//   setup  (root) => void. Adds to THIS case's fixture before the run, for a
+//          machine whose read-only path is only reachable when something else
+//          is on disk. Per case and never in buildFixture, because every other
+//          machine's expected exit code is a property of the fixture as it is.
+
+// The belt as buildFixture wrote it, read back. A machine that claims a dry run
+// is checked on the file, not on the word DRY in what it printed.
+const beltUntouched = (root) =>
+  readFileSync(join(root, ".claude/agent-context/findings.jsonl"), "utf8") === BELT.map((r) => JSON.stringify(r)).join("\n") + "\n";
 
 const MANIFEST = {
+  // The subject is the HOST's transcript store, not the fixture - the account is
+  // per-user, so there is nothing repo-shaped to point it at. --self-test and not
+  // --json because --json proves only that the reader returns: on a runner with
+  // no ~/.claude/projects it takes the unobservable branch and exits 0 whatever
+  // the verdict logic does. The self-test drives every branch of that logic on
+  // fixed instants AND ends by calling the same live reader. It opens transcripts
+  // read-only and writes nothing anywhere.
+  "account-budget.cjs": {
+    args: ["--self-test"],
+    exit: 0,
+    why: "every branch of the starved/serving verdict, the three limit wordings and the reset-stamp arithmetic in two zones, on fixed instants - the answer is a property of the code, not of the account",
+    expect: (out) => out.includes("account-budget self-test: all passed"),
+  },
   "autonomy-check.cjs": { args: ["--json"], exit: 1, why: "eight conditions, and a fixture meets one - exit 1 is the honest answer" },
   "board-see.cjs": { none: "drives a real browser against a served board; needs puppeteer and a listening server, neither of which exists in a fixture" },
   "board-serve-check.cjs": { none: "its whole purpose is to REVIVE a dead server - it spawns a long-lived process, so there is no read-only form of it" },
@@ -162,7 +184,42 @@ const MANIFEST = {
   },
   "composition-watch.cjs": { args: ["--dry", "--json"], exit: 0, why: "no src/app in the fixture, so it reports NOT APPLICABLE and exits clean - which is the behaviour P13 requires of a machine whose subject is absent" },
   "deposit.cjs": { args: ["--open"], exit: 0, why: "three open records, listed by handle" },
+  // --dry is the machine's own flag: it builds the whole record, prints it and
+  // exits before the append. But the dry branch sits AFTER the session proof, so
+  // on the bare fixture this would only ever reach the refusal (exit 1) and the
+  // record would never be built. `setup` gives the case one empty worktree
+  // folder to resolve, which is the weakest evidence session-life accepts and
+  // enough to get past it. `expect` then reads the belt back, because "nothing
+  // written" is the claim and the exit code does not carry it.
+  "dispatch-stamp.cjs": {
+    args: ["--subject", "open-deposit-one", "--session", "gate-fixture-worker", "--via", "spawn", "--dry"],
+    setup: (root) => mkdirSync(join(root, ".claude/worktrees/gate-fixture-worker"), { recursive: true }),
+    exit: 0,
+    why: "proves the session from disk, composes the stamp for a real fixture deposit at the SPAWN door, and under --dry appends nothing",
+    expect: (out, root) => {
+      const rec = JSON.parse(out.slice(out.indexOf("{")));
+      return rec.subject === "open-deposit-one" && rec.dispatch.via === "spawn" && rec.dispatch.session === "gate-fixture-worker" && !("kind" in rec) && beltUntouched(root);
+    },
+  },
   "exit-worker.cjs": { args: ["--dry", "--json"], exit: 0, why: "nothing is held by a live session, so nothing was abandoned" },
+  // ITS SUBJECT IS THIS REPO, NOT THE FIXTURE. It reads engine/ and machines/
+  // from beside itself, plus tools/factory under cwd - and the fixture's
+  // tools/factory holds one .json, so every launcher it examines is the
+  // factory's own. Exit 0 is therefore exact and it is a property of this repo's
+  // source: a launcher added here without windowsHide turns this case red, which
+  // is the rule finally running where a pull request can see it. It appends to
+  // the cwd belt ONLY when it finds an offender, so the passing run writes
+  // nothing and the failing one writes to a temp directory.
+  "gate-no-window.cjs": {
+    args: ["--json"],
+    exit: 0,
+    why: "every process launcher in engine/ and machines/ carries windowsHide: true",
+    // Zero offenders out of zero launchers is the check that cannot fail.
+    expect: (out, root) => {
+      const r = JSON.parse(out);
+      return r.launchers > 0 && r.offenders.length === 0 && r.deposited === 0 && beltUntouched(root);
+    },
+  },
   "intake-worker.cjs": { args: ["--dry", "--json"], exit: 0, why: "drains the watcher's ready-list. --dry because --json alone still writes a report and would still dispatch if a fixture ever carried an auto mode file; the fixture has no ready-list, so it reports the list ABSENT and exits 0 - an empty morning is healthy" },
   "kind.cjs": { args: [], exit: 0, why: "library - the belt's vocabulary, required by everything that reads it" },
   "manager.cjs": { args: ["--json"], exit: 1, writes: true, why: "finds work nobody is carrying. HAS NO READ-ONLY FLAG: this run appends two records, which is safe only because the fixture is a temp directory" },
@@ -310,6 +367,7 @@ function checkSmoke(files) {
 
     const root = buildFixture();
     try {
+      if (m.setup) m.setup(root);
       // A library is proved by loading it. `require` and not `import`, because
       // these are .cjs and loading them is exactly what a machine does.
       const argv = m.args.length || m.run ? [join(MACHINES, f), ...m.args] : ["-e", `require(${JSON.stringify(join(MACHINES, f))})`];
