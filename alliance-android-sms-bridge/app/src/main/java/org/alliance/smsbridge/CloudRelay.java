@@ -148,7 +148,12 @@ final class CloudRelay {
             executeJob(id, type, body);
             request("POST", "/phone/report", "{\"id\":\"" + escapeJson(id) + "\",\"status\":\"sent\"}");
         } catch (Exception error) {
-            request("POST", "/phone/report", "{\"id\":\"" + escapeJson(id) + "\",\"status\":\"failed\",\"error\":\"" + escapeJson(error.getMessage()) + "\"}");
+            // The message alone has been a bare method name ("getGroupIdLevel1")
+            // with nothing to say what kind of failure it was, and nothing was
+            // logged on the handset. Name the exception, and keep the stack here.
+            Log.e(TAG, "Outbound job " + id + " failed", error);
+            String reason = error.getClass().getSimpleName() + ": " + error.getMessage();
+            request("POST", "/phone/report", "{\"id\":\"" + escapeJson(id) + "\",\"status\":\"failed\",\"error\":\"" + escapeJson(reason) + "\"}");
         }
     }
 
