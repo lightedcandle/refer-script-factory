@@ -220,6 +220,7 @@ const MANIFEST = {
       return r.launchers > 0 && r.offenders.length === 0 && r.deposited === 0 && beltUntouched(root);
     },
   },
+  "day-mode.cjs": { args: [], exit: 0, why: "library - what each board colour becomes in daylight, and the script that picks the mode from the sun" },
   "intake-worker.cjs": { args: ["--dry", "--json"], exit: 0, why: "drains the watcher's ready-list. --dry because --json alone still writes a report and would still dispatch if a fixture ever carried an auto mode file; the fixture has no ready-list, so it reports the list ABSENT and exits 0 - an empty morning is healthy" },
   "kind.cjs": { args: [], exit: 0, why: "library - the belt's vocabulary, required by everything that reads it" },
   "manager.cjs": { args: ["--json"], exit: 1, writes: true, why: "finds work nobody is carrying. HAS NO READ-ONLY FLAG: this run appends two records, which is safe only because the fixture is a temp directory" },

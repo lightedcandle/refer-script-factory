@@ -4053,7 +4053,7 @@ const recordWiringHtml = (e, life) => `
             </div>`;
 
 const chipBlock = (name, sub, hue, c) => `
-      <div class="xopen" data-explain="band:${name}" title="click for what ${name} owns, what watches it, and when it last heard anything" style="display:flex; align-items:center; gap:12px; padding:8px 16px; background:oklch(0.185 0.012 70); border:1px solid oklch(0.28 0.012 70); border-radius:5px">
+      <div class="xopen" data-fn="${name}" data-explain="band:${name}" title="click for what ${name} owns, what watches it, and when it last heard anything" style="display:flex; align-items:center; gap:12px; padding:8px 16px; background:oklch(0.185 0.012 70); border:1px solid oklch(0.28 0.012 70); border-radius:5px">
         <span style="width:5px; height:34px; border-radius:3px; background:oklch(0.62 0.15 ${hue}); ${c.stale ? "opacity:0.45; " : ""}flex:none"></span>
         <div style="display:flex; flex-direction:column; gap:2px">
           <span style="font-size:18px; font-weight:500; line-height:1.1">${name}</span>
@@ -5182,7 +5182,7 @@ const html = `<!DOCTYPE html>
          judgement has been worth anything. "Held" means not later undone - the
          only claim the belt can actually support - and the words under it say
          exactly that, so the number cannot be read as more than it is. -->
-    <div class="xopen" data-explain="head:trust" title="Click for what counts as a decision, what is excluded, and what this number cannot say. Work the factory took to an end state, and how much of it has not since been undone. Still standing is not the same as right - it is what has survived. The board cannot yet tell which of these were closed while you were away; that is a known gap and it is on the belt." style="display:flex; align-items:center; gap:14px; padding:10px 18px; border:1px solid oklch(0.30 0.012 70); border-radius:4px">
+    <div class="xopen" data-fn="done" data-explain="head:trust" title="Click for what counts as a decision, what is excluded, and what this number cannot say. Work the factory took to an end state, and how much of it has not since been undone. Still standing is not the same as right - it is what has survived. The board cannot yet tell which of these were closed while you were away; that is a known gap and it is on the belt." style="display:flex; align-items:center; gap:14px; padding:10px 18px; border:1px solid oklch(0.30 0.012 70); border-radius:4px">
       <div style="display:flex; flex-direction:column; gap:2px">
         <span style="font-family:${mono}; font-size:11px; letter-spacing:0.16em; color:oklch(0.56 0.01 80)">CLOSED BY THE FACTORY</span>
         <span style="font-family:${mono}; font-size:17px; letter-spacing:0.06em; color:oklch(0.86 0.008 85)">${D.trust.held}<span style="color:oklch(0.52 0.01 80)"> of </span>${D.trust.decisions}<span style="color:oklch(0.52 0.01 80)"> still standing</span></span>
@@ -5272,7 +5272,7 @@ ${D.cycles
 
   <div style="display:grid; grid-template-columns:minmax(0,1fr) 700px minmax(0,1fr); gap:20px; flex:1; min-height:0">
 
-    <div style="background:oklch(0.185 0.012 70); border:1px solid oklch(0.28 0.012 70); border-radius:6px; padding:16px 18px; display:flex; flex-direction:column; gap:10px; min-height:0; overflow:hidden">
+    <div data-fn="arriving" style="background:oklch(0.185 0.012 70); border:1px solid oklch(0.28 0.012 70); border-radius:6px; padding:16px 18px; display:flex; flex-direction:column; gap:10px; min-height:0; overflow:hidden">
       <div style="display:flex; align-items:center; gap:14px">
         <span style="width:9px; height:9px; border-radius:50%; background:oklch(0.66 0.14 150); animation:alive 3s ease-in-out infinite; flex:none"></span>
         <span class="xopen" data-explain="col:incoming" title="click for what enters this column, what leaves it, and what the two filter rows ask" style="font-family:${mono}; font-size:13px; letter-spacing:0.16em; color:oklch(0.62 0.01 80)">INCOMING</span>
@@ -5328,7 +5328,7 @@ ${["gear", "calendar", "clock", "triage", "stale", "blocked", "eye", "hourglass"
       <div class="morehint"><span>MORE</span><svg viewBox="0 0 24 24" width="13" height="13" fill="none"><path d="M6 9l6 6 6-6" style="stroke:currentColor; stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round"></path></svg></div>
     </div>
 
-    <div style="background:oklch(0.185 0.012 70); border:1px solid oklch(0.28 0.012 70); border-radius:6px; padding:12px 14px 10px; min-height:0; overflow:hidden; display:flex; flex-direction:column; gap:8px">
+    <div data-fn="work" style="background:oklch(0.185 0.012 70); border:1px solid oklch(0.28 0.012 70); border-radius:6px; padding:12px 14px 10px; min-height:0; overflow:hidden; display:flex; flex-direction:column; gap:8px">
 
       <div style="position:relative; flex:0 0 auto; min-height:0">
         ${boardSvg()}
@@ -5774,7 +5774,7 @@ ${["gear", "calendar", "clock", "triage", "stale", "blocked", "eye", "hourglass"
 
     </div>
 
-    <div style="background:oklch(0.185 0.012 70); border:1px solid oklch(0.28 0.012 70); border-radius:6px; padding:16px 18px; display:flex; flex-direction:column; gap:10px; min-height:0; overflow:hidden">
+    <div data-fn="done" style="background:oklch(0.185 0.012 70); border:1px solid oklch(0.28 0.012 70); border-radius:6px; padding:16px 18px; display:flex; flex-direction:column; gap:10px; min-height:0; overflow:hidden">
       <div style="display:flex; align-items:center; gap:14px">
         <span style="width:9px; height:9px; border-radius:50%; background:oklch(0.66 0.14 150); flex:none"></span>
         <span class="xopen" data-explain="col:resolved" title="click for what resolved does and does not claim" style="font-family:${mono}; font-size:13px; letter-spacing:0.16em; color:oklch(0.62 0.01 80)">RESOLVED</span>
@@ -5811,6 +5811,7 @@ ${["gear", "calendar", "clock", "triage", "stale", "blocked", "eye", "hourglass"
   <div style="display:flex; align-items:center; gap:10px; font-family:${mono}; font-size:12.5px; color:oklch(0.50 0.01 80); margin-top:-8px">
     <span>ask what its output triggers, never who supervises it</span>
     <span style="margin-left:auto; color:oklch(0.58 0.01 80)">tap anything to see how it is wired</span>
+    <span id="day-switch" style="display:flex; align-items:center; gap:6px; margin-left:14px"></span>
     <span id="screen-control" style="display:flex; align-items:center; gap:6px; margin-left:14px"></span>
   </div>
 
@@ -7082,8 +7083,25 @@ ${Object.entries(EXPLAIN)
 </body></html>
 `;
 
+// DAY MODE. The board above is drawn in its night colours, which stay the
+// source of truth; day-mode.cjs gives each one a daylight value and ships the
+// script that picks the mode from the sun. A sibling, resolved by location like
+// the vocabulary at the top of this file - but NOT required the way that is: a
+// board that cannot classify a record is wrong, and a board with no day mode is
+// only dark. So a missing or broken library is said out loud and the night
+// board is written as it always was.
+const themed = (() => {
+  const p = path.join(__dirname, "day-mode.cjs");
+  try {
+    return require(p).theme(html);
+  } catch (err) {
+    console.error(`build-tracker: day mode was not applied (${p}: ${err && err.message}). The board was written night-only.`);
+    return html;
+  }
+})();
+
 fs.mkdirSync(path.dirname(OUT), { recursive: true });
-fs.writeFileSync(OUT, html, "utf8");
+fs.writeFileSync(OUT, themed, "utf8");
 
 // ---- WHAT THE BOARD INTENDED TO DRAW ----------------------------------------
 //
