@@ -2189,13 +2189,45 @@ const beltWhyFull =
       ? `${awaitingTriage.length} deposit(s) are waiting to be judged and none has been accepted as work. Only a contract may ride the belt, so nothing can be dispatched until somebody accepts something - open a deposit and press ACCEPT AS WORK, or run triage.cjs. This is not the same as having nothing to do, and the board will not call it that.`
       : beltWhy;
 
-// The same line with its two time-words live. A function, because `live`
-// needs `esc`, which is initialised further down; the template calls this.
-function beltWhyHtml() {
-  if (beltState === "RUNNING") return `${onBelt.length} on the belt · acted on ${live("ago", actedAt, ago(actedAt))}`;
-  if (beltState === "WAITING")
-    return `waiting on word from ${lanes.length} intake doors · ${circulating.length} queued, oldest ${oldestWaiting ? live("since", oldestWaiting, inWords(now - oldestWaiting)) : "unknown"}${abandoned.length ? ` · ${abandoned.length} abandoned` : ""}`;
-  return esc(beltWhy);
+// THE HEMISPHERE IS COUNTS, NOT SENTENCES. Operator, 2026-10-10, looking at
+// Telechurch's belt on the all-repos page: "This need consolidation. Belt
+// already says idle maybe we don't need 'Nobody is working'. And a bunch of
+// nothin nothin nothin. Let the count stats show what is happening instead of
+// too much words. that gets into overflow."
+//
+// It was the second time prose outgrew this hole (see the comment above). The
+// status sentence wrapped to three lines, the two-word verdict to two, and the
+// leak line to three more, and the last of them printed across the bottom rail.
+// A sentence has no upper bound on its width; a number and one word do. So the
+// verdict is one word, and everything the sentence carried is a row: a figure,
+// then what it counts, never wrapping. What the sentence EXPLAINED is one hover
+// or one tap away, where it already was (beltWhyFull, and the belt:state panel).
+//
+// A row whose figure would be zero is left out rather than printed as a zero,
+// with one exception: contracted and resolved always show, because the seer
+// reads the first off the page and "0 resolved" is a fact, not filler.
+const BELT_WORD = { RUNNING: "CIRCULATING", STALLED: "STALLED", WAITING: "WAITING", UNJUDGED: "UNJUDGED", IDLE: "IDLE" };
+
+// A function, because `live` needs `esc`, which is initialised further down;
+// the template calls this.
+function beltStatsHtml() {
+  const row = (figure, label, color, cls, title) =>
+    `<span${cls ? ` class="${cls}"` : ""}${title ? ` title="${esc(title)}"` : ""} style="display:flex; gap:9px; white-space:nowrap; font-family:${mono}; font-size:14px; line-height:1.15; letter-spacing:0.04em; color:${color}"><span style="min-width:3ch; text-align:right">${figure}</span><span>${label}</span></span>`;
+  const green = "oklch(0.72 0.13 150)";
+  const amber = "oklch(0.80 0.12 75)";
+  const red = "oklch(0.80 0.11 25)";
+  const quiet = "oklch(0.62 0.01 80)";
+  return [
+    beltState === "RUNNING" ? row(live("ago", actedAt, ago(actedAt)), "last acted", quiet) : "",
+    beltState === "STALLED" ? row("!", "triggers overdue", red) : "",
+    row(D.openCount, "contracted", green, "opencount"),
+    beltState === "WAITING" && oldestWaiting ? row(live("since", oldestWaiting, inWords(now - oldestWaiting)), "oldest waiting", amber) : "",
+    D.triageCount ? row(D.triageCount, "awaiting triage", amber, "triagecount") : "",
+    D.heldCount ? row(D.heldCount, "held for you", red) : "",
+    abandoned.length ? row(abandoned.length, "abandoned", amber, "", "dispatched to an agent whose session is no longer alive") : "",
+    D.unplaced ? row(D.unplaced, "leaked", red, "", "on no carrier and not held - a leak") : "",
+    row(D.closedCount, "resolved &#10003;", green),
+  ].join("");
 }
 
 // Throughput, not just inventory. Eight of seventeen records are finished and
@@ -3613,16 +3645,7 @@ explains("belt:count", {
 
 // ---- the belt's own verdict, and the four numbers under it -------------------
 explains("belt:state", {
-  title:
-    D.beltState === "RUNNING"
-      ? "CIRCULATING"
-      : D.beltState === "STALLED"
-        ? "BELT STALLED"
-        : D.beltState === "WAITING"
-          ? "NOBODY IS WORKING"
-          : D.beltState === "UNJUDGED"
-            ? "NOTHING JUDGED YET"
-            : "BELT IDLE",
+  title: BELT_WORD[D.beltState] || "IDLE",
   kind: "what the belt is doing, and the counts printed beside it",
   headline:
     // THE LAMP IS THE OTHER SOURCE, AND IT IS CHECKED FIRST. beltState tests
@@ -5383,7 +5406,7 @@ ${["gear", "calendar", "clock", "triage", "stale", "blocked", "eye", "hourglass"
                    that track. Here it sits under the count, in space that was
                    empty, and it now carries each domain's load as well as its
                    colour, which the bars never did. -->
-              <span style="font-family:${mono}; font-size:11px; letter-spacing:0.16em; color:oklch(0.56 0.01 80); margin-top:${D.waitingByDomain.length > 3 ? 8 : 16}px">WAITING, BY DOMAIN${D.waitingByDomain.length ? ` &middot; ${D.waitingByDomain.reduce((a, w) => a + w.count, 0)}` : ""}</span>
+              ${D.waitingByDomain.length ? `<span style="font-family:${mono}; font-size:11px; letter-spacing:0.16em; color:oklch(0.56 0.01 80); margin-top:${D.waitingByDomain.length > 3 ? 8 : 16}px">WAITING, BY DOMAIN &middot; ${D.waitingByDomain.reduce((a, w) => a + w.count, 0)}</span>` : ""}
               <div style="display:flex; flex-direction:column; gap:${D.waitingByDomain.length > 3 ? 2 : 5}px; margin-top:6px; align-items:flex-start">
                 ${
                   D.waitingByDomain.length
@@ -5397,14 +5420,13 @@ ${["gear", "calendar", "clock", "triage", "stale", "blocked", "eye", "hourglass"
                 </div>`,
                         )
                         .join("")
-                    : `<span style="font-family:${mono}; font-size:12px; color:oklch(0.52 0.01 80)">nothing waiting</span>`
+                    : ""
                 }
               </div>
             </div>
 
             <div class="xopen" data-explain="belt:state" title="click for how this state is chosen, and where each number beside it comes from" style="pointer-events:auto; flex:1 1 auto; min-width:0; display:flex; flex-direction:column; gap:5px; border-left:1px solid oklch(0.26 0.012 70); padding-left:24px">
-              <span title="${esc(D.beltWhyFull)}" style="font-family:${mono}; font-size:16px; letter-spacing:0.16em; color:${D.beltState === "RUNNING" ? "oklch(0.72 0.13 150)" : D.beltState === "STALLED" ? "oklch(0.80 0.11 25)" : D.beltState === "WAITING" ? "oklch(0.80 0.12 75)" : D.beltState === "UNJUDGED" ? "oklch(0.80 0.12 75)" : "oklch(0.62 0.01 80)"}">${D.beltState === "RUNNING" ? "CIRCULATING" : D.beltState === "STALLED" ? "BELT STALLED" : D.beltState === "WAITING" ? "NOBODY IS WORKING" : D.beltState === "UNJUDGED" ? "NOTHING JUDGED YET" : "BELT IDLE"}</span>
-              <span title="${esc(D.beltWhyFull)}" style="font-family:${mono}; font-size:14px; line-height:1.4; letter-spacing:0.02em; color:oklch(0.62 0.01 80); overflow-wrap:anywhere">${beltWhyHtml()}</span>
+              <span title="${esc(D.beltWhyFull)}" style="font-family:${mono}; font-size:16px; letter-spacing:0.16em; color:${D.beltState === "RUNNING" ? "oklch(0.72 0.13 150)" : D.beltState === "STALLED" ? "oklch(0.80 0.11 25)" : D.beltState === "WAITING" ? "oklch(0.80 0.12 75)" : D.beltState === "UNJUDGED" ? "oklch(0.80 0.12 75)" : "oklch(0.62 0.01 80)"}; white-space:nowrap; margin-bottom:3px">${BELT_WORD[D.beltState] || "IDLE"}</span>
               <!-- THE THREE KINDS, EACH COUNTED WHERE IT BELONGS.
                    Contracted work is the only number that means somebody owes
                    something; the triage queue is the number that says how much
@@ -5414,11 +5436,7 @@ ${["gear", "calendar", "clock", "triage", "stale", "blocked", "eye", "hourglass"
                    The classes are how the seer reads these off the rendered page
                    and checks them against the belt - it reads the text, as a
                    person does, never a value this code set. -->
-              <span class="opencount" style="font-family:${mono}; font-size:15px; letter-spacing:0.04em; color:oklch(0.72 0.13 150)">${D.openCount} contracted</span>
-              ${D.triageCount ? `<span class="triagecount" style="font-family:${mono}; font-size:15px; letter-spacing:0.04em; color:oklch(0.80 0.12 75)">${D.triageCount} awaiting triage</span>` : ""}
-              ${D.heldCount ? `<span style="font-family:${mono}; font-size:15px; letter-spacing:0.04em; color:oklch(0.80 0.11 25)">+${D.heldCount} held for you</span>` : ""}
-              <span style="font-family:${mono}; font-size:15px; letter-spacing:0.04em; color:oklch(0.72 0.13 150)">&#10003; ${D.closedCount} resolved</span>
-              ${D.unplaced ? `<span style="font-family:${mono}; font-size:13px; line-height:1.35; color:oklch(0.82 0.11 25); overflow-wrap:anywhere">+${D.unplaced} on no carrier and not held &mdash; a leak</span>` : ""}
+              ${beltStatsHtml()}
             </div>
 
           </div>
