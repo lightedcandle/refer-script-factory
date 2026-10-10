@@ -91,6 +91,28 @@ const DOORLIB = (() => {
   }
 })();
 
+// Day mode, resolved as a sibling like the three around it. The builder has
+// already put every board through it; this server needs it for the two pages it
+// writes itself - the all-repos page, and the few lines it adds to a board asked
+// for with only=belt. Without it those two stay in their night colours, which is
+// a board that is dark at noon and nothing worse, so a missing library changes
+// nothing else here.
+const themed = (() => {
+  const p = path.join(__dirname, "../machines/day-mode.cjs");
+  try {
+    const { theme } = require(p);
+    return (html) => {
+      try {
+        return theme(html);
+      } catch {
+        return html;
+      }
+    };
+  } catch {
+    return (html) => html;
+  }
+})();
+
 // The one definition of "alive" - session-life.cjs - resolved as a sibling for
 // the same reason the kind vocabulary is above. Without it /activity cannot say
 // how many contracts have a live agent, and says so rather than guessing.
@@ -455,7 +477,7 @@ const server = http
   .offlist b{font-family:'Space Grotesk',system-ui,sans-serif;font-size:15px;font-weight:500;color:oklch(0.80 0.01 80);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .offlist span{white-space:nowrap}
 </style></head><body>
-  <div class="head"><small>LIVING FACTORY</small><h1>All repos</h1><span class="n">${repos.length - unwired.length} OF ${repos.length} WIRED · <a href="/" style="color:oklch(0.74 0.13 195);text-decoration:none">back to one board</a></span></div>
+  <div class="head"><small>LIVING FACTORY</small><h1>All repos</h1><span class="n">${repos.length - unwired.length} OF ${repos.length} WIRED · <a href="/" style="color:oklch(0.74 0.13 195);text-decoration:none">back to one board</a></span><span id="day-switch" style="font-family:${mono};font-size:12px;display:flex;align-items:center;gap:6px"></span></div>
   <div class="belts">${repos.filter((r) => r.wired).map(cell).join("")}${offCell}</div>
 <script>
   (function () {
@@ -515,7 +537,7 @@ const server = http
   })();
 </script></body></html>`;
       res.writeHead(200, { "content-type": "text/html; charset=utf-8", "cache-control": "no-store", "x-living-factory": "board", "x-board-version": OWN_VERSION });
-      res.end(html);
+      res.end(themed(html));
       return;
     }
     if (!R && P !== "/pulse") {
@@ -1175,7 +1197,9 @@ const server = http
     if (/(?:^|&)only=belt(?:&|$)/.test(String(req.url || "").split("?")[1] || "")) {
       const built = page.toString("utf8");
       const at = built.lastIndexOf("</body>");
-      page = at >= 0 ? built.slice(0, at) + BELT_ONLY + "\n" + built.slice(at) : built + BELT_ONLY;
+      // Through day mode a second time, for the colours in BELT_ONLY alone:
+      // the board's own are already named, and a second pass leaves them be.
+      page = themed(at >= 0 ? built.slice(0, at) + BELT_ONLY + "\n" + built.slice(at) : built + BELT_ONLY);
     }
     res.end(page);
   });
