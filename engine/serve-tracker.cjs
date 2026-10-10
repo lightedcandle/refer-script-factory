@@ -235,6 +235,59 @@ const OWN_VERSION = (() => {
   }
 })();
 
+// ---- BELT ONLY: a board asked for with &only=belt ---------------------------
+//
+// The all-repos page shows every repo's belt at once, and the belt it shows is
+// the one the builder drew - so the board is served exactly as built, with
+// these few lines added at the end of it. They lift the conveyor and the two
+// hemispheres inside it out of the 1920x1080 stage, hide everything else, and
+// scale that one block to whatever frame it has been given. Every script the
+// board carries keeps running against the same elements, which is the point:
+// the pulse still powers this belt, the sessions still ride it, and the page
+// still reloads itself when its repo is rebuilt.
+//
+// THE ONE THING THIS KNOWS ABOUT THE BUILDER is that the belt is the parent of
+// #conveyor, laid out BELT_W wide. The id is the same hook the board's own
+// powerBelt() finds the belt by. The width is the board's centre column (700)
+// less its padding and border, and the hemisphere text is set in px against
+// it - so the block is held at that width and scaled, never re-flowed into the
+// frame, or the words inside the loop run out through the rails again. If
+// build-tracker.cjs moves that column, move BELT_W with it. A board built
+// without a #conveyor says so in words rather than shrinking the whole board
+// into the cell.
+const BELT_W = 670;
+const BELT_ASPECT = 1200 / 640; // the conveyor's own viewBox
+const BELT_ONLY_BG = "oklch(0.185 0.012 70)";
+const ALL_GAP = 10; // between belts on the all-repos page
+const ALL_LABEL = 34; // the name-and-beat strip above each belt
+const BELT_ONLY = [
+  "<style>",
+  // text-size-adjust: a phone's browser inflates text in any block wider than
+  // its frame, and this block is BELT_W wide in a frame half that - seen as
+  // TIMER and WATCHER printed across the rails at three times their size.
+  "html,body{background:" + BELT_ONLY_BG + "!important;overflow:hidden!important;margin:0!important;-webkit-text-size-adjust:100%!important;text-size-adjust:100%!important}",
+  "body>*:not(#beltonly):not(script):not(style){display:none!important}",
+  "#beltonly{position:fixed;left:50%;top:50%;width:" + BELT_W + "px;transform-origin:center center}",
+  "#beltonly.none{width:auto;font:13px/1.5 ui-monospace,monospace;color:oklch(0.56 0.01 80);transform:translate(-50%,-50%);text-align:center}",
+  "</style>",
+  "<script>",
+  "(function(){",
+  "var box=document.createElement('div');box.id='beltonly';",
+  "var svg=document.getElementById('conveyor');var belt=svg&&svg.parentElement;",
+  "if(!belt){box.className='none';box.textContent='this board was built without a belt';document.body.appendChild(box);return;}",
+  // The stage sets the type the belt inherits; taken with it, or the block
+  // falls back to the browser's serif the moment it leaves home.
+  "var cs=getComputedStyle(belt);box.style.fontFamily=cs.fontFamily;box.style.fontSize=cs.fontSize;box.style.lineHeight=cs.lineHeight;box.style.color=cs.color;",
+  "document.body.appendChild(box);box.appendChild(belt);",
+  "function fit(){var w=document.documentElement.clientWidth,h=document.documentElement.clientHeight;if(!w||!h||!box.offsetHeight)return;",
+  "box.style.transform='translate(-50%,-50%) scale('+Math.min(w/box.offsetWidth,h/box.offsetHeight).toFixed(4)+')';}",
+  "fit();window.addEventListener('resize',fit);",
+  "if(window.ResizeObserver)new ResizeObserver(fit).observe(box);",
+  "if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fit);",
+  "})();",
+  "</script>",
+].join("\n");
+
 const server = http
   .createServer((req, res) => {
     // The path decides the route; the query decides the subject.
@@ -338,74 +391,123 @@ const server = http
     // wired says why; none of them is guessed. Served here rather than built,
     // because there is no judgement in it to record - it is the rail's idea
     // applied to repos.
+    //
+    // ONE BELT PER REPO, SINCE 2026-10-10. Operator: "imagine if when i select
+    // All Repos i see multiple belts sized to fit the screen with all the
+    // activities for each, Belt only ... instead of this benign screen with a
+    // lot of blank space all the belts would just fit neatly filling the screen
+    // with their respective pulse. And summary inside."
+    //
+    // It was five numbers per repo and two thirds of the screen empty, and the
+    // numbers were this page's own re-count of things each board already
+    // draws. So the tile is now that repo's belt and nothing else: the board
+    // itself, asked for with only=belt (see BELT_ONLY above), in a frame. Not a
+    // second drawing of a belt - a second drawing is a second opinion, and the
+    // summary inside the loop is a judgement made once, at build, by the
+    // builder. The frame takes no clicks; the whole cell is the link to that
+    // repo's board.
     if (P === "/" && /(?:^|&)repo=__all(?:&|$)/.test(String(req.url || "").split("?")[1] || "")) {
       const repos = Object.values(REPOS).map((r) => {
         const exists = fs.existsSync(r.path);
         return { ...r, exists, wired: exists && declaresTriggers(r.path), hasBoard: exists && fs.existsSync(path.join(r.path, ".claude/agent-context/factory-tracker.html")) };
       });
       const mono = "'JetBrains Mono', ui-monospace, monospace";
-      const tile = (r) => `
-      <a class="tile${r.wired ? "" : " off"}" href="${r.wired ? `/?repo=${encodeURIComponent(r.id)}` : "#"}" data-repo-tile="${r.id}" data-wired="${r.wired ? 1 : 0}">
-        <div class="row"><span class="lamp" data-f="lamp"></span><span class="name">${r.name.replace(/[<>&"]/g, "")}</span><span class="beat" data-f="beat">${r.wired ? "—" : r.exists ? "not wired" : "not on this host"}</span></div>
-        <div class="grid">
-          <div><b data-f="sessions">—</b><span>sessions</span></div>
-          <div><b data-f="timer">—</b><span>timer</span></div>
-          <div><b data-f="watcher">—</b><span>watcher</span></div>
-          <div><b data-f="supervisor">—</b><span>supervisor</span></div>
-          <div><b data-f="builder">—</b><span>builder</span></div>
-        </div>
-        <div class="foot" data-f="foot">${r.wired ? (r.hasBoard ? "board built" : "wired · board not built yet") : ""}</div>
-      </a>`;
+      const safe = (s) => String(s).replace(/[<>&"]/g, "");
+      const unwired = repos.filter((r) => !r.wired);
+      const cell = (r) => `
+      <div class="cell" data-repo-tile="${safe(r.id)}">
+        <div class="row"><span class="lamp" data-f="lamp"></span><span class="name">${safe(r.name)}</span><span class="beat" data-f="beat">—</span></div>
+        ${r.hasBoard ? `<iframe src="/?repo=${encodeURIComponent(r.id)}&only=belt" title="${safe(r.name)} - belt" tabindex="-1"></iframe>` : `<div class="nobelt">wired, but its board has not been built yet - there is no belt to draw</div>`}
+        <a class="go" href="/?repo=${encodeURIComponent(r.id)}" title="open the ${safe(r.name)} board"></a>
+      </div>`;
+      // The repos with no belt share ONE cell rather than taking one each: a
+      // cell is the size of a belt, and a belt-sized box that says "not wired"
+      // three times is the blank space this page was rebuilt to remove.
+      const offCell = unwired.length
+        ? `
+      <div class="cell off">
+        <div class="row"><span class="lamp"></span><span class="name">No belt</span><span class="beat">${unwired.length} of ${repos.length}</span></div>
+        <div class="offlist">${unwired.map((r) => `<div><b>${safe(r.name)}</b><span>${r.exists ? "not wired" : "not on this host"}</span></div>`).join("")}</div>
+      </div>`
+        : "";
       const html = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Living Factory — all repos</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  body{margin:0;background:oklch(0.15 0.012 70);color:oklch(0.95 0.008 85);font-family:'Space Grotesk',system-ui,sans-serif;padding:30px 34px}
-  .head{display:flex;align-items:baseline;gap:18px;margin-bottom:22px}
-  .head small{font-family:${mono};font-size:13px;letter-spacing:0.16em;color:oklch(0.58 0.01 80)}
-  .head h1{font-size:34px;font-weight:600;letter-spacing:-0.02em;margin:0}
-  .head .n{font-family:${mono};font-size:14px;letter-spacing:0.12em;color:oklch(0.62 0.01 80);margin-left:auto}
-  .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
-  .tile{display:block;text-decoration:none;color:inherit;background:oklch(0.185 0.012 70);border:1px solid oklch(0.28 0.012 70);border-radius:6px;padding:14px 16px}
-  .tile:hover{border-color:oklch(0.40 0.012 70)}
-  .tile.off{opacity:0.5;pointer-events:none}
-  .row{display:flex;align-items:center;gap:10px}
+  html,body{height:100%}
+  body{margin:0;box-sizing:border-box;height:100vh;overflow:hidden;display:flex;flex-direction:column;gap:12px;background:oklch(0.15 0.012 70);color:oklch(0.95 0.008 85);font-family:'Space Grotesk',system-ui,sans-serif;padding:14px 18px}
+  body.scrolls{height:auto;min-height:100vh;overflow:auto}
+  .head{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 16px;flex:none}
+  .head small{font-family:${mono};font-size:12px;letter-spacing:0.16em;color:oklch(0.58 0.01 80)}
+  .head h1{font-size:24px;font-weight:600;letter-spacing:-0.02em;margin:0}
+  .head .n{font-family:${mono};font-size:13px;letter-spacing:0.12em;color:oklch(0.62 0.01 80);margin-left:auto}
+  .belts{flex:1 1 auto;min-height:0;display:grid;gap:${ALL_GAP}px}
+  .cell{position:relative;display:flex;flex-direction:column;min-width:0;min-height:0;overflow:hidden;background:${BELT_ONLY_BG};border:1px solid oklch(0.28 0.012 70);border-radius:6px}
+  .cell:hover{border-color:oklch(0.44 0.012 70)}
+  .cell.off{opacity:0.6}
+  .row{flex:none;height:${ALL_LABEL}px;box-sizing:border-box;display:flex;align-items:center;gap:9px;padding:0 12px}
   .lamp{width:9px;height:9px;border-radius:50%;background:oklch(0.45 0.01 80);flex:none}
-  .name{font-size:19px;font-weight:600;letter-spacing:-0.01em;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .beat{font-family:${mono};font-size:12px;letter-spacing:0.06em;color:oklch(0.62 0.01 80);white-space:nowrap}
-  .grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:12px}
-  .grid div{display:flex;flex-direction:column;gap:2px}
-  .grid b{font-family:${mono};font-size:20px;font-weight:500;color:oklch(0.90 0.008 85)}
-  .grid span{font-family:${mono};font-size:10.5px;letter-spacing:0.08em;color:oklch(0.52 0.01 80)}
-  .foot{font-family:${mono};font-size:11.5px;color:oklch(0.52 0.01 80);margin-top:10px;min-height:14px}
-  .note{font-family:${mono};font-size:12px;color:oklch(0.56 0.01 80);margin-top:18px;line-height:1.6}
+  .name{font-size:16px;font-weight:600;letter-spacing:-0.01em;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .beat{font-family:${mono};font-size:11.5px;letter-spacing:0.06em;color:oklch(0.62 0.01 80);white-space:nowrap}
+  .cell iframe{flex:1 1 auto;min-height:0;width:100%;border:0;display:block;background:transparent;pointer-events:none}
+  .go{position:absolute;inset:0}
+  .nobelt,.offlist{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;justify-content:center;gap:8px;padding:0 16px 12px;font-family:${mono};font-size:12px;line-height:1.5;color:oklch(0.56 0.01 80)}
+  .offlist div{display:flex;justify-content:space-between;gap:12px}
+  .offlist b{font-family:'Space Grotesk',system-ui,sans-serif;font-size:15px;font-weight:500;color:oklch(0.80 0.01 80);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .offlist span{white-space:nowrap}
 </style></head><body>
-  <div class="head"><small>LIVING FACTORY</small><h1>All repos</h1><span class="n">${repos.filter((r) => r.wired).length} OF ${repos.length} WIRED · <a href="/" style="color:oklch(0.74 0.13 195);text-decoration:none">back to one board</a></span></div>
-  <div class="tiles">${repos.map(tile).join("")}</div>
-  <p class="note">One tile per repo in the ecosystem map. Every number is fetched by this page from that repo's own endpoints every ten seconds - the beat, who is working there, and the four workers' in-trays: timer = stations due or firing now, watcher = findings deposited in the last hour, supervisor = findings awaiting a decision, builder = contracts with a live agent. The lamp is the pulse: green inside two beats, amber at one missed, red at three, grey when this page cannot see it. Click a tile for that repo's board.</p>
+  <div class="head"><small>LIVING FACTORY</small><h1>All repos</h1><span class="n">${repos.length - unwired.length} OF ${repos.length} WIRED · <a href="/" style="color:oklch(0.74 0.13 195);text-decoration:none">back to one board</a></span></div>
+  <div class="belts">${repos.filter((r) => r.wired).map(cell).join("")}${offCell}</div>
 <script>
   (function () {
-    var GRID = 300000;
+    var GRID = 300000, GAP = ${ALL_GAP}, LABEL = ${ALL_LABEL}, ASPECT = ${BELT_ASPECT};
+    // THE BELTS ARE SIZED TO THE SCREEN, NOT THE SCREEN TO THE BELTS. Every
+    // column count is tried and the one that draws the largest belt wins, so
+    // eleven repos on a wall and four on a laptop both fill what they are
+    // given. Below a third of full size a belt's words stop being readable, and
+    // only then does the page give up fitting and scroll instead.
+    var belts = document.querySelector('.belts');
+    function lay() {
+      var n = belts.children.length;
+      if (!n) return;
+      document.body.classList.remove('scrolls');
+      belts.style.gridAutoRows = '';
+      var W = belts.clientWidth, H = belts.clientHeight, best = 1, scale = 0;
+      for (var c = 1; c <= n; c++) {
+        var rows = Math.ceil(n / c);
+        var w = (W - GAP * (c - 1)) / c, h = (H - GAP * (rows - 1)) / rows - LABEL;
+        var s = Math.min(w, h * ASPECT);
+        if (s > scale) { scale = s; best = c; }
+      }
+      if (scale < ${BELT_W} / 3) {
+        best = Math.max(1, Math.floor((W + GAP) / (300 + GAP)));
+        document.body.classList.add('scrolls');
+        belts.style.gridTemplateRows = 'none';
+        belts.style.gridAutoRows = Math.round((W - GAP * (best - 1)) / best / ASPECT + LABEL) + 'px';
+      } else {
+        belts.style.gridTemplateRows = 'repeat(' + Math.ceil(n / best) + ',minmax(0,1fr))';
+      }
+      belts.style.gridTemplateColumns = 'repeat(' + best + ',minmax(0,1fr))';
+    }
+    lay();
+    window.addEventListener('resize', lay);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(lay);
+    // Each belt is that repo's own board, so everything on it - the cards, the
+    // counts inside the loop, and whether it is turning - is that board's own
+    // judgement and is refreshed by that board. The one thing this page asks
+    // for itself is the beat beside each name, so a repo whose pulse has
+    // stopped is named as stopped even where its belt has merely gone still.
     function ago(ms) { if (ms < 60000) return Math.round(ms / 1000) + 's ago'; if (ms < 3600000) return Math.round(ms / 60000) + 'm ago'; return Math.round(ms / 3600000) + 'h ago'; }
     function fill(tile, f, v) { var el = tile.querySelector('[data-f="' + f + '"]'); if (el && el.textContent !== String(v)) el.textContent = v; }
     function get(u) { return fetch(u, { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }); }
     function refresh() {
-      var now = Date.now();
-      document.querySelectorAll('[data-repo-tile][data-wired="1"]').forEach(function (tile) {
-        var id = encodeURIComponent(tile.getAttribute('data-repo-tile'));
-        Promise.all([get('/schedule?repo=' + id), get('/sessions?repo=' + id), get('/activity?repo=' + id)]).then(function (res) {
-          var sch = res[0], ses = res[1], act = res[2];
+      document.querySelectorAll('[data-repo-tile]').forEach(function (tile) {
+        get('/schedule?repo=' + encodeURIComponent(tile.getAttribute('data-repo-tile'))).then(function (sch) {
+          var now = Date.now();
           var lamp = tile.querySelector('[data-f="lamp"]');
           var last = sch && sch.pulse && sch.pulse.lastRunAt ? Number(sch.pulse.lastRunAt) : 0;
           if (!sch) { lamp.style.background = 'oklch(0.45 0.01 80)'; fill(tile, 'beat', 'unreachable'); }
           else if (!last) { lamp.style.background = 'oklch(0.45 0.01 80)'; fill(tile, 'beat', 'never ticked'); }
           else { var since = now - last; lamp.style.background = since < 2 * GRID ? 'oklch(0.78 0.16 145)' : since < 3 * GRID ? 'oklch(0.80 0.14 75)' : 'oklch(0.70 0.15 25)'; fill(tile, 'beat', 'beat ' + ago(since)); }
-          if (ses && ses.counts) fill(tile, 'sessions', (ses.counts.active || 0) + '/' + (ses.sessions || []).length); else fill(tile, 'sessions', ses && ses.seen === false ? '—' : '?');
-          if (act) {
-            fill(tile, 'timer', act.timer ? (act.timer.running || 0) + (act.timer.due || 0) + (act.timer.queued || 0) : '—');
-            fill(tile, 'watcher', act.watcher ? act.watcher.findingsLastHour : '—');
-            fill(tile, 'supervisor', act.supervisor ? (act.supervisor.awaitingTriage || 0) + (act.supervisor.held || 0) : '—');
-            fill(tile, 'builder', act.builder ? act.builder.building + '/' + act.builder.contracts : '—');
-          }
         });
       });
     }
@@ -1069,7 +1171,13 @@ const server = http
       return;
     }
     res.writeHead(200, { "content-type": "text/html; charset=utf-8", "cache-control": "no-store", "x-living-factory": "board", "x-board-version": OWN_VERSION });
-    res.end(fs.readFileSync(R.file));
+    let page = fs.readFileSync(R.file);
+    if (/(?:^|&)only=belt(?:&|$)/.test(String(req.url || "").split("?")[1] || "")) {
+      const built = page.toString("utf8");
+      const at = built.lastIndexOf("</body>");
+      page = at >= 0 ? built.slice(0, at) + BELT_ONLY + "\n" + built.slice(at) : built + BELT_ONLY;
+    }
+    res.end(page);
   });
 
 let attempt = 0;

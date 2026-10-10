@@ -5151,7 +5151,8 @@ const html = `<!DOCTYPE html>
         // transform, and it draws in the board's own type on the board's own
         // dark ground instead of a system widget. Wired repos are links; the
         // rest say why they are not; ALL REPOS links to the server's combined
-        // page (?repo=__all), one tile per repo, filled live by that page.
+        // page (?repo=__all): one belt per repo, each this board served with
+        // only=belt, so the belt drawn below is also what that page shows.
         D.repoList.length
           ? `<div data-repo-pick="1" style="position:relative; margin-top:4px; max-width:300px">
         <button type="button" data-repo-toggle="1" title="which repo this board observes · click to choose another" style="display:flex; align-items:center; gap:10px; width:100%; font-family:${mono}; font-size:12px; letter-spacing:0.08em; color:oklch(0.86 0.01 80); background:oklch(0.16 0.012 70); border:1px solid oklch(0.32 0.012 70); border-radius:4px; padding:5px 10px; cursor:pointer; text-align:left"><span style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap">${esc(((D.repoList.find((r) => r.current) || {}).name || REPO).toUpperCase())}</span><span style="color:oklch(0.62 0.01 80)">▾</span></button>
