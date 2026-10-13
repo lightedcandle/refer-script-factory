@@ -4,9 +4,9 @@ Status: **design only. Nothing here is built, wired or deployed.**
 Date: 2026-10-12. Thread: shelf G10 in the Telechurch repo (the SMS half).
 
 Wiring waits on the operator's answers about the guide's name, voice and
-greeting, and on the answerer contract the sibling session is writing in the
-Telechurch repo. Until that contract exists, section 4 states what this design
-assumes about it.
+greeting, and on a handoff reaching a pastor end to end on Canary. The contract
+this door builds against is the Assistant session's `assistant/1` in the
+Telechurch repo (proposed, not yet on main); section 4 says what it settles.
 
 What is settled, and not reopened here (operator, 2026-10-12): the bridge stays
 a carrier that knows nothing about any app; the guide is a separate answerer,
@@ -118,7 +118,10 @@ So "Telechurch Live supplies an app card and a per-church card" has, today,
 nothing to choose the church with for anyone who is not already a member with a
 church on their profile. A newcomer is by definition not that.
 
-Proposed order for choosing the cards, cheapest first. All of it is design.
+**How a stranger's first text finds its church is with the operator.** He has
+been given three directions by the Assistant session and has not chosen. The
+list below is what this door could do under any of them, not a choice made for
+him. All of it is design.
 
 1. **The sender is known to an app and has a home church there**: that app's
    card and that church's card. (Needs a lookup the app owns; for Telechurch
@@ -136,9 +139,11 @@ Proposed order for choosing the cards, cheapest first. All of it is design.
    apart, and why Telechurch has sent nothing through here since. There is a
    second bridge app on the phone, `com.sovereignnode.telecombridge`, not
    running.
-3. **The text names a church** or carries a church's code.
-4. **None of the above**: the app card only, and the guide may ask which church
-   they mean. It must not guess one.
+3. **The text names a church** or carries a church's code. Every church
+   already has a short code (Canary's is `oL6bHiV`), so nothing new would have
+   to be invented for this.
+4. **None of the above**: no church is guessed. What happens then is part of
+   what he is choosing.
 
 Which app, when a number is known to more than one: no rule exists. The consent
 words avoid the question by going to every app. An answer cannot do that; two
@@ -185,35 +190,65 @@ text arrives
   the answer is empty, malformed, too long, or the answerer is simply not
   running.
 
-## 4. What this design assumes about the answerer's contract
+## 4. The contract this is built against
 
-The sibling session owns the contract. Until it exists, these are assumptions,
-and each one is a place this design may have to bend.
+The contract now exists: `refer.app/refer.telechurch.assistant.contract.md` in
+the Telechurch repo, contract `assistant/1`, branch `claude/assistant-plan-g10`
+(pull request 903, commit `00faed5f`, proposed and not yet on main). Read
+2026-10-12. It replaces the assumptions this section used to hold. In its words
+this relay is a **door**, and what this document calls the answerer it calls
+the **Assistant**.
 
-In:
+What the door sends, and so what a question on the queue in section 3 holds:
+the contract number, the door (`sms`), the church's id, the question exactly as
+texted, whether this is the person's first text, and the two cards. No number,
+no name, no earlier messages.
 
-- the question, exactly as texted;
-- the cards: one for the app, and one for the church when a church was matched;
-- whether a church was matched at all;
-- nothing that identifies the person. Not the number, not the name. (The relay
-  keeps those and puts the greeting together itself.)
-- no earlier messages. The trial was single questions only, and so is this.
+What comes back, always one of two:
 
-Out, one of:
+- **an answer**: the words, and the ids of the saved facts they rest on;
+- **a handoff**: the words to send, a reason (`crisis`, `care`,
+  `asked_for_pastor`, `not_saved`, `fault`), whether it is urgent (true exactly
+  for crisis), and for `not_saved` a note of what was asked so it can go on the
+  church's list of unanswered questions.
 
-- **answer**: the words, and which card facts they came from;
-- **handoff**: a reason from a short fixed list (grief, crisis, asks for a
-  pastor, does not know, other), and optionally a kind sentence;
+What that settles for the door:
 
-and nothing else. No instruction to send, no link the cards did not contain.
+- **The door sends the Assistant's words unchanged**, for a handoff as well.
+  The fixed wording for grief and crisis lives with the Assistant, outside the
+  model. An earlier draft of this document had the relay writing that reply
+  itself; that is withdrawn.
+- **The door does not decide what is a crisis.** The Assistant's own screen
+  does. The relay's word list has two narrower jobs, in section 5.
+- **The door refuses an answer that names no saved fact** (the contract's
+  rule 6), even though the Assistant should never return one.
+- **The door delivers every handoff to the pastor**, and an urgent one at once.
+- **No door carries the Assistant to real visitors until a handoff reaches a
+  pastor end to end on Canary** (rule 5). That is the gate on wiring, beside
+  the operator's answers.
+- **The save-this-answer loop is adopted** as the contract's section 5. Where a
+  saved answer is kept does not exist yet and needs a database change and the
+  operator's yes.
 
-Assumed, and worth the sibling session saying yes or no to:
+Three places the door still has nothing to stand on:
 
-- "I do not have that fact" is a handoff with the reason *does not know*, not an
-  answer. Both phone runs invented church facts (a dress code twice, baptism and
-  its price), so the relay will not accept an answer that names no card fact.
-- The crisis line is not the answerer's job and the relay will add it even when
-  the answerer already wrote one.
+- **The cards cannot be fetched yet.** The endpoint that hands a door both cards
+  for a church does not exist. Until it does, a door builds against the two
+  example files on the Telechurch branch `claude/assistant-trial-real-facts`:
+  `canary-cards.json` (Canary's real facts) and `invented-filled-cards.json`.
+- **The church's id is the door's to work out**, and for a stranger it cannot
+  (section 2).
+- **When the Assistant cannot be reached at all.** The contract promises the
+  Assistant always returns something, a `fault` handoff at worst. That holds
+  while it is running. If the phone is off or the collector has stopped, nothing
+  comes back, and the door is not allowed to write a reply of its own. The door
+  needs one fixed sentence to send in that case, and the contract does not give
+  it one yet. Raised with the Assistant session.
+
+On timing: the Assistant session measured 15 to 30 seconds for the first reply
+after a church's cards change, with the screen on. This session measured the
+same for any reply with the screen off. Both at once was not measured, so the
+90-second limit in section 3 is a guess that may be too short.
 
 ## 5. The handoff to the pastor, and the pastor's reply back
 
@@ -233,11 +268,15 @@ That takes three things, and none of them exists yet.
 - The pastor is told by a text from the same line. The notice has to carry
   enough for the pastor to answer from their own phone, which for an ordinary
   question means the question itself.
-- **Which pastor** is the church's pastor on record. The Hub already records who
-  leads and who administers each church. *Not checked:* that every church's
-  pastor has a mobile number on record that the line can text. The ruling says
-  every church has a pastor; whether the system can reach each one is a fact to
-  go and count, not to assume.
+- **Which pastor** is the church's pastor on record. Counted by the Assistant
+  session, read-only from the live Telechurch database, 2026-10-12 (not re-run
+  here): all 6 active churches have a mobile number for the person who created
+  the church; 5 of the 6 have a named host with a number; one church has no
+  host and no church phone. So a first person to text exists for every church
+  today, though for one of them it is the founder and not a named host.
+- **Whether a pastor has agreed to be texted for this is recorded nowhere.**
+  Having a number is not the same as having said yes to receiving visitors'
+  questions on it. That is an empty record, reported as one.
 - **This makes church matching (section 2) the thing everything rests on.** A
   text that cannot be matched to a church has no pastor to go to. The ruling
   answers who the person is; it does not answer which church a stranger's text
@@ -290,19 +329,28 @@ A universal expectation is only as good as the worst wait. So:
   gone quiet. That is Care at the app level, asking of churches what a pastor
   asks of people.
 - The visitor is not left guessing either. If a question is still open after
-  the limit, one honest line goes back: it has not been forgotten.
+  the limit, one honest line goes back: it has not been forgotten. Under the
+  contract the door does not write its own replies, so this is a second fixed
+  sentence the door needs from the Assistant's side. Raised with that session.
 
 ### Crisis, unchanged
 
-The 988 and 911 line is still added by the relay, always, when either the
-relay's own check of the incoming text or the answerer's reason says crisis.
-Either is enough; neither can switch the other off. The relay's check runs near
-the front of the order in section 1, so a heavy message that happens to contain
-"service" or "change" is not answered with an events list. The pastor is told at
-once, on the short clock.
+Corrected 2026-10-12 against the contract. The 988 and 911 line is already in
+the Assistant's fixed wording for an urgent handoff, written outside the model.
+So the relay does **not** add it every time. It checks, and adds the line only
+when it is missing, in two cases: an urgent handoff, and a `fault` on a message
+the relay's own word list reads as a crisis. Never twice, never reworded.
 
-The relay's check is a word list, and a word list misses things. It is a floor
-under the model, not a replacement for it.
+The relay's word list has one other job, and it is not deciding what a crisis
+is. It runs near the front of the order in section 1 so that a heavy message
+which happens to contain "service" or "change" skips the events list and the
+profile link and goes straight to the Assistant, whose own screen decides.
+
+An urgent handoff reaches the pastor at once, on the short clock.
+
+A word list misses things. The Assistant session's second trial showed it: the
+screen missed both heavy messages written in words it had not seen, and the
+model caught them. Neither guard is enough alone.
 
 ## 6. What this does not prove
 
@@ -311,7 +359,9 @@ under the model, not a replacement for it.
 - **No text has ever reached a pastor through this, and no pastor's reply has
   ever travelled back.** The promise is the operator's and it stands; the
   machinery that keeps it does not exist yet.
-- **Whether every pastor can be reached by text was not counted.**
+- **No pastor has agreed to be texted for this.** Numbers exist for all 6
+  active churches (the Assistant session's count, not re-run here); consent to
+  this use is recorded nowhere.
 - **Church matching is unproven at every step** beyond the Alliance-member case,
   and section 5 now depends on it entirely. Telechurch's texts do pass through
   this relay (27 in 60 days, one day, one tenant id); that the id names a
@@ -322,9 +372,10 @@ under the model, not a replacement for it.
 - **The hosted engine was not measured here.** The phone-trial session reports a
   Cloudflare trial (Nemotron 3 Super, about 3 seconds a reply). The slot in
   section 3 holds either; a second engine is not decided.
-- **The model invents.** Two phone runs, two different inventions. The rule that
-  an answer must name a saved fact (section 4) is the proposed guard and has not
-  been tried.
+- **The model invents when trusted alone.** Two phone runs here, two different
+  inventions. With the Assistant's screen and check around it, that session
+  reports sixteen questions with nothing invented, one sample each. That is
+  their measurement, not re-run here, and one sample is not a rate.
 - **One question at a time.** No follow-up, no memory of the last text. A
   pastor's reply and the visitor's answer to it are a conversation, and this
   design carries only the first exchange.
@@ -343,11 +394,13 @@ answers (the pastor, always) and that the promise is made. What is left:
 1. **Does a stranger's first text reach the guide, or the registration link?**
    Today it is the link, always. The ruling reads as: answer them. Proposed: the
    guide answers, and the relay offers the registration link once alongside.
-2. **Which church does a stranger's text belong to** when nothing matches it?
-   Proposed: the guide asks, once, and until they say, the text goes to nobody's
-   pastor and is shown at the app level as unplaced.
+2. **How a stranger's first text finds its church.** Already with him, as three
+   directions from the Assistant session. Nothing is proposed here on top of
+   them.
 3. **May a pastor see the visitor's number**, to call them? Proposed: not by
    default; yes when the visitor asked for a call.
+4. **How a pastor says yes to being texted visitors' questions.** Every church
+   has a number on record; none has agreed to this use of it.
 
 ## Records
 
