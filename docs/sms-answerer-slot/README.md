@@ -241,9 +241,15 @@ Three places the door still has nothing to stand on:
 - **When the Assistant cannot be reached at all.** The contract promises the
   Assistant always returns something, a `fault` handoff at worst. That holds
   while it is running. If the phone is off or the collector has stopped, nothing
-  comes back, and the door is not allowed to write a reply of its own. The door
-  needs one fixed sentence to send in that case, and the contract does not give
-  it one yet. Raised with the Assistant session.
+  comes back, and the door is not allowed to write a reply of its own. Raised
+  with the Assistant session and answered the same day in the contract's
+  section 5 (commit `d6f0692d`, read from the file): the door hands the
+  question to the pastor and sends exactly "Thank you for your message. I am
+  passing it to the pastor of {church}, who will respond to you." `{church}` is
+  the name on the church's card, or "the church" when there is no card. If the
+  door's word list reads the message as a crisis it adds the crisis line and
+  tells the pastor at once. So this one is closed on paper; what remains open is
+  the waiting limit before the door decides the Assistant is unreachable.
 
 On timing: the Assistant session measured 15 to 30 seconds for the first reply
 after a church's cards change, with the screen on. This session measured the
@@ -329,9 +335,14 @@ A universal expectation is only as good as the worst wait. So:
   gone quiet. That is Care at the app level, asking of churches what a pastor
   asks of people.
 - The visitor is not left guessing either. If a question is still open after
-  the limit, one honest line goes back: it has not been forgotten. Under the
-  contract the door does not write its own replies, so this is a second fixed
-  sentence the door needs from the Assistant's side. Raised with that session.
+  the limit, one honest line goes back. The wording is fixed in the contract's
+  section 5 (commit `d6f0692d`): "Your message is with the pastor of {church}
+  and has not been forgotten. A pastor will respond to you." It is sent once
+  per question and never repeated, and the door reminds the pastor at the same
+  moment, because the sentence is only true if it does. The limit is proposed
+  as 24 hours and is not ruled, so the door keeps it as a setting. It does not
+  apply to an urgent handoff; how fast a crisis must reach a person is unsettled
+  and belongs to the Assistant plan.
 
 ### Crisis, unchanged
 
@@ -401,6 +412,9 @@ answers (the pastor, always) and that the promise is made. What is left:
    default; yes when the visitor asked for a call.
 4. **How a pastor says yes to being texted visitors' questions.** Every church
    has a number on record; none has agreed to this use of it.
+5. **How long a visitor waits before being told the pastor has not replied
+   yet.** The Assistant session proposes 24 hours. And, separately, how fast a
+   crisis must reach a person, which nobody has proposed a number for.
 
 ## Records
 
