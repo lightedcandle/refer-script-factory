@@ -382,11 +382,23 @@ model caught them. Neither guard is enough alone.
   active churches (the Assistant session's count, not re-run here), but for one
   it is the founder's and not a host's. No agreement from the pastor is needed
   (ruled 2026-10-13).
-- **STOP still exists on this line.** A pastor who texts STOP is opted out by
-  the carrier rule the relay already honours, and the door's notices to that
-  pastor are texts the line starts. The ruling says a pastor has no off switch;
-  the carrier's rule says any number does. Which one governs is a question of
-  legal exposure, and is the operator's.
+- **STOP ends texts to a pastor's number; it never ends the pastor being the
+  contact.** Ruled by the operator, 2026-10-13, relayed by the phone-trial
+  session and recorded in his words in the Telechurch phone-trial record: a
+  published church's pastor must always be reachable through at least one
+  channel outside the app, text or email; text is "just a channel" and the same
+  work can be done by email or on the platform. With no outside channel live
+  the pastor is directed to unpublish, change the number, or name someone else
+  as owner. So the carrier's rule and "no off switch" no longer collide. How
+  the notices move to email is being proposed to him by that session and is
+  the app's side, not this door's.
+- **This door does not yet honour a pastor's STOP itself.** Found while
+  recording the ruling. The relay passes STOP on to the apps, and each app
+  stops its own sends. The guide's notices are queued by the relay directly
+  and check nothing. Today that reaches only the operator's own test pastor
+  number. Before any real pastor is behind this door, it has to ask whether
+  that number has opted out, and if so hand the notice to the other channel
+  and not text it.
 - **Church matching is unproven at every step** beyond the Alliance-member case,
   and section 5 now depends on it entirely. Telechurch's texts do pass through
   this relay (27 in 60 days, one day, one tenant id); that the id names a
@@ -426,8 +438,10 @@ answers (the pastor, always) and that the promise is made. What is left:
    default; yes when the visitor asked for a call.
 4. ~~How a pastor says yes to being texted visitors' questions.~~ Ruled
    2026-10-13: they do not; a published church's pastor is reached. What this
-   leaves him: **what happens when a pastor texts STOP to the line**, since the
-   carrier's opt-out rule and "no off switch" cannot both hold.
+   left was what happens when a pastor texts STOP. Also ruled, the same day:
+   STOP ends texts to that number and the pastor's notices go by another
+   outside channel. The detail of that handover is with him now, from the
+   phone-trial session.
 5. **How long a visitor waits before being told the pastor has not replied
    yet.** The Assistant session proposes 24 hours. And, separately, how fast a
    crisis must reach a person, which nobody has proposed a number for.
