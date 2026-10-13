@@ -14,9 +14,22 @@ asked only when no fixed reply covers the message; each app supplies its own
 knowledge cards; grief, crisis and pastor requests go to a person; and the
 988/911 line is attached by the carrier side, never left to the model.
 
+**Operator ruling, 2026-10-12, relayed by the phone-trial session** (section 5
+was rewritten for it the same day): "All churches have pastors, and its the
+pastors job to answer the questions. The ai is answering all the answers the
+pastor saved in the db and any pastor in the app is in the business of
+responding to their respondents. That is the whole purpose of telechurch. Its
+digital ministry. So i see no false promise but a universal expectation."
+
+So handing a text to the pastor is the main act of this door, not an exception.
+The guide speaks from what the pastor has already saved; everything else is the
+pastor's to answer. The guide may always say a pastor will respond, and the
+carrier side exists to make that true.
+
 Five-seat reading (`refer.fivefold.md`): the guide answering a newcomer is
 **Reach** at the group level. The handoff is **Care**, and Care's rule applies
-in full: the guide notices and prepares, a person decides and speaks.
+in full: the guide notices and prepares, the pastor decides and speaks, and what
+is said goes out in the pastor's name.
 
 ---
 
@@ -196,88 +209,138 @@ Assumed, and worth the sibling session saying yes or no to:
 - The crisis line is not the answerer's job and the relay will add it even when
   the answerer already wrote one.
 
-## 5. The handoff: who is told, and how
+## 5. The handoff to the pastor, and the pastor's reply back
 
-Three parts. Only the first exists in any form.
+Rewritten 2026-10-12 for the operator's ruling at the top of this document. The
+first draft treated the handoff as an exception and proposed making the promise
+"a person will reach out" only when someone was on record to keep it. That is
+withdrawn. The promise is always made. The work is on the carrier side: make it
+true every time, and make it plain when it has not been kept yet.
 
-### What the person who texted hears
+That takes three things, and none of them exists yet.
 
-Written by the carrier side, not by the model, so it is the same every time.
+### 5a. The pastor is actually told
 
-- A plain acknowledgement that a person will be in touch, in the church's name
-  when a church was matched.
-- **For crisis, the 988 and 911 line, always**, added by the relay. It is added
-  when either of two things is true: the relay's own check of the incoming text
-  says crisis, or the answerer's reason says crisis. Either is enough; neither
-  can switch the other off. The relay's check runs near the front of the order
-  in section 1, so a heavy message containing "service" or "change" is not
-  answered with an events list.
-- **The promise is only made when it can be kept.** "A person from the church
-  will reach out" goes out only if there is a named person to tell. If there is
-  not, the reply says what is true instead, and still carries the crisis line.
+- Every text the guide does not answer from the pastor's saved answers becomes
+  an open **question for the pastor**: written down with the church, the time,
+  the reason, and whether it has been answered. It stays open until it is.
+- The pastor is told by a text from the same line. The notice has to carry
+  enough for the pastor to answer from their own phone, which for an ordinary
+  question means the question itself.
+- **Which pastor** is the church's pastor on record. The Hub already records who
+  leads and who administers each church. *Not checked:* that every church's
+  pastor has a mobile number on record that the line can text. The ruling says
+  every church has a pastor; whether the system can reach each one is a fact to
+  go and count, not to assume.
+- **This makes church matching (section 2) the thing everything rests on.** A
+  text that cannot be matched to a church has no pastor to go to. The ruling
+  answers who the person is; it does not answer which church a stranger's text
+  belongs to.
 
-The relay's crisis check is a word list, and a word list misses things. It is a
-floor under the model, not a replacement for it.
+### 5b. The pastor's reply travels back by text
 
-### Who is told
+The visitor texted a phone number, so the answer comes back from that number.
+Two roads for the pastor's reply, both ending in the same place.
 
-In order, the first that exists:
+- **From the app.** The pastor opens the question, writes the answer, and the
+  app sends it through the bridge like any other text. Nothing new is needed on
+  the carrier side. Where this lives in the app is the Assistant session's and
+  the app's to say.
+- **By replying to the notice.** The pastor answers the text they were sent.
+  The relay sees a text from a number it knows to be a pastor with an open
+  question, and passes the words on to the visitor. This needs one new fixed
+  handler near the front of the order in section 1, before the guide is ever
+  asked, so a pastor's reply is never answered by the guide.
+  - One open question: the reply goes to that visitor.
+  - Several open: each notice carries a short number, and the pastor starts the
+    reply with it. A reply the relay cannot place is never guessed at; the
+    pastor is asked which one.
 
-1. the church's own care contact, a person the church names for this;
-2. the church's pastor or administrator on record (the Hub already records who
-   administers a church);
-3. a person at the app level, for texts where no church was matched or the
-   church has named nobody.
+Either way:
 
-No church has a named care contact today, and no app-level person is named for
-this. **Both are empty seats, reported as such, not filled by guessing.**
+- **It goes out in the pastor's name**, so the visitor knows a person answered.
+  The exact wording waits on the voice and greeting.
+- **The visitor's number is not shown to the pastor by default.** The relay
+  carries the words both ways, so it does not need to be. Whether a pastor may
+  see it, to call someone, is in section 7.
+- **The reply closes the question**, and the time it took is kept.
+- **A pastor's answer is a saved answer waiting to happen.** The ruling says the
+  guide speaks from what the pastor saved. Each reply to a new question could be
+  offered back to the pastor: "save this, so the guide can answer it next time?"
+  That is how the guide gets better without anyone writing cards. Proposed to
+  the Assistant session, which owns the cards; not designed here.
 
-### How they are told, and how it is known they were
+### 5c. It is visible when nobody has answered
 
-- A handoff is written down as its own record: when, which church, the reason,
-  and whether anyone has taken it. It is open until a person takes it.
-- The person is told by a text from the same line, saying only that someone
-  needs a person and where to look. Proposed: **the notice does not carry what
-  was texted or the number.** Those are read after signing in. A grief message
-  should not sit in a lock-screen preview.
-- If nobody takes it within a set time, the next person in the list above is
-  told. Crisis has a short clock, the others a longer one.
-- Open handoffs are visible somewhere a person looks every day. Where is the
-  sibling session's and the app's to say.
+A universal expectation is only as good as the worst wait. So:
+
+- Every open question shows its age, to the pastor and to whoever the church
+  lets see it.
+- When one has waited too long, the pastor is reminded once, and then it is
+  shown to the church's other leaders on record. How long is "too long" is a
+  number to set with the operator, shorter for crisis than for parking.
+- Above the church, the app sees the picture across churches: how many
+  questions are open, the longest wait, which churches answer and which have
+  gone quiet. That is Care at the app level, asking of churches what a pastor
+  asks of people.
+- The visitor is not left guessing either. If a question is still open after
+  the limit, one honest line goes back: it has not been forgotten.
+
+### Crisis, unchanged
+
+The 988 and 911 line is still added by the relay, always, when either the
+relay's own check of the incoming text or the answerer's reason says crisis.
+Either is enough; neither can switch the other off. The relay's check runs near
+the front of the order in section 1, so a heavy message that happens to contain
+"service" or "change" is not answered with an events list. The pastor is told at
+once, on the short clock.
+
+The relay's check is a word list, and a word list misses things. It is a floor
+under the model, not a replacement for it.
 
 ## 6. What this does not prove
 
-- **Nothing was built.** Every arrow in section 3 is a drawing.
+- **Nothing was built.** Every arrow in section 3 and every step in section 5
+  is a drawing.
+- **No text has ever reached a pastor through this, and no pastor's reply has
+  ever travelled back.** The promise is the operator's and it stands; the
+  machinery that keeps it does not exist yet.
+- **Whether every pastor can be reached by text was not counted.**
+- **Church matching is unproven at every step** beyond the Alliance-member case,
+  and section 5 now depends on it entirely. Whether Telechurch's texts pass
+  through this relay was not checked.
 - **The model survives on the phone only under test conditions.** See
   `phone-coexistence-2026-10-12/README.md`: started from the cable it is
-  unkillable, which a real app would not be. Running it for real needs an app
-  or service on the phone that holds the model and collects from the queue, and
-  none exists.
-- **Church matching is unproven at every step** beyond the Alliance-member case.
-  Whether Telechurch's texts pass through this relay was not checked.
-- **The model invents.** Two runs, two different inventions. The card-fact rule
-  in section 4 is the proposed guard and has not been tried.
-- **No handoff has ever reached a person.** There is nobody named to reach.
-- **One question at a time.** No follow-up, no memory of the last text.
+  unkillable, which a real app would not be.
+- **The hosted engine was not measured here.** The phone-trial session reports a
+  Cloudflare trial (Nemotron 3 Super, about 3 seconds a reply). The slot in
+  section 3 holds either; a second engine is not decided.
+- **The model invents.** Two phone runs, two different inventions. The rule that
+  an answer must name a saved fact (section 4) is the proposed guard and has not
+  been tried.
+- **One question at a time.** No follow-up, no memory of the last text. A
+  pastor's reply and the visitor's answer to it are a conversation, and this
+  design carries only the first exchange.
 - **The crisis word list has not been written or tested** against real phrasing.
-- **Consent.** A reply to someone who texted first is one thing; a text to a
-  pastor about someone else is another, and is bound by the app's own sending
-  rules. Not examined here.
-- **Cost of the queue on the phone's battery and data** was not measured. The
-  bridge already polls every eight seconds; a second collector doubles that.
+- **Consent.** A reply to someone who texted first is one thing. Notices and
+  reminders to pastors are texts the line starts, and are bound by the app's own
+  sending rules and by STOP. Not examined here.
+- **The load on a pastor was not estimated.** Until answers are saved, nearly
+  every question goes to the pastor.
 
 ## 7. What is the operator's to decide
 
-Beyond the name, voice and greeting already with him:
+Beyond the name, voice and greeting already with him. The ruling settled who
+answers (the pastor, always) and that the promise is made. What is left:
 
 1. **Does a stranger's first text reach the guide, or the registration link?**
-   Today it is the link, always. The guide's whole purpose is the stranger.
-   Proposed: the guide answers, and the relay offers the registration link once
-   alongside.
-2. **What may a pastor's notice contain?** Proposed: nothing of what was texted;
-   only that someone needs a person.
-3. **Who is the person when a church has named nobody**, or no church was
-   matched?
+   Today it is the link, always. The ruling reads as: answer them. Proposed: the
+   guide answers, and the relay offers the registration link once alongside.
+2. **Which church does a stranger's text belong to** when nothing matches it?
+   Proposed: the guide asks, once, and until they say, the text goes to nobody's
+   pastor and is shown at the app level as unplaced.
+3. **May a pastor see the visitor's number**, to call them? Proposed: not by
+   default; yes when the visitor asked for a call.
 
 ## Records
 
