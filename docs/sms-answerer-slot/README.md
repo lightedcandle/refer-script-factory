@@ -407,7 +407,22 @@ model caught them. Neither guard is enough alone.
   and it lives on the app's side. The door sends nothing on STOP.
 - **So the door's whole duty is the lookup.** Before texting a pastor's
   number: has it opted out? If so, no text, and the notice is handed to the
-  email channel. Required by the ruling, and not built.
+  email channel. **Built in the source and tested there, 2026-10-13; not on
+  the live relay** (which is version 97, without it). It reads the mark
+  Telechurch's own STOP handler writes. When the pastor's text channel is
+  closed, nothing is texted and the held notice is written on the question,
+  which stays open. When the mark cannot be read, nothing is texted either and
+  the notice is tried again a minute later.
+- **What "handed to the email channel" means today: nothing.** There is no
+  email channel yet; it is the app's side. Until it exists, a question whose
+  pastor has said STOP is held and visible on the record, and the visitor has
+  been told a pastor will respond. That promise is kept only once the app's
+  side carries the notice.
+- **A wrinkle in the data.** Eight profiles have texting switched off with no
+  reason recorded, and none is recorded as a STOP today. The door treats only
+  a recorded STOP as closed, because the ruling gives a pastor no other off
+  switch. If any of those eight were STOPs from before the reason was kept,
+  the door would text them.
 - **This door does not yet honour a pastor's STOP itself.** Found while
   recording the ruling. The relay passes STOP on to the apps, and each app
   stops its own sends. The guide's notices are queued by the relay directly
