@@ -125,11 +125,17 @@ Proposed order for choosing the cards, cheapest first. All of it is design.
    that is the sibling session's side.)
 2. **A church texted this number recently**: the reply belongs to that church.
    The relay already keeps, with every outgoing text, the details the sending
-   app attached to it, so this may be buildable from what is stored. *Not
-   verified:* that Telechurch's texts go out through this relay at all, or that
-   what it attaches names a church. There is a second bridge app on the phone,
-   `com.sovereignnode.telecombridge`, not running; Telechurch's texts may travel
-   another road.
+   app attached to it, so this may be buildable from what is stored.
+   *Checked 2026-10-12, counts only, no numbers or message text read:* in the
+   last 60 days the relay's outbox holds 27 texts marked as Telechurch's, all on
+   one day (2026-09-27), all carrying the same single tenant id, beside 514
+   unmarked texts (the Alliance's own). So Telechurch's texts do pass through
+   this relay and do carry a tenant. Telechurch's code sets that tenant to the
+   church's id unless a fixed value is configured. *Still not known:* whether
+   that one id is a church or the fixed value, since one id cannot tell the two
+   apart, and why Telechurch has sent nothing through here since. There is a
+   second bridge app on the phone, `com.sovereignnode.telecombridge`, not
+   running.
 3. **The text names a church** or carries a church's code.
 4. **None of the above**: the app card only, and the guide may ask which church
    they mean. It must not guess one.
@@ -307,8 +313,9 @@ under the model, not a replacement for it.
   machinery that keeps it does not exist yet.
 - **Whether every pastor can be reached by text was not counted.**
 - **Church matching is unproven at every step** beyond the Alliance-member case,
-  and section 5 now depends on it entirely. Whether Telechurch's texts pass
-  through this relay was not checked.
+  and section 5 now depends on it entirely. Telechurch's texts do pass through
+  this relay (27 in 60 days, one day, one tenant id); that the id names a
+  church is not established.
 - **The model survives on the phone only under test conditions.** See
   `phone-coexistence-2026-10-12/README.md`: started from the cable it is
   unkillable, which a real app would not be.
