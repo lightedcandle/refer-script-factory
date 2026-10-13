@@ -280,9 +280,17 @@ That takes three things, and none of them exists yet.
   the church; 5 of the 6 have a named host with a number; one church has no
   host and no church phone. So a first person to text exists for every church
   today, though for one of them it is the founder and not a named host.
-- **Whether a pastor has agreed to be texted for this is recorded nowhere.**
-  Having a number is not the same as having said yes to receiving visitors'
-  questions on it. That is an empty record, reported as one.
+- **There is no step where a pastor agrees to this, and no switch to turn it
+  off.** Operator, 2026-10-13, relayed by the phone-trial session and now in
+  the contract's rule 5 in his words: a pastor has taken on responsibility for
+  the people who come to their ministry and cannot bypass it; the only way out
+  is to unpublish the church; "the pastor is always the first point of
+  contact". An earlier draft of this document listed the pastor's agreement as
+  a missing record. That is withdrawn. What is left is practical: which number
+  the app holds for each pastor.
+- **A published church whose pastor cannot be reached is a fault in that
+  church's setup**, to be shown and fixed. It is not a case the door routes
+  around. Today that is one church of six (no host and no church phone).
 - **This makes church matching (section 2) the thing everything rests on.** A
   text that cannot be matched to a church has no pastor to go to. The ruling
   answers who the person is; it does not answer which church a stranger's text
@@ -370,9 +378,15 @@ model caught them. Neither guard is enough alone.
 - **No text has ever reached a pastor through this, and no pastor's reply has
   ever travelled back.** The promise is the operator's and it stands; the
   machinery that keeps it does not exist yet.
-- **No pastor has agreed to be texted for this.** Numbers exist for all 6
-  active churches (the Assistant session's count, not re-run here); consent to
-  this use is recorded nowhere.
+- **Which number reaches each pastor is not settled.** Numbers exist for all 6
+  active churches (the Assistant session's count, not re-run here), but for one
+  it is the founder's and not a host's. No agreement from the pastor is needed
+  (ruled 2026-10-13).
+- **STOP still exists on this line.** A pastor who texts STOP is opted out by
+  the carrier rule the relay already honours, and the door's notices to that
+  pastor are texts the line starts. The ruling says a pastor has no off switch;
+  the carrier's rule says any number does. Which one governs is a question of
+  legal exposure, and is the operator's.
 - **Church matching is unproven at every step** beyond the Alliance-member case,
   and section 5 now depends on it entirely. Telechurch's texts do pass through
   this relay (27 in 60 days, one day, one tenant id); that the id names a
@@ -410,8 +424,10 @@ answers (the pastor, always) and that the promise is made. What is left:
    them.
 3. **May a pastor see the visitor's number**, to call them? Proposed: not by
    default; yes when the visitor asked for a call.
-4. **How a pastor says yes to being texted visitors' questions.** Every church
-   has a number on record; none has agreed to this use of it.
+4. ~~How a pastor says yes to being texted visitors' questions.~~ Ruled
+   2026-10-13: they do not; a published church's pastor is reached. What this
+   leaves him: **what happens when a pastor texts STOP to the line**, since the
+   carrier's opt-out rule and "no off switch" cannot both hold.
 5. **How long a visitor waits before being told the pastor has not replied
    yet.** The Assistant session proposes 24 hours. And, separately, how fast a
    crisis must reach a person, which nobody has proposed a number for.
