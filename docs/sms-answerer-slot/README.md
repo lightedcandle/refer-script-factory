@@ -418,11 +418,26 @@ model caught them. Neither guard is enough alone.
   pastor has said STOP is held and visible on the record, and the visitor has
   been told a pastor will respond. That promise is kept only once the app's
   side carries the notice.
-- **A wrinkle in the data.** Eight profiles have texting switched off with no
-  reason recorded, and none is recorded as a STOP today. The door treats only
-  a recorded STOP as closed, because the ruling gives a pastor no other off
-  switch. If any of those eight were STOPs from before the reason was kept,
-  the door would text them.
+- **Texts off with no reason recorded is held, not open.** Eight profiles are
+  in that state. This document first treated only a recorded STOP as closed.
+  The app-side session then traced the eight (its finding, not re-run here):
+  seven are dormant accounts and one is a STOP from before reasons were kept;
+  none leads an active church. So the source now follows the Assistant
+  contract's section 5a (Telechurch pull request 923, read from the file):
+  open, closed (a recorded STOP), or unknown (off with no reason, or
+  unreadable). Unknown is held and asked again a minute later. A number with
+  no profile at all has never been marked by anything and is treated as open.
+- **Where a held question sits, for the app's notice function.** In the record
+  store `alliance_records`, kind `sms_guide_question`, status `handoff_open`:
+  the church is `values.church_id`, the visitor's words are `values.question`,
+  and the mark is `values.handoff.pastor_notice`, one of `texted`,
+  `pastor_text_channel_closed`, `pastor_text_channel_unknown`. Beside it:
+  `values.handoff.short_no`, `urgent`, `reason`, `opened_at`. There is no
+  `org_id`, and `values.gap.question` is present only when the Assistant sent
+  one. Section 5a guessed these names correctly.
+- **Not wired: calling the app's notice function** (`pastor-contact`, action
+  `notify`) after a question is held. It is not published and its database
+  change is not applied, so there is nothing to call yet.
 - **This door does not yet honour a pastor's STOP itself.** Found while
   recording the ruling. The relay passes STOP on to the apps, and each app
   stops its own sends. The guide's notices are queued by the relay directly
