@@ -46,7 +46,10 @@ const CARE =
 const PERSON =
   /((pastor|minister|someone|somebody|a person).{0,30}(call|talk|speak|contact|reach))|((call|talk to|talk with|speak to|speak with).{0,20}(pastor|minister|someone|a person))/i;
 
-const screen = (text) => (CRISIS.test(text) ? "crisis" : CARE.test(text) ? "care" : PERSON.test(text) ? "asked_for_pastor" : null);
+// Asked-for-a-pastor is read before care: "can a pastor call me, I need someone
+// to pray with" is a request, and "Yes" is the right first word for it. Found in
+// the live trial of 2026-10-13 (Telechurch, tools/factory/sms-guide-collector.cjs).
+const screen = (text) => (CRISIS.test(text) ? "crisis" : PERSON.test(text) ? "asked_for_pastor" : CARE.test(text) ? "care" : null);
 
 const say = (church) => ({
   crisis: `I'm so sorry you are carrying this. I am passing your message to the pastor of ${church} right now, who will respond to you. If you are in danger or thinking of harming yourself, call or text 988 now, or call 911.`,
@@ -58,7 +61,12 @@ const say = (church) => ({
 
 function loadCards(path) {
   const cards = JSON.parse(readFileSync(path, "utf8"));
-  const facts = [...cards.church.facts, ...cards.app.entries].map((f) => ({ id: f.id, say: f.say }));
+  // Each fact carries what it is ABOUT, shown to the model and never sent.
+  // Without it the live trial answered "do I need to dress up" with the church's name.
+  const facts = [
+    ...cards.church.facts.map((f) => ({ id: f.id, say: f.say, about: f.topic })),
+    ...cards.app.entries.map((f) => ({ id: f.id, say: f.say, about: f.meets })),
+  ];
   return { church: cards.church.name, churchId: cards.church.church_id, facts, byId: new Map(facts.map((f) => [f.id, f])) };
 }
 
@@ -75,15 +83,58 @@ export function decide(cards, question, vote) {
   const screened = screen(question);
   if (screened) return handoff(cards, screened, "screen", question);
   if (!vote || vote.fault) return handoff(cards, "fault", "check", question);
-  if (vote.vote === "PERSON") return handoff(cards, "care", "model", question);
+  // The model's own PERSON vote hands off in neutral words. The word screen
+  // owns "I'm so sorry"; the live trial sent it to someone asking what to wear.
+  if (vote.vote === "PERSON") return { ...handoff(cards, "care", "model", question), text: say(cards.church).fault };
   const ids = Array.isArray(vote.ids) ? [...new Set(vote.ids)] : [];
   const real = ids.filter((id) => cards.byId.has(id));
   if (vote.vote !== "FACTS" || !real.length || real.length !== ids.length) {
     return handoff(cards, "not_saved", vote.vote === "NONE" ? "model" : "check", question);
   }
-  return { contract: "assistant/1", kind: "answer", text: real.map((id) => cards.byId.get(id).say).join(" "), used_facts: real };
+  // `kept` is what survived the second look. A picked fact that did not survive
+  // is beside the point, and an answer beside the point is a handoff.
+  const kept = Array.isArray(vote.kept) ? real.filter((id) => vote.kept.includes(id)) : real;
+  if (!kept.length) return handoff(cards, "not_saved", "check", question);
+  return { contract: "assistant/1", kind: "answer", text: kept.map((id) => cards.byId.get(id).say).join(" "), used_facts: kept };
 }
 
+async function chat(modelUrl, system, user, schema, timeoutMs) {
+  const res = await fetch(`${modelUrl}/v1/chat/completions`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    signal: AbortSignal.timeout(timeoutMs),
+    body: JSON.stringify({
+      messages: [{ role: "system", content: system }, { role: "user", content: user }],
+      max_tokens: 80,
+      temperature: 0,
+      cache_prompt: true,
+      // The model cannot produce anything but the shape it is given.
+      response_format: { type: "json_schema", json_schema: { name: "shape", strict: true, schema } },
+    }),
+  });
+  const body = await res.json();
+  if (!res.ok) throw new Error(`model said ${res.status}`);
+  const raw = String(body?.choices?.[0]?.message?.content || "").trim();
+  return { ...JSON.parse(raw), raw };
+}
+
+// The second look: one fact at a time, does it really answer what was asked?
+// Picking alone was not enough in the live trial; with this it was 14 of 14, at
+// a cost of about 1 second becoming 4 to 9.
+async function fits(modelUrl, question, fact, timeoutMs) {
+  const out = await chat(
+    modelUrl,
+    'You check one thing. A person sent a message to a church. Below is an answer the church has saved. Does that answer directly respond to what the person asked? Reply as JSON {"fits":"YES"} or {"fits":"NO"}. Say NO when the answer is about a different subject, even if it is true.',
+    `Message: ${question}\nSaved answer (about ${fact.about || "the church"}): ${fact.say}`,
+    { type: "object", properties: { fits: { enum: ["YES", "NO"] } }, required: ["fits"], additionalProperties: false },
+    timeoutMs,
+  );
+  return out.fits === "YES";
+}
+
+// The sorter's vote, then the second look at each fact it picked. The whole
+// thing has to fit inside the relay's wait (90 seconds), so each step has its
+// own limit: one sort and at most two looks.
 async function askModel(cards, question, modelUrl, timeoutMs) {
   const system = [
     `You sort text messages sent to ${cards.church}, a church. You never write a reply.`,
@@ -92,48 +143,28 @@ async function askModel(cards, question, modelUrl, timeoutMs) {
     "PERSON - when the message is about grief, a death, a crisis, self-harm, danger, a personal struggle, or asks for a pastor, a phone call or prayer with someone.",
     "NONE - when no fact directly answers it. Do not stretch a fact to fit. A link to the church's page does not answer a question about times, place, children, clothing, baptism or money.",
     "Facts:",
-    cards.facts.map((f) => `[${f.id}] ${f.say}`).join("\n"),
+    ...cards.facts.map((f) => `[${f.id}] (about ${f.about || "the church"}) ${f.say}`),
   ].join("\n");
-  // The model cannot produce anything but one of the three shapes.
-  const shape = {
-    type: "json_schema",
-    json_schema: {
-      name: "pick",
-      strict: true,
-      schema: {
-        anyOf: [
-          {
-            type: "object",
-            properties: { vote: { const: "FACTS" }, ids: { type: "array", minItems: 1, items: { enum: cards.facts.map((f) => f.id) } } },
-            required: ["vote", "ids"],
-            additionalProperties: false,
-          },
-          { type: "object", properties: { vote: { enum: ["NONE", "PERSON"] } }, required: ["vote"], additionalProperties: false },
-        ],
-      },
-    },
-  };
   try {
-    const res = await fetch(`${modelUrl}/v1/chat/completions`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      signal: AbortSignal.timeout(timeoutMs),
-      body: JSON.stringify({
-        messages: [{ role: "system", content: system }, { role: "user", content: question }],
-        max_tokens: 48,
-        temperature: 0,
-        cache_prompt: true,
-        response_format: shape,
-      }),
-    });
-    const body = await res.json();
-    if (!res.ok) return { fault: `model said ${res.status}` };
-    const raw = String(body?.choices?.[0]?.message?.content || "").trim();
-    try {
-      return { ...JSON.parse(raw), raw };
-    } catch {
-      return { fault: "unreadable", raw };
+    const vote = await chat(modelUrl, system, question, {
+      anyOf: [
+        {
+          type: "object",
+          // At most two: the live trial answered "can I watch online" with three facts, two beside the point.
+          properties: { vote: { const: "FACTS" }, ids: { type: "array", minItems: 1, maxItems: 2, items: { enum: cards.facts.map((f) => f.id) } } },
+          required: ["vote", "ids"],
+          additionalProperties: false,
+        },
+        { type: "object", properties: { vote: { enum: ["NONE", "PERSON"] } }, required: ["vote"], additionalProperties: false },
+      ],
+    }, Math.round(timeoutMs * 0.5));
+    if (vote.vote !== "FACTS") return vote;
+    const kept = [];
+    for (const id of [...new Set(vote.ids || [])]) {
+      const fact = cards.byId.get(id);
+      if (fact && (await fits(modelUrl, question, fact, Math.round(timeoutMs * 0.25)))) kept.push(id);
     }
+    return { ...vote, kept };
   } catch (error) {
     return { fault: String(error?.message || error) };
   }
@@ -227,7 +258,10 @@ function selftest() {
     ["what should i wear", { vote: "NONE" }, (r) => r.handoff?.reason === "not_saved" && r.gap?.question === "what should i wear"],
     ["what should i wear", { vote: "FACTS", ids: ["Z9"] }, (r) => r.handoff?.reason === "not_saved" && r.handoff.decided_by === "check"],
     ["what should i wear", { vote: "FACTS", ids: [] }, (r) => r.handoff?.reason === "not_saved"],
-    ["im struggling lately", { vote: "PERSON" }, (r) => r.handoff?.reason === "care" && r.handoff.decided_by === "model"],
+    ["im struggling lately", { vote: "PERSON" }, (r) => r.handoff?.reason === "care" && r.handoff.decided_by === "model" && r.text.startsWith("Thank you for your message.")],
+    ["can a pastor call me? i need someone to pray with", null, (r) => r.handoff?.reason === "asked_for_pastor" && r.text.startsWith("Yes.")],
+    ["what should i wear", { vote: "FACTS", ids: ["A2"], kept: [] }, (r) => r.handoff?.reason === "not_saved" && r.handoff.decided_by === "check"],
+    ["how do i join", { vote: "FACTS", ids: ["A2", "C3"], kept: ["A2"] }, (r) => r.kind === "answer" && r.used_facts.length === 1 && r.used_facts[0] === "A2"],
     ["what time is service", { fault: "timeout" }, (r) => r.handoff?.reason === "fault" && r.text.startsWith("Thank you for your message.")],
   ];
   let failed = 0;
