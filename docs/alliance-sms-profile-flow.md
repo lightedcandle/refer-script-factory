@@ -96,17 +96,13 @@ Clears the current profile setup attempt for that phone number, restarts the pro
 
 `STOP` or `CANCEL`
 
-Cancels the local deterministic profile script path. The live relay currently records inbound messages and should be expanded before broad production use to enforce full opt-out policy across all outbound queues.
+Cancels the local deterministic profile script path. In the live relay, a consent keyword that is the whole message (`STOP`, `STOPALL`, `UNSUBSCRIBE`, `CANCEL`, `END`, `QUIT`, `START`, `UNSTOP`, `YES`) is forwarded to Alliance Hub, which forwards it to Telechurch, and is not processed further (read from the deployed function, version 96, on 2026-10-12). Whether every outbound queue then honours the opt-out is still not verified here.
 
 Unknown registered-user text:
 
-After a phone number has completed profile registration, unmatched inbound SMS is handled by the Alliance SMS Smart Intake fallback. The relay replies:
+After a phone number has completed profile registration, unmatched inbound SMS is offered to the Hub's formula engine. If the Hub has no answer, **the relay sends no reply** (corrected 2026-10-12; this document previously said it replied "Let me check on this and get back with you soon.", which the deployed function does not do). This silent point is where the answerer slot is designed to sit: `docs/sms-answerer-slot/README.md`.
 
-```text
-Let me check on this and get back with you soon.
-```
-
-It also records an `sms_intake_gap` with the original text, normalized text, `alliance.sms_router.v1`, `alliance.sms_unknown_intent.v1`, and a suggested future script id when the message resembles a planned intent such as next event, profile link, groups, or event registration.
+The relay records an `sms_intake_gap` with the original text, normalized text, `alliance.sms_router.v1`, `alliance.sms_unknown_intent.v1`, and a suggested future script id when the message resembles a planned intent such as next event, profile link, groups, or event registration.
 
 SMS script source:
 
