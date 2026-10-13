@@ -63,3 +63,10 @@ jobs:
       # shows as a hole. None of that is visible in an exit code.
       - name: pulse belt cycle
         run: node scripts/ci/pulse-belt-cycle.mjs
+
+      # The operator's queue override opens a Manual door for one item. This
+      # checks that it opens for exactly that item, and that a stamp naming
+      # nobody, or a stamp on what is his, changes nothing. The door is only
+      # ever run --dry here, so no agent is started.
+      - name: run-now override
+        run: node scripts/ci/run-now-override.mjs

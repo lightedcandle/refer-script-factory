@@ -340,4 +340,43 @@ const reasonOf = (r) => {
   return d && d !== headlineOf(r) ? d : "";
 };
 
-module.exports = { KIND, KIND_WORDS, NOTING, HANDLE_LETTER, selfTerminal, isNoting, beltIndex, handleIndex, triageRecord, headlineOf, reasonOf };
+// RUN NOW: the operator's queue override, and the only one.
+//
+// Operator, 2026-10-13: "have a priority or run now mode that gets treated as
+// queue override." Measured the same morning: one directed piece of work ranked
+// 208th of 215 behind a backlog the door was holding on Manual, and the only
+// way to move it was to open the door to all forty items in front of it.
+//
+// It is a STAMP ON THE BELT, never a flag on a command line: `runNow: { by,
+// via, at }`, carried by the record itself or attached by a later annotation
+// naming it as `subject` - the same later-wins mechanism advice and dispatch
+// use, and the only way to mark a record that is already down, because the belt
+// is append-only.
+//
+// WHAT IT OVERRIDES: order (the watcher lists it first), the decision timer (a
+// specified deposit is accepted on the next armed round instead of waiting its
+// timer out), and the Manual hold on the intake door, for that item only.
+//
+// WHAT IT DOES NOT: capacity, the account budget, the rule that only an
+// accepted contract is dispatched, and anything that is his by law. A run-now
+// stamp on a decision, or on work whose recommended action is never autonomous,
+// changes nothing.
+//
+// `by` MUST BE "operator". It is a statement of whose direction this is, kept
+// on the belt where it can be read back; a stamp that names nobody is ignored.
+function runNowIndex(records) {
+  const list = Array.isArray(records) ? records.filter(Boolean) : [];
+  const valid = (s) => !!s && typeof s === "object" && String(s.by || "").trim().toLowerCase() === "operator";
+  const ids = new Set(list.map((r) => String(r.id)));
+  const stamps = new Map();
+  for (const r of list) {
+    if (!valid(r.runNow)) continue;
+    // A subject is a target only when it IS a record id. Most subjects name a
+    // file or a thing, and a stamp on such a record is about the record itself.
+    const target = r.subject && ids.has(String(r.subject)) && String(r.subject) !== String(r.id) ? String(r.subject) : String(r.id);
+    stamps.set(target, r.runNow);
+  }
+  return { isRunNow: (r) => !!r && stamps.has(String(r.id)), stampOf: (r) => (r ? stamps.get(String(r.id)) || null : null), count: stamps.size };
+}
+
+module.exports = { KIND, KIND_WORDS, NOTING, HANDLE_LETTER, selfTerminal, isNoting, beltIndex, handleIndex, triageRecord, headlineOf, reasonOf, runNowIndex };

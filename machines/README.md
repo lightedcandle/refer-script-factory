@@ -77,6 +77,18 @@ Rule 4 is the important one. `contract:<dim>` looks like it should mean CONTRACT
 
 **`triaged` is in the NOTING family and must stay there.** A terminal record naming a subject normally *closes* it, so without that, accepting a deposit as work would file it as finished the instant somebody agreed to do it.
 
+### Run now is the operator's queue override, and the only one
+
+A record carrying `runNow: { by: "operator", via, at }` — on itself, or on a later annotation naming it as `subject` with `triggers: "terminal:recorded"` — is moved ahead of the queue. `kind.cjs` holds the one definition (`runNowIndex`); the watcher and the intake door both read it from the belt.
+
+**It overrides** order (the watcher lists it first, ahead of this round's promotions and of carried contracts alike), the decision timer (a specified deposit is accepted on the next armed round), and **the Manual hold on the intake door, for that item only**.
+
+**It does not override** capacity, the account budget, the rule that only an accepted contract is dispatched, or anything that is his: a stamp on a decision, or on work whose recommended action is never autonomous, changes nothing. A stamp whose `by` is not `operator` is ignored.
+
+Under Manual the door's report keeps `armed: false` and says what it sent in `runNow`. `npm run gate:run-now` proves all of the above against fixtures with the door run `--dry`; it does not prove that a session starts, which only a real run can.
+
+**The stamp is a statement, not a lock.** Anything that can append to a belt can write one. It is on the belt so it can be read back and attributed, and that is the whole of its protection.
+
 ### A closer must name its target by id, exactly
 
 `closedBy` is keyed on the subject string and asks for an exact match against a record id. A closer written as *"supersedes belt record `<id>`"* contains the id without equalling it and closes nothing — two findings were answered within 35 minutes and then reported as open and neglected for 26 hours because of it.

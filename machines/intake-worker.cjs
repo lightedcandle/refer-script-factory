@@ -216,7 +216,7 @@ const records = fs
 // a hand-written copy of a rule that also lives in the board, the manager, the
 // exit worker and the deposit lookup - six copies, which drifted every time the
 // rule changed.
-const { beltIndex } = require("./kind.cjs");
+const { beltIndex, runNowIndex } = require("./kind.cjs");
 const { deposit: depositRecord } = require("./deposit.cjs");
 
 // ONE PLACE, because this machine deposits from four call sites and each had
@@ -320,6 +320,10 @@ const whyNotPullable = (r) => {
 const byId = new Map();
 for (const r of records) if (r.id) byId.set(String(r.id), r);
 
+// The operator's queue override. One definition, in kind.cjs, shared with the
+// watcher - what it overrides and what it does not is written there.
+const RUN_NOW = runNowIndex(records);
+
 // FOUR WAYS A STANDING LIST CAN FAIL TO BE ONE, and they are four different
 // facts. Absent means nothing has ever judged this belt; unreadable means the
 // list is there and cannot be trusted; undated means it carries no claim about
@@ -380,7 +384,11 @@ for (const entry of queue.ready) {
     skipped.push({ id, rank, why: whyNotPullable(r) });
     continue;
   }
-  waiting.push({ r, advice: adviceOf(r), at: Date.parse(r.run || "") || 0, rank });
+  // READ FROM THE BELT, NOT FROM THE LIST. The list says where the watcher put
+  // it; whether it carries the operator's override is a fact about the record,
+  // and a door that took that on a list's word would dispatch under Manual on
+  // the strength of one boolean in a file anything can write.
+  waiting.push({ r, advice: adviceOf(r), at: Date.parse(r.run || "") || 0, rank, runNow: RUN_NOW.isRunNow(r) });
 }
 
 // WHAT THE BELT WOULD HAVE OFFERED, COUNTED AND NEVER PULLED. This is the whole
@@ -391,6 +399,25 @@ for (const entry of queue.ready) {
 const beltEligible = records.filter(pullable).length;
 
 const picks = waiting.slice(0, room);
+
+// RUN NOW OPENS A SHUT DOOR FOR ONE ITEM, AND ONLY THAT ITEM.
+//
+// Operator, 2026-10-13: "have a priority or run now mode that gets treated as
+// queue override." Manual means nothing leaves on a schedule - and the morning
+// this was written, the only way to move one directed piece of work was to
+// switch to Automatic and release the forty items waiting in front of it.
+//
+// So under Manual this door sends what carries his override and nothing else.
+// Everything the door already enforces still applies: the item must be on the
+// watcher's list, still pullable, within capacity, and the account must be
+// serving. --dry and --self-test start nothing, as always.
+//
+// IT IS NOT A SECOND WAY TO ARM THE DOOR. `armed` below stays false, because
+// the AutoRun switch is still off and a board reading "armed" would draw the
+// door open for everything. The override is published as its own field.
+const overridePicks = picks.filter((p) => p.runNow);
+const RUN_NOW_OVERRIDE = !DRY && !SELF_TEST && !DO_DISPATCH && !budget.starved && overridePicks.length > 0;
+const toDispatch = DISPATCH_ALLOWED ? picks : RUN_NOW_OVERRIDE ? overridePicks : [];
 
 // WHAT A RECORD SAYS ABOUT ITSELF, IN WHATEVER FIELDS IT HAPPENS TO CARRY.
 //
@@ -802,11 +829,11 @@ let started = [];
 let failedToStart = [];
 let windowsBefore = null;
 let windowsAppeared = [];
-if (DISPATCH_ALLOWED && picks.length) {
+if (toDispatch.length) {
   fs.mkdirSync(DISPATCH_LOGS, { recursive: true });
   windowsBefore = windowedNow();
   const launched = [];
-  for (const p of picks) {
+  for (const p of toDispatch) {
     const label = String(p.r.id).slice(0, 28);
     // MINTED BEFORE THE SPAWN, not read back after it. This is the whole reason
     // the stamp below can be proven from disk: sessionLife identifies a
@@ -1242,11 +1269,19 @@ const report = {
     emptyBecause: queue.emptyBecause || null,
   },
   dry: DRY,
-  selected: picks.map((p) => ({ id: p.r.id, hasRecommendation: !!p.advice, waitedHours: Math.round((now - p.at) / MS.h) })),
+  selected: picks.map((p) => ({ id: p.r.id, hasRecommendation: !!p.advice, waitedHours: Math.round((now - p.at) / MS.h), runNow: p.runNow })),
   // Only the ones still running when they were checked. A pid is not a start.
-  dispatched: DO_DISPATCH ? started : [],
-  failedToStart: DO_DISPATCH ? failedToStart : [],
+  dispatched: DO_DISPATCH || RUN_NOW_OVERRIDE ? started : [],
+  failedToStart: DO_DISPATCH || RUN_NOW_OVERRIDE ? failedToStart : [],
   armed: DO_DISPATCH,
+  // The override is its own fact. Under Manual it is the only reason anything
+  // in `dispatched` is there, and `wouldSendUnderManual` says what it covers
+  // even on a --dry run, where nothing was started.
+  runNow: {
+    override: RUN_NOW_OVERRIDE,
+    wouldSendUnderManual: overridePicks.map((p) => p.r.id),
+    stampsOnBelt: RUN_NOW.count,
+  },
   // ARMED AND HELD ARE DIFFERENT FACTS AND BOTH ARE PUBLISHED.
   //
   // `armed` is the AutoRun switch. It stays true through a starvation, and a
@@ -1289,7 +1324,7 @@ if (JSON_OUT) {
   // only on failure makes silence ambiguous.
   console.log(`  ready-list  ${queue.state.toUpperCase()} - ${queue.why}`);
   for (const s of skipped) console.log(`  skipped  ${s.id} - ${s.why}`);
-  for (const p of picks) console.log(`  would dispatch  ${p.r.id}${p.advice ? "" : "   (no recommendation - it would have to work one out)"}`);
+  for (const p of picks) console.log(`  would dispatch  ${p.r.id}${p.runNow ? "   RUN NOW - his override" : ""}${p.advice ? "" : "   (no recommendation - it would have to work one out)"}`);
   if (!picks.length) {
     // FIVE DIFFERENT MORNINGS THAT ALL LOOK LIKE AN IDLE DOOR. Refused, full,
     // empty by decision, empty with work stranded behind it, and genuinely
@@ -1309,7 +1344,8 @@ if (JSON_OUT) {
   // same from outside, and that is the whole family of defect this machine keeps
   // being repaired for.
   if (budget.starved) console.log(`  HELD - ${budget.why}`);
-  if (DISPATCH_ALLOWED) {
+  if (DISPATCH_ALLOWED || RUN_NOW_OVERRIDE) {
+    if (RUN_NOW_OVERRIDE) console.log(`  RUN NOW - the door is on Manual and sent only what carries his override (${overridePicks.length}). Everything else stays where it was.`);
     // RUNNING is the word now, and it is only printed for a process that was
     // still there when it was looked at. The old line said DISPATCHED the
     // instant a pid existed, which is how three agents that never signed in
