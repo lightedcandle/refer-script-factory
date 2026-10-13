@@ -83,6 +83,12 @@ export function decide(cards, question, vote) {
   const screened = screen(question);
   if (screened) return handoff(cards, screened, "screen", question);
   if (!vote || vote.fault) return handoff(cards, "fault", "check", question);
+  // A pastor's saved answer that passed its second look is given whatever the
+  // sorter voted: the live trial sorted a reworded question as PERSON and it
+  // never reached the answer that had been saved for it.
+  if (Array.isArray(vote.keptSaved) && vote.keptSaved.length) {
+    return { contract: "assistant/1", kind: "answer", text: vote.keptSaved.map((x) => x.say).join(" "), used_facts: vote.keptSaved.map((x) => x.id) };
+  }
   // The model's own PERSON vote hands off in neutral words. The word screen
   // owns "I'm so sorry"; the live trial sent it to someone asking what to wear.
   if (vote.vote === "PERSON") return { ...handoff(cards, "care", "model", question), text: say(cards.church).fault };
@@ -135,7 +141,9 @@ async function fits(modelUrl, question, fact, timeoutMs) {
 // The sorter's vote, then the second look at each fact it picked. The whole
 // thing has to fit inside the relay's wait (90 seconds), so each step has its
 // own limit: one sort and at most two looks.
-async function askModel(cards, question, modelUrl, timeoutMs) {
+async function askModel(cards, question, modelUrl, timeoutMs, savedAnswers = []) {
+  const saved = savedAnswers.filter((x) => x && /^S\d+$/.test(x.id) && x.say).slice(0, 40);
+  const list = [...cards.facts, ...saved];
   const system = [
     `You sort text messages sent to ${cards.church}, a church. You never write a reply.`,
     'Read the message, then answer as JSON with a vote. When the vote is FACTS, add the ids of the facts that answer it, like {"vote":"FACTS","ids":["C2"]}. The three votes:',
@@ -143,7 +151,7 @@ async function askModel(cards, question, modelUrl, timeoutMs) {
     "PERSON - when the message is about grief, a death, a crisis, self-harm, danger, a personal struggle, or asks for a pastor, a phone call or prayer with someone.",
     "NONE - when no fact directly answers it. Do not stretch a fact to fit. A link to the church's page does not answer a question about times, place, children, clothing, baptism or money.",
     "Facts:",
-    ...cards.facts.map((f) => `[${f.id}] (about ${f.about || "the church"}) ${f.say}`),
+    ...list.map((f) => `[${f.id}] (about ${f.about || "the church"}) ${f.say}`),
   ].join("\n");
   try {
     const vote = await chat(modelUrl, system, question, {
@@ -151,20 +159,30 @@ async function askModel(cards, question, modelUrl, timeoutMs) {
         {
           type: "object",
           // At most two: the live trial answered "can I watch online" with three facts, two beside the point.
-          properties: { vote: { const: "FACTS" }, ids: { type: "array", minItems: 1, maxItems: 2, items: { enum: cards.facts.map((f) => f.id) } } },
+          properties: { vote: { const: "FACTS" }, ids: { type: "array", minItems: 1, maxItems: 2, items: { enum: list.map((f) => f.id) } } },
           required: ["vote", "ids"],
           additionalProperties: false,
         },
         { type: "object", properties: { vote: { enum: ["NONE", "PERSON"] } }, required: ["vote"], additionalProperties: false },
       ],
     }, Math.round(timeoutMs * 0.5));
-    if (vote.vote !== "FACTS") return vote;
+    // Every saved answer gets its own look, whatever the vote, and before
+    // anything from the general cards. At most four looks and two answers, so
+    // the whole thing stays inside the relay's wait.
+    const picked = vote.vote === "FACTS" ? [...new Set(vote.ids || [])] : [];
+    const looks = [...saved, ...picked.filter((id) => !/^S\d+$/.test(id)).map((id) => cards.byId.get(id)).filter(Boolean)].slice(0, 4);
     const kept = [];
-    for (const id of [...new Set(vote.ids || [])]) {
-      const fact = cards.byId.get(id);
-      if (fact && (await fits(modelUrl, question, fact, Math.round(timeoutMs * 0.25)))) kept.push(id);
+    const keptSaved = [];
+    for (const fact of looks) {
+      if (kept.length + keptSaved.length >= 2) break;
+      if (!(await fits(modelUrl, question, fact, Math.round(timeoutMs * 0.12)))) continue;
+      if (/^S\d+$/.test(fact.id)) keptSaved.push({ id: fact.id, say: fact.say });
+      else kept.push(fact.id);
     }
-    return { ...vote, kept };
+    // A saved answer that fits is the answer; the general cards are not added to it.
+    if (keptSaved.length) return { ...vote, keptSaved };
+    if (vote.vote !== "FACTS") return vote;
+    return { ...vote, ids: picked.filter((id) => cards.byId.has(id)), kept };
   } catch (error) {
     return { fault: String(error?.message || error) };
   }
@@ -218,7 +236,7 @@ async function run() {
       const started = Date.now();
       const screened = screen(q.question);
       // A question the screen takes is not held up waiting for the model.
-      const vote = screened ? null : await askModel(cards, q.question, modelUrl, 70000);
+      const vote = screened ? null : await askModel(cards, q.question, modelUrl, 70000, Array.isArray(q.saved_answers) ? q.saved_answers : []);
       const response = q.church_id && q.church_id !== cards.churchId
         ? handoff(cards, "fault", "check", q.question)
         : decide(cards, q.question, vote);
@@ -233,6 +251,7 @@ async function run() {
         reason: response.handoff?.reason || null,
         decided_by: response.handoff?.decided_by || "model",
         used_facts: response.used_facts || [],
+        saved_answers_offered: Array.isArray(q.saved_answers) ? q.saved_answers.length : 0,
         seconds: Number(((Date.now() - started) / 1000).toFixed(1)),
         relay: { status: sent.status, applied: sent.body?.applied ?? null, kind: sent.body?.kind || null, reason: sent.body?.reason || null },
       });
@@ -262,6 +281,9 @@ function selftest() {
     ["can a pastor call me? i need someone to pray with", null, (r) => r.handoff?.reason === "asked_for_pastor" && r.text.startsWith("Yes.")],
     ["what should i wear", { vote: "FACTS", ids: ["A2"], kept: [] }, (r) => r.handoff?.reason === "not_saved" && r.handoff.decided_by === "check"],
     ["how do i join", { vote: "FACTS", ids: ["A2", "C3"], kept: ["A2"] }, (r) => r.kind === "answer" && r.used_facts.length === 1 && r.used_facts[0] === "A2"],
+    ["what do people wear", { vote: "PERSON", keptSaved: [{ id: "S1", say: "Come as you are." }] }, (r) => r.kind === "answer" && r.text === "Come as you are." && r.used_facts[0] === "S1"],
+    ["what do people wear", { vote: "NONE", keptSaved: [] }, (r) => r.handoff?.reason === "not_saved"],
+    ["i want to die", { vote: "FACTS", ids: ["A2"], keptSaved: [{ id: "S1", say: "Come as you are." }] }, (r) => r.handoff?.reason === "crisis"],
     ["what time is service", { fault: "timeout" }, (r) => r.handoff?.reason === "fault" && r.text.startsWith("Thank you for your message.")],
   ];
   let failed = 0;
