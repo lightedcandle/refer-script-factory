@@ -157,6 +157,19 @@ for (const t of shots) {
 const tailMins = Math.round((now - prev) / 6e4);
 if (tailMins >= GAP_MIN) gaps.push({ from: new Date(prev).toISOString(), to: new Date(now).toISOString(), mins: tailMins, open: true });
 
+// DATABASE CHANGES MERGED AND NOT APPLIED, from the mind watcher's last report.
+//
+// Operator, 2026-10-13: "continue with recommendations" - this was one. Nothing
+// in CI applies a migration, so a merged fix can sit unapplied; on 2026-10-12 a
+// fix for a readable stream key waited that way. The watcher deposits it on the
+// belt daily, but a belt record is one of many and this is the one thing in the
+// morning report that needs his hand, so it gets its own line at the top.
+// Read from the watcher's file rather than asked again: one station asks the
+// database, and a repo with no mind watcher simply has no line.
+const mind = readJson(path.join(CTX, "mind-watch.json"), null);
+const waiting = mind && mind.state && Array.isArray(mind.state.unappliedMigrations) ? mind.state.unappliedMigrations : null;
+const waitingAsOf = mind && mind.checkedAt ? String(mind.checkedAt) : null;
+
 const totalRuns = worked.reduce((a, w) => a + w.runs, 0);
 const quietMins = gaps.reduce((a, g) => a + g.mins, 0);
 const awakeMins = Math.max(0, Math.round((now - from) / 6e4) - quietMins);
@@ -172,6 +185,8 @@ const report = {
   closures: closures.length,
   lessons: lessons.length,
   needingHim: forHim.length,
+  databaseChangesWaiting: waiting,
+  databaseChangesCheckedAt: waitingAsOf,
   snapshots: shots.length,
   quietPeriods: gaps,
   minutesAwake: awakeMins,
@@ -184,6 +199,11 @@ if (JSON_OUT) {
   console.log(JSON.stringify(report, null, 2));
 } else {
   console.log(`night-watch: ${hours}h since ${base.at}  [${path.basename(ROOT)}]\n`);
+  if (waiting && waiting.length) {
+    console.log(`  WAITING ON HIM: ${waiting.length} database change(s) are merged and not applied (checked ${String(waitingAsOf).slice(0, 16)}Z)`);
+    for (const f of waiting) console.log(`     ${f}`);
+    console.log("");
+  }
   console.log(`  ${totalRuns} station runs across ${worked.length} stations`);
   for (const w of worked) console.log(`     ${String(w.runs).padStart(4)}  ${w.id}`);
   if (silentStations.length) console.log(`  did not run at all: ${silentStations.join(", ")}`);

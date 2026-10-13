@@ -405,6 +405,9 @@ function finish(state, note) {
     migrationsOnDisk: d ? d.onDisk : null,
     migrationsSinceLastPush: d ? d.sinceLastPush.length : null,
     lastRecordedPush: d ? d.lastPush : null,
+    // The names, kept in the report so the morning report can say them in one
+    // line without re-asking the database. null means "could not tell".
+    unappliedMigrations: unapplied(d, appliedMigrations),
   };
 
   if (!prev || REBASE) {
