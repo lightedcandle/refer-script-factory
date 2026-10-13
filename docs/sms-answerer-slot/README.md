@@ -392,6 +392,22 @@ model caught them. Neither guard is enough alone.
   as owner. So the carrier's rule and "no off switch" no longer collide. How
   the notices move to email is being proposed to him by that session and is
   the app's side, not this door's.
+- **What a pastor's STOP does, ruled 2026-10-13** (his full words are in the
+  Telechurch phone-trial record; this is a reading of them): one final text
+  says texts have stopped and messages will now go to their email; after that
+  no text goes to that number; the notices go by email, which is the app's
+  side. Texting START, or choosing text in the app, reopens it. If email is
+  closed as well the app takes over, and that part is not this door's.
+- **The one final text already exists, in another voice.** Read from
+  Telechurch's `sms-bridge-inbound` on main: when a number with a Telechurch
+  profile texts STOP it is already sent a confirmation ("Stop Detected: you
+  have been unsubscribed from Telechurch text messages…"), which says nothing
+  about email. If the door sent its own final text as well, a pastor would get
+  two. So the final text has to be that one message, reworded for a pastor,
+  and it lives on the app's side. The door sends nothing on STOP.
+- **So the door's whole duty is the lookup.** Before texting a pastor's
+  number: has it opted out? If so, no text, and the notice is handed to the
+  email channel. Required by the ruling, and not built.
 - **This door does not yet honour a pastor's STOP itself.** Found while
   recording the ruling. The relay passes STOP on to the apps, and each app
   stops its own sends. The guide's notices are queued by the relay directly
