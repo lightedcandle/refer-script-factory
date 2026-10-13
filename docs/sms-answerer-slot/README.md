@@ -425,8 +425,15 @@ model caught them. Neither guard is enough alone.
   none leads an active church. So the source now follows the Assistant
   contract's section 5a (Telechurch pull request 923, read from the file):
   open, closed (a recorded STOP), or unknown (off with no reason, or
-  unreadable). Unknown is held and asked again a minute later. A number with
-  no profile at all has never been marked by anything and is treated as open.
+  unreadable). Unknown is held and asked again a minute later.
+- **A pastor number with no profile is open only while this is a test.** The
+  test pastor number is set by hand and may have no profile, so today "no
+  profile" is treated as open. For a real church the pastor's number comes
+  from the church's owner, who always has a profile, so "no profile" would
+  mean the number could not be read, and must be held. That change has to be
+  made before a real pastor is behind this door, and the source says so at
+  the line. This is the phone-trial session's reading of the app's rule, not a
+  ruling of the operator's.
 - **Where a held question sits, for the app's notice function.** In the record
   store `alliance_records`, kind `sms_guide_question`, status `handoff_open`:
   the church is `values.church_id`, the visitor's words are `values.question`,
