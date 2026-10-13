@@ -342,7 +342,7 @@
 const fs = require("fs");
 const os = require("os");
 const path = require("path");
-const { KIND, beltIndex, triageRecord } = require("./kind.cjs");
+const { KIND, beltIndex, triageRecord, runNowIndex } = require("./kind.cjs");
 const { deposit: depositRecord, depositMany } = require("./deposit.cjs");
 const { repoRootOf, sessionLife, tokenize, PROJECTS } = require("./session-life.cjs");
 const { discoverTriggers, readScheduleState } = require("./triggers.cjs");
@@ -1012,6 +1012,10 @@ function main(lockState) {
   for (const r of records) if (r.subject && r.recommend) adviceFor.set(String(r.subject), r.recommend);
   const adviceOf = (r) => adviceFor.get(String(r.id)) || r.recommend || null;
 
+  // The operator's queue override. One definition, in kind.cjs, shared with the
+  // intake door - what it overrides and what it does not is written there.
+  const RUN_NOW = runNowIndex(records);
+
   // ---- 1. SCAN --------------------------------------------------------------
   //
   // Incoming is what has not been judged: deposits awaiting triage, plus the
@@ -1277,6 +1281,12 @@ function main(lockState) {
     //    specification is preparation, not judgement.
     if (gaps.length) return { outcome: "COMPLETE", rv, timer, gaps, caveats, advice, why: gaps.join("; ") };
 
+    // 3a. RUN NOW. He directed it, so it does not wait its timer out. Placed
+    //     AFTER his-by-law, retired and underspecified on purpose: the override
+    //     moves a piece of work forward, it does not turn a decision into work
+    //     or make an unspecified thing pickable.
+    if (RUN_NOW.isRunNow(r)) return { outcome: "PROMOTE", rv, timer, gaps, caveats, advice, why: `run now, by the operator's direction${RUN_NOW.stampOf(r).via ? ` through ${RUN_NOW.stampOf(r).via}` : ""}; specified and owned, so it is accepted without waiting for its timer` };
+
     // 4. Expired, and nothing is wrong with it.
     if (timer.expired) return { outcome: "PROMOTE", rv, timer, gaps, caveats, advice, why: `${timer.forced ? "cannot be scheduled" : `timer expired ${timer.overdueBy} ago`}; specified, owned, and ${rv.required ? rv.verdict : "too fresh to have decayed"}` };
 
@@ -1358,8 +1368,15 @@ function main(lockState) {
     return { r, ...j, priority: priorityOf(r, j) };
   });
 
+  // RUN NOW SORTS AHEAD OF EVERYTHING EXCEPT WHAT IS HIS. It is not a score and
+  // is not added to one: a number large enough to always win is a band wearing
+  // a score's name. Band 0 stays first because the override is about work, and
+  // what is held for him is not work.
+  const overrides = (x) => (x.outcome !== "RAISE" && RUN_NOW.isRunNow(x.r) ? 1 : 0);
   judged.sort(
     (a, b) =>
+      (b.priority.band === 0) - (a.priority.band === 0) ||
+      overrides(b) - overrides(a) ||
       a.priority.band - b.priority.band ||
       b.priority.score - a.priority.score ||
       runAt(a.r) - runAt(b.r) ||
@@ -2200,6 +2217,7 @@ function main(lockState) {
     handle: H(x.r),
     id: String(x.r.id),
     outcome: x.outcome,
+    runNow: RUN_NOW.isRunNow(x.r),
     band: x.priority.bandName,
     priority: x.priority.score,
     priorityParts: x.priority.parts,
@@ -2261,6 +2279,7 @@ function main(lockState) {
     handle: H(r),
     id: String(r.id),
     outcome: "CARRIED",
+    runNow: RUN_NOW.isRunNow(r),
     band: null,
     priority: null,
     priorityParts: null,
@@ -2281,7 +2300,7 @@ function main(lockState) {
 
   const promotedRows = ARM ? byOutcome.PROMOTE.map(row) : [];
   const promotedIds = new Set(promotedRows.map((r) => r.id));
-  const readyStanding = [
+  const readyUnordered = [
     ...promotedRows,
     ...records
       .filter((r) => IX.isOpenContract(r) && !promotedIds.has(String(r.id)))
@@ -2291,6 +2310,13 @@ function main(lockState) {
       .sort((a, b) => runAt(a) - runAt(b))
       .map((r, i) => carriedRow(r, promotedRows.length + i + 1)),
   ];
+  // RUN NOW GOES TO THE TOP OF THE WHOLE LIST, not only of its own half. A
+  // contract accepted on an earlier round is carried, and carried rows come
+  // after this round's promotions - so without this an override stamped onto
+  // already-accepted work would move nowhere. The door takes top-first and
+  // never re-sorts, so the order has to be right here. Stable: everything
+  // else keeps the order it had.
+  const readyStanding = [...readyUnordered.filter((x) => x.runNow), ...readyUnordered.filter((x) => !x.runNow)];
 
   const queue = {
     producedAt: new Date(now).toISOString(),

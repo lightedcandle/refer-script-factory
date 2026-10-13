@@ -1,6 +1,6 @@
 {
   "schema": "refer.domain-script-registry.v1",
-  "updated_at": "2026-09-15T03:43:16.392Z",
+  "updated_at": "2026-10-13T11:04:02.967Z",
   "rule": "Before direct work, identify the domain and check that domain's registry/check_first surfaces for an existing script.",
   "domains": [
     {
@@ -32,6 +32,18 @@
           "command": "node machines/pulse-belt.cjs --list"
         },
         {
+          "name": "schedule",
+          "command": "node engine/schedule.cjs"
+        },
+        {
+          "name": "schedule:list",
+          "command": "node engine/schedule.cjs --list"
+        },
+        {
+          "name": "schedule:dry",
+          "command": "node engine/schedule.cjs --dry"
+        },
+        {
           "name": "gate:machines",
           "command": "node scripts/ci/machines-gate.mjs"
         },
@@ -42,6 +54,10 @@
         {
           "name": "gate:pulse-belt",
           "command": "node scripts/ci/pulse-belt-cycle.mjs"
+        },
+        {
+          "name": "gate:run-now",
+          "command": "node scripts/ci/run-now-override.mjs"
         },
         {
           "name": "compile",
@@ -73,7 +89,7 @@
         },
         {
           "name": "verify",
-          "command": "npm run gate:machines && npm run gate:pulse-belt && npm run test && npm run verify:core"
+          "command": "npm run gate:machines && npm run gate:pulse-belt && npm run gate:run-now && npm run test && npm run verify:core"
         },
         {
           "name": "refer:server",
