@@ -140,6 +140,36 @@ select
      where n.nspname='public' and has_function_privilege('anon', p.oid, 'EXECUTE')) as anon_executable_functions,
   (select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace
      where n.nspname='public' and c.relkind='r') as tables,
+  -- Secret-shaped columns a stranger holds SELECT on, in a table whose rows a
+  -- stranger is admitted to. Names only. "Stranger" is two people: signed out
+  -- (a policy for the public or anon role, or no row security at all), and
+  -- signed in but owning nothing (a policy for authenticated that is literally
+  -- "true"). A policy with a real condition for authenticated is not listed:
+  -- the catalog cannot say whose rows it admits, and guessing would flood.
+  (select coalesce(string_agg(c.relname || '.' || a.attname, ', ' order by c.relname, a.attname), '')
+     from pg_attribute a
+     join pg_class c on c.oid=a.attrelid
+     join pg_namespace n on n.oid=c.relnamespace
+     where n.nspname='public' and c.relkind in ('r','v','m')
+       and a.attnum > 0 and not a.attisdropped
+       and a.attname ~* '(secret|password|passwd|api_?key|stream_key|private_key|encrypted|credential|(^|_)token$|_hash$|stripe_customer_id)'
+       -- a key's saved-at stamp, its last four characters and a certificate's id
+       -- match the words above and are not the secret
+       and a.attname !~* '(_at|_last4|credential_id)$'
+       and (
+         (has_column_privilege('anon', c.oid, a.attnum, 'SELECT')
+            and (c.relkind <> 'r' or not c.relrowsecurity or exists (
+              select 1 from pg_policy p
+              where p.polrelid=c.oid and p.polpermissive and p.polcmd in ('r','*')
+                and (0 = any(p.polroles) or (select oid from pg_roles where rolname='anon') = any(p.polroles)))))
+         or
+         (has_column_privilege('authenticated', c.oid, a.attnum, 'SELECT')
+            and c.relkind='r' and c.relrowsecurity and exists (
+              select 1 from pg_policy p
+              where p.polrelid=c.oid and p.polpermissive and p.polcmd in ('r','*')
+                and (0 = any(p.polroles) or (select oid from pg_roles where rolname='authenticated') = any(p.polroles))
+                and pg_get_expr(p.polqual, p.polrelid) = 'true'))
+       )) as stranger_secret_columns,
   -- The database's own record of what it has run. Asked for here so the
   -- migration check can compare the repo against the DATABASE rather than
   -- against a local report file that goes stale without saying so.
@@ -209,7 +239,22 @@ function drift() {
   const at = Date.parse(rep.timestamp || "");
   if (Number.isNaN(at)) return null;
   const files = fs.readdirSync(MIG).filter((f) => f.endsWith(".sql"));
-  const newer = files.filter((f) => fs.statSync(path.join(MIG, f)).mtimeMs > at);
+  // The checkout this runs in is not main. Measured 2026-10-12: the scheduler's
+  // tree sat about 170 merges behind, so a migration merged since was not on
+  // this disk at all and the unapplied check could not see it. What was merged
+  // is what matters, so the last-fetched main is read as well - no network, and
+  // when git cannot answer the disk alone is used, as before.
+  try {
+    const listed = require("child_process").execFileSync("git", ["ls-tree", "-r", "--name-only", "origin/main", "--", "supabase/migrations"], { cwd: ROOT, encoding: "utf8", windowsHide: true, stdio: ["ignore", "pipe", "ignore"] });
+    for (const line of listed.split(/\r?\n/)) {
+      const name = line.trim().split("/").pop();
+      if (name && name.endsWith(".sql") && !files.includes(name)) files.push(name);
+    }
+  } catch {}
+  const newer = files.filter((f) => {
+    const p = path.join(MIG, f);
+    return !fs.existsSync(p) || fs.statSync(p).mtimeMs > at;
+  });
   // Parked migrations: renamed so the runner skips them. Intentional, and worth
   // saying once rather than every cycle - which is what the baseline is for.
   const parked = fs.readdirSync(MIG).filter((f) => /\.sql\.[A-Z]+$/.test(f));
@@ -337,6 +382,17 @@ function finish(state, note) {
   }
 
   const num = (v) => Number(v || 0);
+  // Held aside BEFORE the state is rebuilt below. The rebuild keeps only what is
+  // compared run to run, and for three weeks it silently dropped this list - so
+  // the migration check further down was handed `undefined`, answered "cannot
+  // tell", and never spoke once, with a merged migration sitting unapplied
+  // (measured 2026-10-12: zero deposits since the check was written 09-23).
+  const appliedMigrations = state.applied_migrations;
+  const list = (v) =>
+    String(v || "")
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
   state = {
     anon_readable_tables: num(state.anon_readable_tables),
     anon_readable_names: String(state.anon_readable_names || ""),
@@ -345,6 +401,7 @@ function finish(state, note) {
     definer_names: String(state.definer_names || ""),
     anon_executable_functions: num(state.anon_executable_functions),
     tables: num(state.tables),
+    stranger_secret_columns: String(state.stranger_secret_columns || ""),
     migrationsOnDisk: d ? d.onDisk : null,
     migrationsSinceLastPush: d ? d.sinceLastPush.length : null,
     lastRecordedPush: d ? d.lastPush : null,
@@ -365,7 +422,8 @@ function finish(state, note) {
       if (state.anon_readable_tables) standing.push(`${state.anon_readable_tables} table(s) readable signed-out with no row-level security (${state.anon_readable_names})`);
       // The database's own record, not the local push report - the report was
       // measured stale on 2026-09-23, naming two already-applied files.
-      const standingMissing = unapplied(d, state.applied_migrations);
+      if (state.stranger_secret_columns) standing.push(`${list(state.stranger_secret_columns).length} secret-shaped column(s) a stranger holds read access to (${state.stranger_secret_columns})`);
+      const standingMissing = unapplied(d, appliedMigrations);
       if (standingMissing && standingMissing.length) standing.push(`${standingMissing.length} migration file(s) the database has no record of running`);
       if (standing.length) {
         say(
@@ -406,6 +464,42 @@ function finish(state, note) {
       `The signed-out role can now execute ${state.anon_executable_functions} functions, up from ${num(p.anon_executable_functions)}.`,
       `ALTER DEFAULT PRIVILEGES in this project already grants anon, so a new function is reachable by anyone unless it is explicitly revoked. Growth here is usually an omission rather than a decision. Confirmed with has_function_privilege against the live catalog.`,
     );
+  }
+
+  // 3b. A credential a stranger can read.
+  //
+  // Found by hand on 2026-10-12, not by this station: a church's broadcast
+  // stream key and its encrypted Daily key had been readable with the browser's
+  // own public key for months. The table HAD row security, so question 1 was
+  // satisfied - a row policy decides which rows, never which columns, and
+  // "the public may see public churches" published every column of them.
+  //
+  // What the catalog can and cannot say: it knows the column's name, that the
+  // role holds SELECT on it, and that a policy admits that role to the table.
+  // It cannot know which rows the policy admits, so a listed column may still
+  // be protected row by row. It is therefore a list of things to LOOK AT, said
+  // once when this question is first asked and afterwards only when a new name
+  // appears - which is the moment somebody has just added a secret-shaped
+  // column to a table strangers can read, and the cheapest moment to catch it.
+  const secretsNow = list(state.stranger_secret_columns);
+  if (p.stranger_secret_columns === undefined) {
+    if (secretsNow.length) {
+      say(
+        "stranger-readable-secrets-first-look",
+        `${secretsNow.length} secret-shaped column(s) are readable by a stranger as far as the catalog can tell. Each needs one look.`,
+        `${secretsNow.join(", ")}. A stranger here is someone signed out, or signed in and owning nothing. Listed when the column name looks like a key, token, secret, hash or payment id, the role holds SELECT on it, and a policy admits that role to the table. The catalog cannot see which rows a policy admits, so some of these are protected row by row and are fine; the ones that are not are settled with has_column_privilege() and a count as that role, never by selecting the value. Said once - from here this station reports only a NEW name.`,
+      );
+    }
+  } else {
+    const before = new Set(list(p.stranger_secret_columns));
+    const added = secretsNow.filter((name) => !before.has(name));
+    if (added.length) {
+      say(
+        "stranger-can-read-a-new-secret",
+        `${added.length} new secret-shaped column(s) became readable by a stranger: ${added.join(", ")}.`,
+        `Not on the list last run. Every new table and column is granted to the signed-out and signed-in roles by default, and a row policy does not withhold a column - so a key added to a table strangers can read is public the moment it lands, with no error and no advisory. Put it in a table whose policy admits only its owner, or withhold the column and prove it with has_column_privilege(). Read from the live catalog; no row was read.`,
+      );
+    }
   }
 
   // 4. Schema on disk that nothing local proves was ever applied.
@@ -449,7 +543,7 @@ function finish(state, note) {
   // main and unapplied for hours, and reached production only because an agent
   // ran a push for an unrelated plan. NOTHING IN CI APPLIES MIGRATIONS. This
   // check is the only thing that can notice.
-  const missing = unapplied(d, state.applied_migrations);
+  const missing = unapplied(d, appliedMigrations);
   if (missing && missing.length) {
     say(
       "migrations-not-in-the-database",
