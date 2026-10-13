@@ -566,3 +566,36 @@ Update this file whenever a tool, provider, transport path, script, runner, or p
 - Mitigation: start it through `wscript.exe //B //Nologo engine/run-hidden.vbs powershell.exe ...` (WScript.Shell.Run gives it a hidden console) or spawn without `detached` (Node then attaches a hidden console). Same script, non-detached, ran and logged; the wscript form ran and logged; the detached form ran nothing - three launches each, 2026-09-16
 - Script/doc now encoding mitigation: this ledger, `engine/serve-tracker.cjs` (the `/display/move` route)
 - Verification: the `/display/move` route did nothing on its first live click and re-homed the window once switched to the wscript launcher
+
+### Piping `git show` Through PowerShell To A File Prepends A BOM
+
+- Date: 2026-10-12
+- Domain/provider: Windows PowerShell 5.1 / `git show <rev>:<path> | <anything that writes a file>`
+- Operation: extracting a `.cjs` script from another repo's branch without checking that branch out
+- Symptom: `node` refused the file at line 1 with `SyntaxError: Invalid or unexpected token` pointing at an invisible character before `#!/usr/bin/env node`
+- Likely cause: the PowerShell pipeline re-encodes native output and the write adds U+FEFF; the same family as the `Out-File -Encoding utf8` commit-message trap in `AGENTS.md`
+- Mitigation: let `cmd` do the redirect so PowerShell never touches the bytes: `cmd /c "git -C <repo> show <rev>:<path> > <file>"`
+- Script/doc now encoding mitigation: this ledger
+- Verification: the same file extracted through `cmd /c` ran at once
+
+### A Model On The Phone Runs About Seven Times Slower With The Screen Off
+
+- Date: 2026-10-12
+- Domain/provider: Galaxy S26 Ultra (SM-S948U) / llama.cpp `b11577` `llama-server`, Nemotron 3 Nano 4B Q4_K_M, started from `adb shell`
+- Operation: asking the on-phone model a short question while the phone is asleep
+- Symptom: 16 to 18 tokens a second with the screen on; 2.0 and 2.8 with it off (a short reply in 30 s and 15 s). The first request after waking was still slow (2.1), the next was 15.7
+- Likely cause: not pinned. Thermal status was normal and the process was not moved to the background processor set, so the phone's own power saving while dozing is the likely cause. On charge throughout
+- Mitigation: none applied (phone settings were out of bounds). Size any reply timeout for the asleep figure, not the awake one
+- Script/doc now encoding mitigation: this ledger, `docs/sms-answerer-slot/phone-coexistence-2026-10-12/README.md`
+- Verification: two asleep requests and two awake requests, one sitting; not repeated on another day
+
+### A Process Started From `adb shell` Is Unkillable By Android, So It Proves Nothing About Survival
+
+- Date: 2026-10-12
+- Domain/provider: Android low-memory killer / anything launched over `adb shell`
+- Operation: testing whether Android kills a large process (a 5 GB model server) under memory pressure
+- Symptom: the process reported `oom_score_adj` −1000 and was never a candidate; Android killed 44 cached apps instead. Reads as "it survived" and is not evidence that an installed app would
+- Likely cause: shell-started processes inherit the shell's protected priority; an app's foreground service sits around 200
+- Mitigation: report survival from `adb shell` as untested, and test survival only with the thing packaged as an app. Also: `llama-server` ignored `pkill` (SIGTERM) over adb and needed `kill -9`
+- Script/doc now encoding mitigation: this ledger, `docs/sms-answerer-slot/phone-coexistence-2026-10-12/README.md`
+- Verification: `/proc/<pid>/oom_score_adj` read as −1000 for the model and 200 for the bridge in all 108 samples
