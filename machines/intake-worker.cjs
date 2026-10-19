@@ -890,7 +890,14 @@ if (DISPATCH_ALLOWED && picks.length) {
         `Run node tools/factory/claim.cjs first - it names your deposit and stops you if another live session already holds it. ` +
         `Then read your full brief - the claim, the evidence, the recommendation and how to publish and close it - ` +
         `in this repo at ${briefRel} , before anything else.`;
-      const argv = ["-p", "--session-id", session, "--permission-mode", "acceptEdits", pointer];
+      // Every session is started on a NAMED model. Before 2026-10-19 none was
+      // passed, so every belt session silently ran on whatever the account
+      // default happened to be - against the routing law (set the model on
+      // every spawn; route on the cost of being wrong). A deposit may name its
+      // own; otherwise the belt's work is unclassified judgement, which routes
+      // to opus. PLAN-LEARNING-001, defect 7.
+      const model = String((p.r && p.r.model) || process.env.REFER_DISPATCH_MODEL || "opus");
+      const argv = ["-p", "--session-id", session, "--model", model, "--permission-mode", "acceptEdits", pointer];
       // WINDOWS OFFERS A DISPATCHER TWO BAD SHAPES AND ONE GOOD ONE, and this
       // machine shipped both bad ones before the operator's third report.
       //
