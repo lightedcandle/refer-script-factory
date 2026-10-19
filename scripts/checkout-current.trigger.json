@@ -1,0 +1,9 @@
+{
+  "id": "checkout-current",
+  "run": "factory:checkout-current",
+  "every": "15m",
+  "floor": "15m",
+  "adaptive": false,
+  "owns": "architecture",
+  "why": "This tree IS the live factory: the engine and every universal machine are read off its disk as they run, so a fix merged to main is not live until this checkout holds it. On 2026-10-19 it held eleven commits that never reached origin and so could not take three merged fixes (#43-#45); they reached origin through #46. Every 15 minutes this fast-forwards the tree to origin/main without touching anybody's uncommitted work, and refuses - exit 2, one belt card a day - when local commits would have to be landed first, which is the case that went unseen for a week. Not adaptive: a refusal is a standing condition, and tightening to a faster cadence would not change it."
+}

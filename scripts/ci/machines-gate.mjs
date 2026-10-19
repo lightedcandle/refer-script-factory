@@ -220,6 +220,7 @@ const MANIFEST = {
       return r.launchers > 0 && r.offenders.length === 0 && r.deposited === 0 && beltUntouched(root);
     },
   },
+  "checkout-current.cjs": { args: ["--dry"], exit: 1, why: "the fixture is not a git checkout, and a machine that moves checkouts must say it cannot rather than report one current. --dry writes nothing either way; its moves and refusals are proven on a scratch repo with an origin (Telechurch shelf T314)" },
   "day-mode.cjs": { args: [], exit: 0, why: "library - what each board colour becomes in daylight, and the script that picks the mode from the sun" },
   "intake-worker.cjs": { args: ["--dry", "--json"], exit: 0, why: "drains the watcher's ready-list. --dry because --json alone still writes a report and would still dispatch if a fixture ever carried an auto mode file; the fixture has no ready-list, so it reports the list ABSENT and exits 0 - an empty morning is healthy" },
   "kind.cjs": { args: [], exit: 0, why: "library - the belt's vocabulary, required by everything that reads it" },
