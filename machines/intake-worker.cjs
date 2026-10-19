@@ -482,7 +482,7 @@ const brief = (p) =>
     // all. They were reading the brief correctly; the brief named the act and
     // never named the vocabulary. Both constraints are stated literally now.
     `4. Then append ONE record to .claude/agent-context/findings.jsonl that ends`,
-    `   this item. Three fields decide whether it lands:`,
+    `   this item. Three fields decide whether it lands, and a fourth says why:`,
     `     subject  EXACTLY "${p.r.id}" - the id and nothing else. A subject that`,
     `              describes the item in prose closes nothing and says nothing.`,
     `     triggers one of terminal:fixed, terminal:shipped, terminal:resolved, or`,
@@ -490,6 +490,10 @@ const brief = (p) =>
     `     kind     one of contract, deposit, note, decision - or leave the field`,
     `              out entirely, which is fine. "closure" is not a kind; it is`,
     `              what the record DOES, and writing it there voids the field.`,
+    `     cause    for a fix: missing, unreachable or ignored - no rule existed, a`,
+    `              rule existed but was not reachable when needed, or it was`,
+    `              reachable and skipped. Any other word is refused. This is how`,
+    `              the corpus learns which kind of miss keeps happening.`,
     `   That record is what takes this off the conveyor - nothing else will, and`,
     `   until it is written the board cannot say your work happened.`,
     `5. Publish with npm run branch:publish, which opens AND squash-merges the PR.`,
