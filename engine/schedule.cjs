@@ -842,6 +842,11 @@ for (const st of due) {
     s.lastExit = res ? res.status : null;
     s.requestedFor = null;
     s.runs = (s.runs || 0) + 1;
+    // A run answers the last skip. Left in place, the reason sat beside a clean
+    // run and read as a current fault: the fuel log, 2026-10-19, ran at last and
+    // still said "not tracked in this checkout". lastSkippedAt and the skips
+    // count stay as history.
+    delete s.lastSkipReason;
     // A run that could not be observed is treated as a fault, not as clean.
     // Assuming success from an absent exit code is how a broken station earns
     // itself a two-hour nap.
