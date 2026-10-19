@@ -174,7 +174,26 @@ function Open-Window {
     '--noerrdialogs',
     '--disable-session-crashed-bubble',
     '--disable-infobars',
-    '--no-first-run'
+    '--no-first-run',
+    # A CHURCH SCREEN HAS NOBODY TO CLICK IT.
+    #
+    # Operator, 2026-09-25, first slide of a prayer breakfast: "the presentation
+    # screen is not showing video from youtube, seems to blank out." The video
+    # was fine and embeddable, the link was fine, and the player simply never
+    # started: the slide asks for sound, and Chrome refuses to start a video
+    # with sound until somebody has interacted with the page. On a desk that is
+    # one click. On a screen bolted to a wall it is nobody, ever, so the slide
+    # stays black and looks broken.
+    #
+    # --kiosk DOES NOT GRANT THIS, which is the belief that cost the morning.
+    # It governs the window - fullscreen, no toolbars, no address bar - and has
+    # no opinion about media at all. The autoplay rule is separate and applies
+    # to a kiosk window exactly as it does to an ordinary tab.
+    #
+    # Scoped by the fact that this launcher only ever opens OUR pages, full
+    # screen, on a screen a congregation is looking at: there is no third-party
+    # content here to start shouting unbidden.
+    '--autoplay-policy=no-user-gesture-required'
   )
   Write-Log "window opened (PID $($p.Id))"
   return $p

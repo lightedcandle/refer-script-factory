@@ -139,7 +139,42 @@ select
   (select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace
      where n.nspname='public' and has_function_privilege('anon', p.oid, 'EXECUTE')) as anon_executable_functions,
   (select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace
-     where n.nspname='public' and c.relkind='r') as tables
+     where n.nspname='public' and c.relkind='r') as tables,
+  -- Secret-shaped columns a stranger holds SELECT on, in a table whose rows a
+  -- stranger is admitted to. Names only. "Stranger" is two people: signed out
+  -- (a policy for the public or anon role, or no row security at all), and
+  -- signed in but owning nothing (a policy for authenticated that is literally
+  -- "true"). A policy with a real condition for authenticated is not listed:
+  -- the catalog cannot say whose rows it admits, and guessing would flood.
+  (select coalesce(string_agg(c.relname || '.' || a.attname, ', ' order by c.relname, a.attname), '')
+     from pg_attribute a
+     join pg_class c on c.oid=a.attrelid
+     join pg_namespace n on n.oid=c.relnamespace
+     where n.nspname='public' and c.relkind in ('r','v','m')
+       and a.attnum > 0 and not a.attisdropped
+       and a.attname ~* '(secret|password|passwd|api_?key|stream_key|private_key|encrypted|credential|(^|_)token$|_hash$|stripe_customer_id)'
+       -- a key's saved-at stamp, its last four characters and a certificate's id
+       -- match the words above and are not the secret
+       and a.attname !~* '(_at|_last4|credential_id)$'
+       and (
+         (has_column_privilege('anon', c.oid, a.attnum, 'SELECT')
+            and (c.relkind <> 'r' or not c.relrowsecurity or exists (
+              select 1 from pg_policy p
+              where p.polrelid=c.oid and p.polpermissive and p.polcmd in ('r','*')
+                and (0 = any(p.polroles) or (select oid from pg_roles where rolname='anon') = any(p.polroles)))))
+         or
+         (has_column_privilege('authenticated', c.oid, a.attnum, 'SELECT')
+            and c.relkind='r' and c.relrowsecurity and exists (
+              select 1 from pg_policy p
+              where p.polrelid=c.oid and p.polpermissive and p.polcmd in ('r','*')
+                and (0 = any(p.polroles) or (select oid from pg_roles where rolname='authenticated') = any(p.polroles))
+                and pg_get_expr(p.polqual, p.polrelid) = 'true'))
+       )) as stranger_secret_columns,
+  -- The database's own record of what it has run. Asked for here so the
+  -- migration check can compare the repo against the DATABASE rather than
+  -- against a local report file that goes stale without saying so.
+  (select coalesce(string_agg(version, ',' order by version), '')
+     from supabase_migrations.schema_migrations) as applied_migrations
 `;
 
 // https rather than global fetch, and agent:false so the socket is closed
@@ -204,11 +239,59 @@ function drift() {
   const at = Date.parse(rep.timestamp || "");
   if (Number.isNaN(at)) return null;
   const files = fs.readdirSync(MIG).filter((f) => f.endsWith(".sql"));
-  const newer = files.filter((f) => fs.statSync(path.join(MIG, f)).mtimeMs > at);
+  // The checkout this runs in is not main. Measured 2026-10-12: the scheduler's
+  // tree sat about 170 merges behind, so a migration merged since was not on
+  // this disk at all and the unapplied check could not see it. What was merged
+  // is what matters, so the last-fetched main is read as well - no network, and
+  // when git cannot answer the disk alone is used, as before.
+  try {
+    const listed = require("child_process").execFileSync("git", ["ls-tree", "-r", "--name-only", "origin/main", "--", "supabase/migrations"], { cwd: ROOT, encoding: "utf8", windowsHide: true, stdio: ["ignore", "pipe", "ignore"] });
+    for (const line of listed.split(/\r?\n/)) {
+      const name = line.trim().split("/").pop();
+      if (name && name.endsWith(".sql") && !files.includes(name)) files.push(name);
+    }
+  } catch {}
+  const newer = files.filter((f) => {
+    const p = path.join(MIG, f);
+    return !fs.existsSync(p) || fs.statSync(p).mtimeMs > at;
+  });
   // Parked migrations: renamed so the runner skips them. Intentional, and worth
   // saying once rather than every cycle - which is what the baseline is for.
   const parked = fs.readdirSync(MIG).filter((f) => /\.sql\.[A-Z]+$/.test(f));
-  return { lastPush: rep.timestamp, onDisk: files.length, sinceLastPush: newer.map((f) => f).sort(), parked };
+  return { lastPush: rep.timestamp, onDisk: files.length, sinceLastPush: newer.map((f) => f).sort(), parked, files: files.slice().sort() };
+}
+
+// WHICH MIGRATIONS THE DATABASE ITSELF HAS NO RECORD OF.
+//
+// The local report file answers a different and weaker question - "has a push
+// been recorded here lately" - and it goes stale on its own. Measured
+// 2026-09-23: it named two files from three weeks earlier as unproven while
+// BOTH were already applied; a run somewhere else had pushed them and not
+// written a report. An alarm built on that would have cried wolf daily, which
+// is how an alarm gets switched off before the day it matters.
+//
+// The database keeps its own list. Comparing disk against that list answers the
+// question actually worth asking, with no room for interpretation: this file
+// exists in the repo and the database has never seen it.
+function unapplied(d, appliedCsv) {
+  if (!d || appliedCsv === null || appliedCsv === undefined) return null;
+  const applied = new Set(
+    String(appliedCsv)
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean),
+  );
+  // An empty list from a project that plainly has migrations means the question
+  // could not be answered - reported as unknown rather than as "all missing",
+  // which would be the loudest possible way to be wrong.
+  if (!applied.size) return null;
+  const out = [];
+  for (const f of d.files || []) {
+    const m = /^(\d{10,})/.exec(f);
+    if (!m) continue; // not version-stamped; the runner would skip it too
+    if (!applied.has(m[1])) out.push(f);
+  }
+  return out;
 }
 
 function deposit() {
@@ -299,6 +382,17 @@ function finish(state, note) {
   }
 
   const num = (v) => Number(v || 0);
+  // Held aside BEFORE the state is rebuilt below. The rebuild keeps only what is
+  // compared run to run, and for three weeks it silently dropped this list - so
+  // the migration check further down was handed `undefined`, answered "cannot
+  // tell", and never spoke once, with a merged migration sitting unapplied
+  // (measured 2026-10-12: zero deposits since the check was written 09-23).
+  const appliedMigrations = state.applied_migrations;
+  const list = (v) =>
+    String(v || "")
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
   state = {
     anon_readable_tables: num(state.anon_readable_tables),
     anon_readable_names: String(state.anon_readable_names || ""),
@@ -307,9 +401,13 @@ function finish(state, note) {
     definer_names: String(state.definer_names || ""),
     anon_executable_functions: num(state.anon_executable_functions),
     tables: num(state.tables),
+    stranger_secret_columns: String(state.stranger_secret_columns || ""),
     migrationsOnDisk: d ? d.onDisk : null,
     migrationsSinceLastPush: d ? d.sinceLastPush.length : null,
     lastRecordedPush: d ? d.lastPush : null,
+    // The names, kept in the report so the morning report can say them in one
+    // line without re-asking the database. null means "could not tell".
+    unappliedMigrations: unapplied(d, appliedMigrations),
   };
 
   if (!prev || REBASE) {
@@ -325,7 +423,11 @@ function finish(state, note) {
       const standing = [];
       if (state.definer_no_searchpath) standing.push(`${state.definer_no_searchpath} function(s) run with owner privileges and no pinned search path (${state.definer_names})`);
       if (state.anon_readable_tables) standing.push(`${state.anon_readable_tables} table(s) readable signed-out with no row-level security (${state.anon_readable_names})`);
-      if (state.migrationsSinceLastPush) standing.push(`${state.migrationsSinceLastPush} migration file(s) newer than the last recorded push`);
+      // The database's own record, not the local push report - the report was
+      // measured stale on 2026-09-23, naming two already-applied files.
+      if (state.stranger_secret_columns) standing.push(`${list(state.stranger_secret_columns).length} secret-shaped column(s) a stranger holds read access to (${state.stranger_secret_columns})`);
+      const standingMissing = unapplied(d, appliedMigrations);
+      if (standingMissing && standingMissing.length) standing.push(`${standingMissing.length} migration file(s) the database has no record of running`);
       if (standing.length) {
         say(
           "standing-state-at-first-watch",
@@ -367,12 +469,89 @@ function finish(state, note) {
     );
   }
 
+  // 3b. A credential a stranger can read.
+  //
+  // Found by hand on 2026-10-12, not by this station: a church's broadcast
+  // stream key and its encrypted Daily key had been readable with the browser's
+  // own public key for months. The table HAD row security, so question 1 was
+  // satisfied - a row policy decides which rows, never which columns, and
+  // "the public may see public churches" published every column of them.
+  //
+  // What the catalog can and cannot say: it knows the column's name, that the
+  // role holds SELECT on it, and that a policy admits that role to the table.
+  // It cannot know which rows the policy admits, so a listed column may still
+  // be protected row by row. It is therefore a list of things to LOOK AT, said
+  // once when this question is first asked and afterwards only when a new name
+  // appears - which is the moment somebody has just added a secret-shaped
+  // column to a table strangers can read, and the cheapest moment to catch it.
+  const secretsNow = list(state.stranger_secret_columns);
+  if (p.stranger_secret_columns === undefined) {
+    if (secretsNow.length) {
+      say(
+        "stranger-readable-secrets-first-look",
+        `${secretsNow.length} secret-shaped column(s) are readable by a stranger as far as the catalog can tell. Each needs one look.`,
+        `${secretsNow.join(", ")}. A stranger here is someone signed out, or signed in and owning nothing. Listed when the column name looks like a key, token, secret, hash or payment id, the role holds SELECT on it, and a policy admits that role to the table. The catalog cannot see which rows a policy admits, so some of these are protected row by row and are fine; the ones that are not are settled with has_column_privilege() and a count as that role, never by selecting the value. Said once - from here this station reports only a NEW name.`,
+      );
+    }
+  } else {
+    const before = new Set(list(p.stranger_secret_columns));
+    const added = secretsNow.filter((name) => !before.has(name));
+    if (added.length) {
+      say(
+        "stranger-can-read-a-new-secret",
+        `${added.length} new secret-shaped column(s) became readable by a stranger: ${added.join(", ")}.`,
+        `Not on the list last run. Every new table and column is granted to the signed-out and signed-in roles by default, and a row policy does not withhold a column - so a key added to a table strangers can read is public the moment it lands, with no error and no advisory. Put it in a table whose policy admits only its owner, or withhold the column and prove it with has_column_privilege(). Read from the live catalog; no row was read.`,
+      );
+    }
+  }
+
   // 4. Schema on disk that nothing local proves was ever applied.
-  if (d && d.sinceLastPush.length && d.sinceLastPush.length !== num(p.migrationsSinceLastPush)) {
+  //
+  // THIS ONE MUST NOT BE CHANGE-ONLY, and it was, and it cost a live leak.
+  //
+  // The condition used to be "the count differs from last run". A gap that
+  // simply PERSISTS never changes, so it fires once and is never heard from
+  // again - and schema drift is the one fault that gets worse the longer it
+  // stands still. On 2026-09-23 the database was sitting at a migration from
+  // 2026-09-03 while main carried three newer ones, one of which closed a
+  // verified anon data leak: two analytics views handing anyone with the
+  // browser's own key 944 sessions with user ids, routes, agents and referrers.
+  // The fix had been merged that morning. It reached production hours later,
+  // and only because an agent ran a push for an unrelated plan. This check had
+  // the number in its state file the whole time and said nothing, because the
+  // number had stopped moving.
+  //
+  // So it now speaks on EITHER the gap changing or the gap ageing. Deposits are
+  // deduplicated by day one level down, so a standing fault says its piece once
+  // a day rather than every cycle - loud enough to be a reminder, quiet enough
+  // not to become wallpaper.
+  // NOT CHANGE-ONLY, and not the local report file either. Both of those were
+  // wrong in different directions and the pair of mistakes is the whole lesson.
+  //
+  // It used to fire only when the count differed from last run, so a gap that
+  // simply PERSISTED went quiet - and schema drift is the one fault that gets
+  // worse standing still. Making it louder against the local push report would
+  // have been worse than silence: measured the same day, that file named two
+  // migrations as unproven while both were already live, so the new alarm would
+  // have rung daily about nothing until somebody muted it.
+  //
+  // The database's own migration table settles it. A file here that the
+  // database has no row for is unapplied, full stop, and that is worth saying
+  // every day it remains true - deposits are deduplicated by day one level
+  // down, so it is a daily reminder rather than a flood.
+  //
+  // Why it matters, dated: on 2026-09-23 a migration closing a verified anon
+  // data leak - two analytics views handing anyone with the browser's own key
+  // 944 sessions, with user ids, routes, agents and referrers - sat merged on
+  // main and unapplied for hours, and reached production only because an agent
+  // ran a push for an unrelated plan. NOTHING IN CI APPLIES MIGRATIONS. This
+  // check is the only thing that can notice.
+  const missing = unapplied(d, appliedMigrations);
+  if (missing && missing.length) {
     say(
-      "migrations-newer-than-last-push",
-      `${d.sinceLastPush.length} migration file(s) are newer than the last recorded push, so nothing locally proves the database matches the repo.`,
-      `Last recorded push ${d.lastPush}. Files: ${d.sinceLastPush.join(", ")}. Not a claim that they are unapplied - a later push may simply not have written a report - but a claim that the repo can no longer show it. Schema drift is the definition of silent and permanent.`,
+      "migrations-not-in-the-database",
+      `${missing.length} migration file(s) are in the repo and have no row in the database's own migration table.`,
+      `Files: ${missing.join(", ")}. Compared against supabase_migrations.schema_migrations in the live database, not against a local push report - that report was measured stale on 2026-09-23, naming two already-applied files. Nothing in CI applies migrations, so a merged fix stays merged and unapplied until somebody runs a push; on that date the gap held an anon data leak open for hours after its fix landed on main.`,
     );
   }
 
