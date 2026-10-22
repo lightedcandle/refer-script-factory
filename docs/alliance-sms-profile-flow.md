@@ -96,17 +96,13 @@ Clears the current profile setup attempt for that phone number, restarts the pro
 
 `STOP` or `CANCEL`
 
-Cancels the local deterministic profile script path. The live relay currently records inbound messages and should be expanded before broad production use to enforce full opt-out policy across all outbound queues.
+Cancels the local deterministic profile script path. In the live relay, a consent keyword that is the whole message (`STOP`, `STOPALL`, `UNSUBSCRIBE`, `CANCEL`, `END`, `QUIT`, `START`, `UNSTOP`, `YES`) is forwarded to Alliance Hub, which forwards it to Telechurch, and is not processed further (read from the deployed function, version 96, on 2026-10-12). Whether every outbound queue then honours the opt-out is still not verified here.
 
 Unknown registered-user text:
 
-After a phone number has completed profile registration, unmatched inbound SMS is handled by the Alliance SMS Smart Intake fallback. The relay replies:
+After a phone number has completed profile registration, unmatched inbound SMS is offered to the Hub's formula engine. If the Hub has no answer, **the relay sends no reply** (corrected 2026-10-12; this document previously said it replied "Let me check on this and get back with you soon.", which the deployed function does not do). This silent point is where the answerer slot is designed to sit: `docs/sms-answerer-slot/README.md`.
 
-```text
-Let me check on this and get back with you soon.
-```
-
-It also records an `sms_intake_gap` with the original text, normalized text, `alliance.sms_router.v1`, `alliance.sms_unknown_intent.v1`, and a suggested future script id when the message resembles a planned intent such as next event, profile link, groups, or event registration.
+The relay records an `sms_intake_gap` with the original text, normalized text, `alliance.sms_router.v1`, `alliance.sms_unknown_intent.v1`, and a suggested future script id when the message resembles a planned intent such as next event, profile link, groups, or event registration.
 
 SMS script source:
 
@@ -147,12 +143,11 @@ From the workspace root:
 ```powershell
 npm run alliance:hub-check
 npm run alliance:hub-deploy
-npm --prefix refer-zo-bootstrap run alliance:sms-relay-deploy -- --deploy
 ```
 
 The Alliance Hub deploy script uploads the Pages secrets without printing values. The Pages app needs Supabase URL, anon key, service role key for context lookups, profile form secret, SMS relay URL, and SMS relay token.
 
-The Supabase relay deploy script sets relay secrets and deploys `alliance-sms-relay` with its own `X-Dispatcher-Token` gate.
+The Supabase relay, `alliance-sms-relay`, is no longer deployed from this workspace. Since mid-October 2026 it is built from the Telechurch repo (`supabase/functions/alliance-sms-relay/`). The copy and deploy script in `refer-zo-bootstrap` are stale; running them would take production back several versions (checked 2026-10-22, live version 109). The relay's behaviour described in this document predates that move and may no longer be complete.
 
 ## Verification
 

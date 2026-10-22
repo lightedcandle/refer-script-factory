@@ -350,8 +350,14 @@ Deployment commands from the workspace root:
 ```powershell
 npm run alliance:forms-check
 npm run alliance:forms-deploy
-npm --prefix refer-zo-bootstrap run alliance:sms-relay-deploy -- --deploy
 ```
+
+The SMS relay itself (`alliance-sms-relay`) is no longer deployed from here.
+Since mid-October 2026 it is built from the Telechurch repo,
+`supabase/functions/alliance-sms-relay/`, and deployed from there. The copy in
+`refer-zo-bootstrap` is stale; deploying it would take production back several
+versions (checked 2026-10-22, live version 109). See
+`docs/sms-answerer-slot/build-2026-10-13.md`.
 
 ## Deterministic Profile Intake
 
