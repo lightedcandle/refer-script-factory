@@ -143,12 +143,11 @@ From the workspace root:
 ```powershell
 npm run alliance:hub-check
 npm run alliance:hub-deploy
-npm --prefix refer-zo-bootstrap run alliance:sms-relay-deploy -- --deploy
 ```
 
 The Alliance Hub deploy script uploads the Pages secrets without printing values. The Pages app needs Supabase URL, anon key, service role key for context lookups, profile form secret, SMS relay URL, and SMS relay token.
 
-The Supabase relay deploy script sets relay secrets and deploys `alliance-sms-relay` with its own `X-Dispatcher-Token` gate.
+The Supabase relay, `alliance-sms-relay`, is no longer deployed from this workspace. Since mid-October 2026 it is built from the Telechurch repo (`supabase/functions/alliance-sms-relay/`). The copy and deploy script in `refer-zo-bootstrap` are stale; running them would take production back several versions (checked 2026-10-22, live version 109). The relay's behaviour described in this document predates that move and may no longer be complete.
 
 ## Verification
 
