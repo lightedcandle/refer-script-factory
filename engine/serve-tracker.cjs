@@ -440,6 +440,7 @@ const server = http
       <div class="cell" data-repo-tile="${safe(r.id)}">
         <div class="row"><span class="lamp" data-f="lamp"></span><span class="name">${safe(r.name)}</span><span class="beat" data-f="beat">—</span></div>
         ${r.hasBoard ? `<iframe src="/?repo=${encodeURIComponent(r.id)}&only=belt" title="${safe(r.name)} - belt" tabindex="-1"></iframe>` : `<div class="nobelt">wired, but its board has not been built yet - there is no belt to draw</div>`}
+        <div class="stopped"><b>PULSE STOPPED</b><span data-f="stopped"></span></div>
         <a class="go" href="/?repo=${encodeURIComponent(r.id)}" title="open the ${safe(r.name)} board"></a>
       </div>`;
       // The repos with no belt share ONE cell rather than taking one each: a
@@ -465,7 +466,15 @@ const server = http
   .belts{flex:1 1 auto;min-height:0;display:grid;gap:${ALL_GAP}px}
   .cell{position:relative;display:flex;flex-direction:column;min-width:0;min-height:0;overflow:hidden;background:${BELT_ONLY_BG};border:1px solid oklch(0.28 0.012 70);border-radius:6px}
   .cell:hover{border-color:oklch(0.44 0.012 70)}
-  .cell.off{opacity:0.6}
+  .cell.off{opacity:0.6;order:9999}
+  .cell.dead{border-color:oklch(0.64 0.18 25);box-shadow:inset 0 0 0 2px oklch(0.64 0.18 25)}
+  .cell.dead .row{background:oklch(0.36 0.12 25)}
+  .cell.dead .beat{color:oklch(0.93 0.04 25)}
+  .cell.dead iframe{opacity:0.28}
+  .stopped{display:none;position:absolute;left:0;right:0;top:${ALL_LABEL}px;bottom:0;flex-direction:column;align-items:center;justify-content:center;gap:8px;font-family:${mono};text-align:center;background:oklch(0.20 0.05 25 / 0.55)}
+  .cell.dead .stopped{display:flex}
+  .stopped b{font-size:clamp(18px,2.2vw,34px);font-weight:600;letter-spacing:0.14em;color:oklch(0.80 0.15 25)}
+  .stopped span{font-size:14px;letter-spacing:0.06em;color:oklch(0.90 0.03 25)}
   .row{flex:none;height:${ALL_LABEL}px;box-sizing:border-box;display:flex;align-items:center;gap:9px;padding:0 12px}
   .lamp{width:9px;height:9px;border-radius:50%;background:oklch(0.45 0.01 80);flex:none}
   .name{font-size:16px;font-weight:600;letter-spacing:-0.01em;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -521,17 +530,50 @@ const server = http
     function ago(ms) { if (ms < 60000) return Math.round(ms / 1000) + 's ago'; if (ms < 3600000) return Math.round(ms / 60000) + 'm ago'; return Math.round(ms / 3600000) + 'h ago'; }
     function fill(tile, f, v) { var el = tile.querySelector('[data-f="' + f + '"]'); if (el && el.textContent !== String(v)) el.textContent = v; }
     function get(u) { return fetch(u, { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }); }
+    // A STOPPED PULSE TAKES THE WHOLE CELL. Three beats missed is the same
+    // fifteen minutes the board's own lamp calls NOT BEATING and autonomy-check
+    // calls an outage; at that point the belt underneath has already been
+    // stopped by its own board, and a still belt beside ten turning ones is
+    // not something anybody sees from across a room. So the cell goes red and
+    // says so in words. Never ticked and unreachable stay grey: this page not
+    // knowing is not the same as the repo being down.
+    //
+    // THE BELTS ARE ORDERED BY WHO NEEDS HIM, and re-ordered as that changes:
+    // a stopped pulse first, then what is held for him, then what an agent is
+    // working right now, then what nobody has judged, then what is contracted
+    // and waiting. Counted by /activity with the predicates the boards are
+    // built with, so the order can never disagree with the numbers inside the
+    // loops. Equal need keeps the ecosystem map's order, so a quiet factory
+    // looks the same every time. Done with CSS order, not by moving the
+    // cells: a moved frame reloads its board.
+    var need = {};
+    function sort() {
+      var tiles = [].slice.call(document.querySelectorAll('[data-repo-tile]'));
+      var ranked = tiles.map(function (t, i) { return { t: t, i: i, n: need[t.getAttribute('data-repo-tile')] || [0, 0, 0, 0, 0] }; });
+      ranked.sort(function (a, b) { for (var k = 0; k < 5; k++) if (a.n[k] !== b.n[k]) return b.n[k] - a.n[k]; return a.i - b.i; });
+      ranked.forEach(function (r, at) { if (r.t.style.order !== String(at)) r.t.style.order = String(at); });
+    }
     function refresh() {
-      document.querySelectorAll('[data-repo-tile]').forEach(function (tile) {
-        get('/schedule?repo=' + encodeURIComponent(tile.getAttribute('data-repo-tile'))).then(function (sch) {
+      var tiles = [].slice.call(document.querySelectorAll('[data-repo-tile]'));
+      Promise.all(tiles.map(function (tile) {
+        var id = tile.getAttribute('data-repo-tile'), q = encodeURIComponent(id);
+        return Promise.all([get('/schedule?repo=' + q), get('/activity?repo=' + q)]).then(function (res) {
+          var sch = res[0], act = res[1];
           var now = Date.now();
           var lamp = tile.querySelector('[data-f="lamp"]');
           var last = sch && sch.pulse && sch.pulse.lastRunAt ? Number(sch.pulse.lastRunAt) : 0;
+          var dead = false;
           if (!sch) { lamp.style.background = 'oklch(0.45 0.01 80)'; fill(tile, 'beat', 'unreachable'); }
           else if (!last) { lamp.style.background = 'oklch(0.45 0.01 80)'; fill(tile, 'beat', 'never ticked'); }
-          else { var since = now - last; lamp.style.background = since < 2 * GRID ? 'oklch(0.78 0.16 145)' : since < 3 * GRID ? 'oklch(0.80 0.14 75)' : 'oklch(0.70 0.15 25)'; fill(tile, 'beat', 'beat ' + ago(since)); }
+          else { var since = now - last; dead = since >= 3 * GRID; lamp.style.background = since < 2 * GRID ? 'oklch(0.78 0.16 145)' : !dead ? 'oklch(0.80 0.14 75)' : 'oklch(0.70 0.15 25)'; fill(tile, 'beat', 'beat ' + ago(since)); fill(tile, 'stopped', 'last beat ' + ago(since)); }
+          if (tile.classList.contains('dead') !== dead) tile.classList.toggle('dead', dead);
+          // An answer that did not come keeps the need it last had, so one
+          // dropped request does not shuffle the wall.
+          var was = need[id] || [0, 0, 0, 0, 0];
+          var sup = act && act.supervisor, bld = act && act.builder;
+          need[id] = [dead ? 1 : 0, sup ? sup.held || 0 : was[1], bld ? bld.building || 0 : was[2], sup ? sup.awaitingTriage || 0 : was[3], bld ? bld.contracts || 0 : was[4]];
         });
-      });
+      })).then(sort);
     }
     refresh(); setInterval(refresh, 10000);
   })();

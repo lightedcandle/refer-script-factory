@@ -66,6 +66,7 @@ debug.log
 # by machines/build-tracker.cjs like any other subject's. Both are still output
 # and both stay ignored; they are just universal output now, not local.
 .claude/agent-context/schedule-state.json
+.claude/agent-context/checkout-current.json
 .claude/agent-context/sessions.json
 .claude/agent-context/clock-state.json
 .claude/agent-context/pulse.json

@@ -794,11 +794,26 @@ for (const st of due) {
   // behind to expire.
   const edit = machineIsMidEdit(command);
   if (edit.checked && edit.dirty) {
+    // An untracked machine (`??`) is not mid-edit: this checkout simply does not
+    // hold its committed version, which means the checkout is behind main. Said
+    // separately because the remedy differs - commit the edit, versus move the
+    // checkout forward.
+    const untracked = /^\?\?/.test(edit.detail || "");
+    const reason = untracked
+      ? `its machine is not tracked in this checkout (${edit.detail}) - the checkout does not hold its committed version, so it is probably behind main`
+      : `its machine has uncommitted changes (${edit.detail})`;
     console.error(
-      `  ${st.id}: SKIPPED - its machine has uncommitted changes (${edit.detail}). ` +
+      `  ${st.id}: SKIPPED - ${reason}. ` +
         `There is no deploy step here: the file is read as it runs, so a save is a deploy and this one is mid-edit. ` +
         `It will run on the next tick after the change is committed.`,
     );
+    // Written to state, not only to stderr. Before 2026-10-19 a skipped station
+    // left nothing behind, so the fuel log was skipped every tick for ten days
+    // and the board showed it as never run, not as skipped (PLAN-LEARNING-001).
+    s.lastSkippedAt = Date.now();
+    s.lastSkipReason = reason;
+    s.skips = (s.skips || 0) + 1;
+    writeState(state, st.id);
     failed++;
     continue;
   }
@@ -827,6 +842,11 @@ for (const st of due) {
     s.lastExit = res ? res.status : null;
     s.requestedFor = null;
     s.runs = (s.runs || 0) + 1;
+    // A run answers the last skip. Left in place, the reason sat beside a clean
+    // run and read as a current fault: the fuel log, 2026-10-19, ran at last and
+    // still said "not tracked in this checkout". lastSkippedAt and the skips
+    // count stay as history.
+    delete s.lastSkipReason;
     // A run that could not be observed is treated as a fault, not as clean.
     // Assuming success from an absent exit code is how a broken station earns
     // itself a two-hour nap.

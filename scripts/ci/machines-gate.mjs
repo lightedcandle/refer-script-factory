@@ -59,7 +59,7 @@
  * thing in the repo, which is the state this repo was already in.
  */
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync, readdirSync, statSync } from "node:fs";
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync, readdirSync, statSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname, resolve, basename } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -220,6 +220,7 @@ const MANIFEST = {
       return r.launchers > 0 && r.offenders.length === 0 && r.deposited === 0 && beltUntouched(root);
     },
   },
+  "checkout-current.cjs": { args: ["--dry"], exit: 1, why: "the fixture is not a git checkout, and a machine that moves checkouts must say it cannot rather than report one current. --dry writes nothing either way; its moves and refusals are proven on a scratch repo with an origin (Telechurch shelf T314)" },
   "day-mode.cjs": { args: [], exit: 0, why: "library - what each board colour becomes in daylight, and the script that picks the mode from the sun" },
   "intake-worker.cjs": { args: ["--dry", "--json"], exit: 0, why: "drains the watcher's ready-list. --dry because --json alone still writes a report and would still dispatch if a fixture ever carried an auto mode file; the fixture has no ready-list, so it reports the list ABSENT and exits 0 - an empty morning is healthy" },
   "kind.cjs": { args: [], exit: 0, why: "library - the belt's vocabulary, required by everything that reads it" },
@@ -229,6 +230,23 @@ const MANIFEST = {
   "provider-watch.cjs": { args: ["--json"], exit: [0, 1], why: "asks the host whether Docker is running, which is not a property of this repo. Both codes are correct; crashing is not, so the run must still emit JSON carrying docker.reachable", expect: (out) => "reachable" in (JSON.parse(out).docker || {}) },
   "pulse-belt.cjs": { args: ["--list"], exit: 0, why: "--list derives the cycle and writes nothing. On a fixture with no pulse-belt.jsonl this is the first-run path: one card, two empty stages, and NOT reported as a gap, because never-run and stopped are different facts" },
   "pulse-check.cjs": { args: ["--json"], exit: 1, why: "the fixture's trigger has never run and two records name nothing to trigger - both are real faults and it must say so" },
+  // ITS SUBJECT IS THE HOST'S SCREENS, NOT THE FIXTURE - only the store and the
+  // belt it writes to are under cwd. So nothing it finds is a property of this
+  // repo: a desk with a paired receiver reports one sink, a runner with no
+  // powershell.exe reports every probe under readFailures, and both are exit 0
+  // by the machine's own contract. What IS a property of the fixture is what
+  // --dry promises, and `expect` reads it off disk: no screens.json beside the
+  // belt, and the belt as it was - which matters on exactly the desk where a
+  // sink is seen for the first time and a non-dry run would deposit.
+  "screen-registry.cjs": {
+    args: ["--dry", "--json"],
+    exit: 0,
+    why: "probes the host's displays and wireless sinks, composes the whole report for the fixture repo, and under --dry writes neither the store nor the belt. Exit 0 whatever the host has: no wireless display is an ordinary state, and an unreadable probe is reported, not thrown",
+    expect: (out, root) => {
+      const r = JSON.parse(out);
+      return r.repo === basename(root) && Array.isArray(r.readFailures) && typeof r.counts.screens === "number" && r.deposited === 0 && !existsSync(join(root, ".claude/agent-context/screens.json")) && beltUntouched(root);
+    },
+  },
   "session-belt.cjs": { args: ["--dry", "--json"], exit: 0, why: "lists the sessions alive in the fixture repo from their transcripts and writes nothing under --dry; a fixture has no transcript directory of its own, so the list is empty and the exit is clean - an empty repo is healthy" },
   "session-life.cjs": { args: [], exit: 0, why: "library - the one definition of whether a dispatched agent is still alive" },
   "triage.cjs": { args: ["--list"], exit: 0, why: "lists what is awaiting judgement" },

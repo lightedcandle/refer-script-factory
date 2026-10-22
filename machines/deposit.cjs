@@ -109,6 +109,8 @@ const path = require("path");
 
 const KINDLIB = require("./kind.cjs");
 const { KIND_WORDS, beltIndex, handleIndex, headlineOf, reasonOf } = KINDLIB;
+/** The three causes of the blame step (refer.learning.md, PLAN-LEARNING-001). */
+const CAUSE_WORDS = ["missing", "unreachable", "ignored"];
 
 const BELT_REL = ".claude/agent-context/findings.jsonl";
 const beltPathFor = (root) => path.join(root || process.cwd(), BELT_REL);
@@ -154,6 +156,18 @@ function refusalsFor(record) {
     const k = String(record.kind).trim().toLowerCase();
     if (!KIND_WORDS.includes(k)) {
       out.push(`kind "${record.kind}" is not one of ${KIND_WORDS.join(", ")} - "closure" is what a record does, not what it is, and writing it here voids the field`);
+    }
+  }
+
+  // `cause` is the blame step of the learning chain (refer.learning.md; a
+  // consumer's refer.agent.claude.md section 11): why the thing happened. It is
+  // optional - a machine detector cannot know it - but a cause that is present
+  // and misspelled would be void forever on an append-only belt, and the
+  // scorecard (corpus-scorecard.cjs) could never count it. PLAN-LEARNING-001.
+  if (record.cause != null) {
+    const c = String(record.cause).trim().toLowerCase();
+    if (!CAUSE_WORDS.includes(c)) {
+      out.push(`cause "${record.cause}" is not one of ${CAUSE_WORDS.join(", ")} - no rule existed, a rule existed but was not reachable when needed, or it was reachable and skipped`);
     }
   }
 
