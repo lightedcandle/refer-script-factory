@@ -4265,6 +4265,9 @@ const loopCard = (label, value, orbitSecs, hue, glyph) => `
 // is the expensive version of the same work. Today it sums one repo; the day a
 // second is wired it splits with no rework.
 const REPO = path.basename(ROOT);
+// The blueprint toggle in the header shows only where the repo can draw one
+// (PLAN-CIRCUIT-001): the circuit reader is the repo's own station.
+const HAS_CIRCUIT = fs.existsSync(path.join(ROOT, "tools/factory/circuit-build.cjs"));
 const LEDGER = path.join(CTX, "factory-ledger.json");
 let ledger = readJson(LEDGER, {});
 // Migrate the flat first version - months at the top level - under this repo.
@@ -5189,6 +5192,22 @@ const html = `<!DOCTYPE html>
             )
             .join("\n          ")}
         </div>
+      </div>`
+          : ""
+      }
+      ${
+        // THE BLUEPRINT TOGGLE. Operator, 2026-11-05: "add a blueprint Button and
+        // icon under the factory selection to flip the factory board to blueprint
+        // / Factory toggle". Two halves, the current one lit; the blueprint page
+        // draws the same pair with BLUEPRINT lit, so it reads as one switch. It
+        // flips the whole page rather than the belt's column, because the map
+        // needs the room (PLAN-CIRCUIT-001). Shown only for a repo that has a
+        // circuit reader - a button to a map that cannot be drawn would be the
+        // board promising what it does not keep.
+        HAS_CIRCUIT
+          ? `<div data-board-mode="factory" style="display:flex; margin-top:6px; max-width:300px; border:1px solid oklch(0.32 0.012 70); border-radius:4px; overflow:hidden; font-family:${mono}; font-size:12px; letter-spacing:0.08em">
+        <span title="the factory board: the belt and what it is working on" style="flex:1; display:flex; align-items:center; justify-content:center; gap:7px; padding:5px 10px; background:oklch(0.24 0.012 70); color:oklch(0.92 0.01 85)"><svg viewBox="0 0 16 16" width="14" height="14" fill="none" aria-hidden="true"><path d="M1 13h14M2 13V7l4 2V7l4 2V4h4v9" style="stroke:currentColor; stroke-width:1.4"></path></svg>FACTORY</span>
+        <a href="/blueprint?repo=${encodeURIComponent(REPO_ID)}" title="flip to the blueprint: how ${esc(REPO)} is wired, block by block - click a block to go inside" style="flex:1; display:flex; align-items:center; justify-content:center; gap:7px; padding:5px 10px; background:oklch(0.16 0.012 70); color:oklch(0.74 0.09 230); text-decoration:none; border-left:1px solid oklch(0.32 0.012 70)"><svg viewBox="0 0 16 16" width="14" height="14" fill="none" aria-hidden="true"><rect x="4" y="4" width="8" height="8" rx="1" style="stroke:currentColor; stroke-width:1.4"></rect><path d="M6 1v3M10 1v3M6 12v3M10 12v3M1 6h3M1 10h3M12 6h3M12 10h3" style="stroke:currentColor; stroke-width:1.2"></path></svg>BLUEPRINT</a>
       </div>`
           : ""
       }
