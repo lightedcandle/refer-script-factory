@@ -277,6 +277,10 @@ const OWN_VERSION = (() => {
 // build-tracker.cjs moves that column, move BELT_W with it. A board built
 // without a #conveyor says so in words rather than shrinking the whole board
 // into the cell.
+// The blueprint's map, per repo root, for two minutes (see /blueprint).
+const BLUEPRINT_CACHE = new Map();
+const BLUEPRINT_TTL_MS = 2 * 60 * 1000;
+
 const BELT_W = 670;
 const BELT_ASPECT = 1200 / 640; // the conveyor's own viewBox
 const BELT_ONLY_BG = "oklch(0.185 0.012 70)";
@@ -428,6 +432,56 @@ const server = http
     // summary inside the loop is a judgement made once, at build, by the
     // builder. The frame takes no clicks; the whole cell is the link to that
     // repo's board.
+    // ---- THE BLUEPRINT: the board flipped to how the repo is wired ------------
+    //
+    // Operator, 2026-11-05: "add a blueprint Button and icon under the factory
+    // selection to flip the factory board to blueprint / Factory toggle"
+    // (PLAN-CIRCUIT-001). The map is the observed repo's own reader, run here
+    // when the page is opened - never a saved file, so it is never older than
+    // the checkout it reads. It runs in a child process with a timeout, so a
+    // reader that hangs or throws costs this page and not the board. Kept for
+    // two minutes so flipping back and forth does not reread 1,200 files;
+    // ?fresh=1 rereads. /blueprint.json returns the same map for checks.
+    if (P === "/blueprint" || P === "/blueprint.json") {
+      if (!R) {
+        res.writeHead(404, { "content-type": "text/plain; charset=utf-8" });
+        res.end("no such repo in the ecosystem map");
+        return;
+      }
+      const script = path.join(R.root, "tools/factory/circuit-build.cjs");
+      const fresh = /(?:^|&)fresh=1(?:&|$)/.test(String(req.url || "").split("?")[1] || "");
+      let circuit = null;
+      let error = null;
+      if (!fs.existsSync(script)) {
+        error = `${R.name} has no circuit reader yet (tools/factory/circuit-build.cjs), so there is no map to draw.`;
+      } else {
+        const hit = BLUEPRINT_CACHE.get(R.root);
+        if (hit && !fresh && Date.now() - hit.at < BLUEPRINT_TTL_MS) circuit = hit.circuit;
+        else {
+          const r = spawnSync(process.execPath, [script, "--root", R.root], { encoding: "utf8", timeout: 60000, maxBuffer: 64 * 1024 * 1024, windowsHide: true });
+          if (r.status === 0) {
+            try {
+              circuit = JSON.parse(r.stdout);
+              BLUEPRINT_CACHE.set(R.root, { at: Date.now(), circuit });
+            } catch (e) {
+              error = "the reader answered with something that is not a map: " + e.message;
+            }
+          } else error = `the reader stopped (${r.error ? r.error.message : "exit " + r.status}).\n` + String(r.stderr || "").slice(-2000);
+        }
+      }
+      if (P === "/blueprint.json") {
+        res.writeHead(circuit ? 200 : 503, { "content-type": "application/json", "cache-control": "no-store" });
+        res.end(JSON.stringify(circuit || { error }));
+        return;
+      }
+      res.writeHead(200, { "content-type": "text/html; charset=utf-8", "cache-control": "no-store", "x-living-factory": "blueprint", "x-board-version": OWN_VERSION });
+      // Loaded fresh each time: a change to how the page draws shows on the next
+      // open, without restarting the server that every board depends on.
+      const pageModule = require.resolve("./blueprint-page.cjs");
+      delete require.cache[pageModule];
+      res.end(require(pageModule).renderBlueprintPage({ repoId: R.id, repoName: R.name, circuit, error }));
+      return;
+    }
     if (P === "/" && /(?:^|&)repo=__all(?:&|$)/.test(String(req.url || "").split("?")[1] || "")) {
       const repos = Object.values(REPOS).map((r) => {
         const exists = fs.existsSync(r.path);
