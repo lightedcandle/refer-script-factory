@@ -101,12 +101,15 @@ const PROJECTS = path.join(HOME, ".claude", "projects");
 
 const MS = { m: 60000, h: 3600000 };
 
-// HOW FAR BACK A REFUSAL STILL COUNTS. Six hours covers the longest reset
-// horizon these messages have been seen to name on this machine ("resets 6:10am"
-// stamped at 06:27, and five-hour windows elsewhere). Older than that and the
-// reset test in (3) would have released it anyway, so the lookback only bounds
-// the scan rather than deciding anything.
-const LOOKBACK_MS = 6 * MS.h;
+// HOW FAR BACK A REFUSAL STILL COUNTS. It was six hours, on the belief that six
+// covered the longest reset horizon. A WEEKLY limit does not: on 2026-11-09 the
+// refusal at 03:01Z named "resets 2pm (America/New_York)", sixteen hours out, so
+// after six hours the refusal fell out of the scan and the door would have
+// reopened ten hours early into a still-closed account (operator, 2026-11-09:
+// "check fix publish automatically when limits reset"). Now the same horizon
+// as MAX_RESET_AHEAD_MS below. Nothing is held longer than before in practice:
+// the reset test in (3) and any later success still release it.
+const LOOKBACK_MS = 2 * 24 * MS.h;
 
 // Only the end of each transcript is read. Both facts this needs - the newest
 // refusal and the newest success - are by definition at the end, and a session
