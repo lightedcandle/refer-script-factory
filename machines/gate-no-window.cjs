@@ -95,26 +95,61 @@ function callText(src, openIdx) {
   return src.slice(openIdx);
 }
 
+// THE CLOCK RUNS MORE THAN tools/factory. Scoping by folder missed the one
+// that mattered: Telechurch's edge-follow station runs
+// tools/edge-deploy-verified.mjs every ten minutes, detached, and every git,
+// tar and npx it started opened a console. The operator saw
+// "scoop\shims\git.exe" flash in bursts ten minutes apart (2026-11-09: "no pop
+// ups"), and this gate reported clean because the file sat one folder up.
+// So every script a trigger's `run` names is scanned too, wherever it lives -
+// scoped by what the clock runs, which is what the rule was always about.
+function clockScripts(repo) {
+  const dir = path.join(repo, "tools", "factory");
+  const named = new Set();
+  let entries = [];
+  try {
+    entries = fs.readdirSync(dir).filter((n) => n.endsWith(".trigger.json"));
+  } catch {
+    return [];
+  }
+  for (const n of entries) {
+    let run = "";
+    try {
+      run = String(JSON.parse(fs.readFileSync(path.join(dir, n), "utf8")).run || "");
+    } catch {
+      continue;
+    }
+    for (const m of run.matchAll(/(?:^|\s)((?:tools|scripts)\/[\w./-]+\.(?:cjs|mjs|js))(?=\s|$)/g)) named.add(m[1]);
+  }
+  return [...named];
+}
+
+const targets = [];
+for (const { base, dirs } of ROOTS)
+  for (const dir of dirs) {
+    let entries = [];
+    try {
+      entries = fs.readdirSync(path.join(base, dir));
+    } catch {
+      continue;
+    }
+    for (const name of entries) targets.push({ base, dir, name });
+  }
+for (const rel of clockScripts(process.cwd()))
+  targets.push({ base: process.cwd(), dir: path.dirname(rel), name: path.basename(rel) });
+
 const offenders = [];
 let checked = 0;
 const seenFiles = new Set();
-for (const { base, dirs } of ROOTS)
-  for (const dir of dirs) {
-  const d = path.join(base, dir);
-  let entries = [];
-  try {
-    entries = fs.readdirSync(d);
-  } catch {
-    continue;
-  }
-  for (const name of entries) {
+for (const { base, dir, name } of targets) {
+  {
     if (!/\.(cjs|mjs|js)$/.test(name)) continue;
     if (name === path.basename(__filename)) continue;
     // A throwaway probe an agent left behind is not a launcher anybody runs.
     // Named rather than inferred, so a real file cannot hide behind the suffix.
     if (/\.tmp\.(cjs|mjs|js)$/.test(name)) continue;
-    const file = path.join(d, name);
-    if (seenFiles.has(file)) continue;
+    const file = path.join(base, dir, name);
+    if (seenFiles.has(file) || !fs.existsSync(file)) continue;
     seenFiles.add(file);
     const src = fs.readFileSync(file, "utf8");
     STARTERS.lastIndex = 0;
